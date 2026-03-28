@@ -10,7 +10,7 @@ Sistem za rezervaciju i upravljanje terminima
 | Halilović Lamija | 19390|lhalilovic1@etf.unsa.ba |
 | Alispahić Amina |19585 | aalispahic1@etf.unsa.ba|
 | Hatibović Kenan | 18042| khatibovic1@etf.unsa.ba |
-| Mahmutović Hana | |hmahmutovi2@etf.unsa.ba |
+| Mahmutović Hana |19226 |hmahmutovi2@etf.unsa.ba |
 | Husović Hamza |19548 | hhusovic1@etf.unsa.ba |
 | Milišić Merjem | 19337| mmilisic2@etf.unsa.ba|
 | Šehić Almedin | 19162 | asehic1@etf.unsa.ba |
