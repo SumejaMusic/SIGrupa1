@@ -1,51 +1,54 @@
 # Product vision
 
 ## Naziv projekta: 
-Sistem za upravljanje bolnickim terminima
+Sistem za upravljanje bolničkim terminima
 
-## Problem koji sistem rjesava
-Cilj naseg sistema je da se postojece prakse koje su neprakticne za sve korisnike pojednostave. Klijenti prolaze kroz komplikovan proces zakazivanja termina i nemaju stalni uvid u svoje termine na jednom mjestu kroz jednostavan interface. Osim toga prolaze kroz suvisne dolaske u bolnicu, koji bi mogli biti izvedeni kroz online rezim. Doktori u tom procesu provode dosta vremena na administracijskim poslovima, umjesto da posvete vise vremena klijentima. Uz to, nemaju pregledan uvid u zakazane termine pregleda, a komunikacija sa specijalistima je spora. Menadzment bolnice nema jasnu sliku o tome koliko je bolnicki kapacitet zaista iskoristen i da li je iskoristen efikasno. 
+## Problem koji sistem rješava
+Cilj našeg sistema je da se postojeće prakse koje su nepraktične za sve korisnike pojednostavne. Klijenti prolaze kroz kompliciran proces zakazivanja termina i nemaju stalni uvid u svoje termine na jednom mjestu kroz jednostavan interface. Osim toga prolaze kroz suvišne dolaske u bolnicu, koji bi mogli biti izvedeni kroz online režim. Doktori u tom procesu provode dosta vremena na administrativnim poslovima, umjesto da posvete više vremena klijentima. Uz to, nemaju pregledan uvid u zakazane termine pregleda, a komunikacija sa specijalistima je spora. Menadžment bolnice nema jasnu sliku o tome koliko je bolnički kapacitet zaista iskorišten i da li je iskorišten efikasno.
 
 ## Ciljni korisnici
 Ciljni korisnici sistema su doktori, klijenti, administratori i vlasnici.
-Klijenti (odnosno pacijenti) zele brzu rezervaciju, pregled svojih nalaza i historiju posjeta.
-Doktori zele mogucnost upravljanja svojim terminima, pregled postojecih nalaza, izdaju uputnica za specijaliste i potvrdu termina.
-Administrator treba imati mogucnost upravljanja bazom sistema i rjesavanja tehnickih problema svih korisnika.
-Menadzment (odnosno vlasnici bolnice) ima mogucnost pregleda i pracenja statistike, kapaciteta i efikasnosti rada bolnice.
+Klijenti (odnosno pacijenti) žele brzu rezervaciju, pregled svojih nalaza i historiju posjeta.
+Doktori žele mogućnost upravljanja svojim terminima, pregled postojećih nalaza, izdaju uputnica za specijaliste i potvrdu termina.
+Administrator treba imati mogućnost upravljanja bazom sistema i rješavanja tehničkih problema svih korisnika.
+Menadžment (odnosno vlasnici bolnice) ima mogućnost pregleda i praćenja statistike, kapaciteta i efikasnosti rada bolnice.
 
 ## Vrijednost sistema
-Sistem ima za cilj rijesiti prethodno navedene probleme. Klijenti ce imati pristup platformi preko koje moze jednostavno rezervisati termine i pregledati postojece. Doktorima ce administracijski poslovi biti olaksani i imat ce pregledniji uvid u postojece termine. Administratori nece morati voditi racuna o preklapanjima termina, jer ce sistem to raditi za njih. Menadzment ce imati uvid u statistiku sto ce pomoci u poboljsanju poslovanja bolnice, kao i pruzanju bolje usluge pacijentima.
+Sistem ima za cilj riješiti prethodno navedene probleme. Klijenti će imati pristup platformi preko koje mogu jednostavno rezervisati termine i pregledati postojeće. Doktorima će administrativni poslovi biti olakšani i imat će pregledniji uvid u postojeće termine. Administratori neće morati voditi računa o preklapanjima termina, jer će sistem to raditi za njih. Menadžment će imati uvid u statistiku što će pomoći u poboljšanju poslovanja bolnice, kao i pružanju bolje usluge pacijentima.
 
 ## Scope MVP verzije
 - Baza podataka korisnika (pacijenti i doktori sa ID-om)
-- Login i registracija korisnika (povlacenje podataka pri rezervaciji)
-- Pregled dostupnih doktora (padajuce liste ili pretraga) i prikaz njihovog kalendara/popunjenosti (8 sati rada)
+- Login i registracija korisnika (povlačenje podataka pri rezervaciji)
+- Pregled dostupnih doktora (padajuće liste ili pretraga) i prikaz njihovog kalendara/popunjenosti (8 sati rada)
 - Osnovni sistem rezervacije (do 30-60 dana unaprijed) uz unos "razloga pregleda"
-- Sistem zakljucavanja termina na 2 minute (Buffer zona) dok pacijent unosi podatke kako bi se sprijecile duple rezervacije
-- Mogucnost otkazivanja termina (klijent na webu ili emailu, doktor u aplikaciji) uz pravilo "zabranjeno otkazivanje 24h prije"
+- Sistem zaključavanja termina na 2 minute (Buffer zona) dok pacijent unosi podatke kako bi se spriječile duple rezervacije
+- Mogućnost otkazivanja termina (klijent na webu ili emailu, doktor u aplikaciji) uz pravilo "zabranjeno otkazivanje 24h prije"
 - Automatska email potvrda o rezervaciji
 - Pregled rasporeda (Dashboard) za doktora
 
-## Sta ne ulazi u MVP
-- Mogucnost da ljekar opste prakse direktno rezervise termin kod specijaliste za svog pacijenta
-- Ocitavanje i pregled nalaza unutar sistema, te zakljucivanje termina sa medicinskim biljeskama
-- Oznacavanje hitnosti slucaja i slanje obavijesti o hitnom stanju pacijenta
-- SMS obavjestenja namijenjena starijim pacijentima koji ne koriste email aktivno
-- Automatski podsjetnici za pacijente sa hronicnim bolestima bazirani na statistici sistema o optimalnom vremenu kontrole
-- Obavjestenje pacijentu kada ljekar prebaci ili izmijeni termin
+## Šta ne ulazi u MVP
+- Mogućnost da ljekar opšte prakse direktno rezerviše termin kod specijaliste za svog pacijenta
+- Očitavanje i pregled nalaza unutar sistema, te zaključivanje termina sa medicinskim bilješkama
+- Označavanje hitnosti slučaja i slanje obavijesti o hitnom stanju pacijenta
+- SMS obavještenja namijenjena starijim pacijentima koji ne koriste email aktivno
+- Automatski podsjetnici za pacijente sa hroničnim bolestima bazirani na statistici sistema o optimalnom vremenu kontrole
+- Obavještenje pacijentu kada ljekar prebaci ili izmijeni termin
 - Zauzetost kapaciteta, popunjenost ljekara po satnici, efikasnost odjela
-- Zahtjev za posjet pacijentu na kucnoj adresi
-- Srednjorocne rezervacije od 3 do 12 mjeseci unaprijed, namijenjene specijalistima
-- Rezervacija termina putem glasa sa odgovorima iskljucivo DA, NE, ODUSTAJEM (putem AI asistenta, namijenjeno klijentima sa invaliditetom)
+- Zahtjev za posjet pacijentu na kućnoj adresi
+- Srednjoročne rezervacije od 3 do 12 mjeseci unaprijed, namijenjene specijalistima
+- Rezervacija termina putem glasa sa odgovorima isključivo DA, NE, ODUSTAJEM (putem AI asistenta, namijenjeno klijentima sa invaliditetom)
 
-## Kljucna ogranicenja i pretpostavke
-### Ogranicenja
-### Tehnicka ogranicenja
-Buffer zona od dvije minute je kriticna tacka, ako bi server imao problema u tom trenutku postoji rizik da se termin ili ne oslobodi na vrijeme ili da dodje do greske u rezervaciji.
-Nije planirana mobilna aplikacija u MVP fazi, sto bi moglo biti ogranicenje za starije pacijente koji nemaju praksu koristenja weba.
+## Ključna ograničenja i pretpostavke
+### Ograničenja
+### Tehnička ograničenja
+Buffer zona od dvije minute je kritična tačka, ako bi server imao problema u tom trenutku postoji rizik da se termin ili ne oslobodi na vrijeme ili da dođe do greške u rezervaciji.
+Nije planirana mobilna aplikacija u MVP fazi, što bi moglo biti ograničenje za starije pacijente koji nemaju praksu korištenja weba. Sistem je u potpunosti ovisan o stabilnoj internet konekciji. U slučaju prekida mreže u bolnici, doktori i administratori gube pristup rasporedu i rezervacijama u realnom vremenu. Ako je sistem hostovan na internom bolničkom serveru, planirani ili neplanirani zastoji direktno onemogućavaju zakazivanje termina, bez fallback opcije za korisnike. Sistem se oslanja isključivo na web preglednik, što znači da stariji ili nestandardni preglednici mogu uzrokovati probleme u prikazu ili funkcionalnosti.
+
+### Poslovna ograničenja
+Budžet za razvoj sistema je ograničen, što direktno utiče na opseg i dinamiku realizacije. Sistem obrađuje osjetljive lične i medicinske podatke pacijenata, što ga stavlja pod regulatorni okvir zaštite podataka. Prije puštanja sistema u rad možda će biti potrebno pribaviti određene dozvole ili prolaziti kroz interne bolničke procedure odobravanja, što može produžiti rok isporuke.
 
 ### Ljudski faktor
-Sistem ne moze dati garanciju da ce doktorni redovno azurirati termine ili unositi odredjene izmjene. Stariji pacijenti mozda nece biti u mogucnosti da samostalno koriste sistem.
+Sistem ne može dati garanciju da će doktori redovno ažurirati termine ili unositi određene izmjene. Stariji pacijenti možda neće biti u mogućnosti da samostalno koriste sistem. Administratori ili doktori mogu pogrešno unijeti podatke (npr. radno vrijeme, trajanje termina), što kaskadno utiče na sve rezervacije. Doktori ili osoblje mogu dijeliti login podatke između kolega radi praktičnosti, što narušava sigurnost i onemogućava tačno praćenje ko je šta uradio u sistemu.
 
 ### Pretpostavke
 ### O korisnicima
@@ -53,11 +56,10 @@ Pretpostavlja se da pacijenti imaju osnovni pristup internetu i email adresi, je
 Pretpostavlja se da ljekari imaju osnovno digitalno znanje (ili da su spremni prisustvovati kratkoj edukaciji) i da su voljni koristiti aplikaciju umjesto papirnog ili telefonskog rasporeda.
 
 ### O organizaciji
-Pretpostavlja se da bolnica ima administratora koji ce voditi i odrzavati bazu korisnika i dodavati nove ljekare, rjesavati tehnicke probleme i biti prva linija podrske.
-Pretpostavlja se da menadzment bolnice podrzava digitalizaciju i da ce osigurati da osoblje prihvati novi nacin rada, jer bez toga sistem nece biti koristen bez obzira na tehnicku kvalitetu.
-Pretpostavlja se da bolnica ima stabilnu internet infrastrukturu koja moze podrzati svakodnevno koristenje sistema.
+Pretpostavlja se da bolnica ima administratora koji će voditi i održavati bazu korisnika i dodavati nove ljekare, rješavati tehničke probleme i biti prva linija podrške.
+Pretpostavlja se da menadžment bolnice podržava digitalizaciju i da će osigurati da osoblje prihvati novi način rada, jer bez toga sistem neće biti korišten bez obzira na tehničku kvalitetu.
+Pretpostavlja se da bolnica ima stabilnu internet infrastrukturu koja može podržati svakodnevno korištenje sistema.
 
 ### O podacima
-Pretpostavlja se da podaci pacijenata (JMBG i broj knjizice) vec postoje u nekoj formi i da se mogu unijeti u sistem pri inicijalnom postavljanju.
-Pretpostavlja se da su podaci tacni i azurirani obzirom da sistem ne moze funkcionisati pouzdano ako su osnovni podaci o pacijentima ili ljekarima netacni ili zastarjeli.
-
+Pretpostavlja se da podaci pacijenata (JMBG i broj knjižice) već postoje u nekoj formi i da se mogu unijeti u sistem pri inicijalnom postavljanju.
+Pretpostavlja se da su podaci tačni i ažurirani obzirom da sistem ne može funkcionisati pouzdano ako su osnovni podaci o pacijentima ili ljekarima netačni ili zastarjeli.
