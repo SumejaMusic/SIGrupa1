@@ -35,7 +35,7 @@
 | **KAN-37** | Admin panel - backend |Razvoj backenda za admin funkcije | Feature|High |High |To do | | | 
 | **KAN-38** | Kreirati ER model baze podataka | Definisanje entiteta, atributa,relacija, primarnih i stranih ključeva | Technical task |High |High |To do | | | 
 | **KAN-39** | Kreiranje baze podataka | Implementacija baze podataka u stvarnom okruženju| Technical task |High |High |To do | | | 
-| **KAN-40** | Definisanje prava pristupa bazi podataka | Implementacija autentifikacije i autorizacije za pristup podacima| Tecnical task |High | Medium |To do | | | 
+| **KAN-40** | Definisanje prava pristupa bazi podataka | Implementacija autentifikacije i autorizacije za pristup podacima| Technical task |High | Medium |To do | | | 
 | **KAN-41** | Testiranje baze podataka | Provjera validnosti podataka, provjera veza između definisanih tabela, provjera prava pristupa| Technical task |High |High |To do | | | 
 
 ## Link 
