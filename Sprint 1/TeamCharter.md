@@ -1,8 +1,7 @@
 # Team Charter – Sistem za rezervaciju i upravljanje terminima
 
 ## Naziv tima
-Sistem za rezervaciju i upravljanje terminima
-
+SIGrupa1
 ## Članovi tima
 | Ime i prezime | Indeks | Email |
 |---|---|---|
