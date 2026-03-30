@@ -4,7 +4,7 @@
 Sistem za upravljanje bolničkim terminima
 
 ## Problem koji sistem rješava
-Cilj našeg sistema je da se postojeće prakse koje su nepraktične za sve korisnike pojednostavne. Klijenti prolaze kroz kompliciran proces zakazivanja termina i nemaju stalni uvid u svoje termine na jednom mjestu kroz jednostavan interface. Osim toga prolaze kroz suvišne dolaske u bolnicu, koji bi mogli biti izvedeni kroz online režim. Doktori u tom procesu provode dosta vremena na administrativnim poslovima, umjesto da posvete više vremena klijentima. Uz to, nemaju pregledan uvid u zakazane termine pregleda, a komunikacija sa specijalistima je spora. Menadžment bolnice nema jasnu sliku o tome koliko je bolnički kapacitet zaista iskorišten i da li je iskorišten efikasno.
+Cilj našeg sistema je da se postojeće prakse koje su nepraktične za sve korisnike pojednostave. Klijenti prolaze kroz kompliciran proces zakazivanja termina i nemaju stalni uvid u svoje termine na jednom mjestu kroz jednostavan interface. Osim toga prolaze kroz suvišne dolaske u bolnicu, koji bi mogli biti izvedeni kroz online režim. Doktori u tom procesu provode dosta vremena na administrativnim poslovima, umjesto da posvete više vremena klijentima. Uz to, nemaju pregledan uvid u zakazane termine pregleda, a komunikacija sa specijalistima je spora. Menadžment bolnice nema jasnu sliku o tome koliko je bolnički kapacitet zaista iskorišten i da li je iskorišten efikasno.
 
 ## Ciljni korisnici
 Ciljni korisnici sistema su doktori, klijenti, administratori i vlasnici.
