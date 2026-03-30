@@ -1,7 +1,4 @@
-## Korisni linkovi
-* [**Jira Board Projekta**](https://etf-team1-si.atlassian.net/jira/software/projects/KAN/list?jql=project+%3D+KAN+ORDER+BY+created+DESC&atlOrigin=eyJpIjoiMGMwNmUyOTYxMTk3NDFlNThmOTc2MDI3MzViZjM5ZTkiLCJwIjoiaiJ9)
-
-
+##Product Backlog 
 ---
 
 
@@ -36,3 +33,7 @@
 | **KAN-35** | Automatski podsjetnik |Pacijenti na čijem profilu je postavljen atribut “hronični bolesnik“ automatski se dodjeljuje podsjetnik u vidu mejla. |Feature|Low |Low |To do | | |
 | **KAN-36** | Upload i evidencija laboratorijskih nalaza |Omogućava medicinskom osoblju dodavanje PDF nalaza ili vrijednosti u historiju pregleda pacijenta. | Feature|Medium | Medium|To do | | |
 | **KAN-37** | Admin panel - backend |Razvoj backenda za admin funkcije | Feature|High |High |To do | | | 
+
+## Link 
+* [**Jira Board Projekta**](https://etf-team1-si.atlassian.net/jira/software/projects/KAN/list?jql=project+%3D+KAN+ORDER+BY+created+DESC&atlOrigin=eyJpIjoiMGMwNmUyOTYxMTk3NDFlNThmOTc2MDI3MzViZjM5ZTkiLCJwIjoiaiJ9)
+
