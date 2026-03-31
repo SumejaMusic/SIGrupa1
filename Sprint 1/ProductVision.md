@@ -6,15 +6,33 @@ Sistem za upravljanje bolničkim terminima
 ## Problem koji sistem rješava
 Cilj našeg sistema je da se postojeće prakse koje su nepraktične za sve korisnike pojednostave. Klijenti prolaze kroz kompliciran proces zakazivanja termina i nemaju stalni uvid u svoje termine na jednom mjestu kroz jednostavan interface. Osim toga prolaze kroz suvišne dolaske u bolnicu, koji bi mogli biti izvedeni kroz online režim. Doktori u tom procesu provode dosta vremena na administrativnim poslovima, umjesto da posvete više vremena klijentima. Uz to, nemaju pregledan uvid u zakazane termine pregleda, a komunikacija sa specijalistima je spora. Menadžment bolnice nema jasnu sliku o tome koliko je bolnički kapacitet zaista iskorišten i da li je iskorišten efikasno.
 
+Konkretni problemi
+
+- Duple rezervacije usljed istovremenih zahtjeva više korisnika
+- Neiskorištenost ljekarskih kapaciteta — ljekari imaju 8 sati rada, ali termini nisu optimalno raspoređeni
+- Pacijenti kasno otkazuju ili uopće ne otkazuju termine, a niko drugi ne može iskoristiti slobodan slot
+- Nema automatske obavijesti — ni pacijent ni ljekar ne dobijaju pravovremene podsjetnike
+- Hronični bolesnici zaboravljaju zakazati redovne kontrole na vrijeme
+- Termini kod specijalista su neorganizovani — pacijenti sami pokušavaju zakazati bez uputa ljekara opšte prakse
+- Stariji pacijenti koji ne koriste internet ostaju bez pravovremenih informacija
+- Privatnost medicinskih podataka nije adekvatno zaštićena u ručnim ili improvizovanim sistemima
+
+Sve ovo rezultira preopterećenošću osoblja, nezadovoljnim pacijentima, izgubljenim terminima i lošim iskorištenjem resursa bolnice što u konačnici utiče na kvalitet zdravstvene zaštite.
+
 ## Ciljni korisnici
 Ciljni korisnici sistema su doktori, klijenti, administratori i vlasnici.
-Klijenti (odnosno pacijenti) žele brzu rezervaciju, pregled svojih nalaza i historiju posjeta.
-Doktori žele mogućnost upravljanja svojim terminima, pregled postojećih nalaza, izdaju uputnica za specijaliste i potvrdu termina.
-Administrator treba imati mogućnost upravljanja bazom sistema i rješavanja tehničkih problema svih korisnika.
-Menadžment (odnosno vlasnici bolnice) ima mogućnost pregleda i praćenja statistike, kapaciteta i efikasnosti rada bolnice.
+- Klijenti (odnosno pacijenti) žele brzu rezervaciju, pregled svojih nalaza i historiju posjeta.
+- Doktori žele mogućnost upravljanja svojim terminima, pregled postojećih nalaza, izdaju uputnica za specijaliste i potvrdu termina.
+- Administrator treba imati mogućnost upravljanja bazom sistema i rješavanja tehničkih problema svih korisnika.
+- Menadžment (odnosno vlasnici bolnice) ima mogućnost pregleda i praćenja statistike, kapaciteta i efikasnosti rada bolnice.
 
 ## Vrijednost sistema
-Sistem ima za cilj riješiti prethodno navedene probleme. Klijenti će imati pristup platformi preko koje mogu jednostavno rezervisati termine i pregledati postojeće. Doktorima će administrativni poslovi biti olakšani i imat će pregledniji uvid u postojeće termine. Administratori neće morati voditi računa o preklapanjima termina, jer će sistem to raditi za njih. Menadžment će imati uvid u statistiku što će pomoći u poboljšanju poslovanja bolnice, kao i pružanju bolje usluge pacijentima.
+### Za pacijenta
+Umjesto čekanja na telefonu ili odlaska na šalter, pacijent u nekoliko klikova vidi slobodne termine, zakazuje pregled i dobija potvrdu na email. Ima uvid u svoju historiju posjeta i nalaze, a sistem ga podsjeća kada je vrijeme za kontrolu — posebno ako boluje od hronične bolesti.
+### Za ljekara
+Ljekar počinje radni dan sa jasnim pregledom rasporeda. Ne gubi vrijeme na administrativne pozive, može se fokusirati na pacijenta, a sistem mu omogućava pregled nalaza, izdavanje uputnica i zaključivanje termina direktno iz aplikacije.
+### Za administraciju i vlasnika bolnice
+Nema više ručne evidencije i grešaka. Vlasnik bolnice u realnom vremenu prati zauzetost kapaciteta, efikasnost odjela i iskorištenost ljekarskog radnog vremena od 8 sati — što omogućava bolje poslovne odluke.
 
 ## Scope MVP verzije
 - Baza podataka korisnika (pacijenti i doktori sa ID-om)
@@ -39,7 +57,7 @@ Sistem ima za cilj riješiti prethodno navedene probleme. Klijenti će imati pri
 - Rezervacija termina putem glasa sa odgovorima isključivo DA, NE, ODUSTAJEM (putem AI asistenta, namijenjeno klijentima sa invaliditetom)
 
 ## Ključna ograničenja i pretpostavke
-### Ograničenja
+## Ograničenja
 ### Tehnička ograničenja
 Buffer zona od dvije minute je kritična tačka, ako bi server imao problema u tom trenutku postoji rizik da se termin ili ne oslobodi na vrijeme ili da dođe do greške u rezervaciji.
 Nije planirana mobilna aplikacija u MVP fazi, što bi moglo biti ograničenje za starije pacijente koji nemaju praksu korištenja weba. Sistem je u potpunosti ovisan o stabilnoj internet konekciji. U slučaju prekida mreže u bolnici, doktori i administratori gube pristup rasporedu i rezervacijama u realnom vremenu. Ako je sistem hostovan na internom bolničkom serveru, planirani ili neplanirani zastoji direktno onemogućavaju zakazivanje termina, bez fallback opcije za korisnike. Sistem se oslanja isključivo na web preglednik, što znači da stariji ili nestandardni preglednici mogu uzrokovati probleme u prikazu ili funkcionalnosti.
@@ -50,7 +68,7 @@ Budžet za razvoj sistema je ograničen, što direktno utiče na opseg i dinamik
 ### Ljudski faktor
 Sistem ne može dati garanciju da će doktori redovno ažurirati termine ili unositi određene izmjene. Stariji pacijenti možda neće biti u mogućnosti da samostalno koriste sistem. Administratori ili doktori mogu pogrešno unijeti podatke (npr. radno vrijeme, trajanje termina), što kaskadno utiče na sve rezervacije. Doktori ili osoblje mogu dijeliti login podatke između kolega radi praktičnosti, što narušava sigurnost i onemogućava tačno praćenje ko je šta uradio u sistemu.
 
-### Pretpostavke
+## Pretpostavke
 ### O korisnicima
 Pretpostavlja se da pacijenti imaju osnovni pristup internetu i email adresi, jer se cijeli sistem notifikacija i potvrda oslanja na email komunikaciju.
 Pretpostavlja se da ljekari imaju osnovno digitalno znanje (ili da su spremni prisustvovati kratkoj edukaciji) i da su voljni koristiti aplikaciju umjesto papirnog ili telefonskog rasporeda.
