@@ -1,38 +1,4 @@
 # ID Storyja: US-01
-
-## Naziv storyja: Rezervacija termina
-
-## Opis
-Kao pacijent, želim da mogu rezervisati termin kod doktora na osnovu dostupnog rasporeda, kako bih osigurao pravovremeni pregled bez čekanja.
-## Poslovna vrijednost:
-
-Ova funkcionalnost predstavlja osnovu sistema jer:
--omogućava digitalno zakazivanje pregleda
--smanjuje administrativno opterećenje
--poboljšava organizaciju rada doktora
--povećava zadovoljstvo pacijenata
-
-Bez ove funkcionalnosti sistem nema svoju ključnu svrhu.
-
-## Prioritet:
-
-Visok (High)
-
-## Pretpostavke i otvorena pitanja:
-
-### Pretpostavke:
-- Sistem već ima implementiran login (KAN-11)
-- Postoje dostupni termini (KAN-12)
-- Validacija sprječava duple rezervacije (KAN-19)
-
-
-### Otvorena pitanja:
-- Da li pacijent može rezervisati više termina dnevno?
-- Da li postoji ograničenje po specijalisti?
-- Kako se označavaju hitni termini (KAN-33)?
-
-
-# ID Storyja: US-01
 ## Naziv storyja: Historija pregleda korisnika
 ## Opis
 
@@ -225,7 +191,7 @@ Nizak (Low)
 ### Otvorena pitanja:
 - Koliko ranije pacijent može otkazati termin?
 - Da li se šalje potvrda o otkazivanju?
-  # ID Storyja: US-10
+# ID Storyja: US-10
 ## Naziv storyja: Dashboard za doktora – pregled rasporeda
 ## Opis
 
@@ -247,3 +213,248 @@ Nizak (Low)
 - Da li doktor može mijenjati termine?
 - Da li vidi i historiju pregleda pacijenata?
 
+
+
+# ID Storyja: US-11
+## Naziv storyja: Automatsko oslobađanje zaključanih termina
+## Opis
+
+Kao sistem, želim automatski osloboditi termine koji nisu potvrđeni u određenom vremenu, kako bi se povećila dostupnost termina za druge pacijente.
+
+## Poslovna vrijednost:
+- Povećava iskorištenost termina
+- Smanjuje zastoje i neiskorištene resurse
+- Olakšava rad administracije i medicinskog osoblja
+## Prioritet:
+
+Nizak (Low)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Postoje termini označeni kao “zaključani”
+- Sistem prati status potvrđenosti termina
+### Otvorena pitanja:
+- Koliko vremena mora proći prije oslobađanja termina?
+- Da li pacijent dobija obavijest o oslobađanju termina?
+# ID Storyja: US-12
+## Naziv storyja: Validacija i sprječavanje duplih rezervacija
+## Opis
+
+Kao sistem, želim spriječiti dupliranje termina u isto vrijeme za istog pacijenta, kako bih izbjegao konflikte i greške u rasporedu.
+
+## Poslovna vrijednost:
+- Osigurava tačnost evidencije termina
+- Smanjuje administrativne greške
+- Poboljšava iskustvo pacijenata i doktora
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Pacijenti mogu rezervisati termine online (KAN-06)
+- Sistem prati sve postojeće rezervacije
+### Otvorena pitanja:
+- Da li se validacija odnosi i na specijaliste i porodične doktore?
+- Šta se dešava ako pacijent pokuša rezervisati dupli termin?
+# ID Storyja: US-13
+## Naziv storyja: Upravljanje radnim vremenom doktora (admin)
+## Opis
+
+Kao administrator, želim da mogu upravljati radnim vremenom doktora, kako bi se termini mogli pravilno planirati i zakazivati.
+
+## Poslovna vrijednost:
+- Omogućava bolju organizaciju rasporeda doktora
+- Povećava iskorištenost resursa
+- Smanjuje greške u zakazivanju
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Administrator ima pristup admin panelu (KAN-02)
+- Doktor je registrovan u sistemu
+### Otvorena pitanja:
+- Da li doktor može sam mijenjati svoje radno vrijeme?
+- Kako se tretiraju vanredni i hitni termini?
+# ID Storyja: US-14
+## Naziv storyja: Reset lozinke putem emaila
+## Opis
+
+Kao korisnik, želim da mogu resetovati lozinku putem emaila, kako bih mogao povratiti pristup svom nalogu ako zaboravim lozinku.
+
+## Poslovna vrijednost:
+- Povećava sigurnost korisničkog naloga
+- Omogućava samostalno rješavanje problema sa loginom
+- Smanjuje opterećenje podrške
+## Prioritet:
+
+Srednji (Medium)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Korisnik ima validnu email adresu
+- Sistem može slati emailove
+### Otvorena pitanja:
+- Koliko dugo je reset link validan?
+- Da li postoji limit pokušaja resetovanja?
+# ID Storyja: US-15
+## Naziv storyja: Rezervacija termina kod specijaliste putem doktora porodične medicine
+## Opis
+
+Kao pacijent, želim da moj porodični doktor može rezervisati termin kod specijaliste u moje ime, kako bih dobio bržu i koordiniranu medicinsku uslugu.
+
+## Poslovna vrijednost:
+- Omogućava koordinaciju između doktora
+- Smanjuje vrijeme čekanja pacijenta
+- Povećava efikasnost u sistemu zakazivanja
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Porodični doktor ima pristup sistemu
+- Specijalista je registrovan u sistemu
+### Otvorena pitanja:
+- Da li pacijent dobija obavijest o rezervaciji?
+- Može li pacijent potvrditi ili odbiti termin?
+# ID Storyja: US-16
+## Naziv storyja: Menadžment panel
+## Opis
+
+Kao administrator, želim imati centralizovani menadžment panel za nadzor i upravljanje sistemom, kako bih mogao pratiti sve aktivnosti i resurse.
+
+# Poslovna vrijednost:
+- Omogućava centralizovanu kontrolu sistema
+- Povećava efikasnost administracije
+- Olakšava praćenje termina i aktivnosti korisnika
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Administrator ima pristup sistemu
+- Panel prikazuje sve ključne informacije o korisnicima i terminima
+### Otvorena pitanja:
+- Koji podaci su prioritetni za prikaz?
+- Da li se menadžment panel koristi i za izvještavanje?
+# ID Storyja: US-17
+## Naziv storyja: Automatska odjava nakon perioda neaktivnosti (session timeout)
+## Opis
+
+Kao korisnik, želim da me sistem automatski odjavi nakon određenog vremena neaktivnosti, kako bi se povećala sigurnost mog naloga.
+
+## Poslovna vrijednost:
+- Povećava sigurnost podataka
+- Smanjuje rizik od neovlaštenog pristupa
+- Osigurava usklađenost sa sigurnosnim standardima
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Sistem prati aktivnosti korisnika
+- Login funkcionalnost je implementirana
+### Otvorena pitanja:
+- Koliko minuta neaktivnosti pokreće timeout?
+- Da li se korisniku prikazuje upozorenje prije odjave?
+# ID Storyja: US-18
+## Naziv storyja: Logovanje svih akcija u sistemu (audit log)
+## Opis
+
+Kao administrator, želim da sistem bilježi sve akcije i promjene unutar sistema, kako bih mogao pratiti i analizirati aktivnosti korisnika.
+
+## Poslovna vrijednost:
+- Povećava sigurnost i transparentnost
+- Omogućava reviziju i praćenje grešaka
+- Pomaže u otkrivanju neovlaštenih aktivnosti
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Sistem prati sve CRUD akcije
+- Administratori imaju pristup audit logu
+### Otvorena pitanja:
+- Koliko dugo se čuvaju podaci u audit logu?
+- Ko sve ima pristup logovima?
+# ID Storyja: US-19
+## Naziv storyja: Omogućavanje pregleda komentara prilikom zakazivanja termina
+## Opis
+
+Kao pacijent ili doktor, želim da mogu vidjeti napomene ili komentare vezane za termin, kako bih imao sve relevantne informacije prije pregleda.
+
+## Poslovna vrijednost:
+- Povećava kvalitet komunikacije
+- Smanjuje nesporazume u zakazivanju
+- Olakšava pripremu za pregled
+## Prioritet:
+
+Srednji (Medium)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Komentari se unose prilikom rezervacije termina
+- Korisnici imaju pristup detaljima termina
+### Otvorena pitanja:
+- Ko može unositi komentare?
+- Da li se komentari prikazuju samo doktoru ili i pacijentu?
+# ID Storyja: US-20
+# Naziv storyja: Vodič za korištenje stranice
+## Opis
+
+Kao pacijent ili doktor, želim da imam interaktivno uputstvo ili dokumentaciju, kako bih znao kako koristiti sistem.
+
+## Poslovna vrijednost:
+- Pomaže korisnicima da brže nauče koristiti sistem
+- Smanjuje potrebu za podrškom
+- Poboljšava korisničko iskustvo
+## Prioritet:
+
+Nizak (Low)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Postoji osnovna dokumentacija sistema
+- Sistem može prikazivati upute u interaktivnom formatu
+### Otvorena pitanja:
+- Da li vodič uključuje video tutorijale ili samo tekst?
+- Da li se vodič ažurira automatski sa novim funkcionalnostima?
+
+# ID Storyja: US-21
+
+## Naziv storyja: Rezervacija termina
+
+## Opis
+Kao pacijent, želim da mogu rezervisati termin kod doktora na osnovu dostupnog rasporeda, kako bih osigurao pravovremeni pregled bez čekanja.
+## Poslovna vrijednost:
+
+Ova funkcionalnost predstavlja osnovu sistema jer:
+- omogućava digitalno zakazivanje pregleda
+- smanjuje administrativno opterećenje
+- poboljšava organizaciju rada doktora
+- povećava zadovoljstvo pacijenata
+
+Bez ove funkcionalnosti sistem nema svoju ključnu svrhu.
+
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+
+### Pretpostavke:
+- Sistem već ima implementiran login (KAN-11)
+- Postoje dostupni termini (KAN-12)
+- Validacija sprječava duple rezervacije (KAN-19)
+
+
+### Otvorena pitanja:
+- Da li pacijent može rezervisati više termina dnevno?
+- Da li postoji ograničenje po specijalisti?
+- Kako se označavaju hitni termini (KAN-33)?
