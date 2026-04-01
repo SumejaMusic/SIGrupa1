@@ -426,7 +426,451 @@ Nizak (Low)
 - Da li vodič uključuje video tutorijale ili samo tekst?
 - Da li se vodič ažurira automatski sa novim funkcionalnostima?
 
+
 # ID Storyja: US-21
+## Naziv storyja: Panel medicinskog osoblja
+## Opis
+
+Kao medicinsko osoblje, želim da imam panel sa kontrolama za upravljanje pregledima i terminima pacijenata, kako bih mogao efikasno organizovati svoj rad.
+
+## Poslovna vrijednost:
+- Omogućava bolju organizaciju rada medicinskog osoblja
+- Povećava produktivnost i smanjuje greške u rasporedu
+- Omogućava praćenje historije pacijenata
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Medicinsko osoblje je registrovano i ima pristup sistemu
+- Panel prikazuje relevantne termine i pacijente
+### Otvorena pitanja:
+- Da li panel uključuje opciju kreiranja novih termina?
+- Koje informacije o pacijentu su prikazane?
+# ID Storyja: US-22
+## Naziv storyja: Two factor authentication
+## Opis
+
+Kao korisnik, želim da koristim dvofaktorsku autentifikaciju prilikom logina, kako bi moj nalog bio sigurniji.
+
+## Poslovna vrijednost:
+- Povećava sigurnost korisničkog naloga
+- Smanjuje rizik od neovlaštenog pristupa
+- Pomaže u zaštiti osjetljivih medicinskih podataka
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Korisnik ima aktivan email ili telefon za 2FA
+- Login sistem je implementiran (KAN-11)
+### Otvorena pitanja:
+- Koji tip 2FA će se koristiti (SMS, email, aplikacija)?
+- Da li je 2FA obavezna za sve korisnike ili opcionalna?
+# ID Storyja: US-23
+## Naziv storyja: Detekcija neobičnog ponašanja - blokiranje naloga
+## Opis
+
+Kao sistem, želim automatski blokirati naloge nakon više neuspješnih pokušaja logina, kako bi zaštitio korisničke podatke.
+
+## Poslovna vrijednost:
+- Povećava sigurnost sistema
+- Štiti osjetljive informacije pacijenata
+- Smanjuje mogućnost neovlaštenog pristupa
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Login sistem prati broj neuspješnih pokušaja
+- Korisnici imaju način da povrate pristup (KAN-21)
+### Otvorena pitanja:
+- Koliko pokušaja je dozvoljeno prije blokade?
+- Da li se korisniku šalje upozorenje prije blokade?
+# ID Storyja: US-24
+## Naziv storyja: Enkripcija osjetljivih podataka
+## Opis
+
+Kao sistem, želim da enkriptujem osjetljive zdravstvene podatke, kako bi zaštitio privatnost pacijenata i osigurao sigurnost informacija.
+
+## Poslovna vrijednost:
+- Povećava sigurnost podataka
+- Omogućava usklađenost sa zakonima o zaštiti podataka
+- Smanjuje rizik od curenja osjetljivih informacija
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Podaci pacijenata se čuvaju u bazi
+- Sistem podržava enkripciju na nivou baze ili aplikacije
+### Otvorena pitanja:
+- Koji algoritam enkripcije će se koristiti?
+- Da li se enkripcija primjenjuje i na backup-e?
+# ID Storyja: US-25
+## Naziv storyja: Označavanje hitnosti prijavljenog termina
+## Opis
+
+Kao administrator ili medicinsko osoblje, želim vizuelno označiti hitne pacijente u sistemu, kako bi prioritetni termini bili obrađeni odmah.
+
+## Poslovna vrijednost:
+- Omogućava pravovremenu obradu hitnih pacijenata
+- Povećava efikasnost rada medicinskog osoblja
+- Smanjuje rizik od propusta u hitnim slučajevima
+## Prioritet:
+
+Srednji (Medium)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Sistem prepoznaje urgentne slučajeve
+- Korisnici imaju pristup vizuelnom označavanju
+### Otvorena pitanja:
+- Koji kriterijumi određuju hitnost?
+- Da li pacijent vidi da je njegov termin označen kao hitan?
+# ID Storyja: US-26
+## Naziv storyja: Export statistike zdravstvene ustanove
+## Opis
+
+Kao administrator, želim eksportovati statistiku zakazanih pregleda doktora u CSV formatu, kako bih mogao analizirati podatke i planirati resurse.
+
+## Poslovna vrijednost:
+- Omogućava bolju analizu podataka
+- Pomaže u planiranju resursa i rasporeda
+- Olakšava izvještavanje i donošenje odluka
+## Prioritet:
+
+Nizak (Low)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Podaci o terminima i doktorima su pohranjeni u bazi
+- Sistem može generisati CSV fajl
+### Otvorena pitanja:
+- Da li se eksport vrši periodično ili na zahtjev?
+- Ko ima pristup eksportovanim podacima?
+# ID Storyja: US-27
+## Naziv storyja: Automatski podsjetnik
+## Opis
+
+Kao pacijent, želim da sistem automatski šalje podsjetnike pacijentima sa hroničnim bolestima, kako bi se smanjila zaboravljena zakazivanja pregleda.
+
+## Poslovna vrijednost:
+- Povećava prisutnost pacijenata na terminima
+- Poboljšava kontinuitet liječenja
+- Smanjuje administrativni posao slanja podsjetnika ručno
+## Prioritet:
+
+Nizak (Low)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Pacijent ima označen atribut “hronični bolesnik”
+- Sistem može slati emailove
+### Otvorena pitanja:
+- Koliko često se šalje podsjetnik?
+- Da li se podsjetnik šalje i putem SMS-a?
+# ID Storyja: US-28
+## Naziv storyja: Upload i evidencija laboratorijskih nalaza
+## Opis
+
+Kao medicinsko osoblje, želim dodavati PDF nalaze ili vrijednosti u historiju pregleda pacijenata, kako bi podaci bili kompletni i dostupni za buduće preglede.
+
+## Poslovna vrijednost:
+- Omogućava detaljniju evidenciju pacijenata
+- Pomaže doktorima u analizi i praćenju bolesti
+- Smanjuje rizik od gubitka podataka
+## Prioritet:
+
+Srednji (Medium)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Pacijent ima nalaze spremne za upload
+- Sistem omogućava sigurno pohranjivanje fajlova
+### Otvorena pitanja:
+- Koji tip fajlova je dozvoljen?
+- Koliko dugo se čuvaju uploadovani fajlovi?
+# ID Storyja: US-29
+## Naziv storyja: Admin panel - backend
+## Opis
+
+Kao backend developer, želim razviti backend funkcionalnosti za admin panel, kako bi administratori mogli upravljati korisnicima, terminima i resursima.
+
+## Poslovna vrijednost:
+- Omogućava efikasan rad admin panela
+- Omogućava skalabilnost sistema
+- Povećava sigurnost i kontrolu nad podacima
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Baza podataka je spremna (KAN-38, KAN-39)
+- API-jevi za frontend su planirani
+### Otvorena pitanja:
+- Koje funkcionalnosti backend treba podržati prvo?
+- Da li će biti REST ili GraphQL API?
+# ID Storyja: US-30
+## Naziv storyja: Kreirati ER model baze podataka
+## Opis
+
+Kao sistem dizajner, želim definisati entitete, atribute, relacije, primarne i strane ključeve, kako bi baza podataka bila pravilno strukturirana i spremna za implementaciju.
+
+## Poslovna vrijednost:
+- Omogućava ispravno funkcionisanje sistema
+- Pomaže u validaciji poslovnih procesa
+- Smanjuje rizik od grešaka pri implementaciji baze
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Postoji produkt backlog sa svim funkcionalnostima
+- Sistemski zahtjevi su jasno definirani
+### Otvorena pitanja:
+- Koji tip baze podataka će se koristiti (SQL/NoSQL)?
+- Da li će model podržavati buduća proširenja sistema?
+
+# ID Storyja: US-31
+## Naziv storyja: Kreiranje baze podataka
+## Opis
+
+Kao sistem administrator, želim implementirati bazu podataka u stvarnom okruženju, kako bi sistem mogao pohranjivati sve podatke pacijenata, termina i korisnika.
+
+## Poslovna vrijednost:
+- Omogućava centralizovano čuvanje podataka
+- Osigurava konzistentnost i integritet podataka
+- Podržava sve funkcionalnosti sistema
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- ER model baze je definisan (US-30)
+- Sistemski zahtjevi su poznati
+### Otvorena pitanja:
+- Koji tip baze podataka se koristi (SQL/NoSQL)?
+- Da li je potrebna replikacija za veću dostupnost?
+# ID Storyja: US-32
+## Naziv storyja: Definisanje prava pristupa bazi podataka
+## Opis
+
+Kao administrator, želim implementirati autentifikaciju i autorizaciju za pristup podacima, kako bi se osigurala sigurnost i privatnost informacija.
+
+## Poslovna vrijednost:
+- Povećava sigurnost osjetljivih podataka
+- Sprečava neovlašteni pristup
+- Omogućava kontrolu pristupa različitim tipovima korisnika
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Korisnici su registrovani u sistemu
+- Sistem podržava različite uloge korisnika
+### Otvorena pitanja:
+- Koje uloge korisnika će biti definisane?
+- Da li postoji centralizovana kontrola pristupa?
+# ID Storyja: US-33
+## Naziv storyja: Testiranje baze podataka
+## Opis
+
+Kao QA inženjer, želim testirati bazu podataka da provjerim validnost podataka, veze između tabela i prava pristupa, kako bi sistem radio pouzdano.
+
+## Poslovna vrijednost:
+- Osigurava ispravnost podataka i veza u bazi
+- Sprečava greške u radu sistema
+- Povećava pouzdanost i kvalitet sistema
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Baza podataka je kreirana i konfigurirana
+- Prava pristupa su definisana
+### Otvorena pitanja:
+- Koje testove automatizirati, a koje ručno izvršiti?
+- Kako dokumentovati rezultate testiranja?
+# ID Storyja: US-34
+## Naziv storyja: Admin panel - registracija pacijenta
+## Opis
+
+Kao administrator, želim registrirati nove pacijente u sistem, kako bi mogli koristiti sve funkcionalnosti za zakazivanje i praćenje pregleda.
+
+## Poslovna vrijednost:
+- Omogućava proširenje baze korisnika
+- Omogućava pacijentima pristup sistemu
+- Smanjuje administrativni posao kroz digitalnu registraciju
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Backend admin panela je implementiran (US-29)
+- Polja pacijenta i validacija su definisani
+### Otvorena pitanja:
+- Koje informacije su obavezne prilikom registracije?
+- Da li pacijent može sam unijeti podatke ili samo admin?
+# ID Storyja: US-35
+## Naziv storyja: Login sistem
+## Opis
+
+Kao korisnik, želim se autentifikovati prilikom ulaska u sistem, kako bih imao siguran pristup svojim podacima i funkcionalnostima.
+
+## Poslovna vrijednost:
+- Osigurava sigurnost korisničkih naloga
+- Sprečava neovlašteni pristup sistemu
+- Omogućava personalizovani prikaz podataka
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Korisnici imaju kreirane naloge
+- Sistem podržava različite tipove korisnika (pacijent, doktor, admin)
+### Otvorena pitanja:
+- Da li login podržava social login opcije?
+- Koja pravila za jačinu lozinke se primjenjuju?
+# ID Storyja: US-36
+## Naziv storyja: Pregled dostupnih resursa
+## Opis
+
+Kao pacijent ili administrator, želim pregledati dostupnost slobodnih sala i doktora, kako bih mogao rezervisati termine u skladu sa rasporedom.
+
+## Poslovna vrijednost:
+- Omogućava optimalnu organizaciju termina
+- Pomaže u sprječavanju preklapanja termina
+- Povećava efikasnost i zadovoljstvo korisnika
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Sistem prati zauzetost resursa
+- Administrator i pacijent imaju pristup informacijama
+### Otvorena pitanja:
+- Da li se prikazuje raspored po danima ili satima?
+- Ko ima prioritet pri rezervaciji termina?
+# ID Storyja: US-37
+## Naziv storyja: Historija pregleda korisnika
+## Opis
+
+Kao pacijent, želim vidjeti prikaz prošlih pregleda, kako bih mogao pratiti svoje zdravstveno stanje i rezultate prethodnih pregleda.
+
+## Poslovna vrijednost:
+- Pomaže pacijentima u praćenju zdravstvenih podataka
+- Omogućava doktorima bolju pripremu za pregled
+- Povećava transparentnost i evidenciju podataka
+## Prioritet:
+
+Srednji (Medium)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Baza podataka sadrži historiju pregleda
+- Pacijent ima pristup svom nalogu
+### Otvorena pitanja:
+- Koliko unazad pregleda prikazujemo?
+- Da li pacijent može preuzeti historiju pregleda?
+# ID Storyja: US-38
+## Naziv storyja: Admin panel - backend
+## Opis
+
+Kao backend developer, želim razviti backend funkcionalnosti za admin panel, kako bi administratori mogli upravljati korisnicima, terminima i resursima.
+
+## Poslovna vrijednost:
+- Omogućava efikasan rad admin panela
+- Omogućava skalabilnost sistema
+- Povećava sigurnost i kontrolu nad podacima
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- ER model baze je definisan (US-30)
+- API-jevi za frontend su planirani
+### Otvorena pitanja:
+- Koje funkcionalnosti backend treba podržati prvo?
+- Da li će backend imati logovanje aktivnosti?
+# ID Storyja: US-39
+## Naziv storyja: Rezervacija termina
+## Opis
+
+Kao pacijent, želim rezervisati termin kod doktora na osnovu dostupnog rasporeda, kako bih osigurao pravovremeni pregled.
+
+## Poslovna vrijednost:
+- Omogućava digitalno zakazivanje pregleda
+- Smanjuje administrativni posao
+- Povećava zadovoljstvo pacijenata
+## Prioritet:
+
+Visok (High)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Login funkcionalnost je implementirana (US-35)
+- Termini su dostupni za rezervaciju (US-36)
+### Otvorena pitanja:
+- Da li pacijent može rezervisati više termina dnevno?
+- Kako se tretiraju hitni termini?
+# ID Storyja: US-40
+## Naziv storyja: Email potvrda o rezervaciji
+## Opis
+
+Kao pacijent, želim primiti automatski email nakon uspješne rezervacije, kako bih imao potvrdu i detalje zakazanog termina.
+
+## Poslovna vrijednost:
+- Povećava sigurnost i pouzdanost sistema
+- Smanjuje administrativni posao slanja potvrda ručno
+- Pomaže pacijentima da prate termine
+## Prioritet:
+
+Srednji (Medium)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Rezervacija termina je uspješno izvršena (US-39)
+- Sistem može slati emailove
+### Otvorena pitanja:
+- Koliko brzo nakon rezervacije se šalje email?
+- Koji podaci se uključuju u potvrdu?
+# ID Storyja: US-41
+## Naziv storyja: Otkazivanje termina (medicinsko osoblje)
+## Opis
+
+Kao medicinsko osoblje, želim otkazati termine pacijenata, kako bih mogao reagovati na promjene u rasporedu ili hitne situacije.
+
+## Poslovna vrijednost:
+- Omogućava fleksibilnost u upravljanju terminima
+- Smanjuje greške u rasporedu
+- Poboljšava organizaciju rada medicinskog osoblja
+## Prioritet:
+
+Nizak (Low)
+
+## Pretpostavke i otvorena pitanja:
+### Pretpostavke:
+- Medicinsko osoblje ima pristup sistemu
+- Postoji backend funkcionalnost za otkazivanje (US-38)
+### Otvorena pitanja:
+- Da li pacijent dobija obavijest o otkazivanju? 
+-Koliko unaprijed termin može biti otkazan?
+
+# ID Storyja: US-42
 
 ## Naziv storyja: Rezervacija termina
 
@@ -458,3 +902,4 @@ Visok (High)
 - Da li pacijent može rezervisati više termina dnevno?
 - Da li postoji ograničenje po specijalisti?
 - Kako se označavaju hitni termini (KAN-33)?
+
