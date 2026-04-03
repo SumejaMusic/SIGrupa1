@@ -15,7 +15,7 @@ Kao pacijent, želim da mogu pregledati historiju svojih pregleda, kako bih imao
 
 Srednji (Medium)
 
-## Pretpostavke i otvorena pitanja:
+
 ## Pretpostavke:
 - Sistem vodi evidenciju svih pregleda
 - Pacijent ima kreiran nalog
@@ -37,11 +37,11 @@ Kao administrator, želim da imam korisnički interfejs za administraciju, kako 
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Backend funkcionalnosti već postoje (KAN-37)
 - Administrator ima pristup sistemu
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koje funkcionalnosti treba prikazati u frontend panelu?
 - Da li je potrebna autentifikacija za pristup panelu?
 
@@ -59,11 +59,11 @@ Kao administrator, želim da mogu registrovati nove pacijente, kako bi oni mogli
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Administrator ima pristup admin panelu
 - Sistem validira podatke unosa
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li pacijent može samostalno registrovati nalog?
 - Koji su obavezni podaci za registraciju?
 ## US-04
@@ -80,11 +80,11 @@ Kao pacijent ili doktor, želim da se mogu prijaviti u sistem koristeći svoje k
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 Korisnici imaju kreirane naloge (KAN-10)
 Podaci su šifrovani i sigurni
-### Otvorena pitanja:
+## Otvorena pitanja:
 Da li je obavezna dvofaktorska autentifikacija (KAN-29)?
 Koliko pokušaja login-a je dozvoljeno prije blokade (KAN-30)?
 ## US-05
@@ -101,11 +101,11 @@ Kao pacijent, želim da vidim dostupne doktore i slobodne termine, kako bih odab
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Termini su definisani u sistemu
 - Podaci o doktorima su dostupni
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Može li pacijent filtrirati po specijalizaciji doktora?
 - Da li se prikazuje zauzetost termina u realnom vremenu?
 ##  US-06
@@ -122,12 +122,12 @@ Kao pacijent, želim da mogu rezervisati termin kod doktora na osnovu dostupnog 
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Sistem već ima implementiran login (KAN-11)
 - Postoje dostupni termini (KAN-12)
 - Validacija sprječava duple rezervacije (KAN-19)
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li pacijent može rezervisati više termina dnevno?
 - Postoji li ograničenje po specijalisti?
 - Kako se označavaju hitni termini (KAN-33)?
@@ -145,9 +145,9 @@ Kao pacijent, želim da dobijem email potvrdu nakon rezervacije termina, kako bi
 
 Srednji (Medium)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
-### Pacijent ima validnu email adresu
+
+## Pretpostavke:
+## Pacijent ima validnu email adresu
 - Rezervacija je uspješno izvršena
 ### Otvorena pitanja:
 - Koji detalji se prikazuju u emailu?
@@ -166,11 +166,11 @@ Kao medicinsko osoblje, želim da mogu otkazati termine pacijenata, kako bih osl
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Termin je već rezervisan
 - Osoblje ima pristup panelu medicinskog osoblja (KAN-28)
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko ranije se može izvršiti otkazivanje?
 - Da li se šalje obavijest pacijentu?
 ## US-09
@@ -186,11 +186,10 @@ Kao pacijent, želim da mogu otkazati svoj termin, kako bih oslobodio termin u s
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Termin je već rezervisan
 - Sistem vodi evidenciju svih termina
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko ranije pacijent može otkazati termin?
 - Da li se šalje potvrda o otkazivanju?
 ##  US-10
@@ -207,11 +206,11 @@ Kao doktor, želim da imam pregled svog dnevnog i sedmičnog rasporeda, kako bih
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Termini su već definisani
 - Doktor ima pristup svom panelu (KAN-28)
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li doktor može mijenjati termine?
 - Da li vidi i historiju pregleda pacijenata?
 
@@ -231,11 +230,11 @@ Kao sistem, želim automatski osloboditi termine koji nisu potvrđeni u određen
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Postoje termini označeni kao “zaključani”
 - Sistem prati status potvrđenosti termina
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko vremena mora proći prije oslobađanja termina?
 
 ## US-12
@@ -252,11 +251,10 @@ Kao sistem, želim spriječiti dupliranje termina u isto vrijeme za istog pacije
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Pacijenti mogu rezervisati termine online (KAN-06)
 - Sistem prati sve postojeće rezervacije
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li se validacija odnosi i na specijaliste i porodične doktore?
 - Šta se dešava ako pacijent pokuša rezervisati dupli termin?
 ## US-13
@@ -273,11 +271,10 @@ Kao administrator, želim da mogu upravljati radnim vremenom doktora, kako bi se
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Administrator ima pristup admin panelu (KAN-02)
 - Doktor je registrovan u sistemu
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li doktor može sam mijenjati svoje radno vrijeme?
 - Kako se tretiraju vanredni i hitni termini?
 ## US-14
@@ -294,11 +291,11 @@ Kao korisnik, želim da mogu resetovati lozinku putem emaila, kako bih mogao pov
 
 Srednji (Medium)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Korisnik ima validnu email adresu
 - Sistem može slati emailove
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko dugo je reset link validan?
 - Da li postoji limit pokušaja resetovanja?
 ## US-15
@@ -315,11 +312,11 @@ Kao pacijent, želim da moj porodični doktor može rezervisati termin kod speci
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Porodični doktor ima pristup sistemu
 - Specijalista je registrovan u sistemu
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li pacijent dobija obavijest o rezervaciji?
 - Može li pacijent potvrditi ili odbiti termin?
 ## US-16
@@ -336,11 +333,11 @@ Kao administrator, želim imati centralizovani menadžment panel za nadzor i upr
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Administrator ima pristup sistemu
 - Panel prikazuje sve ključne informacije o korisnicima i terminima
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji podaci su prioritetni za prikaz?
 - Da li se menadžment panel koristi i za izvještavanje?
 ## US-17
@@ -357,11 +354,10 @@ Kao korisnik, želim da me sistem automatski odjavi nakon određenog vremena nea
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Sistem prati aktivnosti korisnika
 - Login funkcionalnost je implementirana
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko minuta neaktivnosti pokreće timeout?
 - Da li se korisniku prikazuje upozorenje prije odjave?
 ## US-18
@@ -378,11 +374,10 @@ Kao administrator, želim da sistem bilježi sve akcije i promjene unutar sistem
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Sistem prati sve CRUD akcije
 - Administratori imaju pristup audit logu
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko dugo se čuvaju podaci u audit logu?
 - Ko sve ima pristup logovima?
 ## US-19
@@ -399,11 +394,11 @@ Kao pacijent ili doktor, želim da mogu vidjeti napomene ili komentare vezane za
 
 Srednji (Medium)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Komentari se unose prilikom rezervacije termina
 - Korisnici imaju pristup detaljima termina
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Ko može unositi komentare?
 - Da li se komentari prikazuju samo doktoru ili i pacijentu?
 ## US-20
@@ -420,11 +415,11 @@ Kao pacijent ili doktor, želim da imam interaktivno uputstvo ili dokumentaciju,
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Postoji osnovna dokumentacija sistema
 - Sistem može prikazivati upute u interaktivnom formatu
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li vodič uključuje video tutorijale ili samo tekst?
 - Da li se vodič ažurira automatski sa novim funkcionalnostima?
 
@@ -443,11 +438,10 @@ Kao medicinsko osoblje, želim da imam panel sa kontrolama za upravljanje pregle
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Medicinsko osoblje je registrovano i ima pristup sistemu
 - Panel prikazuje relevantne termine i pacijente
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li panel uključuje opciju kreiranja novih termina?
 - Koje informacije o pacijentu su prikazane?
 ## US-22
@@ -464,11 +458,10 @@ Kao korisnik, želim da koristim dvofaktorsku autentifikaciju prilikom logina, k
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Korisnik ima aktivan email ili telefon za 2FA
 - Login sistem je implementiran (KAN-11)
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji tip 2FA će se koristiti (SMS, email, aplikacija)?
 - Da li je 2FA obavezna za sve korisnike ili opcionalna?
 ##  US-23
@@ -485,11 +478,11 @@ Kao sistem, želim automatski blokirati naloge nakon više neuspješnih pokušaj
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Login sistem prati broj neuspješnih pokušaja
 - Korisnici imaju način da povrate pristup (KAN-21)
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko pokušaja je dozvoljeno prije blokade?
 - Da li se korisniku šalje upozorenje prije blokade?
 ## US-24
@@ -506,11 +499,10 @@ Kao sistem, želim da enkriptujem osjetljive zdravstvene podatke, kako bi zašti
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Podaci pacijenata se čuvaju u bazi
 - Sistem podržava enkripciju na nivou baze ili aplikacije
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji algoritam enkripcije će se koristiti?
 - Da li se enkripcija primjenjuje i na backup-e?
 ##  US-25
@@ -527,11 +519,10 @@ Kao administrator ili medicinsko osoblje, želim vizuelno označiti hitne pacije
 
 Srednji (Medium)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Sistem prepoznaje urgentne slučajeve
 - Korisnici imaju pristup vizuelnom označavanju
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji kriterijumi određuju hitnost?
 - Da li pacijent vidi da je njegov termin označen kao hitan?
 ## US-26
@@ -548,11 +539,11 @@ Kao administrator, želim eksportovati statistiku zakazanih pregleda doktora u C
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Podaci o terminima i doktorima su pohranjeni u bazi
 - Sistem može generisati CSV fajl
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Da li se eksport vrši periodično ili na zahtjev?
 - Ko ima pristup eksportovanim podacima?
 ## US-27
@@ -569,11 +560,10 @@ Kao pacijent, želim da sistem automatski šalje podsjetnike pacijentima sa hron
 
 Nizak (Low)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Pacijent ima označen atribut “hronični bolesnik”
 - Sistem može slati emailove
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koliko često se šalje podsjetnik?
 - Da li se podsjetnik šalje i putem SMS-a?
 ## US-28
@@ -590,11 +580,11 @@ Kao medicinsko osoblje, želim dodavati PDF nalaze ili vrijednosti u historiju p
 
 Srednji (Medium)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Pacijent ima nalaze spremne za upload
 - Sistem omogućava sigurno pohranjivanje fajlova
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji tip fajlova je dozvoljen?
 - Koliko dugo se čuvaju uploadovani fajlovi?
 ## US-29
@@ -611,11 +601,10 @@ Kao backend developer, želim razviti backend funkcionalnosti za admin panel, ka
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Baza podataka je spremna (KAN-38, KAN-39)
 - API-jevi za frontend su planirani
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koje funkcionalnosti backend treba podržati prvo?
 - Da li će biti REST ili GraphQL API?
 ## US-30
@@ -632,11 +621,11 @@ Kao sistem dizajner, želim definisati entitete, atribute, relacije, primarne i 
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Postoji produkt backlog sa svim funkcionalnostima
 - Sistemski zahtjevi su jasno definirani
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji tip baze podataka će se koristiti (SQL/NoSQL)?
 - Da li će model podržavati buduća proširenja sistema?
 
@@ -654,11 +643,10 @@ Kao sistem administrator, želim implementirati bazu podataka u stvarnom okruže
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - ER model baze je definisan (US-30)
 - Sistemski zahtjevi su poznati
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koji tip baze podataka se koristi (SQL/NoSQL)?
 - Da li je potrebna replikacija za veću dostupnost?
 ## US-32
@@ -675,11 +663,10 @@ Kao administrator, želim implementirati autentifikaciju i autorizaciju za prist
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+## Pretpostavke:
 - Korisnici su registrovani u sistemu
 - Sistem podržava različite uloge korisnika
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koje uloge korisnika će biti definisane?
 - Da li postoji centralizovana kontrola pristupa?
 ## US-33
@@ -696,11 +683,11 @@ Kao QA inženjer, želim testirati bazu podataka da provjerim validnost podataka
 
 Visok (High)
 
-## Pretpostavke i otvorena pitanja:
-### Pretpostavke:
+
+## Pretpostavke:
 - Baza podataka je kreirana i konfigurirana
 - Prava pristupa su definisana
-### Otvorena pitanja:
+## Otvorena pitanja:
 - Koje testove automatizirati, a koje ručno izvršiti?
 - Kako dokumentovati rezultate testiranja?
 
