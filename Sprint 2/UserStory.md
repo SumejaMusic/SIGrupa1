@@ -7,9 +7,9 @@
 Kao pacijent, želim da mogu pregledati historiju svojih pregleda, kako bih imao uvid u prethodne termine i zdravstvene nalaze.
 
 ## Poslovna vrijednost:
-Omogućava bolju evidenciju zdravstvenih podataka pacijenta
-Pomaže doktorima u donošenju informisanih odluka
-Poboljšava transparentnost i praćenje liječenja
+- Omogućava bolju evidenciju zdravstvenih podataka pacijenta
+- Pomaže doktorima u donošenju informisanih odluka
+- Poboljšava transparentnost i praćenje liječenja
 
 ## Prioritet:
 
