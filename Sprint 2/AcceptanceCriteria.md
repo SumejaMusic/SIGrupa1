@@ -166,3 +166,42 @@
 
 5. **Ažuriranje kalendara:**
    - **Sistem mora osigurati** da se otkazani termin odmah nakon akcije osoblja prikaže kao slobodan u kalendaru za ostale korisnike koji vrše pretragu.
+
+
+### ID Storyja: US-09
+**Naziv:** Otkazivanje termina (pacijent)
+
+---
+
+1. **Glavni proces otkazivanja:**
+   - **Kada** je pacijent u sekciji "Moji termini", **ako** klikne na dugme "Otkaži" pored zakazanog pregleda, **tada** sistem mora promijeniti status tog termina u "OTKAZAN" i odmah osloboditi to mjesto u bazi.
+
+2. **Vremensko ograničenje (Odgovor na otvoreno pitanje):**
+   - **Sistem ne smije dozvoliti** pacijentu da samostalno otkaže termin ako je do početka pregleda ostalo manje od 24 sata.
+
+3. **Email potvrda o otkazivanju (Odgovor na otvoreno pitanje):**
+   - **Kada** pacijent uspješno otkaže termin, **tada** sistem mora automatski poslati email potvrdu pacijentu kao dokaz da je termin uredno otkazan.
+
+4. **Potvrda akcije:**
+   - **Kada** pacijent klikne na opciju otkazivanja, **tada** sistem mora izbaciti upit: "Da li ste sigurni da želite otkazati ovaj termin?".
+
+5. **Ažuriranje kalendara za ostale:**
+   - **Sistem mora omogućiti** da se netom otkazani termin odmah prikaže kao slobodan u realnom vremenu za sve ostale pacijente koji u tom trenutku vrše pretragu slobodnih doktora.
+
+6. **Feedback na ekranu:**
+   - **Korisnik treba dobiti** jasnu poruku na ekranu: "Vaš termin je uspješno otkazan" odmah nakon što se akcija završi.
+
+
+### ID Storyja: US-10
+**Naziv:** Dashboard za doktora – pregled rasporeda
+
+---
+
+1. **Dnevni i sedmični prikaz:**
+   - **Kada** je doktor na svom panelu (KAN-28), **ako** klikne na opciju "Sedmični prikaz", **tada** mu sistem mora prikazati tabelu sa svim terminima raspoređenim po danima u tekućoj sedmici.
+
+2. **Mijenjanje termina (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** doktoru da pomjeri (izmjeni) termin pacijenta ako dođe do neplaniranih promjena. **Kada** doktor izmijeni termin, **tada** pacijent mora automatski dobiti email obavijest o novom vremenu pregleda.
+
+3. **Historija pregleda pacijenta (Odgovor na otvoreno pitanje):**
+   - **Kada** doktor pregleda listu pacijenata za taj dan, **ako** klikne na ime pacijenta, **tada** mu sistem mora otvoriti uvid u historiju prethodnih dolazaka i nalaza tog pacijenta radi boljeg uvida u slučaj.
