@@ -1,6 +1,6 @@
 # User Story
 
- US-01
+## US-01
 ## Historija pregleda korisnika
 ## Opis
 
@@ -23,7 +23,7 @@ Srednji (Medium)
 - Koji detalji pregleda se prikazuju (samo datum ili i opis terapije)?
 - Da li se prikazuju i otkazani termini?
 
- US-02
+## US-02
 ## Admin panel
 ## Opis
 
