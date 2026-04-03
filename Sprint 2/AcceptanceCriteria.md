@@ -40,6 +40,28 @@
 5. **Pretraga:**
    - **Kada** admin unese ime pacijenta u polje za pretragu unutar panela, **tada** sistem mora odmah prikazati relevantne rezultate.
 
+
+
+### ID Storyja: US-03
+**Naziv:** Admin panel - registracija pacijenta
+
+---
+
+1. **Glavni proces registracije:**
+   - **Kada** je administrator u panelu za upravljanje pacijentima, **ako** klikne na "Novi pacijent" i popuni sva polja, **tada** sistem mora kreirati novi profil u bazi i dodijeliti mu ulogu 'PACIJENT'.
+
+2. **Obavezni podaci (Odgovor na otvoreno pitanje):**
+   - **Sistem mora zahtijevati** unos sljedećih obaveznih polja: Ime, Prezime, Validna Email adresa i Broj telefona. Ako bilo koje od ovih polja ostane prazno, sistem ne smije dozvoliti spašavanje.
+
+3. **Validacija email adrese:**
+   - **Ako** administrator pokuša registrovati pacijenta sa emailom koji već postoji u bazi, **tada** sistem mora izbaciti upozorenje "Korisnik sa ovim emailom je već registrovan".
+
+4. **Samostalna registracija (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** pacijentu da se i samostalno registruje putem javne stranice za registraciju, ali administrator mora imati uvid u sve te profile unutar svog panela.
+
+5. **Feedback poruka:**
+   - **Korisnik (admin) treba dobiti** potvrdu na vrhu ekrana "Pacijent uspješno registrovan" odmah nakon što se podaci upišu u bazu.
+
   
 
 ### ID Storyja: US-06
