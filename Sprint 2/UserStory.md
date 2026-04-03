@@ -40,7 +40,7 @@ Visok (High)
 
 
 ## Pretpostavke:
-- Backend funkcionalnosti već postoje (KAN-37)
+- Backend funkcionalnosti već postoje 
 - Administrator ima pristup sistemu
 ## Otvorena pitanja:
 - Koje funkcionalnosti treba prikazati u frontend panelu?
@@ -83,11 +83,11 @@ Visok (High)
 
 
 ## Pretpostavke:
-Korisnici imaju kreirane naloge (KAN-10)
+Korisnici imaju kreirane naloge 
 Podaci su šifrovani i sigurni
 ## Otvorena pitanja:
-Da li je obavezna dvofaktorska autentifikacija (KAN-29)?
-Koliko pokušaja login-a je dozvoljeno prije blokade (KAN-30)?
+Da li je obavezna dvofaktorska autentifikacija?
+Koliko pokušaja login-a je dozvoljeno prije blokade?
 ## US-05
 ## Pregled dostupnih resursa
 ## Opis
@@ -124,13 +124,13 @@ Visok (High)
 
 
 ## Pretpostavke:
-- Sistem već ima implementiran login (KAN-11)
-- Postoje dostupni termini (KAN-12)
-- Validacija sprječava duple rezervacije (KAN-19)
+- Sistem već ima implementiran login
+- Postoje dostupni termini
+- Validacija sprječava duple rezervacije
 ## Otvorena pitanja:
 - Da li pacijent može rezervisati više termina dnevno?
 - Postoji li ograničenje po specijalisti?
-- Kako se označavaju hitni termini (KAN-33)?
+- Kako se označavaju hitni termini?
 ## US-07
 ## Email potvrda o rezervaciji
 ## Opis
@@ -166,7 +166,7 @@ Nizak (Low)
 
 ## Pretpostavke:
 - Termin je već rezervisan
-- Osoblje ima pristup panelu medicinskog osoblja (KAN-28)
+- Osoblje ima pristup panelu medicinskog osoblja
 ## Otvorena pitanja:
 - Koliko ranije se može izvršiti otkazivanje?
 - Da li se šalje obavijest pacijentu?
@@ -204,7 +204,7 @@ Nizak (Low)
 
 ## Pretpostavke:
 - Termini su već definisani
-- Doktor ima pristup svom panelu (KAN-28)
+- Doktor ima pristup svom panelu 
 ## Otvorena pitanja:
 - Da li doktor može mijenjati termine?
 - Da li vidi i historiju pregleda pacijenata?
@@ -232,7 +232,7 @@ Nizak (Low)
 - Koliko vremena mora proći prije oslobađanja termina?
 
 ## US-12
-## N Validacija i sprječavanje duplih rezervacija
+## Validacija i sprječavanje duplih rezervacija
 ## Opis
 
 Kao sistem, želim spriječiti dupliranje termina u isto vrijeme za istog pacijenta, kako bih izbjegao konflikte i greške u rasporedu.
@@ -245,7 +245,7 @@ Sistem osigurava preciznu evidenciju svih zakazanih termina, čime se značajno 
 Visok (High)
 
 ## Pretpostavke:
-- Pacijenti mogu rezervisati termine online (KAN-06)
+- Pacijenti mogu rezervisati termine online
 - Sistem prati sve postojeće rezervacije
 ## Otvorena pitanja:
 - Da li se validacija odnosi i na specijaliste i porodične doktore?
@@ -264,7 +264,7 @@ Naš sistem pomaže u efikasnijoj organizaciji rasporeda doktora, što omogućav
 Visok (High)
 
 ## Pretpostavke:
-- Administrator ima pristup admin panelu (KAN-02)
+- Administrator ima pristup admin panelu
 - Doktor je registrovan u sistemu
 ## Otvorena pitanja:
 - Da li doktor može sam mijenjati svoje radno vrijeme?
@@ -443,7 +443,7 @@ Visok (High)
 
 ## Pretpostavke:
 - Korisnik ima aktivan email ili telefon za 2FA
-- Login sistem je implementiran (KAN-11)
+- Login sistem je implementiran 
 ## Otvorena pitanja:
 - Koji tip 2FA će se koristiti (SMS, email, aplikacija)?
 - Da li je 2FA obavezna za sve korisnike ili opcionalna?
@@ -463,7 +463,7 @@ Visok (High)
 
 ## Pretpostavke:
 - Login sistem prati broj neuspješnih pokušaja
-- Korisnici imaju način da povrate pristup (KAN-21)
+- Korisnici imaju način da povrate pristup
 ## Otvorena pitanja:
 - Koliko pokušaja je dozvoljeno prije blokade?
 - Da li se korisniku šalje upozorenje prije blokade?
@@ -578,7 +578,7 @@ Admin panel funkcioniše efikasno i omogućava jednostavno upravljanje svim funk
 Visok (High)
 
 ## Pretpostavke:
-- Baza podataka je spremna (KAN-38, KAN-39)
+- Baza podataka je spremna 
 - API-jevi za frontend su planirani
 ## Otvorena pitanja:
 - Koje funkcionalnosti backend treba podržati prvo?
@@ -619,7 +619,7 @@ Centralizovano čuvanje podataka omogućava da sve informacije budu na jednom mj
 Visok (High)
 
 ## Pretpostavke:
-- ER model baze je definisan (US-30)
+- ER model baze je definisan
 - Sistemski zahtjevi su poznati
 ## Otvorena pitanja:
 - Koji tip baze podataka se koristi (SQL/NoSQL)?
