@@ -46,30 +46,11 @@ Visok (High)
 - Da li je potrebna autentifikacija za pristup panelu?
 
 ## US-03
-## Admin panel - registracija pacijenta
-### Opis
-
-Kao administrator, želim da mogu registrovati nove pacijente, kako bi oni mogli koristiti sistem.
-### Poslovna vrijednost:
-Kroz sistem je omogućen kontrolisan unos korisnika, čime se osigurava veća sigurnost i bolja organizacija podataka. 
-Takav pristup doprinosi i većoj tačnosti informacija, jer se smanjuje prostor za greške prilikom unosa. 
-Uz to, pacijentima je omogućen pristup različitim funkcionalnostima sistema, što im olakšava korištenje usluga i praćenje vlastitih podataka.
-### Prioritet:
-
-Visok (High)
-
-
-### Pretpostavke:
-- Administrator ima pristup admin panelu
-- Sistem validira podatke unosa
-### Otvorena pitanja:
-- Da li pacijent može samostalno registrovati nalog?
-- Koji su obavezni podaci za registraciju?
-## US-04
 ## Login sistem
 ### Opis
 
-Kao pacijent ili doktor, želim da se mogu prijaviti u sistem koristeći svoje kredencijale, kako bih pristupio svojim funkcionalnostima.
+Admin panel za registraciju pacijenata omogućava da se cijeli proces unosa novih pacijenata obavi brzo i pregledno. Osoblje može lako ažurirati podatke, pratiti historiju pacijenata i upravljati terminima, što pojednostavljuje administrativni posao i poboljšava organizaciju u klinici.
+
 
 ### Poslovna vrijednost:
 Sistem je osmišljen tako da osigura visok nivo sigurnosti, čime se štite svi njegovi dijelovi od neovlaštenog pristupa. 
@@ -81,11 +62,30 @@ Visok (High)
 
 
 ### Pretpostavke:
-Korisnici imaju kreirane naloge 
-Podaci su šifrovani i sigurni
+- Korisnici imaju kreirane naloge 
+- Podaci su šifrovani i sigurni
 ### Otvorena pitanja:
-Da li je obavezna dvofaktorska autentifikacija?
 Koliko pokušaja login-a je dozvoljeno prije blokade?
+## US-04
+## Admin panel - registracija pacijenta
+### Opis
+
+Kao administrator, želim da mogu registrovati nove pacijente, kako bi oni mogli koristiti sistem.
+### Poslovna vrijednost:
+Admin panel za registraciju pacijenata omogućava brzo i jednostavno dodavanje novih korisnika u sistem. 
+Olakšava praćenje osnovnih podataka, termina i statusa pacijenata, čime administrativno osoblje štedi vrijeme i smanjuje mogućnost grešaka prilikom unosa informacija.
+
+### Prioritet:
+
+Visok (High)
+
+
+### Pretpostavke:
+- Administrator ima pristup admin panelu
+- Sistem validira podatke unosa
+### Otvorena pitanja:
+- Koji su obavezni podaci za registraciju?
+
 ## US-05
 ## Pregled dostupnih resursa
 ### Opis
