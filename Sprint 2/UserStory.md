@@ -32,7 +32,6 @@ Kao administrator, želim da imam korisnički interfejs za administraciju, kako 
 ### Poslovna vrijednost:
 Sistem omogućava jednostavnije i efikasnije upravljanje svim njegovim funkcionalnostima, čime se olakšava svakodnevni rad. 
 Zahvaljujući automatizaciji, potreba za ručnim unosom podataka je značajno smanjena, što ujedno umanjuje mogućnost grešaka. 
-
 Kao rezultat toga, administrativno osoblje može raditi brže i fokusirati se na važnije zadatke, čime se ukupna produktivnost povećava.
 ### Prioritet:
 
