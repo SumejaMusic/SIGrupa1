@@ -1,5 +1,7 @@
-# ID Storyja: US-01
-## Naziv storyja: Historija pregleda korisnika
+# User Story
+
+## US-01
+## Historija pregleda korisnika
 ## Opis
 
 Kao pacijent, želim da mogu pregledati historiju svojih pregleda, kako bih imao uvid u prethodne termine i zdravstvene nalaze.
@@ -21,8 +23,8 @@ Srednji (Medium)
 - Koji detalji pregleda se prikazuju (samo datum ili i opis terapije)?
 - Da li se prikazuju i otkazani termini?
 
-# ID Storyja: US-02
-## Naziv storyja: Admin panel - frontend
+## US-02
+## Admin panel
 ## Opis
 
 Kao administrator, želim da imam korisnički interfejs za administraciju, kako bih mogao upravljati korisnicima, terminima i resursima.
@@ -43,8 +45,8 @@ Visok (High)
 - Koje funkcionalnosti treba prikazati u frontend panelu?
 - Da li je potrebna autentifikacija za pristup panelu?
 
-# ID Storyja: US-03
-## Naziv storyja: Admin panel - registracija pacijenta
+## US-03
+## Admin panel - registracija pacijenta
 ## Opis
 
 Kao administrator, želim da mogu registrovati nove pacijente, kako bi oni mogli koristiti sistem.
@@ -64,8 +66,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li pacijent može samostalno registrovati nalog?
 - Koji su obavezni podaci za registraciju?
-# ID Storyja: US-04
-## Naziv storyja: Login sistem
+## US-04
+## Login sistem
 ## Opis
 
 Kao pacijent ili doktor, želim da se mogu prijaviti u sistem koristeći svoje kredencijale, kako bih pristupio svojim funkcionalnostima.
@@ -85,8 +87,8 @@ Podaci su šifrovani i sigurni
 ### Otvorena pitanja:
 Da li je obavezna dvofaktorska autentifikacija (KAN-29)?
 Koliko pokušaja login-a je dozvoljeno prije blokade (KAN-30)?
-# ID Storyja: US-05
-## Naziv storyja: Pregled dostupnih resursa
+## US-05
+## Pregled dostupnih resursa
 ## Opis
 
 Kao pacijent, želim da vidim dostupne doktore i slobodne termine, kako bih odabrao najpogodniji termin za pregled.
@@ -106,8 +108,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Može li pacijent filtrirati po specijalizaciji doktora?
 - Da li se prikazuje zauzetost termina u realnom vremenu?
-# ID Storyja: US-06
-## Naziv storyja: Rezervacija termina
+##  US-06
+## Rezervacija termina
 ## Opis
 
 Kao pacijent, želim da mogu rezervisati termin kod doktora na osnovu dostupnog rasporeda, kako bih osigurao pravovremeni pregled bez čekanja.
@@ -129,8 +131,8 @@ Visok (High)
 - Da li pacijent može rezervisati više termina dnevno?
 - Postoji li ograničenje po specijalisti?
 - Kako se označavaju hitni termini (KAN-33)?
-# ID Storyja: US-07
-## Naziv storyja: Email potvrda o rezervaciji
+## US-07
+## Email potvrda o rezervaciji
 ## Opis
 
 Kao pacijent, želim da dobijem email potvrdu nakon rezervacije termina, kako bih imao podsjetnik i dokaz zakazanog pregleda.
@@ -150,8 +152,8 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Koji detalji se prikazuju u emailu?
 - Da li se šalju i kasniji podsjetnici?
-# ID Storyja: US-08
-## Naziv storyja: Otkazivanje termina (medicinsko osoblje)
+## US-08
+## Otkazivanje termina (medicinsko osoblje)
 ## Opis
 
 Kao medicinsko osoblje, želim da mogu otkazati termine pacijenata, kako bih oslobodio termine u slučaju promjena u rasporedu.
@@ -171,8 +173,8 @@ Nizak (Low)
 ### Otvorena pitanja:
 - Koliko ranije se može izvršiti otkazivanje?
 - Da li se šalje obavijest pacijentu?
-# ID Storyja: US-09
-## Naziv storyja: Otkazivanje termina (pacijent)
+## US-09
+##  Otkazivanje termina (pacijent)
 ## Opis
 Kao pacijent, želim da mogu otkazati svoj termin, kako bih oslobodio termin u slučaju spriječenosti.
 
@@ -191,8 +193,8 @@ Nizak (Low)
 ### Otvorena pitanja:
 - Koliko ranije pacijent može otkazati termin?
 - Da li se šalje potvrda o otkazivanju?
-# ID Storyja: US-10
-## Naziv storyja: Dashboard za doktora – pregled rasporeda
+##  US-10
+## Dashboard za doktora – pregled rasporeda
 ## Opis
 
 Kao doktor, želim da imam pregled svog dnevnog i sedmičnog rasporeda, kako bih efikasno organizovao svoje obaveze.
@@ -215,8 +217,8 @@ Nizak (Low)
 
 
 
-# ID Storyja: US-11
-## Naziv storyja: Automatsko oslobađanje zaključanih termina
+## US-11
+## Automatsko oslobađanje zaključanih termina
 ## Opis
 
 Kao sistem, želim automatski osloboditi termine koji nisu potvrđeni u određenom vremenu, kako bi se povećila dostupnost termina za druge pacijente.
@@ -235,9 +237,9 @@ Nizak (Low)
 - Sistem prati status potvrđenosti termina
 ### Otvorena pitanja:
 - Koliko vremena mora proći prije oslobađanja termina?
-- Da li pacijent dobija obavijest o oslobađanju termina?
-# ID Storyja: US-12
-## Naziv storyja: Validacija i sprječavanje duplih rezervacija
+
+## US-12
+## N Validacija i sprječavanje duplih rezervacija
 ## Opis
 
 Kao sistem, želim spriječiti dupliranje termina u isto vrijeme za istog pacijenta, kako bih izbjegao konflikte i greške u rasporedu.
@@ -257,8 +259,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li se validacija odnosi i na specijaliste i porodične doktore?
 - Šta se dešava ako pacijent pokuša rezervisati dupli termin?
-# ID Storyja: US-13
-## Naziv storyja: Upravljanje radnim vremenom doktora (admin)
+## US-13
+## Upravljanje radnim vremenom doktora (admin)
 ## Opis
 
 Kao administrator, želim da mogu upravljati radnim vremenom doktora, kako bi se termini mogli pravilno planirati i zakazivati.
@@ -278,8 +280,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li doktor može sam mijenjati svoje radno vrijeme?
 - Kako se tretiraju vanredni i hitni termini?
-# ID Storyja: US-14
-## Naziv storyja: Reset lozinke putem emaila
+## US-14
+##  Reset lozinke putem emaila
 ## Opis
 
 Kao korisnik, želim da mogu resetovati lozinku putem emaila, kako bih mogao povratiti pristup svom nalogu ako zaboravim lozinku.
@@ -299,8 +301,8 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Koliko dugo je reset link validan?
 - Da li postoji limit pokušaja resetovanja?
-# ID Storyja: US-15
-## Naziv storyja: Rezervacija termina kod specijaliste putem doktora porodične medicine
+## US-15
+##  Rezervacija termina kod specijaliste putem doktora porodične medicine
 ## Opis
 
 Kao pacijent, želim da moj porodični doktor može rezervisati termin kod specijaliste u moje ime, kako bih dobio bržu i koordiniranu medicinsku uslugu.
@@ -320,8 +322,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li pacijent dobija obavijest o rezervaciji?
 - Može li pacijent potvrditi ili odbiti termin?
-# ID Storyja: US-16
-## Naziv storyja: Menadžment panel
+## US-16
+## Menadžment panel
 ## Opis
 
 Kao administrator, želim imati centralizovani menadžment panel za nadzor i upravljanje sistemom, kako bih mogao pratiti sve aktivnosti i resurse.
@@ -341,8 +343,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koji podaci su prioritetni za prikaz?
 - Da li se menadžment panel koristi i za izvještavanje?
-# ID Storyja: US-17
-## Naziv storyja: Automatska odjava nakon perioda neaktivnosti (session timeout)
+## US-17
+## Automatska odjava nakon perioda neaktivnosti (session timeout)
 ## Opis
 
 Kao korisnik, želim da me sistem automatski odjavi nakon određenog vremena neaktivnosti, kako bi se povećala sigurnost mog naloga.
@@ -362,8 +364,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koliko minuta neaktivnosti pokreće timeout?
 - Da li se korisniku prikazuje upozorenje prije odjave?
-# ID Storyja: US-18
-## Naziv storyja: Logovanje svih akcija u sistemu (audit log)
+## US-18
+## Logovanje svih akcija u sistemu (audit log)
 ## Opis
 
 Kao administrator, želim da sistem bilježi sve akcije i promjene unutar sistema, kako bih mogao pratiti i analizirati aktivnosti korisnika.
@@ -383,8 +385,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koliko dugo se čuvaju podaci u audit logu?
 - Ko sve ima pristup logovima?
-# ID Storyja: US-19
-## Naziv storyja: Omogućavanje pregleda komentara prilikom zakazivanja termina
+## US-19
+## Omogućavanje pregleda komentara prilikom zakazivanja termina
 ## Opis
 
 Kao pacijent ili doktor, želim da mogu vidjeti napomene ili komentare vezane za termin, kako bih imao sve relevantne informacije prije pregleda.
@@ -404,8 +406,8 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Ko može unositi komentare?
 - Da li se komentari prikazuju samo doktoru ili i pacijentu?
-# ID Storyja: US-20
-# Naziv storyja: Vodič za korištenje stranice
+## US-20
+## Vodič za korištenje stranice
 ## Opis
 
 Kao pacijent ili doktor, želim da imam interaktivno uputstvo ili dokumentaciju, kako bih znao kako koristiti sistem.
@@ -427,8 +429,8 @@ Nizak (Low)
 - Da li se vodič ažurira automatski sa novim funkcionalnostima?
 
 
-# ID Storyja: US-21
-## Naziv storyja: Panel medicinskog osoblja
+## US-21
+##  Panel medicinskog osoblja
 ## Opis
 
 Kao medicinsko osoblje, želim da imam panel sa kontrolama za upravljanje pregledima i terminima pacijenata, kako bih mogao efikasno organizovati svoj rad.
@@ -448,8 +450,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li panel uključuje opciju kreiranja novih termina?
 - Koje informacije o pacijentu su prikazane?
-# ID Storyja: US-22
-## Naziv storyja: Two factor authentication
+## US-22
+##  Two factor authentication
 ## Opis
 
 Kao korisnik, želim da koristim dvofaktorsku autentifikaciju prilikom logina, kako bi moj nalog bio sigurniji.
@@ -469,8 +471,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koji tip 2FA će se koristiti (SMS, email, aplikacija)?
 - Da li je 2FA obavezna za sve korisnike ili opcionalna?
-# ID Storyja: US-23
-## Naziv storyja: Detekcija neobičnog ponašanja - blokiranje naloga
+##  US-23
+##   Detekcija neobičnog ponašanja - blokiranje naloga
 ## Opis
 
 Kao sistem, želim automatski blokirati naloge nakon više neuspješnih pokušaja logina, kako bi zaštitio korisničke podatke.
@@ -490,8 +492,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koliko pokušaja je dozvoljeno prije blokade?
 - Da li se korisniku šalje upozorenje prije blokade?
-# ID Storyja: US-24
-## Naziv storyja: Enkripcija osjetljivih podataka
+## US-24
+## Enkripcija osjetljivih podataka
 ## Opis
 
 Kao sistem, želim da enkriptujem osjetljive zdravstvene podatke, kako bi zaštitio privatnost pacijenata i osigurao sigurnost informacija.
@@ -511,8 +513,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koji algoritam enkripcije će se koristiti?
 - Da li se enkripcija primjenjuje i na backup-e?
-# ID Storyja: US-25
-## Naziv storyja: Označavanje hitnosti prijavljenog termina
+##  US-25
+## Označavanje hitnosti prijavljenog termina
 ## Opis
 
 Kao administrator ili medicinsko osoblje, želim vizuelno označiti hitne pacijente u sistemu, kako bi prioritetni termini bili obrađeni odmah.
@@ -532,8 +534,8 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Koji kriterijumi određuju hitnost?
 - Da li pacijent vidi da je njegov termin označen kao hitan?
-# ID Storyja: US-26
-## Naziv storyja: Export statistike zdravstvene ustanove
+## US-26
+## Export statistike zdravstvene ustanove
 ## Opis
 
 Kao administrator, želim eksportovati statistiku zakazanih pregleda doktora u CSV formatu, kako bih mogao analizirati podatke i planirati resurse.
@@ -553,8 +555,8 @@ Nizak (Low)
 ### Otvorena pitanja:
 - Da li se eksport vrši periodično ili na zahtjev?
 - Ko ima pristup eksportovanim podacima?
-# ID Storyja: US-27
-## Naziv storyja: Automatski podsjetnik
+## US-27
+##  Automatski podsjetnik
 ## Opis
 
 Kao pacijent, želim da sistem automatski šalje podsjetnike pacijentima sa hroničnim bolestima, kako bi se smanjila zaboravljena zakazivanja pregleda.
@@ -574,8 +576,8 @@ Nizak (Low)
 ### Otvorena pitanja:
 - Koliko često se šalje podsjetnik?
 - Da li se podsjetnik šalje i putem SMS-a?
-# ID Storyja: US-28
-## Naziv storyja: Upload i evidencija laboratorijskih nalaza
+## US-28
+##  Upload i evidencija laboratorijskih nalaza
 ## Opis
 
 Kao medicinsko osoblje, želim dodavati PDF nalaze ili vrijednosti u historiju pregleda pacijenata, kako bi podaci bili kompletni i dostupni za buduće preglede.
@@ -595,8 +597,8 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Koji tip fajlova je dozvoljen?
 - Koliko dugo se čuvaju uploadovani fajlovi?
-# ID Storyja: US-29
-## Naziv storyja: Admin panel - backend
+## US-29
+## Admin panel - backend
 ## Opis
 
 Kao backend developer, želim razviti backend funkcionalnosti za admin panel, kako bi administratori mogli upravljati korisnicima, terminima i resursima.
@@ -616,8 +618,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koje funkcionalnosti backend treba podržati prvo?
 - Da li će biti REST ili GraphQL API?
-# ID Storyja: US-30
-## Naziv storyja: Kreirati ER model baze podataka
+## US-30
+##  Kreirati ER model baze podataka
 ## Opis
 
 Kao sistem dizajner, želim definisati entitete, atribute, relacije, primarne i strane ključeve, kako bi baza podataka bila pravilno strukturirana i spremna za implementaciju.
@@ -638,8 +640,8 @@ Visok (High)
 - Koji tip baze podataka će se koristiti (SQL/NoSQL)?
 - Da li će model podržavati buduća proširenja sistema?
 
-# ID Storyja: US-31
-## Naziv storyja: Kreiranje baze podataka
+## US-31
+##  Kreiranje baze podataka
 ## Opis
 
 Kao sistem administrator, želim implementirati bazu podataka u stvarnom okruženju, kako bi sistem mogao pohranjivati sve podatke pacijenata, termina i korisnika.
@@ -659,8 +661,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koji tip baze podataka se koristi (SQL/NoSQL)?
 - Da li je potrebna replikacija za veću dostupnost?
-# ID Storyja: US-32
-## Naziv storyja: Definisanje prava pristupa bazi podataka
+## US-32
+## Definisanje prava pristupa bazi podataka
 ## Opis
 
 Kao administrator, želim implementirati autentifikaciju i autorizaciju za pristup podacima, kako bi se osigurala sigurnost i privatnost informacija.
@@ -680,8 +682,8 @@ Visok (High)
 ### Otvorena pitanja:
 - Koje uloge korisnika će biti definisane?
 - Da li postoji centralizovana kontrola pristupa?
-# ID Storyja: US-33
-## Naziv storyja: Testiranje baze podataka
+## US-33
+## Testiranje baze podataka
 ## Opis
 
 Kao QA inženjer, želim testirati bazu podataka da provjerim validnost podataka, veze između tabela i prava pristupa, kako bi sistem radio pouzdano.
