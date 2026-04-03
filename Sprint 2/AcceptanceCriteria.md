@@ -126,3 +126,43 @@
 5. **Više termina dnevno (Otvoreno pitanje):**
    - **Sistem ne treba dozvoliti** pacijentu da rezerviše više od jednog termina kod istog doktora u jednom danu, da ne bi zauzimao mjesta drugima.
      
+
+
+### ID Storyja: US-07
+**Naziv:** Email potvrda o rezervaciji
+
+---
+
+1. **Automatsko slanje potvrde:**
+   - **Kada** pacijent uspješno završi proces rezervacije, **tada** sistem mora automatski poslati email potvrdu na korisničku adresu.
+
+2. **Sadržaj emaila (Odgovor na otvoreno pitanje):**
+   - **Korisnik treba dobiti** u emailu sve ključne informacije o terminu: tačan datum i vrijeme, ime i prezime doktora, naziv odjela.
+
+3. **Slanje naknadnih podsjetnika (Odgovor na otvoreno pitanje):**
+   - **Sistem treba poslati** i dodatni podsjetnik 24 sata prije samog termina, kako bi se osiguralo da pacijent ne zaboravi na pregled.
+
+4. **Link za otkazivanje/izmjenu:**
+   - **Korisnik treba dobiti** link unutar emaila koji ga vodi direktno na opciju otkazivanja ili pomjeranja termina, u skladu sa pravilima poliklinike.
+
+
+
+### ID Storyja: US-08
+**Naziv:** Otkazivanje termina (medicinsko osoblje)
+
+---
+
+1. **Proces otkazivanja iz panela:**
+   - **Kada** je medicinsko osoblje prijavljeno u svoj panel, **ako** odabere konkretan termin pacijenta i klikne na opciju "Otkaži", **tada** sistem mora osloboditi to mjesto u bazi.
+
+2. **Vremensko ograničenje (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** osoblju da otkaže termin prije samog pregleda.
+
+3. **Obavijest pacijentu (Odgovor na otvoreno pitanje):**
+   - **Kada** osoblje otkaže termin, **tada** sistem mora automatski poslati email obavijest pacijentu sa informacijom da je njegov termin otkazan od strane bolnice i ponuditi mu kontakt telefon za novi dogovor.
+
+4. **Potvrda:**
+   - **Sistem ne smije dozvoliti** slučajno otkazivanje jednim klikom. Prije finalnog oslobađanja termina, **osoblje treba dobiti** upit: "Da li ste sigurni da želite otkazati ovaj termin?".
+
+5. **Ažuriranje kalendara:**
+   - **Sistem mora osigurati** da se otkazani termin odmah nakon akcije osoblja prikaže kao slobodan u kalendaru za ostale korisnike koji vrše pretragu.
