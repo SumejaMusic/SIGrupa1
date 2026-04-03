@@ -2,82 +2,81 @@
 
 ## US-01
 ## Historija pregleda korisnika
-## Opis
+### Opis
 
 Kao pacijent, želim da mogu pregledati historiju svojih pregleda, kako bih imao uvid u prethodne termine i zdravstvene nalaze.
 
-## Poslovna vrijednost:
+### Poslovna vrijednost:
 Ovaj sistem omogućava kvalitetniju i uredniju evidenciju zdravstvenih podataka pacijenata, što uveliko olakšava svakodnevni rad. 
 Na osnovu tako organizovanih informacija, doktori mogu lakše donositi informisane i preciznije odluke o liječenju. 
 Pored toga, cijeli proces postaje transparentniji, a praćenje toka liječenja jednostavnije i pouzdanije.
 
-## Prioritet:
+### Prioritet:
 
 Srednji (Medium)
 
 
-## Pretpostavke:
+### Pretpostavke:
 - Sistem vodi evidenciju svih pregleda
 - Pacijent ima kreiran nalog
-## Otvorena pitanja:
+### Otvorena pitanja:
 - Koji detalji pregleda se prikazuju (samo datum ili i opis terapije)?
 - Da li se prikazuju i otkazani termini?
 
 ## US-02
 ## Admin panel
-## Opis
+### Opis
 
 Kao administrator, želim da imam korisnički interfejs za administraciju, kako bih mogao upravljati korisnicima, terminima i resursima.
 
-## Poslovna vrijednost:
+### Poslovna vrijednost:
 Sistem omogućava jednostavnije i efikasnije upravljanje svim njegovim funkcionalnostima, čime se olakšava svakodnevni rad. 
 Zahvaljujući automatizaciji, potreba za ručnim unosom podataka je značajno smanjena, što ujedno umanjuje mogućnost grešaka. 
 
 Kao rezultat toga, administrativno osoblje može raditi brže i fokusirati se na važnije zadatke, čime se ukupna produktivnost povećava.
-## Prioritet:
+### Prioritet:
 
 Visok (High)
 
 
-## Pretpostavke:
+### Pretpostavke:
 - Backend funkcionalnosti već postoje 
 - Administrator ima pristup sistemu
-## Otvorena pitanja:
+### Otvorena pitanja:
 - Koje funkcionalnosti treba prikazati u frontend panelu?
 - Da li je potrebna autentifikacija za pristup panelu?
 
 ## US-03
 ## Admin panel - registracija pacijenta
-## Opis
+### Opis
 
 Kao administrator, želim da mogu registrovati nove pacijente, kako bi oni mogli koristiti sistem.
-
-## Poslovna vrijednost:
+### Poslovna vrijednost:
 Kroz sistem je omogućen kontrolisan unos korisnika, čime se osigurava veća sigurnost i bolja organizacija podataka. 
 Takav pristup doprinosi i većoj tačnosti informacija, jer se smanjuje prostor za greške prilikom unosa. 
 Uz to, pacijentima je omogućen pristup različitim funkcionalnostima sistema, što im olakšava korištenje usluga i praćenje vlastitih podataka.
-## Prioritet:
+### Prioritet:
 
 Visok (High)
 
 
-## Pretpostavke:
+### Pretpostavke:
 - Administrator ima pristup admin panelu
 - Sistem validira podatke unosa
-## Otvorena pitanja:
+### Otvorena pitanja:
 - Da li pacijent može samostalno registrovati nalog?
 - Koji su obavezni podaci za registraciju?
 ## US-04
 ## Login sistem
-## Opis
+### Opis
 
 Kao pacijent ili doktor, želim da se mogu prijaviti u sistem koristeći svoje kredencijale, kako bih pristupio svojim funkcionalnostima.
 
-## Poslovna vrijednost:
+### Poslovna vrijednost:
 Sistem je osmišljen tako da osigura visok nivo sigurnosti, čime se štite svi njegovi dijelovi od neovlaštenog pristupa. 
 Istovremeno, korisnicima omogućava personalizovan pristup podacima, pa svako može vidjeti i koristiti informacije koje su relevantne upravo za njega. 
 Poseban naglasak stavljen je na zaštitu osjetljivih medicinskih informacija, kako bi privatnost pacijenata bila u potpunosti očuvana.
-## Prioritet:
+### Prioritet:
 
 Visok (High)
 
