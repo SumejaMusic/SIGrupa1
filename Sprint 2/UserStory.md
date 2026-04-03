@@ -7,9 +7,9 @@
 Kao pacijent, želim da mogu pregledati historiju svojih pregleda, kako bih imao uvid u prethodne termine i zdravstvene nalaze.
 
 ## Poslovna vrijednost:
-- Omogućava bolju evidenciju zdravstvenih podataka pacijenta
-- Pomaže doktorima u donošenju informisanih odluka
-- Poboljšava transparentnost i praćenje liječenja
+Ovaj sistem omogućava kvalitetniju i uredniju evidenciju zdravstvenih podataka pacijenata, što uveliko olakšava svakodnevni rad. 
+Na osnovu tako organizovanih informacija, doktori mogu lakše donositi informisane i preciznije odluke o liječenju. 
+Pored toga, cijeli proces postaje transparentniji, a praćenje toka liječenja jednostavnije i pouzdanije.
 
 ## Prioritet:
 
@@ -30,9 +30,10 @@ Srednji (Medium)
 Kao administrator, želim da imam korisnički interfejs za administraciju, kako bih mogao upravljati korisnicima, terminima i resursima.
 
 ## Poslovna vrijednost:
-- Omogućava efikasno upravljanje sistemom
-- Smanjuje potrebu za ručnim unosom podataka
-- Povećava produktivnost administrativnog osoblja
+Sistem omogućava jednostavnije i efikasnije upravljanje svim njegovim funkcionalnostima, čime se olakšava svakodnevni rad. 
+Zahvaljujući automatizaciji, potreba za ručnim unosom podataka je značajno smanjena, što ujedno umanjuje mogućnost grešaka. 
+
+Kao rezultat toga, administrativno osoblje može raditi brže i fokusirati se na važnije zadatke, čime se ukupna produktivnost povećava.
 ## Prioritet:
 
 Visok (High)
@@ -52,9 +53,9 @@ Visok (High)
 Kao administrator, želim da mogu registrovati nove pacijente, kako bi oni mogli koristiti sistem.
 
 ## Poslovna vrijednost:
-- Omogućava kontrolisan unos korisnika
-- Povećava tačnost podataka
-- Omogućava pacijentima pristup funkcionalnostima sistema
+Kroz sistem je omogućen kontrolisan unos korisnika, čime se osigurava veća sigurnost i bolja organizacija podataka. 
+Takav pristup doprinosi i većoj tačnosti informacija, jer se smanjuje prostor za greške prilikom unosa. 
+Uz to, pacijentima je omogućen pristup različitim funkcionalnostima sistema, što im olakšava korištenje usluga i praćenje vlastitih podataka.
 ## Prioritet:
 
 Visok (High)
@@ -73,9 +74,9 @@ Visok (High)
 Kao pacijent ili doktor, želim da se mogu prijaviti u sistem koristeći svoje kredencijale, kako bih pristupio svojim funkcionalnostima.
 
 ## Poslovna vrijednost:
-- Osigurava sigurnost sistema
-- Omogućava personalizovan pristup podacima
-- Štiti osjetljive medicinske informacije
+Sistem je osmišljen tako da osigura visok nivo sigurnosti, čime se štite svi njegovi dijelovi od neovlaštenog pristupa. 
+Istovremeno, korisnicima omogućava personalizovan pristup podacima, pa svako može vidjeti i koristiti informacije koje su relevantne upravo za njega. 
+Poseban naglasak stavljen je na zaštitu osjetljivih medicinskih informacija, kako bi privatnost pacijenata bila u potpunosti očuvana.
 ## Prioritet:
 
 Visok (High)
@@ -94,9 +95,10 @@ Koliko pokušaja login-a je dozvoljeno prije blokade (KAN-30)?
 Kao pacijent, želim da vidim dostupne doktore i slobodne termine, kako bih odabrao najpogodniji termin za pregled.
 
 ## Poslovna vrijednost:
-- Omogućava transparentnost rasporeda
-- Olakšava donošenje odluka pacijentu
-- Povećava efikasnost zakazivanja termina
+Sistem pruža jasan i pregledan uvid u raspored, čime se postiže veća transparentnost i lakše snalaženje. 
+Na osnovu dostupnih informacija, pacijenti mogu jednostavnije donijeti odluke koje im najviše odgovaraju. 
+Uz to, sam proces zakazivanja termina postaje brži i efikasniji, što olakšava organizaciju i pacijentima i osoblju.
+
 ## Prioritet:
 
 Visok (High)
@@ -115,9 +117,7 @@ Visok (High)
 Kao pacijent, želim da mogu rezervisati termin kod doktora na osnovu dostupnog rasporeda, kako bih osigurao pravovremeni pregled bez čekanja.
 
 ## Poslovna vrijednost:
-- Omogućava digitalno zakazivanje pregleda
-- Smanjuje administrativno opterećenje
-- Povećava zadovoljstvo pacijenata
+Korištenjem sistema omogućeno je jednostavno i brzo digitalno zakazivanje pregleda, bez potrebe za dodatnim procedurama ili čekanjem. Time se značajno smanjuje administrativno opterećenje, jer se veliki dio posla automatizuje. Kao rezultat toga, pacijenti imaju ugodnije iskustvo i veće zadovoljstvo uslugom.
 ## Prioritet:
 
 Visok (High)
@@ -138,9 +138,7 @@ Visok (High)
 Kao pacijent, želim da dobijem email potvrdu nakon rezervacije termina, kako bih imao podsjetnik i dokaz zakazanog pregleda.
 
 ## Poslovna vrijednost:
-- Smanjuje zaboravljanje termina
-- Povećava pouzdanost sistema
-- Poboljšava korisničko iskustvo
+Uvođenjem ovakvog rješenja znatno se smanjuje mogućnost da pacijenti zaborave zakazane termine, što doprinosi boljoj organizaciji. Istovremeno, sistem djeluje pouzdanije i stabilnije u svakodnevnom radu. Sve to zajedno utiče na pozitivnije korisničko iskustvo i lakše korištenje sistema.
 ## Prioritet:
 
 Srednji (Medium)
@@ -159,9 +157,8 @@ Srednji (Medium)
 Kao medicinsko osoblje, želim da mogu otkazati termine pacijenata, kako bih oslobodio termine u slučaju promjena u rasporedu.
 
 ## Poslovna vrijednost:
-- Omogućava fleksibilnost u rasporedu
-- Pomaže u optimalnoj organizaciji termina
-- Smanjuje neiskorištene termine
+Sistem omogućava veću fleksibilnost u rasporedu, prilagođavajući se potrebama i pacijenata i osoblja. To pomaže u optimalnoj organizaciji termina, tako da se vrijeme efikasno koristi. Kao dodatna prednost, smanjuje se broj neiskorištenih termina, čime cijeli proces postaje produktivniji i bolje koordiniran.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -179,9 +176,8 @@ Nizak (Low)
 Kao pacijent, želim da mogu otkazati svoj termin, kako bih oslobodio termin u slučaju spriječenosti.
 
 ## Poslovna vrijednost:
-- Smanjuje broj neiskorištenih termina
-- Omogućava bolju iskorištenost resursa
-- Povećava fleksibilnost i zadovoljstvo pacijenata
+Ovaj sistem pomaže da se broj neiskorištenih termina značajno smanji, čime se resursi bolje raspoređuju i maksimalno iskorištavaju. Istovremeno, omogućava veću fleksibilnost u planiranju, što pozitivno utiče na zadovoljstvo pacijenata i olakšava njihovo iskustvo sa uslugom.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -199,9 +195,8 @@ Nizak (Low)
 Kao doktor, želim da imam pregled svog dnevnog i sedmičnog rasporeda, kako bih efikasno organizovao svoje obaveze.
 
 ## Poslovna vrijednost:
-- Omogućava bolju organizaciju rada
-- Smanjuje greške u rasporedu
-- Povećava produktivnost i planiranje radnog dana
+Sistem doprinosi boljoj organizaciji svakodnevnog rada, jer pruža jasan pregled obaveza i zadataka. Time se značajno smanjuje mogućnost grešaka u rasporedu, a zaposlenima omogućava učinkovitije planiranje radnog dana. Kao rezultat, produktivnost raste, a radni proces postaje jednostavniji i pregledniji.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -223,9 +218,8 @@ Nizak (Low)
 Kao sistem, želim automatski osloboditi termine koji nisu potvrđeni u određenom vremenu, kako bi se povećila dostupnost termina za druge pacijente.
 
 ## Poslovna vrijednost:
-- Povećava iskorištenost termina
-- Smanjuje zastoje i neiskorištene resurse
-- Olakšava rad administracije i medicinskog osoblja
+Sistem omogućava bolje iskorištenje dostupnih termina, čime se smanjuju zastoji i neiskorišteni resursi. Time se rad administracije i medicinskog osoblja znatno olakšava, jer je organizacija procesa jasnija i efikasnija, što doprinosi glatkom funkcionisanju cijelog sistema.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -244,9 +238,8 @@ Nizak (Low)
 Kao sistem, želim spriječiti dupliranje termina u isto vrijeme za istog pacijenta, kako bih izbjegao konflikte i greške u rasporedu.
 
 ## Poslovna vrijednost:
-- Osigurava tačnost evidencije termina
-- Smanjuje administrativne greške
-- Poboljšava iskustvo pacijenata i doktora
+Sistem osigurava preciznu evidenciju svih zakazanih termina, čime se značajno smanjuje mogućnost administrativnih grešaka. To ne samo da olakšava posao osoblju, već i poboljšava iskustvo pacijenata, koji imaju pouzdan uvid u svoje termine, kao i doktora, kojima je rad organizovan i pregledan.
+
 ## Prioritet:
 
 Visok (High)
@@ -264,9 +257,8 @@ Visok (High)
 Kao administrator, želim da mogu upravljati radnim vremenom doktora, kako bi se termini mogli pravilno planirati i zakazivati.
 
 ## Poslovna vrijednost:
-- Omogućava bolju organizaciju rasporeda doktora
-- Povećava iskorištenost resursa
-- Smanjuje greške u zakazivanju
+Naš sistem pomaže u efikasnijoj organizaciji rasporeda doktora, što omogućava optimalno korištenje dostupnih resursa. Istovremeno, smanjuje se rizik od grešaka prilikom zakazivanja, čime cijeli proces postaje pouzdaniji i pregledniji, a rad osoblja jednostavniji.
+
 ## Prioritet:
 
 Visok (High)
@@ -284,9 +276,8 @@ Visok (High)
 Kao korisnik, želim da mogu resetovati lozinku putem emaila, kako bih mogao povratiti pristup svom nalogu ako zaboravim lozinku.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost korisničkog naloga
-- Omogućava samostalno rješavanje problema sa loginom
-- Smanjuje opterećenje podrške
+Ovaj sistem značajno povećava sigurnost korisničkih naloga, štiteći ih od neovlaštenog pristupa. Korisnicima takođe omogućava samostalno rješavanje problema sa loginom, što čini korištenje praktičnijim i bržim. Kao rezultat, opterećenje službe za podršku se smanjuje, a proces postaje efikasniji za sve strane.
+
 ## Prioritet:
 
 Srednji (Medium)
@@ -305,9 +296,8 @@ Srednji (Medium)
 Kao pacijent, želim da moj porodični doktor može rezervisati termin kod specijaliste u moje ime, kako bih dobio bržu i koordiniranu medicinsku uslugu.
 
 ## Poslovna vrijednost:
-- Omogućava koordinaciju između doktora
-- Smanjuje vrijeme čekanja pacijenta
-- Povećava efikasnost u sistemu zakazivanja
+Naš sistem olakšava koordinaciju između doktora, što omogućava bolje usklađivanje termina i zadataka. Time se smanjuje vrijeme čekanja pacijenata, a cijeli proces zakazivanja postaje efikasniji i pregledniji, čime se poboljšava iskustvo i osoblja i korisnika.
+
 ## Prioritet:
 
 Visok (High)
@@ -326,9 +316,8 @@ Visok (High)
 Kao administrator, želim imati centralizovani menadžment panel za nadzor i upravljanje sistemom, kako bih mogao pratiti sve aktivnosti i resurse.
 
 # Poslovna vrijednost:
-- Omogućava centralizovanu kontrolu sistema
-- Povećava efikasnost administracije
-- Olakšava praćenje termina i aktivnosti korisnika
+Centralizovana kontrola olakšava nadzor i upravljanje svim funkcijama, što značajno povećava efikasnost administrativnog osoblja. Istovremeno, praćenje termina i aktivnosti korisnika postaje preglednije, što pojednostavljuje organizaciju i omogućava brže reagovanje na potrebe pacijenata i osoblja.
+
 ## Prioritet:
 
 Visok (High)
@@ -347,9 +336,8 @@ Visok (High)
 Kao korisnik, želim da me sistem automatski odjavi nakon određenog vremena neaktivnosti, kako bi se povećala sigurnost mog naloga.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost podataka
-- Smanjuje rizik od neovlaštenog pristupa
-- Osigurava usklađenost sa sigurnosnim standardima
+Sigurnost podataka je znatno poboljšana, čime se smanjuje rizik od neovlaštenog pristupa i potencijalnih problema. Takođe, ovakav pristup osigurava da sve procedure budu u skladu sa važećim sigurnosnim standardima, što dodatno povećava pouzdanost i zaštitu informacija.
+
 ## Prioritet:
 
 Visok (High)
@@ -367,9 +355,8 @@ Visok (High)
 Kao administrator, želim da sistem bilježi sve akcije i promjene unutar sistema, kako bih mogao pratiti i analizirati aktivnosti korisnika.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost i transparentnost
-- Omogućava reviziju i praćenje grešaka
-- Pomaže u otkrivanju neovlaštenih aktivnosti
+Ovaj pristup doprinosi većoj sigurnosti i transparentnosti u radu, jer omogućava praćenje svih aktivnosti i reviziju eventualnih grešaka. Takođe, olakšava otkrivanje neovlaštenih radnji, čime se dodatno štite podaci i poboljšava kontrola nad procesima.
+
 ## Prioritet:
 
 Visok (High)
@@ -387,9 +374,8 @@ Visok (High)
 Kao pacijent ili doktor, želim da mogu vidjeti napomene ili komentare vezane za termin, kako bih imao sve relevantne informacije prije pregleda.
 
 ## Poslovna vrijednost:
-- Povećava kvalitet komunikacije
-- Smanjuje nesporazume u zakazivanju
-- Olakšava pripremu za pregled
+Bolja komunikacija doprinosi jasnijem dogovoru između pacijenata i osoblja, čime se smanjuju nesporazumi prilikom zakazivanja termina. To također olakšava pripremu za pregled, jer su sve informacije dostupne na vrijeme i organizovane, što čini iskustvo ugodnijim i efikasnijim.
+
 ## Prioritet:
 
 Srednji (Medium)
@@ -408,9 +394,8 @@ Srednji (Medium)
 Kao pacijent ili doktor, želim da imam interaktivno uputstvo ili dokumentaciju, kako bih znao kako koristiti sistem.
 
 ## Poslovna vrijednost:
-- Pomaže korisnicima da brže nauče koristiti sistem
-- Smanjuje potrebu za podrškom
-- Poboljšava korisničko iskustvo
+Intuitivno dizajnirane funkcionalnosti pomažu korisnicima da brže savladaju rad sa sistemom, što smanjuje potrebu za dodatnom podrškom. Kao rezultat, iskustvo korištenja postaje jednostavnije i ugodnije, čime se povećava zadovoljstvo korisnika.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -431,9 +416,8 @@ Nizak (Low)
 Kao medicinsko osoblje, želim da imam panel sa kontrolama za upravljanje pregledima i terminima pacijenata, kako bih mogao efikasno organizovati svoj rad.
 
 ## Poslovna vrijednost:
-- Omogućava bolju organizaciju rada medicinskog osoblja
-- Povećava produktivnost i smanjuje greške u rasporedu
-- Omogućava praćenje historije pacijenata
+Bolja organizacija rada medicinskog osoblja omogućava učinkovitije planiranje i smanjuje greške u rasporedu. Uz to, moguće je pratiti historiju pacijenata, što olakšava donošenje informisanih odluka i doprinosi ukupnoj produktivnosti i kvalitetu pružene njege.
+
 ## Prioritet:
 
 Visok (High)
@@ -451,9 +435,8 @@ Visok (High)
 Kao korisnik, želim da koristim dvofaktorsku autentifikaciju prilikom logina, kako bi moj nalog bio sigurniji.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost korisničkog naloga
-- Smanjuje rizik od neovlaštenog pristupa
-- Pomaže u zaštiti osjetljivih medicinskih podataka
+Povećana sigurnost korisničkih naloga smanjuje rizik od neovlaštenog pristupa, čime se štite osjetljivi medicinski podaci. Takav pristup dodatno osigurava privatnost pacijenata i povećava povjerenje u sistem.
+
 ## Prioritet:
 
 Visok (High)
@@ -471,9 +454,8 @@ Visok (High)
 Kao sistem, želim automatski blokirati naloge nakon više neuspješnih pokušaja logina, kako bi zaštitio korisničke podatke.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost sistema
-- Štiti osjetljive informacije pacijenata
-- Smanjuje mogućnost neovlaštenog pristupa
+Sistem je dizajniran da pruža visok nivo sigurnosti, čime se osjetljive informacije pacijenata dodatno štite. Istovremeno, značajno se smanjuje mogućnost neovlaštenog pristupa, što doprinosi pouzdanosti i sigurnosti cjelokupnog okruženja.
+
 ## Prioritet:
 
 Visok (High)
@@ -492,9 +474,8 @@ Visok (High)
 Kao sistem, želim da enkriptujem osjetljive zdravstvene podatke, kako bi zaštitio privatnost pacijenata i osigurao sigurnost informacija.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost podataka
-- Omogućava usklađenost sa zakonima o zaštiti podataka
-- Smanjuje rizik od curenja osjetljivih informacija
+Povećana zaštita podataka osigurava da svi podaci budu sigurni i zaštićeni od neovlaštenog pristupa. Sistem takođe omogućava usklađenost sa zakonima o zaštiti podataka, što smanjuje rizik od curenja osjetljivih informacija i povećava povjerenje korisnika.
+
 ## Prioritet:
 
 Visok (High)
@@ -512,9 +493,8 @@ Visok (High)
 Kao administrator ili medicinsko osoblje, želim vizuelno označiti hitne pacijente u sistemu, kako bi prioritetni termini bili obrađeni odmah.
 
 ## Poslovna vrijednost:
-- Omogućava pravovremenu obradu hitnih pacijenata
-- Povećava efikasnost rada medicinskog osoblja
-- Smanjuje rizik od propusta u hitnim slučajevima
+Sistem omogućava pravovremenu obradu hitnih pacijenata, što je ključno za njihovu sigurnost i zdravlje. Time se povećava efikasnost rada medicinskog osoblja, a rizik od propusta u urgentnim situacijama značajno se smanjuje, čime se poboljšava ukupna kvaliteta pružene njege.
+
 ## Prioritet:
 
 Srednji (Medium)
@@ -532,9 +512,8 @@ Srednji (Medium)
 Kao administrator, želim eksportovati statistiku zakazanih pregleda doktora u CSV formatu, kako bih mogao analizirati podatke i planirati resurse.
 
 ## Poslovna vrijednost:
-- Omogućava bolju analizu podataka
-- Pomaže u planiranju resursa i rasporeda
-- Olakšava izvještavanje i donošenje odluka
+Sistem omogućava detaljniju analizu podataka, što olakšava planiranje resursa i rasporeda. Takođe, pojednostavljuje pripremu izvještaja i pomaže u donošenju informisanih odluka, čime se povećava efikasnost i preglednost cjelokupnog procesa.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -553,9 +532,8 @@ Nizak (Low)
 Kao pacijent, želim da sistem automatski šalje podsjetnike pacijentima sa hroničnim bolestima, kako bi se smanjila zaboravljena zakazivanja pregleda.
 
 ## Poslovna vrijednost:
-- Povećava prisutnost pacijenata na terminima
-- Poboljšava kontinuitet liječenja
-- Smanjuje administrativni posao slanja podsjetnika ručno
+Veća prisutnost pacijenata na zakazanim terminima doprinosi kontinuitetu liječenja i boljoj njezi. Istovremeno, smanjuje se administrativni posao jer više nije potrebno ručno slati podsjetnike, što olakšava rad osoblja i čini cijeli proces efikasnijim.
+
 ## Prioritet:
 
 Nizak (Low)
@@ -573,9 +551,8 @@ Nizak (Low)
 Kao medicinsko osoblje, želim dodavati PDF nalaze ili vrijednosti u historiju pregleda pacijenata, kako bi podaci bili kompletni i dostupni za buduće preglede.
 
 ## Poslovna vrijednost:
-- Omogućava detaljniju evidenciju pacijenata
-- Pomaže doktorima u analizi i praćenju bolesti
-- Smanjuje rizik od gubitka podataka
+Detaljna evidencija pacijenata omogućava doktorima precizniju analizu i praćenje razvoja bolesti, što doprinosi kvalitetnijem liječenju. Takođe, smanjuje se rizik od gubitka važnih podataka, čime se osigurava sigurnost i pouzdanost informacija.
+
 ## Prioritet:
 
 Srednji (Medium)
@@ -594,9 +571,8 @@ Srednji (Medium)
 Kao backend developer, želim razviti backend funkcionalnosti za admin panel, kako bi administratori mogli upravljati korisnicima, terminima i resursima.
 
 ## Poslovna vrijednost:
-- Omogućava efikasan rad admin panela
-- Omogućava skalabilnost sistema
-- Povećava sigurnost i kontrolu nad podacima
+Admin panel funkcioniše efikasno i omogućava jednostavno upravljanje svim funkcijama sistema. Uz to, sistem je skalabilan i može se lako prilagoditi rastućim potrebama, dok povećana sigurnost i kontrola nad podacima osiguravaju pouzdanost i zaštitu informacija.
+
 ## Prioritet:
 
 Visok (High)
@@ -614,9 +590,9 @@ Visok (High)
 Kao sistem dizajner, želim definisati entitete, atribute, relacije, primarne i strane ključeve, kako bi baza podataka bila pravilno strukturirana i spremna za implementaciju.
 
 ## Poslovna vrijednost:
-- Omogućava ispravno funkcionisanje sistema
-- Pomaže u validaciji poslovnih procesa
-- Smanjuje rizik od grešaka pri implementaciji baze
+Ove funkcionalnosti osiguravaju pravilno funkcionisanje sistema i pomažu u provjeri i validaciji poslovnih procesa. Time se značajno smanjuje rizik od grešaka prilikom implementacije baze podataka, čime se povećava pouzdanost i stabilnost cijelog sistema.
+
+
 ## Prioritet:
 
 Visok (High)
@@ -636,9 +612,8 @@ Visok (High)
 Kao sistem administrator, želim implementirati bazu podataka u stvarnom okruženju, kako bi sistem mogao pohranjivati sve podatke pacijenata, termina i korisnika.
 
 ## Poslovna vrijednost:
-- Omogućava centralizovano čuvanje podataka
-- Osigurava konzistentnost i integritet podataka
-- Podržava sve funkcionalnosti sistema
+Centralizovano čuvanje podataka omogućava da sve informacije budu na jednom mjestu, što olakšava pristup i upravljanje njima. Time se osigurava konzistentnost i integritet podataka, a sistem može nesmetano podržavati sve svoje funkcionalnosti, čineći rad pouzdanim i efikasnim.
+
 ## Prioritet:
 
 Visok (High)
@@ -656,9 +631,8 @@ Visok (High)
 Kao administrator, želim implementirati autentifikaciju i autorizaciju za pristup podacima, kako bi se osigurala sigurnost i privatnost informacija.
 
 ## Poslovna vrijednost:
-- Povećava sigurnost osjetljivih podataka
-- Sprečava neovlašteni pristup
-- Omogućava kontrolu pristupa različitim tipovima korisnika
+Povećana zaštita osjetljivih podataka sprječava neovlašteni pristup i osigurava da informacije ostanu privatne. Sistem takođe omogućava kontrolu pristupa za različite tipove korisnika, čime se dodatno unapređuje sigurnost i organizacija rada.
+
 ## Prioritet:
 
 Visok (High)
@@ -676,9 +650,8 @@ Visok (High)
 Kao QA inženjer, želim testirati bazu podataka da provjerim validnost podataka, veze između tabela i prava pristupa, kako bi sistem radio pouzdano.
 
 ## Poslovna vrijednost:
-- Osigurava ispravnost podataka i veza u bazi
-- Sprečava greške u radu sistema
-- Povećava pouzdanost i kvalitet sistema
+Ove funkcionalnosti garantuju da su podaci i veze u bazi ispravni, čime se smanjuje mogućnost grešaka u radu sistema. Kao rezultat, pouzdanost i kvalitet cijelog sistema značajno se povećavaju, što doprinosi sigurnijem i efikasnijem radu.
+
 ## Prioritet:
 
 Visok (High)
