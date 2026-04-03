@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-### ID Storyja: US-01
+### ID Storyja: US-06
 **Naziv:** Rezervacija termina
 
 ---
