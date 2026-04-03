@@ -20,7 +20,7 @@ Srednji (Medium)
 - Sistem vodi evidenciju svih pregleda
 - Pacijent ima kreiran nalog
 ### Otvorena pitanja:
-- Koji detalji pregleda se prikazuju (samo datum ili i opis terapije)?
+- Koji detalji pregleda se prikazuju (samo datum ili datum i opis terapije)??
 - Da li se prikazuju i otkazani termini?
 
 ## US-02
