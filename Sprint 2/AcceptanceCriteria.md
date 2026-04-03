@@ -84,6 +84,27 @@
    - **Korisnik treba dobiti** opštu poruku "Pogrešan email ili lozinka" u slučaju netačnih podataka. Sistem ne smije precizirati koji je od ta dva podatka pogrešan iz sigurnosnih razloga.
 
 
+### ID Storyja: US-05
+**Naziv:** Pregled dostupnih resursa
+
+---
+
+1. **Filtriranje po specijalizaciji (Odgovor na otvoreno pitanje):**
+   - **Kada** je pacijent na stranici za pregled resursa, **ako** izabere određenu specijalizaciju (npr. Kardiologija) iz filtera, **tada** sistem mora prikazati isključivo ljekare koji pripadaju tom odjelu.
+
+2. **Prikaz ljekara:**
+   - **Kada** pacijent otvori listu resursa, **tada** sistem mora izlistati sve dostupne ljekare sa njihovim osnovnim informacijama (ime, titula i slika) radi lakšeg prepoznavanja.
+
+3. **Odabir ljekara i kalendara:**
+   - **Kada** pacijent klikne na konkretnog ljekara, **tada** sistem mora otvoriti njegov interaktivni kalendar sa prikazom slobodnih i zauzetih termina.
+
+4. **Zauzetost u realnom vremenu (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** prikaz zauzeća termina u realnom vremenu. **Ako** je termin upravo rezervisan od strane drugog korisnika, on više ne smije biti vidljiv kao slobodan za ostale pacijente.
+
+5. **Vizuelna razlika termina:**
+   - **Korisnik treba dobiti** jasan vizuelni prikaz (npr. različite boje) između termina koji su slobodni za klik i onih koji su već popunjeni ili blokirani od strane administracije.
+
+
 
 ### ID Storyja: US-06
 **Naziv:** Rezervacija termina
