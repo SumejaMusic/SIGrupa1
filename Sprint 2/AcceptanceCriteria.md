@@ -387,10 +387,14 @@
 ### ID Storyja: US-32 
 **Naziv:** Definisanje prava pristupa bazi podataka
  --- 
-1. **Definisanje uloga (Odgovor na otvoreno pitanje):** - **Sistem mora omogućiti** razlikovanje najmanje četiri osnovne uloge korisnika: PACIJENT, DOKTOR, MEDICINSKO_OSOBLJE i ADMINISTRATOR. 
-2. **Centralizovana kontrola pristupa (Odgovor na otvoreno pitanje):** - **Kada** korisnik pokuša pristupiti bilo kojem API endpointu ili stranici, **ako** njegova uloga nije autorizovana za tu akciju, **tada** sistem mora odbiti zahtjev i vratiti grešku. 
-3. **Pristup doktora:** - **Kada** je doktor prijavljen na sistem, **tada** mu sistem mora omogućiti puni pristup terminima i historiji onih pacijenata koji su rezervisali pregled kod njega. 
-4. **Pristup medicinskog osoblja:** - **Kada** član medicinskog osoblja otvori panel, **tada** mu sistem mora dozvoliti upravljanje kalendarima svih ljekara.
+1. **Definisanje uloga (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** razlikovanje najmanje četiri osnovne uloge korisnika: PACIJENT, DOKTOR, MEDICINSKO_OSOBLJE i ADMINISTRATOR. 
+2. **Centralizovana kontrola pristupa (Odgovor na otvoreno pitanje):**
+   - **Kada** korisnik pokuša pristupiti bilo kojem API endpointu ili stranici, **ako** njegova uloga nije autorizovana za tu akciju, **tada** sistem mora odbiti zahtjev i vratiti grešku. 
+3. **Pristup doktora:**
+   - **Kada** je doktor prijavljen na sistem, **tada** mu sistem mora omogućiti puni pristup terminima i historiji onih pacijenata koji su rezervisali pregled kod njega. 
+4. **Pristup medicinskog osoblja:**
+   - **Kada** član medicinskog osoblja otvori panel, **tada** mu sistem mora dozvoliti upravljanje kalendarima svih ljekara.
 
 
 
