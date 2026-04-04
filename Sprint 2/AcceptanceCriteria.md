@@ -313,6 +313,86 @@
     - Korisnik na obavijesti koja se pojavi na ekranu mora imati 2 dugmeta sa opcijama "Otkaži" i "Produži sesiju"
 2. **Odjava**
     - Sistem mora omogućiti preusmjeravanja korisnika na login formu nakon 15 minuta neaktivnosti
+  
+### ID Storyja: US-21 
+**Naziv:** Panel medicinskog osoblja 
+---
+1. **Glavni prikaz termina:** 
+- **Kada** je medicinsko osoblje prijavljeno na sistem, **ako** otvori svoj panel, **tada** sistem mora prikazati listu svih termina zakazanih za taj dan
+2. **Kreiranje novih termina (Odgovor na otvoreno pitanje):** 
+- **Sistem mora omogućiti** osoblju da ručno kreira novi termin za pacijenta (npr. u slučaju telefonske rezervacije). **Kada** osoblje unese podatke pacijenta i izabere slobodan termin, **tada** se taj termin mora odmah pojaviti u bazi kao "ZAKAZAN". 
+3. **Prikaz informacija o pacijentu (Odgovor na otvoreno pitanje):** 
+- **Kada** osoblje klikne na detalje termina, **tada** sistem mora prikazati sljedeće relevantne informacije: Ime i prezime pacijenta, Broj telefona, Vrstu pregleda i Razlog posjete koji je pacijent naveo. 
+4. **Brza pretraga i filtriranje:** 
+- **Kada** osoblje unese ime pacijenta u polje za pretragu, **tada** sistem mora filtrirati listu i prikazati samo termine vezane za tog specifičnog pacijenta. 
+5. **Ograničenje pristupa:** - **Sistem ne smije dozvoliti** običnim pacijentima pristup ovom panelu. Pristup je dozvoljen isključivo medicinskom osoblju ili administrator.
+
+
+
+
+
+
+
+
+
+### ID Storyja: US-22 
+**Naziv:** Two factor authentication (2FA) 
+--- 
+1. **Slanje sigurnosnog koda (Tip 2FA):** - **Kada** korisnik unese ispravnu email adresu i lozinku, **ako** mu je uključena opcija 2FA, **tada** sistem mora automatski poslati email sa jednokratnim kodom na njegovu adresu. 
+2. **Unos i potvrda koda:** - **Kada** korisnik dobije kod, **ako** ga ispravno unese u polje za potvrdu na ekranu, **tada** mu sistem mora dozvoliti konačan pristup aplikaciji. 
+3. **Pogrešan ili istekao kod:** - **Sistem ne smije dozvoliti** prijavu ako je unijeti kod pogrešan. Takođe, kod mora biti nevažeći **ako** je od njegovog slanja prošlo više od 5 minuta (istekao kod). 
+4. **Opcionalna vs Obavezna aktivacija (Odgovor na otvoreno pitanje):** - **Sistem mora omogućiti** pacijentima da sami biraju da li žele aktivirati 2FA na svom profilu (opcionalno). 
+5. **Aktivacija 2FA opcije:** - **Kada** pacijent ode na "Postavke profila", **tada** korisnik treba dobiti opciju (toggle/prekidač) da uključi ili isključi 2FA zaštitu za svoj nalog. 
+6. **Poruka o slanju koda:** - **Korisnik treba dobiti** jasnu informaciju na ekranu kako bi znao da treba provjeriti svoj inbox prije nastavka prijave.
+
+
+
+### ID Storyja: US-23 
+**Naziv:** Detekcija neobičnog ponašanja - blokiranje naloga
+ --- 
+1. **Limit pokušaja prijave (Odgovor na otvoreno pitanje):** - **Kada** bilo koji korisnik pokušava da se prijavi na sistem, **ako** unese pogrešnu lozinku 5 puta zaredom, **tada** sistem mora automatski blokirati taj nalog na neko vrijeme. 
+2. **Upozorenje prije blokade (Odgovor na otvoreno pitanje):** - **Kada** se desi 3. neuspješan pokušaj prijave zaredom, **tada** korisnik treba dobiti jasno upozorenje na ekranu: "Preostala su vam još 2 pokušaja prije nego što nalog bude privremeno blokiran". 
+3. **Obavijest vlasniku putem emaila:** - **Kada** nalog bude zvanično blokiran, **tada** sistem mora poslati automatski email vlasniku tog naloga sa informacijom da je zabilježen neobičan broj pokušaja prijave radi njegove sigurnosti. 
+4. **Ručno odblokiranje (Admin):** - **Sistem mora omogućiti** administratoru da unutar admin panela vidi listu blokiranih korisnika i da ih ručno odblokira prije isteka vremena ako pacijent to zatraži (npr. putem telefona).
+
+
+
+### ID Storyja: US-24
+ **Naziv:** Enkripcija osjetljivih podataka
+ --- 
+1. **Enkripcija na nivou baze (Odgovor na otvoreno pitanje): - **Sistem mora osigurati** da se osjetljivi podaci pacijenata čuvaju isključivo u enkriptovanom obliku koristeći standardni **AES-256** algoritam 
+2. **Heširanje lozinki:** - **Kada** korisnik kreira lozinku, **ako** sistem treba da je spasi u bazu, **tada** ona mora biti heširana tako da niko, pa ni administrator baze, ne može vidjeti lozinku u običnom tekstu. 
+3. **Enkripcija backup fajlova (Odgovor na otvoreno pitanje):** - **Ako** sistem kreira automatsku rezervnu kopiju (backup) baze podataka, **tada** i taj backup fajl mora biti enkriptovan kao i aktivna baza. 
+
+### ID Storyja: US-25
+ **Naziv:** Označavanje hitnosti prijavljenog termina 
+---
+ 1. **Ručno označavanje hitnosti:** - **Kada** medicinska sestra ili administrator pregledaju listu zakazanih termina, **ako** odaberu određenog pacijenta, **tada** sistem mora ponuditi opciju da se taj termin označi statusom "HITNO". 
+2. **Vizuelno isticanje u panelu:** - **Kada** je termin označen kao hitan, **tada** se taj cijeli red u tabeli na doktorovom i admin dashboardu mora obojiti u crvenu boju. 
+3. **Kriteriji za hitnost (Odgovor na otvoreno pitanje):** - **Sistem treba omogućiti** osoblju da oznaku hitnosti dodijeli na osnovu pacijentovog opisa simptoma ili na osnovu procjene sestre prilikom dolaska pacijenta.
+ 4. **Vidljivost za pacijenta (Odgovor na otvoreno pitanje):** - **Sistem ne smije prikazivati** internu oznaku "Hitno" na pacijentovoj strani aplikacije. Oznaka je namijenjena isključivo za internu organizaciju medicinskog osoblja. 
+
+
+
+### ID Storyja: US-31 
+**Naziv:** Kreiranje baze podataka 
+--- 
+1. **Izbor tipa baze podataka (Odgovor na otvoreno pitanje):** - **Sistem mora koristiti** relacijsku bazu podataka (SQL), kao što je PostgreSQL ili MySQL.
+2. **Implementacija tabela:** - **Kada** administrator pokrene skripte za kreiranje baze, **tada** sistem mora uspješno generisati sve tabele, primarne ključeve (PK) i strane ključeve (FK).
+3. **Integritet podataka:** - **Sistem ne smije dozvoliti** upisivanje termina u bazu ako pacijent ili ljekar sa tim ID-em ne postoje, čime se sprječava pojava nevažećih zapisa. 
+4. **Dostupnost i Replikacija (Odgovor na otvoreno pitanje):** - **Za veću dostupnost sistema**, baza podataka mora vršiti automatski dnevni backup. U slučaju kvara na glavnom serveru, administrator mora biti u mogućnosti da povrati podatke iz zadnje kopije. 
+
+
+
+### ID Storyja: US-32 
+**Naziv:** Definisanje prava pristupa bazi podataka
+ --- 
+1. **Definisanje uloga (Odgovor na otvoreno pitanje):** - **Sistem mora omogućiti** razlikovanje najmanje četiri osnovne uloge korisnika: PACIJENT, DOKTOR, MEDICINSKO_OSOBLJE i ADMINISTRATOR. 
+2. **Centralizovana kontrola pristupa (Odgovor na otvoreno pitanje):** - **Kada** korisnik pokuša pristupiti bilo kojem API endpointu ili stranici, **ako** njegova uloga nije autorizovana za tu akciju, **tada** sistem mora odbiti zahtjev i vratiti grešku. 
+3. **Pristup doktora:** - **Kada** je doktor prijavljen na sistem, **tada** mu sistem mora omogućiti puni pristup terminima i historiji onih pacijenata koji su rezervisali pregled kod njega. 
+4. **Pristup medicinskog osoblja:** - **Kada** član medicinskog osoblja otvori panel, **tada** mu sistem mora dozvoliti upravljanje kalendarima svih ljekara.
+
+
 
 
 
