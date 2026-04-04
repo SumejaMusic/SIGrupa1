@@ -205,3 +205,73 @@
 
 3. **Historija pregleda pacijenta (Odgovor na otvoreno pitanje):**
    - **Kada** doktor pregleda listu pacijenata za taj dan, **ako** klikne na ime pacijenta, **tada** mu sistem mora otvoriti uvid u historiju prethodnih dolazaka i nalaza tog pacijenta radi boljeg uvida u slučaj.
+
+
+### ID Storyja: US-11
+**Naziv:** Automatsko oslobađanje zaključanih termina
+
+---
+
+1. **Vrijeme otključavanja termina (Odgovor na otvoreno pitanje)**  
+    - Kada termin dobije status "zaključan", ako pacijent ne klikne dugme za potvrdu termina u roku od 2 minute, tada termin dobije status slobodan
+    - Kada prođe rok od 2 minute, ako pacijent nije kliknuo na dugme "Potvrdi termin", tada se pacijent vraća na početni ekran za izbor termina
+    - Korisnik treba dobiti obavijest na ekranu "Vrijeme za potvrdu termina je isteklo. Molimo Vas odaberite novi termin" kada se vrati na početni ekran za izbor termina
+   - Sistem mora omogućiti da, nakon 2 minute bez potvrde, termin bude ponovo vidljiv među slobodnim terminima
+   - Kada korisnik klikne na dugme za potvrdu, ako je u tom trenutku nastupilo tačno 2 minute, tada se korisnik vraća na početni ekran gdje mu se prikaže poruka "Vrijeme za potvrdu termina je isteklo. Molimo Vas odaberite novi termin"
+
+ 2. **Unos podataka**
+    - Sistem ne smije dozvoliti potvrdu termina ako pacijent nije popunio sva obavezna polja
+    - Korisnik treba dobiti poruku "Ne smijete rezervisati termin bez popunjavanja obaveznih polja!" ako pokuša potvrditi termin bez unesenih podataka
+
+### ID Storyja: US-12
+**Naziv:** Validacija i sprječavanje duplih rezervacija
+
+---
+
+1. **Rezervacija termina (Odgovor na otvoreno pitanje)**   
+    - Kada korisnik odabere termin, ako se ne preklapa ni sa jednom od postojećih rezervacija, tada se korisiku prikazuje forma za unos podataka i potvrdu termina
+    - Sistem mora omogućiti zaključavanje termina u roku od 2 minute kako bi spriječio duple rezervacije (mozda izbaciti spominje se u US-11)
+    - Sistem ne smije dozvoliti pacijentu rezervaciju termina koji se vremenski poklapa s bilo kojim već potvrđenim terminom, bez obzira na doktora
+    - Sistem mora vršiti provjeru preklapanja termina u trenutku kada pacijent klikne na termin
+    - Kada korisnik klikne na termin, ako u to vrijeme ima rezervisan termin kod drugog doktora, tada se korisniku prikazuje poruka "Već imate rezervisan termin u ovo vrijeme. Molimo Vas odaberite drugi termin ili otkažite drugi"
+    - Sistem treba omogućiti pacijentu da rezerviše termin ako je otkazao termin sa kojim je postojalo preklapanje
+    - Sistem mora potvrđene termine označiti kao zauzete i izbaciti ih iz liste ponuđenih slobodnih termina
+
+2. **Rezervacija termina od strane dva ili više korisnika**  
+   - Kada više korisnika želi rezervisati isti termin, tada se termin zaključava za korisnika čiji je zahtjev prvi stigao na server
+   - Kada pacijent želi rezervisati termin, ako njegov zahtjev stigne na server poslije zahtjeva drugog pacijenta, tada pacijent dobija poruku na ekranu "Žao nam je. Termin je već rezervisan. Molimo izaberite drugi"
+ 
+### ID Storyja: US-14
+**Naziv:** Reset lozinke putem emaila
+
+---
+Za svaki story navesti mjerljive i provjerljive acceptance kriterije. 
+Primjer strukture: - Kada [početni uslov], ako [akcija], tada [očekivani rezultat] - Sistem mora 
+omogućiti… - Sistem ne smije dozvoliti… - Korisnik treba dobiti… 
+Kriteriji trebaju biti: - jasni - testabilni - povezani sa stvarnim očekivanim ponašanjem sistema
+
+- Koliko dugo je reset link validan? - Da li postoji limit pokušaja resetovanja?
+1. **Validni podaci i link**  
+    - Kada korisnik klikne na link zaboravljena lozinka ispod forme za login, ako unese ispravan mail, tada sistem šalje link za resetovanje lozinke na email
+    - Kada korisnik klikne na validan link za resetovanje lozinke i promjeni lozinku, tada sistem treba zabilježiti promjenjenu lozinku i preusmjeriti ga na login formu
+    - Sistem ne smije dozvoliti ponovnu upotrebu linka za resetovanje nakon što je već iskorišten
+
+ 2. **Vrijeme validnosti linka ( Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti da link za resetovanje lozinke bude validan 10 minuta
+    - Kada korisnik klikne na link za reset lozinke koji je istekao, tada korisnik dobiva obavijest "Link za resetovanje je istekao."
+ 3. **Limit pokušaja resetovanja (Odgovor na otvoreno pitanje)**  
+     - Sistem treba omogućiti da korisnik može generisati link za resetovanje lozinke 3 puta u roku od sat vremena
+     - Kada korisnik pokuša da generiše link za resetovanje poruke, ako je premašio 3 pokušaja, tada se korisniku šalje mail o prekoračenju broja pokušaja sa porukom "Morate čekati 1h do sljedećeg pokušaja generisanja linka za promjenu lozinke"
+     - Sistem ne smije dozvoliti generisanje linka za resetovanje više od 3 puta za bilo koji mail koji se unosi
+4. **Unos e-maila**  
+   - Kada korisnik unese mail koji ne postoji u sistemu, tada sistem prikazuje poruku na ekranu "Link za resetovanje lozinke će biti poslan na Vašu mail adresu"
+   - Kada korisnik unese neispravan fomat mail adrese, tada sistem prikazuje upozorenje na ekranu "Neispravan format mail adrese!"
+
+
+     
+
+   
+
+
+
+ 
