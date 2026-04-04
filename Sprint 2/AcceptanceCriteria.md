@@ -233,7 +233,7 @@
     - Sistem mora omogućiti zaključavanje termina u roku od 2 minute kako bi spriječio duple rezervacije (mozda izbaciti spominje se u US-11)
     - Sistem ne smije dozvoliti pacijentu rezervaciju termina koji se vremenski poklapa s bilo kojim već potvrđenim terminom, bez obzira na doktora
     - Sistem mora vršiti provjeru preklapanja termina u trenutku kada pacijent klikne na termin
-    - Kada korisnik klikne na termin, ako u to vrijeme ima rezervisan termin kod drugog doktora, tada se korisniku prikazuje poruka "Već imate rezervisan termin u ovo vrijeme. Molimo Vas odaberite drugi termin ili otkažite drugi"
+    - Kada korisnik klikne na termin, ako u to vrijeme ima rezervisan termin kod drugog doktora, tada se korisniku prikazuje poruka "Već imate rezervisan termin u ovo vrijeme. Molimo Vas odaberite drugi termin ili otkažite termin koji se preklapa"
     - Sistem treba omogućiti pacijentu da rezerviše termin ako je otkazao termin sa kojim je postojalo preklapanje
     - Sistem mora potvrđene termine označiti kao zauzete i izbaciti ih iz liste ponuđenih slobodnih termina
 
@@ -245,15 +245,9 @@
 **Naziv:** Reset lozinke putem emaila
 
 ---
-Za svaki story navesti mjerljive i provjerljive acceptance kriterije. 
-Primjer strukture: - Kada [početni uslov], ako [akcija], tada [očekivani rezultat] - Sistem mora 
-omogućiti… - Sistem ne smije dozvoliti… - Korisnik treba dobiti… 
-Kriteriji trebaju biti: - jasni - testabilni - povezani sa stvarnim očekivanim ponašanjem sistema
-
-- Koliko dugo je reset link validan? - Da li postoji limit pokušaja resetovanja?
 1. **Validni podaci i link**  
     - Kada korisnik klikne na link zaboravljena lozinka ispod forme za login, ako unese ispravan mail, tada sistem šalje link za resetovanje lozinke na email
-    - Kada korisnik klikne na validan link za resetovanje lozinke i promjeni lozinku, tada sistem treba zabilježiti promjenjenu lozinku i preusmjeriti ga na login formu
+    - Kada korisnik klikne na validan link za resetovanje lozinke i promjeni lozinku, tada sistem treba zabilježiti promijenjenu lozinku i preusmjeriti ga na login formu
     - Sistem ne smije dozvoliti ponovnu upotrebu linka za resetovanje nakon što je već iskorišten
 
  2. **Vrijeme validnosti linka ( Odgovor na otvoreno pitanje)**
@@ -261,14 +255,66 @@ Kriteriji trebaju biti: - jasni - testabilni - povezani sa stvarnim očekivanim 
     - Kada korisnik klikne na link za reset lozinke koji je istekao, tada korisnik dobiva obavijest "Link za resetovanje je istekao."
  3. **Limit pokušaja resetovanja (Odgovor na otvoreno pitanje)**  
      - Sistem treba omogućiti da korisnik može generisati link za resetovanje lozinke 3 puta u roku od sat vremena
-     - Kada korisnik pokuša da generiše link za resetovanje poruke, ako je premašio 3 pokušaja, tada se korisniku šalje mail o prekoračenju broja pokušaja sa porukom "Morate čekati 1h do sljedećeg pokušaja generisanja linka za promjenu lozinke"
+     - Kada korisnik pokuša da generiše link za resetovanje poruke, ako je premašio 3 pokušaja, tada se korisniku na ekranu prikazuje poruka "Morate čekati 1h do sljedećeg pokušaja generisanja linka za promjenu lozinke"
      - Sistem ne smije dozvoliti generisanje linka za resetovanje više od 3 puta za bilo koji mail koji se unosi
 4. **Unos e-maila**  
    - Kada korisnik unese mail koji ne postoji u sistemu, tada sistem prikazuje poruku na ekranu "Link za resetovanje lozinke će biti poslan na Vašu mail adresu"
    - Kada korisnik unese neispravan fomat mail adrese, tada sistem prikazuje upozorenje na ekranu "Neispravan format mail adrese!"
+5. **Sigurnost lozinke**
+   - Sistem ne smije dozvoliti postavljanje lozinke koja ima manje od 8 karaktera, nema bar jedno veliko slovo i barem 1 broj
 
 
-     
+### ID Storyja: US-15 
+**Naziv:** Rezervacija termina kod specijaliste putem porodičnog doktora 
+
+1. **Rezervacija termina**
+   - Kada doktor pristupi rasporedu specijaliste i odabere slobodan termin, ako doktor putem pretrage pronađe pacijenta i odabere ga za rezervaciju termina na njegovo ime, tada sistem treba rezervisati termin za odabranog pacijenta i doktor dobija poruku na ekranu "Termin je uspješno rezervisan"
+   - Sistem mora odmah izbaciti rezervisani termin sa liste slobodnih termina
+2. **Obavijest o rezervaciji (Odgovor na otvoreno pitanje)**
+   - Kada doktor rezerviše termin za pacijenta, pacijentu se šalje obavijest na mail o vremenu termina i podacima o specijalisti 
+
+3. **Otkazivanje termina od strane pacijenta (Odgovor na otvoreno pitanje)**
+   - Sistem mora omogućiti pacijentu da može odbiti termin koji je rezervisan na njegovo ime ako je rok duži od 24 h
+   - Kada pacijent klikne opciju "Otkaži termin", tada sistem treba odmah osloboditi rezervisani termin 
+   - Sistem ne smije dozvoliti otkazivanje rezervacije 24 h prije rezervisanog termina
+   - Korisnik treba obavijest na ekranu "Rezervaciju nije moguće otkazati 24 h prije"
+
+
+   
+### ID Storyja: US-16
+**Naziv:** Pregled sistema i statistika
+
+1. **Pregled sistema i statistika**  
+   - Kada vlasnik ili menadžer pristupi dashboard-u, tada sistem treba prikazati sve dostpne statistike
+   - Sistem mora omogućiti filtriranje podataka po vremenskom periodu
+2. **Registrovani korisnici (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti prikaz broja registorvanih korisnika po ulogama u sistemu
+
+3. **Zakazani termini (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti prikazivanje broja zakazanih termina po svakom doktoru
+    - Sistem mora omogućiti prikazivanje broja slobodnih termina
+    - Sistem mora omogućiti prikazivanje zauzetosti sala po terminima
+4. **Aktivnost zaposlenih (Odgovor na otvoreno pitanje)**
+    - Sistem mora prikazivati informaciju ko je zakazao termin i kada
+    - Sistem mora prikazati informaciju ko je otkazao termin i kada
+5. **Pravo pristupa**
+    - Sistem ne smije dozvoliti pristup pregledu statistika korisnicima koji nemaju ulogu vlasnika ili menadžera
+    
+6. **Ažuriranje podataka podataka (Odgovor na otvoreno pitanje)**
+   - Sistem mora omogućiti da se podaci ažuriraju svakih 5 minuta dok rezervacije kod specijaliste moraju biti ažurirane u realnom vremenu
+
+
+### ID Storyja: US-17
+**Naziv:** Automatska odjava
+
+1. **Pokretanje timeout (Odgovor na otvoreno pitanje)**
+    - Kada korisnik nije aktivan više od 15 minuta na svom korisničkom profilu, tada sistem treba da pokrene automatsku odjavu korisnika 
+    - Korisnik treba dobiti obavijest na ekranu "Biti ćete odjavljeni s vašeg profila za 2 minute"
+    - Korisnik na obavijesti koja se pojavi na ekranu mora imati 2 dugmeta sa opcijama "Otkaži" i "Produži sesiju"
+2. **Odjava**
+    - Sistem mora omogućiti preusmjeravanja korisnika na login formu nakon 15 minuta neaktivnosti
+
+
 
    
 
