@@ -27,7 +27,7 @@ U sistemu za zakazivanje medicinskih termina, **NFR zahtjevi** obuhvataju perfor
 
 
 
-## Lista Nefunkcionalnih zahtjeva za nas sistem
+## Lista Nefunkcionalnih zahtjeva za naš sistem
 
 | ID     | Naziv zahtjeva                                                                              | Kategorija     | Prioritet |
 | ------ | ------------------------------------------------------------------------------------------- | -------------- | --------- |
@@ -52,5 +52,6 @@ U sistemu za zakazivanje medicinskih termina, **NFR zahtjevi** obuhvataju perfor
 | NFR-19 | Baza podataka mora osigurati konzistentnost i integritet podataka                           | Pouzdanost     | Visok     |
 | NFR-20 | Sistem mora omogućiti brze upite nad velikim skupom podataka                                | Performanse    | Srednji   |
 | NFR-21 | Baza podataka mora biti dizajnirana u normalizovanom obliku                    | Skalabilnost   | Srednji   |
-| NFR-22 | Sistem mora privremeno zaključati odabrani termin na 2 minute tokom unosa podataka kako bi se sprječile duple rezervacije | Konzistentnost | Visok | 
+| NFR-22 | Sistem mora zaključati termin na 2 minute tokom unosa podataka kako bi se sprječile duple rezervacije | Konzistentnost | Visok | 
 | NFR-23 | Sistem mora omogućiti two factor authentication kao dodatni sloj zaštite za korisnike | Sigurnost | Visok |
+| NFR-24 | Sistem mora implementirati enkripciju za osjetljive zdravstvene podatke | Sigurnost | Visok | 
