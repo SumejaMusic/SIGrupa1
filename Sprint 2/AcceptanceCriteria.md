@@ -313,6 +313,80 @@
     - Korisnik na obavijesti koja se pojavi na ekranu mora imati 2 dugmeta sa opcijama "Otkaži" i "Produži sesiju"
 2. **Odjava**
     - Sistem mora omogućiti preusmjeravanja korisnika na login formu nakon 15 minuta neaktivnosti
+ 
+3. **Produži sesiju**
+    - Kada korisnik klikne na dugme "Produži sesiju", sistem treba resetovati tajmer neaktivnosti na 0 minuta
+    - Obavijest se zatvara i korisnik nastavlja rad na istoj stranici bez prekida
+ 
+4. **Otkaži sesiju**
+    - Kada korisnik klikne na dugme "Otkaži", sistem treba odmah odjaviti korisnika
+    - Sistem preusmjerava korisnika na login formu
+ 
+5. **Sigurnost sesije**
+    - Nakon automatske odjave, korisnička sesija mora biti poništena
+    - Pokušaj pristupa zaštićenim stranicama s isteknutom sesijom mora rezultirati preusmjeravanjem na login formu
+### ID Storyja: US-18
+**Naziv:** Logovanje svih akcija u sistemu (audit log)
+ 
+1. **Bilježenje akcija**
+    - Sistem mora bilježiti sve CRUD akcije (kreiranje, čitanje, ažuriranje, brisanje) koje korisnici izvršavaju unutar sistema
+    - Svaki zapis u audit logu mora sadržavati: ID korisnika, vrstu akcije, naziv entiteta nad kojim je akcija izvršena, datum i vrijeme akcije
+    - Sistem mora bilježiti i neuspješne pokušaje prijave u sistem
+ 
+2. **Pristup audit logu (Odgovor na otvoreno pitanje)**
+    - Samo administratori sistema imaju pravo pregleda audit loga
+    - Administratori mogu pretraživati i filtrirati zapise prema korisniku, vrsti akcije i vremenskom periodu
+ 
+3. **Čuvanje podataka (Odgovor na otvoreno pitanje)**
+    - Podaci u audit logu čuvaju se minimalno 12 mjeseci
+    - Nakon isteka perioda čuvanja, podaci se automatski arhiviraju ili brišu u skladu s politikom privatnosti
+ 
+4. **Integritet podataka**
+    - Zapisi u audit logu ne smiju biti izmjenjivi ni od strane administratora
+    - Sistem mora osigurati da se svaka akcija zabiliježi u realnom vremenu, bez mogućnosti preskakanja zapisa
+
+
+### ID Storyja: US-19
+**Naziv:** Omogućavanje pregleda komentara prilikom zakazivanja termina
+ 
+1. **Unos komentara (Odgovor na otvoreno pitanje)**
+    - Komentare prilikom zakazivanja termina mogu unositi pacijent i osoblje
+    - Doktor ne unosi komentare pri zakazivanju, ali ih može pregledati
+    - Komentar je opcionalno polje prilikom kreiranja termina
+ 
+2. **Pregled komentara (Odgovor na otvoreno pitanje)**
+    - Komentari vezani za termin vidljivi su i pacijentu i doktoru
+    - Komentari se prikazuju u okviru detalja termina na pregledu zakazanih termina
+    - Korisnik mora biti prijavljen i imati pristup konkretnom terminu kako bi vidio komentare
+ 
+3. **Prikaz komentara**
+    - Sistem mora prikazati komentar u detaljima termina uz informacije: tekst komentara, ime osobe koja je unijela komentar i datum unosa
+    - Ukoliko termin nema komentara, u sekciji za komentare prikazuje se poruka "Nema komentara za ovaj termin"
+ 
+4. **Izmjena i brisanje komentara**
+    - Komentar može izmijeniti ili obrisati samo osoba koja ga je unijela ili administrator sistema
+    - Svaka izmjena komentara mora biti zabilježena u audit logu (US-18)
+ 
+### ID Storyja: US-20
+**Naziv:** Vodič za korištenje stranice
+ 
+1. **Sadržaj vodiča (Odgovor na otvoreno pitanje)**
+    - Vodič sadrži tekstualna uputstva s pratećim slikama za sve ključne funkcionalnosti sistema
+    - Vodič ne uključuje video tutorijale u inicijalnoj verziji
+    - Sadržaj vodiča organizovan je po ulogama: odvojeni vodič za pacijente i odvojeni vodič za doktore
+ 
+2. **Pristup vodiču**
+    - Vodič je dostupan svim prijavljenim korisnicima putem ikone ili linka vidljivog na svakoj stranici sistema
+    - Vodič se otvara kao zasebna stranica bez napuštanja trenutne stranice
+ 
+3. **Interaktivnost vodiča**
+    - Vodič sadrži pretragu po ključnim riječima kako bi korisnik brzo pronašao željenu temu
+    - Sadržaj je organizovan po sekcijama s mogućnošću direktnog skoka na određenu temu putem menija
+ 
+4. **Ažuriranje vodiča (Odgovor na otvoreno pitanje)**
+    - Vodič se ne ažurira automatski već ga ručno ažurira administrator sistema nakon svake značajnije izmjene funkcionalnosti
+    - Svaka verzija vodiča mora imati vidljivo istaknut datum posljednjeg ažuriranja
+
   
 ### ID Storyja: US-21 
 **Naziv:** Panel medicinskog osoblja 
