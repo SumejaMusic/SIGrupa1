@@ -457,6 +457,22 @@
 4. **Vidljivost za pacijenta (Odgovor na otvoreno pitanje):**
    - **Sistem ne smije prikazivati** internu oznaku "Hitno" na pacijentovoj strani aplikacije. Oznaka je namijenjena isključivo za internu organizaciju medicinskog osoblja. 
 
+### ID Storyja: US-26
+**Naziv:** Export statistike zdravstvene ustanove
+---
+1. **Eksport na zahtjev (Odgovor na otvoreno pitanje):**
+   - **Kada** je administrator na stranici za statistiku i odabere vremenski period, **ako** klikne na dugme "Generiši izvještaj", **tada** sistem mora generisati CSV fajl sa podacima za taj period.
+
+2. **Proces preuzimanja:**
+   - **Kada** sistem završi generisanje podataka, **tada** korisnik (admin) treba odmah dobiti prozor za spašavanje (download) CSV fajla na svoj računar.
+
+3. **Pristup podacima (Odgovor na otvoreno pitanje):**
+   - **Sistem ne smije dozvoliti** običnim pacijentima ili ljekarima pristup opciji eksporta. Ova funkcionalnost mora biti vidljiva i dostupna isključivo korisnicima sa ulogom 'ADMIN'.
+
+4. **Sadržaj izvještaja:**
+   - **Korisnik treba dobiti** CSV fajl koji sadrži sljedeće kolone: Ime ljekara, Ukupan broj zakazanih termina, Broj obavljenih pregleda u željenom vremenskom periodu.
+
+
 ### ID Storyja: US-27
 **Naziv:** Automatski podsjetnik
  
