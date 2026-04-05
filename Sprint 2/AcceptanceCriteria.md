@@ -301,7 +301,7 @@
     - Sistem ne smije dozvoliti pristup pregledu statistika korisnicima koji nemaju ulogu vlasnika ili menadžera
     
 6. **Ažuriranje podataka podataka (Odgovor na otvoreno pitanje)**
-   - Sistem mora omogućiti da se podaci ažuriraju svakih 5 minuta dok rezervacije kod specijaliste moraju biti ažurirane u realnom vremenu
+   - Sistem mora omogućiti da se podaci ažuriraju u realnom vremenu
 
 
 ### ID Storyja: US-17
