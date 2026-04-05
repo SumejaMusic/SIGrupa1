@@ -457,7 +457,30 @@
 4. **Vidljivost za pacijenta (Odgovor na otvoreno pitanje):**
    - **Sistem ne smije prikazivati** internu oznaku "Hitno" na pacijentovoj strani aplikacije. Oznaka je namijenjena isključivo za internu organizaciju medicinskog osoblja. 
 
+### ID Storyja: US-27
+**Naziv:** Automatski podsjetnik
+ 
+1. **Slanje podsjetnika (Odgovor na otvoreno pitanje)**
+    - Sistem automatski šalje podsjetnik pacijentima koji imaju označen atribut "hronični bolesnik" kada se približava period u kojem trebaju obaviti rutinski pregled ili produžiti terapiju
+    - Podsjetnik se šalje 7 dana prije isteka perioda važenja terapije ili preporučenog datuma rutinskog pregleda
+    - Podsjetnik se šalje putem emaila na adresu registrovanu u korisničkom profilu pacijenta
+ 
+2. **Sadržaj podsjetnika**
+    - Email podsjetnik mora sadržavati: ime i prezime pacijenta, razlog podsjetnika (produženje terapije ili rutinski pregled), preporučeni vremenski period u kojem pregled treba biti obavljen
+    - Podsjetnik mora sadržavati poziv na akciju sa uputom kako zakazati termin putem sistema
+ 
+3. **Uvjet slanja**
+    - Sistem šalje podsjetnik samo ukoliko pacijent nema već zakazan termin u preporučenom periodu
+    - Ukoliko pacijent zakaže termin nakon primljenog podsjetnika, sistem ne šalje dodatne podsjetnike za isti period
 
+4. **Definisanje perioda pregleda**
+    - Doktor sistema definišu period u kojem hronični pacijent treba obaviti rutinski pregled ili produžiti terapiju
+    - Taj period se čuva u profilu pacijenta i na osnovu njega sistem automatski izračunava kada treba poslati podsjetnik
+ 
+5. **Evidencija poslanih podsjetnika**
+    - Sistem mora evidentirati svaki poslani podsjetnik s datumom i vremenom slanja
+    - Administrator može pregledati evidenciju poslanih podsjetnika za svakog pacijenta
+ 
 
 ### ID Storyja: US-31 
 **Naziv:** Kreiranje baze podataka 
