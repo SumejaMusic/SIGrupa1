@@ -108,7 +108,7 @@ Visok (High)
 ### Otvorena pitanja:
 - Može li pacijent filtrirati po specijalizaciji doktora?
 - Da li se prikazuje zauzetost termina u realnom vremenu?
-##  US-06
+##  US-06.1
 ## Rezervacija termina
 ### Opis
 
@@ -129,6 +129,27 @@ Visok (High)
 - Da li pacijent može rezervisati više termina dnevno?
 - Postoji li ograničenje po specijalisti?
 - Kako se označavaju hitni termini?
+##  US-06.2
+## Rezervacija termina
+### Opis
+
+Kao pacijent, želim da mogu rezervisati termin kod doktora po mom izboru, kako bih osigurao pregled kod osobe koje želim.
+
+### Poslovna vrijednost:
+Pacijentova autonomija u odabiru doktora povećava zadovoljstvo i povjerenje u ustanovu, što direktno doprinosi lojalnosti pacijenata i smanjuje odlazak ka drugim privatnim klinikama. 
+### Prioritet:
+
+Visok (High)
+
+
+### Pretpostavke:
+- Pacijent već ima account u sistemu
+- Pacijent može pretraživati doktore po imenu, specijalnosti ili odjelu
+- Svaki doktor ima definirano radno vrijeme i dostupne termine u sistemu
+### Otvorena pitanja:
+- Može li pacijent vidjeti ocjene ili recenzije doktora ili samo osnovne informacije?
+- Postoji li ograničenje po specijalisti?
+
 ## US-07
 ## Email potvrda o rezervaciji
 ### Opis
@@ -248,7 +269,7 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li se validacija odnosi i na specijaliste i porodične doktore?
 - Šta se dešava ako pacijent pokuša rezervisati dupli termin?
-## US-13
+## US-13.1
 ## Upravljanje radnim vremenom doktora (admin)
 ### Opis
 
@@ -267,6 +288,29 @@ Visok (High)
 ### Otvorena pitanja:
 - Da li doktor može sam mijenjati svoje radno vrijeme?
 - Kako se tretiraju vanredni i hitni termini?
+## US-13.2
+## Upravljanje radnim vremenom doktora
+### Opis
+
+Kao doktor, želim da imam pravo slanja upita promjene dužine termina pregleda, kako bi termini u sistemu bili usklađeni sa terminima koji se izvršavaju u zdravstvenoj ustanovi. 
+
+## Poslovna vrijednost:
+Neusklađenost dužine termina u sistemu s realnošću u ustanovi direktno uzrokuje kolizije u rasporedu, prekovremeno čekanje pacijenata i gubitak povjerenja u digitalni sistem rezervacija. Omogućavanjem procesa promjene dužine termina kroz formalni upit, ustanova osigurava da raspored u sistemu uvijek odražava stvarno stanje čime se smanjuju operativne greške, rasterećuje administrativno osoblje od ručnih korekcija i povećava pouzdanost sistema.
+
+### Prioritet:
+
+Visok (High)
+
+### Pretpostavke:
+- Doktor je registrovan u sistemu
+- Svaki termin u sistemu ima definisanu dužinu trajanja kao atribut koji se može mijenjati
+- Doktor ne može direktno mijenjati dužinu termina 
+- Administrator je jedini koji može odobriti ili odbiti upit za promjenu
+- Doktor je obavješten o statusu upita (odobreno/odbijeno) putem notifikacije u sistemu
+### Otvorena pitanja:
+- Da li upit odobrava samo administrator ili i neko iz odjela uprave?
+- Na koji način doktor i admin primaju obavještenje o upitu?
+
 ## US-14
 ##  Reset lozinke putem emaila
 ### Opis
@@ -365,11 +409,11 @@ Visok (High)
 ### Otvorena pitanja:
 - Koliko dugo se čuvaju podaci u audit logu?
 - Ko sve ima pristup logovima?
-## US-19
-## Omogućavanje pregleda komentara prilikom zakazivanja termina
+## US-19.1
+## Omogućavanje pregleda komentara termina
 ### Opis
 
-Kao pacijent ili doktor, želim da mogu vidjeti napomene ili komentare vezane za termin, kako bih imao sve relevantne informacije prije pregleda.
+Kao doktor, želim da mogu vidjeti napomene ili komentare vezane za termin, kako bih imao sve relevantne informacije prije pregleda.
 
 ### Poslovna vrijednost:
 Bolja komunikacija doprinosi jasnijem dogovoru između pacijenata i osoblja, čime se smanjuju nesporazumi prilikom zakazivanja termina. To također olakšava pripremu za pregled, jer su sve informacije dostupne na vrijeme i organizovane, što čini iskustvo ugodnijim i efikasnijim.
@@ -385,11 +429,36 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Ko može unositi komentare?
 - Da li se komentari prikazuju samo doktoru ili i pacijentu?
+## US-19.2
+## Omogućavanje dodavanje komentara prilikom zakazivanja termina
+### Opis
+
+Kao pacijent, želim da mogu dodati napomenu/komentar prilikom rezervacije termina, kako bih dostavio sve relevantne informacije vezane za hitnost pregleda.
+
+
+### Poslovna vrijednost:
+Bolja komunikacija doprinosi jasnijem dogovoru između pacijenata i osoblja, 
+čime se smanjuju nesporazumi prilikom zakazivanja termina. To također olakšava pripremu za pregled, jer su sve informacije dostupne na vrijeme i organizovane, što čini iskustvo ugodnijim i efikasnijim.
+
+### Prioritet:
+
+Srednji (Medium)
+
+
+### Pretpostavke:
+- Pacijent je prijavljen i ima aktivnu rezervaciju u trenutku dodavanja napomene
+- Napomena je opcionalno polje (rezervacija je validna i bez nje)
+- Polje za napomenu ima ograničen broj znakova
+- Napomena je vidljiva doktoru i administratoru prije i tokom pregleda
+### Otvorena pitanja:
+- Da li pacijent može izmijeniti ili obrisati napomenu nakon što je rezervacija potvrđena?
+- Ko odlučuje o klasifikaciji hitnosti termina?
+
 ## US-20
 ## Vodič za korištenje stranice
 ### Opis
 
-Kao pacijent ili doktor, želim da imam interaktivno uputstvo ili dokumentaciju, kako bih znao kako koristiti sistem.
+Kao korisnik sistema, želim da imam interaktivno uputstvo ili dokumentaciju, kako bih znao kako koristiti sistem.
 
 ### Poslovna vrijednost:
 Intuitivno dizajnirane funkcionalnosti pomažu korisnicima da brže savladaju rad sa sistemom, što smanjuje potrebu za dodatnom podrškom. Kao rezultat, iskustvo korištenja postaje jednostavnije i ugodnije, čime se povećava zadovoljstvo korisnika.
@@ -503,11 +572,34 @@ Srednji (Medium)
 ### Otvorena pitanja:
 - Koji kriterijumi određuju hitnost?
 - Da li pacijent vidi da je njegov termin označen kao hitan?
-## US-26
-## Export statistike zdravstvene ustanove
+## US-26.1
+## Statistika zdravstvene ustanove
 ### Opis
 
-Kao administrator, želim eksportovati statistiku zakazanih pregleda doktora u CSV formatu, kako bih mogao analizirati podatke i planirati resurse.
+Kao administrator, želim vidjeti statistiku rezervacija termina, kako bih identificirao uska grla u sistemu.
+
+### Poslovna vrijednost:
+Sistem omogućava administratoru vidljive pokazatelje opterećenosti resursa, stopu otkayivanja termina te trend rezervacija koji pomazu pri ranom otkrivanju problema. Smanjenjem vremena cekanja za uklanjanje problema poboljsava reputaciju zdravstvene ustanove te smanjuje nezadovoljstvo pacijenta.
+
+### Prioritet:
+
+Srednji (Medium)
+
+
+### Pretpostavke:
+- Podaci o terminima i doktorima su pohranjeni u bazi
+- Administrator ima pravo uvida u statistiku svih odjela i ljekara
+- Sistem bilježi datum kreiranja rezervacije i datum samog termina
+- Sistem može generisati eksport fajl (CSV ili PDF)
+### Otvorena pitanja:
+- Da li se statistika prikazuje na nivou ustanove, odjela ili pojedinog ljekara?
+- Da li je potreban grafički prikaz (grafikoni, dijagrami) ili je dovoljna tabelarna forma?
+- Koje konkretne metrike trebaju biti prikazane u statistici? 
+## US-26.2
+## Statistika zdravstvene ustanove
+### Opis
+
+Kao uprava zdravstvene ustanove, želim eksportovati statistiku zakazanih pregleda doktora u CSV formatu, kako bih mogao analizirati podatke i planirati resurse.
 
 ### Poslovna vrijednost:
 Sistem omogućava detaljniju analizu podataka, što olakšava planiranje resursa i rasporeda. Takođe, pojednostavljuje pripremu izvještaja i pomaže u donošenju informisanih odluka, čime se povećava efikasnost i preglednost cjelokupnog procesa.
@@ -523,6 +615,7 @@ Nizak (Low)
 ### Otvorena pitanja:
 - Da li se eksport vrši periodično ili na zahtjev?
 - Ko ima pristup eksportovanim podacima?
+
 ## US-27
 ##  Automatski podsjetnik
 ### Opis
@@ -569,7 +662,7 @@ Srednji (Medium)
 Kao backend developer, želim razviti backend funkcionalnosti za admin panel, kako bi administratori mogli upravljati korisnicima, terminima i resursima.
 
 ### Poslovna vrijednost:
-Admin panel funkcioniše efikasno i omogućava jednostavno upravljanje svim funkcijama sistema. Uz to, sistem je skalabilan i može se lako prilagoditi rastućim potrebama, dok povećana sigurnost i kontrola nad podacima osiguravaju pouzdanost i zaštitu informacija.
+Admin panel predstavlja centralno upravljanje ovog sistema čime bi sistem funkcionisao efikasnije, povećavo sigurnost i omogućavao jednostavno upravljanje svim funkcijama sistema.
 
 ### Prioritet:
 
