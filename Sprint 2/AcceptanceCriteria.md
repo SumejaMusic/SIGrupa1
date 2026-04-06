@@ -369,36 +369,30 @@
  
 ### ID Storyja: US-20
 **Naziv:** Vodič za korištenje stranice
- 
-1. **Sadržaj vodiča (Odgovor na otvoreno pitanje)**
-    - Vodič sadrži tekstualna uputstva s pratećim slikama za sve ključne funkcionalnosti sistema
-    - Vodič ne uključuje video tutorijale u inicijalnoj verziji
-    - Sadržaj vodiča organizovan je po ulogama: odvojeni vodič za pacijente i odvojeni vodič za doktore
- 
-2. **Pristup vodiču**
-    - Vodič je dostupan svim prijavljenim korisnicima putem ikone ili linka vidljivog na svakoj stranici sistema
-    - Vodič se otvara kao zasebna stranica bez napuštanja trenutne stranice
- 
-3. **Interaktivnost vodiča**
-    - Vodič sadrži pretragu po ključnim riječima kako bi korisnik brzo pronašao željenu temu
-    - Sadržaj je organizovan po sekcijama s mogućnošću direktnog skoka na određenu temu putem menija
- 
-4. **Ažuriranje vodiča (Odgovor na otvoreno pitanje)**
-    - Vodič se ne ažurira automatski već ga ručno ažurira administrator sistema nakon svake značajnije izmjene funkcionalnosti
-    - Svaka verzija vodiča mora imati vidljivo istaknut datum posljednjeg ažuriranja
+ ---
+ 1. **Sadržaj vodiča (Odgovor na otvoreno pitanje):**
+   - **Kada** korisnik otvori vodič, **tada** sistem mora prikazati tekstualna uputstva sa pratećim slikama za sve ključne funkcije. Vodič ne treba sadržavati video tutorijale u ovoj fazi, već mora biti podijeljen na sekcije za pacijente i za doktore.
 
-  
+2. **Pristup vodiču sa svake stranice:**
+   - **Kada** je korisnik na bilo kojoj stranici sistema, **ako** klikne na ikonu ili link za pomoć, **tada** se vodič mora otvoriti kao zasebna stranica (ili u novom tabu) bez prekidanja trenutnog rada korisnika.
+
+3. **Navigacija (Skok na temu):**
+   - **Korisnik treba dobiti** meni sa strane koji omogućava direktan "skok" na određenu sekciju vodiča (npr. "Kako rezervisati termin") bez potrebe za ručnim skrolovanjem kroz cijeli tekst.
+
+4. **Ručno ažuriranje (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** administratoru da ručno izmijeni vodič putem admin panela.
+
 ### ID Storyja: US-21 
 **Naziv:** Panel medicinskog osoblja 
 ---
 1. **Glavni prikaz termina:** 
-- **Kada** je medicinsko osoblje prijavljeno na sistem, **ako** otvori svoj panel, **tada** sistem mora prikazati listu svih termina zakazanih za taj dan
+   - **Kada** je medicinsko osoblje prijavljeno na sistem, **ako** otvori svoj panel, **tada** sistem mora prikazati listu svih termina zakazanih za taj dan
 2. **Kreiranje novih termina (Odgovor na otvoreno pitanje):** 
-- **Sistem mora omogućiti** osoblju da ručno kreira novi termin za pacijenta (npr. u slučaju telefonske rezervacije). **Kada** osoblje unese podatke pacijenta i izabere slobodan termin, **tada** se taj termin mora odmah pojaviti u bazi kao "ZAKAZAN". 
+   - **Sistem mora omogućiti** osoblju da ručno kreira novi termin za pacijenta (npr. u slučaju telefonske rezervacije). **Kada** osoblje unese podatke pacijenta i izabere slobodan termin, **tada** se taj termin mora odmah pojaviti u bazi kao "ZAKAZAN". 
 3. **Prikaz informacija o pacijentu (Odgovor na otvoreno pitanje):** 
-- **Kada** osoblje klikne na detalje termina, **tada** sistem mora prikazati sljedeće relevantne informacije: Ime i prezime pacijenta, Broj telefona, Vrstu pregleda i Razlog posjete koji je pacijent naveo. 
+   - **Kada** osoblje klikne na detalje termina, **tada** sistem mora prikazati sljedeće relevantne informacije: Ime i prezime pacijenta, Broj telefona, Vrstu pregleda i Razlog posjete koji je pacijent naveo. 
 4. **Brza pretraga i filtriranje:** 
-- **Kada** osoblje unese ime pacijenta u polje za pretragu, **tada** sistem mora filtrirati listu i prikazati samo termine vezane za tog specifičnog pacijenta. 
+   - **Kada** osoblje unese ime pacijenta u polje za pretragu, **tada** sistem mora filtrirati listu i prikazati samo termine vezane za tog specifičnog pacijenta. 
 5. **Ograničenje pristupa:** - **Sistem ne smije dozvoliti** običnim pacijentima pristup ovom panelu. Pristup je dozvoljen isključivo medicinskom osoblju ili administrator.
 
 
@@ -457,25 +451,37 @@
 4. **Vidljivost za pacijenta (Odgovor na otvoreno pitanje):**
    - **Sistem ne smije prikazivati** internu oznaku "Hitno" na pacijentovoj strani aplikacije. Oznaka je namijenjena isključivo za internu organizaciju medicinskog osoblja. 
 
-### ID Storyja: US-26
-**Naziv:** Export statistike zdravstvene ustanove
+### ID Storyja: US-26.1
+**Naziv:** Vizuelni pregled statistike (Admin)
+---
+1. **Nivoi prikaza (Odgovor na otvoreno pitanje):**
+   - **Kada** administrator otvori stranicu sa statistikom, **ako** izabere filter, **tada** sistem mora omogućiti prikaz podataka na tri nivoa: za cijelu ustanovu, za određeni odjel ili za pojedinačnog ljekara.
+
+2. **Grafički prikaz (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** vizuelni prikaz putem jednostavnih grafikona (npr. linijski dijagram za trend rezervacija kroz mjesec) pored standardne tabelarne forme, radi lakše identifikacije "uskih grla".
+
+3. **Ključne metrike (Odgovor na otvoreno pitanje):**
+   - **Korisnik (admin) treba dobiti** uvid u sljedeće metrike: ukupan broj zakazanih termina, procenat otkazanih termina i prosječno vrijeme čekanja na slobodan termin kod određenog specijaliste.
+  
+### ID Storyja: US-26.2
+**Naziv:** Export statistike u CSV (Uprava)
 ---
 1. **Eksport na zahtjev (Odgovor na otvoreno pitanje):**
-   - **Kada** je administrator na stranici za statistiku i odabere vremenski period, **ako** klikne na dugme "Generiši izvještaj", **tada** sistem mora generisati CSV fajl sa podacima za taj period.
+   - **Kada** menadžment odabere željeni period, **ako** klikne na dugme "Export u CSV", **tada** sistem mora generisati traženi CSV file.
 
-2. **Proces preuzimanja:**
-   - **Kada** sistem završi generisanje podataka, **tada** korisnik (admin) treba odmah dobiti prozor za spašavanje (download) CSV fajla na svoj računar.
+2. **Kontrola pristupa (Odgovor na otvoreno pitanje):**
+   - **Sistem ne smije dozvoliti** običnim korisnicima (pacijentima) pristup ovoj funkcionalnosti. Pravo pristupa imna administrator.
 
-3. **Pristup podacima (Odgovor na otvoreno pitanje):**
-   - **Sistem ne smije dozvoliti** običnim pacijentima ili ljekarima pristup opciji eksporta. Ova funkcionalnost mora biti vidljiva i dostupna isključivo korisnicima sa ulogom 'ADMIN'.
+3. **Tačnost podataka:**
+   - **Kada** se CSV fajl otvori, **tada** podaci u kolonama (ime ljekara, datum, status termina) moraju biti identični onima koji su pohranjeni u bazi podataka.
 
-4. **Sadržaj izvještaja:**
-   - **Korisnik treba dobiti** CSV fajl koji sadrži sljedeće kolone: Ime ljekara, Ukupan broj zakazanih termina, Broj obavljenih pregleda u željenom vremenskom periodu.
+4. **Čitljivost fajla:**
+   - **Sistem mora osigurati** da su podaci u CSV fajlu pravilno razdvojeni i formatirani.
 
 
 ### ID Storyja: US-27
 **Naziv:** Automatski podsjetnik
- 
+--- 
 1. **Slanje podsjetnika (Odgovor na otvoreno pitanje)**
     - Sistem automatski šalje podsjetnik pacijentima koji imaju označen atribut "hronični bolesnik" kada se približava period u kojem trebaju obaviti rutinski pregled ili produžiti terapiju
     - Podsjetnik se šalje 7 dana prije isteka perioda važenja terapije ili preporučenog datuma rutinskog pregleda
@@ -496,7 +502,48 @@
 5. **Evidencija poslanih podsjetnika**
     - Sistem mora evidentirati svaki poslani podsjetnik s datumom i vremenom slanja
     - Administrator može pregledati evidenciju poslanih podsjetnika za svakog pacijenta
- 
+
+### ID Storyja: US-28
+**Naziv:** Upload i evidencija laboratorijskih nalaza
+---
+1. **Glavni proces uploada:**
+   - **Kada** je medicinsko osoblje na profilu pacijenta, **ako** odabere opciju "Dodaj nalaz" i izabere PDF fajl, **tada** sistem mora taj fajl spasiti u bazu i povezati ga sa historijom pacijenta.
+
+2. **Dozvoljeni tipovi fajlova (Odgovor na otvoreno pitanje):**
+   - **Sistem ne smije dozvoliti** upload bilo kojeg formata osim **PDF-a**. Ako korisnik pokuša dodati sliku ili Word dokument, tada sistem mora izbaciti poruku: "Dozvoljeni su samo PDF fajlovi".
+
+3. **Trajanje čuvanja (Odgovor na otvoreno pitanje):**
+   - **Sistem mora osigurati** da se svi uploadovani nalazi čuvaju trajno (dok je nalog aktivan), kako bi bili dostupni doktorima za sve buduće preglede pacijenta.
+
+4. **Pregled nalaza:**
+   - **Kada** pacijent ili doktor kliknu na naziv nalaza u istoriji, **tada** sistem mora otvoriti PDF dokument u novom tabu preglednika radi lakšeg čitanja.
+
+### ID Storyja: US-29
+**Naziv:** Admin panel - backend
+
+---
+1. **Izbor arhitekture (Odgovor na otvoreno pitanje):**
+   - **Sistem mora implementirati** komunikaciju putem **REST API** standarda. Kada frontend pošalje zahtjev, backend mora vratiti odgovor isključivo u JSON formatu.
+
+2. **Prioritetne funkcije (Odgovor na otvoreno pitanje):**
+   - **Kao prioritet**, backend mora prvo podržati rute za prijavu (login) administratora i osnovno upravljanje (dodavanje/brisanje) doktorima i odjelima.
+
+3. **Sigurnost administratorskih ruta:**
+   - **Sistem ne smije dozvoliti** pristup backend rutama za administraciju bez validnog tokena. Ako običan pacijent pokuša pristupiti, **tada** backend mora vratiti grešku "Pristup odbijen".
+
+### ID Storyja: US-30
+**Naziv:** Kreirati ER model baze podataka
+
+---
+
+1. **Tip baze podataka (Odgovor na otvoreno pitanje):**
+   - **Sistem mora koristiti** relacijsku (**SQL**) bazu podataka kako bi se osigurala tačna povezanost pacijenata sa njihovim terminima.
+
+2. **Struktura ključeva i relacija:**
+   - **Kada se dizajniraju tabele**, **tada** svaka tabela mora imati svoj jedinstveni primarni ključ (PK), a sve veze moraju biti osigurane stranim ključevima (FK).
+
+3. **Podrška za proširenja (Odgovor na otvoreno pitanje):**
+   - **Model baze mora biti projektovan** tako da omogućava lako dodavanje novih modula u budućnosti bez potrebe za mijenjanjem osnovnih tabela korisnika i ljekara.
 
 ### ID Storyja: US-31 
 **Naziv:** Kreiranje baze podataka 
@@ -510,8 +557,6 @@
 4. **Dostupnost i Replikacija (Odgovor na otvoreno pitanje):**
    - **Za veću dostupnost sistema**, baza podataka mora vršiti automatski dnevni backup. U slučaju kvara na glavnom serveru, administrator mora biti u mogućnosti da povrati podatke iz zadnje kopije. 
 
-
-
 ### ID Storyja: US-32 
 **Naziv:** Definisanje prava pristupa bazi podataka
  --- 
@@ -524,6 +569,20 @@
 4. **Pristup medicinskog osoblja:**
    - **Kada** član medicinskog osoblja otvori panel, **tada** mu sistem mora dozvoliti upravljanje kalendarima svih ljekara.
 
+### ID Storyja: US-33
+**Naziv:** Testiranje baze podataka
+---
+1. **Provjera integriteta podataka (Validnost):**
+   - **Kada** QA inženjer unosi neispravne podatke u bazu (npr. pogrešan format datuma), **ako** baza odbije taj upis i izbaci grešku, **tada** je test validnosti podataka uspješan.
+
+2. **Provjera prava pristupa:**
+   - **Kada** se testiraju prava pristupa bazi, **ako** korisnik koji nema administratorske ovlasti ne može direktno pristupiti tabelama, **tada** je sigurnost baze potvrđena.
+
+3. **Automatizacija vs Ručno testiranje (Odgovor na otvoreno pitanje):**
+   - **Sistem mora omogućiti** automatsko testiranje integriteta podataka, dok se provjera prava pristupa i vizuelna provjera unosa vrši ručno od strane QA inženjera.
+
+4. **Dokumentovanje rezultata (Odgovor na otvoreno pitanje):**
+   - **Kada** je proces testiranja završen, **ako** su svi rezultati uredno upisani u QA izvještaj, **tada** je proces dokumentovanja rezultata završen.
 
 
 
