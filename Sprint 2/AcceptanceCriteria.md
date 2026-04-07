@@ -256,15 +256,16 @@
 1. **Rezervacija termina (Odgovor na otvoreno pitanje)**   
     - Kada korisnik odabere termin, ako se ne preklapa ni sa jednom od postojećih rezervacija, tada se korisiku prikazuje forma za unos podataka i potvrdu termina
     - Sistem mora omogućiti zaključavanje termina u roku od 2 minute kako bi spriječio duple rezervacije 
-    - Sistem ne smije dozvoliti pacijentu rezervaciju termina koji se vremenski poklapa s bilo kojim već potvrđenim terminom, bez obzira na doktora
+    - Sistem ne smije dozvoliti pacijentu rezervaciju termina koji se vremenski poklapa s bilo kojim već potvrđenim terminom, bez obzira da li se radi o doktoru opšte prakse ili specijalisti
     - Sistem mora vršiti provjeru preklapanja termina u trenutku kada pacijent klikne na termin
     - Kada korisnik klikne na termin, ako u to vrijeme ima rezervisan termin kod drugog doktora, tada se korisniku prikazuje poruka "Već imate rezervisan termin u ovo vrijeme. Molimo Vas odaberite drugi termin ili otkažite termin koji se preklapa"
     - Sistem treba omogućiti pacijentu da rezerviše termin ako je otkazao termin sa kojim je postojalo preklapanje
     - Sistem mora potvrđene termine označiti kao zauzete i izbaciti ih iz liste ponuđenih slobodnih termina
 
 2. **Rezervacija termina od strane dva ili više korisnika**  
-   - Kada više korisnika želi rezervisati isti termin, tada se termin zaključava za korisnika čiji je zahtjev prvi stigao na server
+   - Kada više korisnika želi rezervisati isti termin, tada se termin zaključava za korisnika čiji je zahtjev prvi stigao 
    - Kada pacijent želi rezervisati termin, ako njegov zahtjev stigne na server poslije zahtjeva drugog pacijenta, tada pacijent dobija poruku na ekranu "Žao nam je. Termin je već rezervisan. Molimo izaberite drugi"
+
 
 ### ID Storyja: US-13.1
 **Naziv:** Upravljanje radnim vremenom doktora (admin)
