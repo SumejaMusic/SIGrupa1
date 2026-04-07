@@ -2,7 +2,7 @@
 
 ---
 
-##Osnovne informacije
+## Osnovne informacije
 
 | Polje | Vrijednost |
 |-------|------------|
@@ -48,7 +48,7 @@ Identifikovane četiri ciljne grupe s jasno definisanim potrebama:
 | Stakeholder |
 |-------------|
 | Pacijent |
-| Ljekar | 
+| Doktor | 
 | Administrator | 
 | Menadžment | 
 
@@ -86,14 +86,14 @@ Identifikovane četiri ciljne grupe s jasno definisanim potrebama:
 
 ---
 
-## 📊 Metrike Sprinta
+## Metrike Sprinta
 
 | Metrika | Vrijednost |
 |---------|------------|
-| Planirani artefakti | 3 |
-| Završeni artefakti | 3 |
+| Planirani artefakti | 4 |
+| Završeni artefakti | 4 |
 | Blokkeri | 0 |
-| Story points | — *(Sprint 1 je discovery faza)* |
+| Story points | — *(Sprint 1 je discovery faza)* - 1 |
 
 ---
 
