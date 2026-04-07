@@ -344,27 +344,32 @@
 
    
 ### ID Storyja: US-16
-**Naziv:** Pregled sistema i statistika
+**Naziv:** Menadžment panel
 
 ---
-1. **Pregled sistema i statistika**  
-   - Kada vlasnik ili menadžer pristupi dashboard-u, tada sistem treba prikazati sve dostpne statistike
-   - Sistem mora omogućiti filtriranje podataka po vremenskom periodu
-2. **Registrovani korisnici (Odgovor na otvoreno pitanje)**
-    - Sistem mora omogućiti prikaz broja registorvanih korisnika po ulogama u sistemu
+1. **Prioritetni podaci za prikaz (Odgovor na otvoreno pitanje)**
+    - Kada je administrator prijavljen, ako pristupi menadžment panelu, tada treba da mu se prikaže ukupan broj registrovanih korisnika, ukupan broj zakazanih termina, zauzetost sala
+    - Sistem mora omogućiti filtriranje podataka po vremenskom periodu
 
-3. **Zakazani termini (Odgovor na otvoreno pitanje)**
+2. **Ažuriranje podataka podataka**
+   - Sistem mora omogućiti da se podaci ažuriraju u realnom vremenu
+
+3. **Pravo pristupa**
+    - Sistem ne smije dozvoliti pristup menadžment panelu osobama koje nemaju ulogu administratora
+    
+4. **Registrovani korisnici**
+    - Sistem mora omogućiti prikaz broja registorvanih korisnika po ulogama u sistemu (doktor, pacijent, medicinska sestra,admin)
+
+5. **Zakazani termini**
     - Sistem mora omogućiti prikazivanje broja zakazanih termina po svakom doktoru
     - Sistem mora omogućiti prikazivanje broja slobodnih termina
     - Sistem mora omogućiti prikazivanje zauzetosti sala po terminima
-4. **Aktivnost zaposlenih (Odgovor na otvoreno pitanje)**
+6. **Aktivnost zaposlenih**
     - Sistem mora prikazivati informaciju ko je zakazao termin i kada
     - Sistem mora prikazati informaciju ko je otkazao termin i kada
-5. **Pravo pristupa**
-    - Sistem ne smije dozvoliti pristup pregledu statistika korisnicima koji nemaju ulogu vlasnika ili menadžera
-    
-6. **Ažuriranje podataka podataka (Odgovor na otvoreno pitanje)**
-   - Sistem mora omogućiti da se podaci ažuriraju u realnom vremenu
+7. **Upotreba za izvještavanje (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti administratoru eksportovanje podataka o terminima za odabrani period u CSV formatu
+
 
 
 ### ID Storyja: US-17
