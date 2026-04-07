@@ -1,6 +1,6 @@
-# Non-Functional Requirements (NFR)
+# Nefunkcionalni zahtjevi 
 
-**Non-Functional Requirements (NFR)** predstavljaju skup zahtjeva koji definišu kvalitet sistema, a ne njegove funkcionalnosti. Dok **funkcionalni zahtjevi** opisuju šta sistem radi, **NFR** definišu kako sistem izvršava te funkcije.
+**Nefunkcionalni zahtjevi** predstavljaju skup zahtjeva koji definišu kvalitet sistema, a ne njegove funkcionalnosti.
 
 U sistemu za zakazivanje medicinskih termina, **NFR zahtjevi** obuhvataju performanse, sigurnost, pouzdanost, skalabilnost i upotrebljivost. Oni osiguravaju da sistem radi brzo, sigurno i stabilno pod realnim opterećenjem korisnika.
 
