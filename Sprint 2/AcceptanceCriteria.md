@@ -134,18 +134,23 @@
 **Naziv:** Rezervacija termina
 
 ---   
-1. **Pretraga doktora**
+1. **Izbor doktora**
+     - Kada je pacijent logovan i unese ime doktora ili odjel u polje za pretragu, ako sistem pronađe rezultate, tada sistem mora prikazati listu doktora koji odgovaraju unesenom pojmu
+     - Kada pacijent odabere doktora iz liste, tada sistem mora prikazati njegov kalendar sa slobodnim terminima
+     - Kada pacijent klikne na slobodan termin, tada sistem mora preusmjeriti pacijenta na formu za unos podataka i potvrdu rezervacije
+     
+2. **Pretraga doktora**
    - Sistem mora omogućiti pacijentu pretragu doktora po imenu, specijalnosti ili odjelu
    - Kada pacijent unese pojam koji ne postoji u sistemu, sistem mora prikazati poruku "Nije pronađen nijedan doktor"
 
-2. **Prikaz informacija o doktoru (Odgovor na otvoreno pitanje)**
+3. **Prikaz informacija o doktoru (Odgovor na otvoreno pitanje)**
    - Sistem mora prikazati osnovne informacije o doktoru (ime, specijalnost, odjel, radno vrijeme)
 
-3. **Odabir doktora i prikaz termina**
+4. **Odabir doktora i prikaz termina**
     - Kada pacijent odabere doktora, sistem mora prikazati njegov kalendar sa slobodnim i zauzetim terminima
    - Sistem mora omogućiti pacijentu da odabere slobodan termin iz kalendara odabranog doktora
 
-4. **Ograničenje po specijalosti (Odgovor na otvoreno pitanje)**
+5. **Ograničenje po specijalosti (Odgovor na otvoreno pitanje)**
     - Sistem mora omogućiti samo doktoru opšte prakse rezervaciju termina kod specijaliste za svog pacijenta
 
 ### ID Storyja: US-07
@@ -250,7 +255,7 @@
 
 1. **Rezervacija termina (Odgovor na otvoreno pitanje)**   
     - Kada korisnik odabere termin, ako se ne preklapa ni sa jednom od postojećih rezervacija, tada se korisiku prikazuje forma za unos podataka i potvrdu termina
-    - Sistem mora omogućiti zaključavanje termina u roku od 2 minute kako bi spriječio duple rezervacije (mozda izbaciti spominje se u US-11)
+    - Sistem mora omogućiti zaključavanje termina u roku od 2 minute kako bi spriječio duple rezervacije 
     - Sistem ne smije dozvoliti pacijentu rezervaciju termina koji se vremenski poklapa s bilo kojim već potvrđenim terminom, bez obzira na doktora
     - Sistem mora vršiti provjeru preklapanja termina u trenutku kada pacijent klikne na termin
     - Kada korisnik klikne na termin, ako u to vrijeme ima rezervisan termin kod drugog doktora, tada se korisniku prikazuje poruka "Već imate rezervisan termin u ovo vrijeme. Molimo Vas odaberite drugi termin ili otkažite termin koji se preklapa"
@@ -412,7 +417,7 @@
     - Kada je doktor logovan i otvori detalje termina, tada sistem mora prikazati sve komentare vezane za taj termin
     - Sistem ne smije dozvoliti doktoru pregled komentara termina koji nisu njegov
 2. **Unos komentara (Odgovor na otvoreno pitanje)**
-    - Sistem mora omogućiti unos pacijentu i osoblju unos komentara prilikom zakazivanja termina
+    - Sistem mora omogućiti pacijentu i medicinskom osoblju unos komentara prilikom zakazivanja termina
     - Komentar je opcionalno polje prilikom kreiranja termina
 
 3. **Pregled komentara (Odgovor na otvoreno pitanje)**
@@ -420,7 +425,7 @@
     - Komentari se prikazuju u okviru detalja termina na pregledu zakazanih termina
     - Korisnik mora biti prijavljen i imati pristup konkretnom terminu kako bi vidio komentare
 
-1. **Prikaz detalja komentara**
+4. **Prikaz detalja komentara**
     - Sistem mora prikazati komentar u detaljima termina uz informacije: tekst komentara, ime osobe koja je unijela komentar i datum unosa
     - Ukoliko termin nema komentara, u sekciji za komentare prikazuje se poruka "Nema komentara za ovaj termin"
 
@@ -432,7 +437,7 @@
 1. **Dodavanje komentara**  
     - Kada je pacijent logovan i odabere aktivnu rezervaciju, ako unese napomenu u polje za komentar i klikne "Potvrdi", tada sistem mora sačuvati napomenu i prikazati je uz detalje rezervacije
     - Sistem mora omogućiti pacijentu da rezerviše termin i bez unosa komentara
-    - Sistem ne smije dozvoliti unos napomene duže od maksilanog dozvoljenog broja karaktera 
+    - Sistem ne smije dozvoliti unos napomene sa više od 255 karaktera
     - Korisnik mora dobiti obavijest na ekranu o prekoračenju dozvoljenog broja karaktera "Prekoračili ste broj dozvoljenih karaktera za ovo polje!"
 2. **Izmjena i brisanje komentara (Odgovor na otvoreno pitanje)**
     - Komentar može izmijeniti ili obrisati samo osoba koja ga je unijela ili administrator sistema
