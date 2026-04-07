@@ -308,7 +308,7 @@
 ---
 1. **Validni podaci i link**  
     - Kada korisnik klikne na link zaboravljena lozinka ispod forme za login, ako unese ispravan mail, tada sistem šalje link za resetovanje lozinke na email
-    - Kada korisnik klikne na validan link za resetovanje lozinke i promjeni lozinku, tada sistem treba zabilježiti promijenjenu lozinku i preusmjeriti ga na login formu
+    - Kada korisnik klikne na validan link za resetovanje lozinke i promijeni lozinku, tada sistem treba zabilježiti promijenjenu lozinku i preusmjeriti ga na login formu
     - Sistem ne smije dozvoliti ponovnu upotrebu linka za resetovanje nakon što je već iskorišten
 
  2. **Vrijeme validnosti linka ( Odgovor na otvoreno pitanje)**
@@ -413,7 +413,7 @@
  
 4. **Integritet podataka**
     - Zapisi u audit logu ne smiju biti izmjenjivi ni od strane administratora
-    - Sistem mora osigurati da se svaka akcija zabiliježi u realnom vremenu, bez mogućnosti preskakanja zapisa
+    - Sistem mora osigurati da se svaka akcija zabilježi u realnom vremenu, bez mogućnosti preskakanja zapisa
 
 ### ID Storyja: US-19.1
 **Naziv:** Omogućavanje pregleda komentara termina
@@ -617,6 +617,9 @@
 
 3. **Sigurnost administratorskih ruta:**
    - **Sistem ne smije dozvoliti** pristup backend rutama za administraciju bez validnog tokena. Ako običan pacijent pokuša pristupiti, **tada** backend mora vratiti grešku "Pristup odbijen".
+
+4. **Validacija ulaznih podataka:**
+   - **Kada** se šalju podaci na backend (npr. novi ljekar), **ako** neki obavezni podatak fali ili je u pogrešnom formatu, **tada** backend mora zaustaviti upis u bazu i vratiti jasnu poruku o grešci (npr. 400 Bad Request).
 
 ### ID Storyja: US-30
 **Naziv:** Kreirati ER model baze podataka

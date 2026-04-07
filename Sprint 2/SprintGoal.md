@@ -7,24 +7,34 @@ Sprint 2
 
 ## Sprint cilj
 
-Izgraditi sigurnu osnovu sistema kroz implementaciju autentifikacije, zaštite podataka i admin infrastrukture, kako bi korisnici mogli bezbjedno pristupiti sistemu, a administratori upravljati korisnicima i terminima.
+Cilj sprinta je detaljno razraditi sigurnosne i administrativne funkcionalnosti sistema kroz definisanje i unapređenje user stories, acceptance kriterija i nefunkcionalnih zahtjeva, kako bi se postavila jasna osnova za kasniju implementaciju autentifikacije, zaštite podataka i upravljanja korisnicima.
 
 ---
 
 ## Ključne stavke koje tim želi završiti
 
-- Funkcionalan login sistem sa zaštitom od zloupotrebe (blokada naloga, 2FA)
-- Enkripcija osjetljivih podataka i sigurno čuvanje lozinki
-- Kreiranje baze podataka sa definisanim pravima pristupa po ulogama (RBAC)
-- Admin panel sa pregledom korisnika, termina i statistika
-- Historija pregleda dostupna pacijentu
-- Automatski podsjetnici za hronične bolesnike i označavanje hitnih termina
+### Razrada i dorada user stories vezanih za:
+- login sistem 
+- admin panel i upravljanje korisnicima 
+- historiju pregleda 
+### Definisanje i proširenje acceptance kriterija za ključne funkcionalnosti:
+- autentifikacija i autorizacija
+- blokada naloga i 2FA
+- pristup historiji pregleda
+- upravljanje korisnicima i terminima
+### Identifikacija i dokumentovanje sigurnosnih i performansnih NFR zahtjeva:
+- enkripcija podataka
+- RBAC (role-based access control)
+- ograničenje pokušaja logina
+- timeout sesije
+### Usklađivanje funkcionalnih i nefunkcionalnih zahtjeva 
 
 ---
 
 ## Rizici i zavisnosti
 
-- Login sistem mora biti završen prije implementacije 2FA i blokade naloga
-- Baza podataka je preduvjet za sve ostale stavke u sprintu
-- Nedostupnost email servisa (SMTP) blokira 2FA, podsjetnike i obavijesti o blokadi naloga
-- Nedefinirane korisničke uloge mogu usporiti razvoj admin panela i kontrole pristupa
+- Nedovoljno precizni acceptance kriteriji mogu otežati implementaciju u narednim sprintovima
+- Neusklađenost između user stories i NFR zahtjeva
+- Nedefinisane korisničke uloge mogu uticati na dizajn RBAC sistema
+- Zavisi od prethodno definisanog Product Backlog-a i Product Vision-a
+- Potrebna koordinacija tima kako bi se izbjeglo preklapanje funkcionalnosti
