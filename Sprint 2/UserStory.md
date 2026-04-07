@@ -40,3 +40,69 @@
 | **US-31** | Kreiranje baze podataka | Kao sistem administrator, želim implementirati bazu podataka u stvarnom okruženju, kako bi sistem mogao pohranjivati sve podatke pacijenata, termina i korisnika. | Centralizovano čuvanje podataka omogućava da sve informacije budu na jednom mjestu, što olakšava pristup i upravljanje njima. Time se osigurava konzistentnost i integritet podataka, a sistem može nesmetano podržavati sve svoje funkcionalnosti, čineći rad pouzdanim i efikasnim. | Visok (High) | - ER model baze je definisan<br>- Sistemski zahtjevi su poznati | - Koji tip baze se koristi (SQL/NoSQL)?<br>- Da li je potrebna replikacija? |
 | **US-32** | Definisanje prava pristupa bazi podataka | Kao sistem administrator, želim implementirati autentifikaciju i autorizaciju za pristup podacima, kako bi se osigurala sigurnost i privatnost informacija. | Povećana zaštita osjetljivih podataka sprječava neovlašteni pristup i osigurava da informacije ostanu privatne. Sistem također omogućava kontrolu pristupa za različite tipove korisnika, čime se dodatno unapređuje sigurnost i organizacija rada. | Visok (High) | - Korisnici su registrovani<br>- Sistem podržava različite uloge | - Koje uloge korisnika će biti definisane?<br>- Da li postoji centralizovana kontrola pristupa? |
 | **US-33** | Testiranje baze podataka | Kao QA inženjer, želim testirati bazu podataka da provjerim validnost podataka, veze između tabela i prava pristupa, kako bi sistem radio pouzdano. | Ove funkcionalnosti garantuju da su podaci i veze u bazi ispravni, čime se smanjuje mogućnost grešaka u radu sistema. Kao rezultat, pouzdanost i kvalitet cijelog sistema značajno se povećavaju, što doprinosi sigurnijem i efikasnijem radu. | Visok (High) | - Baza podataka je kreirana i konfigurirana<br>- Prava pristupa su definisana | - Koje testove automatizirati, a koje ručno?<br>- Kako dokumentovati rezultate testiranja? |
+
+# Plan Sprintova
+
+---
+
+## Sprint 3
+- **US-30** — Kreiranje ER modela
+
+---
+
+## Sprint 4
+- **US-31** — Kreiranje baze podataka
+
+---
+
+## Sprint 5
+- **US-03** — Login sistem
+- **US-14** — Reset lozinke
+- **US-24** — Enkripcija
+- **US-32** — Definisanje prava pristupa
+
+---
+
+## Sprint 6
+- **US-04** — Registracija pacijenta (Admin)
+- **US-13.1** — Radno vrijeme doktora
+- **US-02** — Admin panel
+- **US-16** — Menadžment panel
+
+---
+
+## Sprint 7 — Srž sistema (rezervacija)
+- **US-05** — Pregled resursa
+- **US-06.1 & US-06.2** — Rezervacija
+- **US-08 & US-09** — Otkazivanje termina (medicinsko osoblje i pacijent)
+- **US-12** — Validacija duplih termina
+- **US-19.2** — Dodavanje komentara
+
+---
+
+## Sprint 8
+- **US-07** — Email potvrda
+- **US-15** — Rezervacija termina kod specijaliste putem doktora porodične medicine
+- **US-17** — Session timeout
+- **US-22 & US-23** — 2FA i blokiranje naloga
+- **US-18** — Audit log
+
+---
+
+## Sprint 9
+- **US-21** — Panel osoblja
+- **US-10** — Dashboard za doktora
+- **US-25** — Označavanje hitnosti
+- **US-01** — Historija pregleda
+- **US-28** — Upload nalaza
+
+---
+
+## Sprint 10
+- **US-11** — Oslobađanje zaključanih termina
+- **US-26.1 & US-26.2** — Statistika i export
+- **US-13.2** — Upit za promjenu dužine termina
+- **US-27** — Automatski podsjetnik
+- **US-20** — Vodič
+- **US-33** — Testiranje baze podataka
+
