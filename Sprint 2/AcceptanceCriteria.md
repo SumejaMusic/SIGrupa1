@@ -613,6 +613,9 @@
 3. **Sigurnost administratorskih ruta:**
    - **Sistem ne smije dozvoliti** pristup backend rutama za administraciju bez validnog tokena. Ako običan pacijent pokuša pristupiti, **tada** backend mora vratiti grešku "Pristup odbijen".
 
+4. **Validacija ulaznih podataka:**
+   - **Kada** se šalju podaci na backend (npr. novi ljekar), **ako** neki obavezni podatak fali ili je u pogrešnom formatu, **tada** backend mora zaustaviti upis u bazu i vratiti jasnu poruku o grešci (npr. 400 Bad Request).
+
 ### ID Storyja: US-30
 **Naziv:** Kreirati ER model baze podataka
 
