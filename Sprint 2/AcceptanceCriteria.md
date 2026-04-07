@@ -106,27 +106,47 @@
 
 
 
-### ID Storyja: US-06
+### ID Storyja: US-06.1
 **Naziv:** Rezervacija termina
 
 ---
-
 1. **Glavni proces rezervacije:**
-   - **Kada** je pacijent logovan i izabere slobodan termin iz kalendara, **ako** klikne na "Potvrdi", **tada** sistem mora taj termin upisati u bazu kao "ZAKAZAN".
+   - **Kada** je pacijent logovan i izabere slobodan termin iz kalendara, **ako** unese potrebne podatke i klikne na "Potvrdi", **tada** sistem mora taj termin upisati u bazu kao "ZAKAZAN"
+   - Sistem mora omogućiti pacijentu rezervaciju termina najviše 60 dana unaprijed kod doktora opšte prakse
+   - Sistem mora omogućiti rezervaciju termina najviše 12 mjeseci unaprijed kod specijaliste
      
-2. **Potvrda rezervacije:**
-   - **Korisnik treba dobiti** potvrdu na ekranu i na email odmah nakon što uspješno rezerviše termin, sa svim detaljima (vrijeme, doktor).
-     
-3. **Prikaz slobodnih mjesta:**
+2. **Ograničenje po specijalisti (Odgovor na otvoreno pitanje)**  
+   - Sistem ne smije dozvoliti rezervisanje više termina u istom danu za jednog pacijenta kod istog specijaliste
+   - Sistem mora ukloniti termin koji je popunjen iz liste slobodnih termina
+3. **Označavanje hitnih termina (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti da su hitni termini označeni crvenom bojom na dashboard-u
+    - Sistem mora omogućiti doktoru i medicinskom osoblju da termin označe kao hitan 
+    - Sistem ne smije dozvoliti pacijentu da označi termin kao hitan
+4. **Prikaz slobodnih mjesta:**
    - **Sistem mora omogućiti** da pacijent vidi samo one termine koji su u radnom vremenu doktora i koji već nisu zauzeti od strane nekog drugog pacijenta.
-     
-4. **Problem duplih rezervacija:**
+5. **Problem duplih rezervacija:**
    - **Sistem ne smije dozvoliti** da dva različita pacijenta rezervišu isti termin.
-     
-5. **Više termina dnevno (Otvoreno pitanje):**
-   - **Sistem ne treba dozvoliti** pacijentu da rezerviše više od jednog termina kod istog doktora u jednom danu, da ne bi zauzimao mjesta drugima.
-     
+6. **Rezervacija više termina dnevno (Odgovor na otvoreno pitanje)**
+      - **Sistem ne smije dozvoliti** pacijentu da rezerviše više od jednog termina kod istog doktora u jednom danu, da ne bi zauzimao mjesta drugima.
+     - Kada pacijent pokuša rezervisati termin kod istog doktora u istom danu, tada se na ekranu pojavi obavijest "Nije dozvoljeno rezervisati više termina kod istog doktora u istom danu!"
+    
+### ID Storyja: US-06.2
+**Naziv:** Rezervacija termina
 
+---   
+1. **Pretraga doktora**
+   - Sistem mora omogućiti pacijentu pretragu doktora po imenu, specijalnosti ili odjelu
+   - Kada pacijent unese pojam koji ne postoji u sistemu, sistem mora prikazati poruku "Nije pronađen nijedan doktor"
+
+2. **Prikaz informacija o doktoru (Odgovor na otvoreno pitanje)**
+   - Sistem mora prikazati osnovne informacije o doktoru (ime, specijalnost, odjel, radno vrijeme)
+
+3. **Odabir doktora i prikaz termina**
+    - Kada pacijent odabere doktora, sistem mora prikazati njegov kalendar sa slobodnim i zauzetim terminima
+   - Sistem mora omogućiti pacijentu da odabere slobodan termin iz kalendara odabranog doktora
+
+4. **Ograničenje po specijalosti (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti samo doktoru opšte prakse rezervaciju termina kod specijaliste za svog pacijenta
 
 ### ID Storyja: US-07
 **Naziv:** Email potvrda o rezervaciji
@@ -240,7 +260,42 @@
 2. **Rezervacija termina od strane dva ili više korisnika**  
    - Kada više korisnika želi rezervisati isti termin, tada se termin zaključava za korisnika čiji je zahtjev prvi stigao na server
    - Kada pacijent želi rezervisati termin, ako njegov zahtjev stigne na server poslije zahtjeva drugog pacijenta, tada pacijent dobija poruku na ekranu "Žao nam je. Termin je već rezervisan. Molimo izaberite drugi"
- 
+
+### ID Storyja: US-13.1
+**Naziv:** Upravljanje radnim vremenom doktora (admin)
+
+---
+1. **Dodavanje radnog vremena doktora**  
+    - Kada je administrator logovan i odabere doktora iz sistema, ako unese radno vrijeme i klikne na dugme "Potvrdi", tada sistem mora sačuvati radno vrijeme i prikazati ga u kalendaru doktora
+2. **Promjena radnog vremena**  
+    - Sistem mora omogućiti administratoru izmjenu postojećeg radnog vremena doktora
+    - Kada administrator izmijeni radno vrijeme,tada sistem mora odmah  ažurirati kalendar doktora
+    - Sistem ne smije dozvoliti promjenu radnog vremena ako doktor ima već zakazane termine u tom periodu
+    - Administrator mora dobiti obavijest "Nije moguće promijeniti radno vrijeme. Doktor ima rezervisane termine u ovom periodu"
+3. **Pregled radnog vremena**
+     - Sistem mora omogućiti administratoru pregled radnog vremena svih doktora
+     - Sistem mora prikazati zauzete i slobodne termine u okviru radnog vremena svakog doktora
+4. **Promjena radnog vremena od strane doktora**
+    - Sistem ne smije dozvoliti doktoru da mijenja svoje radno vrijeme
+
+### ID Storyja: US-13.2
+**Naziv:** Upravljanje radnim vremenom doktora
+
+---
+1. **Slanje upita**  
+   - Kada je doktor logovan i odabere opciju "Promjena dužine termina", ako unese željenu dužinu termina i razlog promjene i klikne dugme "Pošalji upit", tada sistem mora poslati upit administratoru 
+   - Doktor treba dobiti obavijest na ekranu "Vaš upit je uspješno poslan"
+2. **Odobravanje upita od strane admina (Odgovor na otvoreno pitanje)**  
+      - Sistem mora omogućiti administratoru pregled svih pristiglih upita za promjenu dužine termina
+      - Kada administrator odobri upit, sistem mora automatski ažurirati dužinu termina u kalendaru doktora
+      - Kada administrator odbije upit, sistem mora zadržati postojeću dužinu termina
+3. **Obavijesti o upitu (Odgovor na otvoreno pitanje)**
+     - Kada administrator odobri ili odbije upit, sistem mora obavijestiti doktora putem obavijesti u sistemu
+     - Kada pristigne novi upit, sistem mora obavijestiti administratora putem obavijesti u sistemu
+4. **Preklapanje sa postojećim terminima**
+    - Sistem ne smije dozvoliti promjenu dužine termina ako bi nova dužina uzrokovala preklapanje sa već zakazanim terminima
+
+
 ### ID Storyja: US-14
 **Naziv:** Reset lozinke putem emaila
 
@@ -267,6 +322,7 @@
 ### ID Storyja: US-15 
 **Naziv:** Rezervacija termina kod specijaliste putem porodičnog doktora 
 
+---
 1. **Rezervacija termina**
    - Kada doktor pristupi rasporedu specijaliste i odabere slobodan termin, ako doktor putem pretrage pronađe pacijenta i odabere ga za rezervaciju termina na njegovo ime, tada sistem treba rezervisati termin za odabranog pacijenta i doktor dobija poruku na ekranu "Termin je uspješno rezervisan"
    - Sistem mora odmah izbaciti rezervisani termin sa liste slobodnih termina
@@ -284,6 +340,7 @@
 ### ID Storyja: US-16
 **Naziv:** Pregled sistema i statistika
 
+---
 1. **Pregled sistema i statistika**  
    - Kada vlasnik ili menadžer pristupi dashboard-u, tada sistem treba prikazati sve dostpne statistike
    - Sistem mora omogućiti filtriranje podataka po vremenskom periodu
@@ -307,6 +364,7 @@
 ### ID Storyja: US-17
 **Naziv:** Automatska odjava
 
+---
 1. **Pokretanje timeout (Odgovor na otvoreno pitanje)**
     - Kada korisnik nije aktivan više od 15 minuta na svom korisničkom profilu, tada sistem treba da pokrene automatsku odjavu korisnika 
     - Korisnik treba dobiti obavijest na ekranu "Biti ćete odjavljeni s vašeg profila za 2 minute"
@@ -327,7 +385,8 @@
     - Pokušaj pristupa zaštićenim stranicama s isteknutom sesijom mora rezultirati preusmjeravanjem na login formu
 ### ID Storyja: US-18
 **Naziv:** Logovanje svih akcija u sistemu (audit log)
- 
+
+---
 1. **Bilježenje akcija**
     - Sistem mora bilježiti sve CRUD akcije (kreiranje, čitanje, ažuriranje, brisanje) koje korisnici izvršavaju unutar sistema
     - Svaki zapis u audit logu mora sadržavati: ID korisnika, vrstu akcije, naziv entiteta nad kojim je akcija izvršena, datum i vrijeme akcije
@@ -345,31 +404,48 @@
     - Zapisi u audit logu ne smiju biti izmjenjivi ni od strane administratora
     - Sistem mora osigurati da se svaka akcija zabiliježi u realnom vremenu, bez mogućnosti preskakanja zapisa
 
+### ID Storyja: US-19.1
+**Naziv:** Omogućavanje pregleda komentara termina
 
-### ID Storyja: US-19
-**Naziv:** Omogućavanje pregleda komentara prilikom zakazivanja termina
- 
-1. **Unos komentara (Odgovor na otvoreno pitanje)**
-    - Komentare prilikom zakazivanja termina mogu unositi pacijent i osoblje
-    - Doktor ne unosi komentare pri zakazivanju, ali ih može pregledati
+--- 
+1. **Pregled komentara po terminu**  
+    - Kada je doktor logovan i otvori detalje termina, tada sistem mora prikazati sve komentare vezane za taj termin
+    - Sistem ne smije dozvoliti doktoru pregled komentara termina koji nisu njegov
+2. **Unos komentara (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti unos pacijentu i osoblju unos komentara prilikom zakazivanja termina
     - Komentar je opcionalno polje prilikom kreiranja termina
- 
-2. **Pregled komentara (Odgovor na otvoreno pitanje)**
-    - Komentari vezani za termin vidljivi su i pacijentu i doktoru
+
+3. **Pregled komentara (Odgovor na otvoreno pitanje)**
+    - Sistem mora omogućiti da komentari budu vidljivi i doktoru i pacijentu
     - Komentari se prikazuju u okviru detalja termina na pregledu zakazanih termina
     - Korisnik mora biti prijavljen i imati pristup konkretnom terminu kako bi vidio komentare
- 
-3. **Prikaz komentara**
+
+1. **Prikaz detalja komentara**
     - Sistem mora prikazati komentar u detaljima termina uz informacije: tekst komentara, ime osobe koja je unijela komentar i datum unosa
     - Ukoliko termin nema komentara, u sekciji za komentare prikazuje se poruka "Nema komentara za ovaj termin"
- 
-4. **Izmjena i brisanje komentara**
+
+
+### ID Storyja: US-19.2
+**Naziv:** Omogućavanje dodavanje komentara prilikom zakazivanja termina
+
+--- 
+1. **Dodavanje komentara**  
+    - Kada je pacijent logovan i odabere aktivnu rezervaciju, ako unese napomenu u polje za komentar i klikne "Potvrdi", tada sistem mora sačuvati napomenu i prikazati je uz detalje rezervacije
+    - Sistem mora omogućiti pacijentu da rezerviše termin i bez unosa komentara
+    - Sistem ne smije dozvoliti unos napomene duže od maksilanog dozvoljenog broja karaktera 
+    - Korisnik mora dobiti obavijest na ekranu o prekoračenju dozvoljenog broja karaktera "Prekoračili ste broj dozvoljenih karaktera za ovo polje!"
+2. **Izmjena i brisanje komentara (Odgovor na otvoreno pitanje)**
     - Komentar može izmijeniti ili obrisati samo osoba koja ga je unijela ili administrator sistema
-    - Svaka izmjena komentara mora biti zabilježena u audit logu (US-18)
- 
+    - Sistem mora omogućiti izmjenu i brisanje komentara samo prije pregleda
+    - Sistem ne smije dozvoliti izmjenu i brisanje komentara nakon pregleda
+
+3. **Klasifikacija hitnosti (Odgovor na otvoreno pitanje)**  
+   - Sistem mora omogućiti samo doktoru da označi termin pod "HITNO"
+
 ### ID Storyja: US-20
 **Naziv:** Vodič za korištenje stranice
- ---
+
+---
  1. **Sadržaj vodiča (Odgovor na otvoreno pitanje):**
    - **Kada** korisnik otvori vodič, **tada** sistem mora prikazati tekstualna uputstva sa pratećim slikama za sve ključne funkcije. Vodič ne treba sadržavati video tutorijale u ovoj fazi, već mora biti podijeljen na sekcije za pacijente i za doktore.
 
