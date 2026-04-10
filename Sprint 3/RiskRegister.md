@@ -13,7 +13,7 @@
 | **RR-11** | Neautorizovan pristup admin panelu | Slaba zaštita admin naloga | Niska | Visok | Visok |  | Security tim | U toku |
 | **RR-12** | Gubitak sesije korisnika | Isticanje session tokena | Srednja | Srednji | Srednji |  | Backend developer | Otvoren |
 | **RR-13** | Konflikt u rasporedu doktora | Nema centralne provjere rasporeda | Srednja | Visok | Visok | Centralni scheduling sistem | Backend developer | Otvoren |
-| **RR-14** | Neispravne obavijesti pacijentima | Pogrešni podaci u sistemu notifikacija | Niska | Srednji | Nizak | Logovanje i verifikacija poruka | QA tim | Ublažen/Mitigated |
+| **RR-14** | Neispravne obavijesti pacijentima | Pogrešni podaci u sistemu notifikacija | Niska | Srednji | Nizak | Logovanje i verifikacija poruka | QA tim | Identifikovan |
 | **RR-15** | Kašnjenje notifikacija | Problem sa email/SMS servisom | Srednja | Srednji | Srednji | Retry mehanizam | Backend developer | Otvoren |
 | **RR-16** | Pacijent se ne pojavi na termin | Pacijent zaboravi ili ne dobije obavijest | Srednja | Srednji | Srednji | SMS/email podsjetnici | Backend developer | Otvoren |
 | **RR-17** | Doktor kasni ili nije dostupan | Promjene u rasporedu ili hitni slučajevi | Srednja | Visok | Visok | Dinamičko ažuriranje rasporeda ili zamjenski doktor | Projekt menadžer | Otvoren |
