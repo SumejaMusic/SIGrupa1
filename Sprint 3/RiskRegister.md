@@ -5,3 +5,18 @@
 | **RR-03** | Greške u zakazivanju termina | Bug u logici sistema | Visoka | Srednji | Visok | Unit testovi, QA testiranje | QA tim | Open |
 | **RR-04** | Preopterećenje sistema | Veliki broj korisnika | Srednja | Visok | Visok | Skaliranje servera | DevOps tim | Open |
 | **RR-05** | Gubitak internet konekcije | Mrežni problemi u bolnici | Niska | Srednji | Nizak | Offline mod ili retry mehanizam | IT podrška | Open |
+| **RR-06** | Loše korisničko iskustvo | Neintuitivan dizajn | Srednja | Srednji | Srednji | Feedback korisnika | Frontend developer | Open |
+| **RR-07** |
+| **RR-08** |
+| **RR-09** |
+| **RR-10** |
+| **RR-11** |
+| **RR-12** |
+| **RR-13** |
+| **RR-14** |
+| **RR-15** |
+| **RR-16** |
+| **RR-17** |
+| **RR-18** |
+| **RR-19** |
+| **RR-20** |
