@@ -52,7 +52,7 @@ Na sedmičnom sastanku tim mora demonstrirati da:
  
 ## Sedmični sastanak – agenda
  
-1. Prezentacija Risk Registra – pregled ključnih rizika i planova mitigacije
+1. Prezentacija Risk Registra – pregled ključnih rizika
 2. Walkthrough Domain Modela ili Use Case Modela – veza sa zahtjevima
 3. Prezentacija Architecture Overview – obrazloženje tehničkih odluka
 4. Pregled Test Strategy – kako i šta testiramo
