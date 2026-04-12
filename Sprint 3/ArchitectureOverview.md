@@ -31,6 +31,8 @@ Relacijska baza podataka
 
 **Sigurnosni mehanizmi sistema**: odgovoran je za enkripciju osjetljivih zdravstvenih podataka, vođenje audit loga svih aktivnosti u sistemu, osiguranja integriteta podataka u bazi, te backup i oporavak podataka. 
 
+**Baza podataka**: omogućava trajno čuvanje podataka o korisnicima, terminima, nalazima. Ključni entiteti koje baza čuva su: korisnici (pacijenti, doktori, medicinsko osoblje, administrator) sa njihovim ulogama, termini sa vremenskim oznakama, doktori, te medicinski podaci pacijenata kao što su dijagnoza, medicinska historija i sl. Integritet podataka osiguran je primarnim i stranim ključima između entiteta, a osjetljivi medicinski podaci se čuvaju u enkriptovanom obliku. 
+
 ## Tok podataka i interakcija
 
 ### Autentifikacijski tok
