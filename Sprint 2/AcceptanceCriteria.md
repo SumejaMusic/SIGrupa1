@@ -75,7 +75,7 @@
 3. **Validacija email adrese:**
    - **Ako** administrator pokuša registrovati pacijenta sa emailom koji već postoji u bazi, **tada** sistem mora izbaciti upozorenje "Korisnik sa ovim emailom je već registrovan".
 
-4. **Samostalna registracija (Odgovor na otvoreno pitanje):**
+4. **Samostalna registracija:**
    - **Sistem mora omogućiti** pacijentu da se i samostalno registruje putem javne stranice za registraciju, ali administrator mora imati uvid u sve te profile unutar svog panela.
 
 5. **Feedback poruka:**
