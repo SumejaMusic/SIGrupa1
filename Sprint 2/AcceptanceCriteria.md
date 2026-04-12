@@ -1,5 +1,6 @@
 # Acceptance Criteria
 
+**Izmjena nakon Sprinta 2:** AC ažurirani, usklađeni sa US
 
 ### ID Storyja: US-01
 **Naziv:** Historija pregleda korisnika
@@ -21,7 +22,7 @@
 
 
 ### ID Storyja: US-02
-**Naziv:** Admin panel - frontend
+**Naziv:** Admin panel
 
 ---
 
@@ -40,9 +41,27 @@
 5. **Pretraga:**
    - **Kada** admin unese ime pacijenta u polje za pretragu unutar panela, **tada** sistem mora odmah prikazati relevantne rezultate.
 
-
-
 ### ID Storyja: US-03
+**Naziv:** Login sistem
+
+---
+
+1. **Glavni proces prijave (Autentifikacija):**
+   - **Kada** korisnik unese ispravnu email adresu i lozinku, **ako** klikne na dugme "Prijavi se", **tada** sistem mora provjeriti podatke u bazi i dozvoliti pristup aplikaciji.
+
+2. **Preusmjeravanje prema ulogama:**
+   - **Kada** se korisnik uspješno prijavi, **ako** ima ulogu 'PACIJENT', tada ga sistem vodi na njegov profil, a **ako** ima ulogu 'DOKTOR', tada ga sistem vodi na ljekarski dashboard.
+
+3. **Dvofaktorska autentifikacija:**
+   - **Ako** korisnik ima aktiviranu opciju dvofaktorske autentifikacije, **tada** sistem nakon ispravne lozinke mora zatražiti unos sigurnosnog koda prije nego što dozvoli konačan pristup podacima.
+
+4. **Blokada nakon neuspješnih pokušaja:**
+   - **Sistem ne smije dozvoliti** više od 5 neuspješnih pokušaja prijave zaredom za jedan nalog. **Ako** korisnik premaši ovaj limit, **tada** sistem mora privremeno blokirati pristup tom nalogu.
+
+5. **Poruke o greškama:**
+   - **Korisnik treba dobiti** opštu poruku "Pogrešan email ili lozinka" u slučaju netačnih podataka. Sistem ne smije precizirati koji je od ta dva podatka pogrešan iz sigurnosnih razloga.
+
+### ID Storyja: US-04
 **Naziv:** Admin panel - registracija pacijenta
 
 ---
@@ -62,26 +81,6 @@
 5. **Feedback poruka:**
    - **Korisnik (admin) treba dobiti** potvrdu na vrhu ekrana "Pacijent uspješno registrovan" odmah nakon što se podaci upišu u bazu.
 
-  
-### ID Storyja: US-04
-**Naziv:** Login sistem
-
----
-
-1. **Glavni proces prijave (Autentifikacija):**
-   - **Kada** korisnik unese ispravnu email adresu i lozinku, **ako** klikne na dugme "Prijavi se", **tada** sistem mora provjeriti podatke u bazi i dozvoliti pristup aplikaciji.
-
-2. **Preusmjeravanje prema ulogama:**
-   - **Kada** se korisnik uspješno prijavi, **ako** ima ulogu 'PACIJENT', tada ga sistem vodi na njegov profil, a **ako** ima ulogu 'DOKTOR', tada ga sistem vodi na ljekarski dashboard.
-
-3. **Dvofaktorska autentifikacija:**
-   - **Ako** korisnik ima aktiviranu opciju dvofaktorske autentifikacije, **tada** sistem nakon ispravne lozinke mora zatražiti unos sigurnosnog koda prije nego što dozvoli konačan pristup podacima.
-
-4. **Blokada nakon neuspješnih pokušaja:**
-   - **Sistem ne smije dozvoliti** više od 5 neuspješnih pokušaja prijave zaredom za jedan nalog. **Ako** korisnik premaši ovaj limit, **tada** sistem mora privremeno blokirati pristup tom nalogu.
-
-5. **Poruke o greškama:**
-   - **Korisnik treba dobiti** opštu poruku "Pogrešan email ili lozinka" u slučaju netačnih podataka. Sistem ne smije precizirati koji je od ta dva podatka pogrešan iz sigurnosnih razloga.
 
 
 ### ID Storyja: US-05
@@ -106,7 +105,7 @@
 
 
 
-### ID Storyja: US-06.1
+### ID Storyja: US-06
 **Naziv:** Rezervacija termina
 
 ---
@@ -130,7 +129,7 @@
       - **Sistem ne smije dozvoliti** pacijentu da rezerviše više od jednog termina kod istog doktora u jednom danu, da ne bi zauzimao mjesta drugima.
      - Kada pacijent pokuša rezervisati termin kod istog doktora u istom danu, tada se na ekranu pojavi obavijest "Nije dozvoljeno rezervisati više termina kod istog doktora u istom danu!"
     
-### ID Storyja: US-06.2
+### ID Storyja: US-07
 **Naziv:** Rezervacija termina
 
 ---   
@@ -153,7 +152,7 @@
 5. **Ograničenje po specijalosti (Odgovor na otvoreno pitanje)**
     - Sistem mora omogućiti samo doktoru opšte prakse rezervaciju termina kod specijaliste za svog pacijenta
 
-### ID Storyja: US-07
+### ID Storyja: US-08
 **Naziv:** Email potvrda o rezervaciji
 
 ---
@@ -172,7 +171,7 @@
 
 
 
-### ID Storyja: US-08
+### ID Storyja: US-09
 **Naziv:** Otkazivanje termina (medicinsko osoblje)
 
 ---
@@ -193,7 +192,7 @@
    - **Sistem mora osigurati** da se otkazani termin odmah nakon akcije osoblja prikaže kao slobodan u kalendaru za ostale korisnike koji vrše pretragu.
 
 
-### ID Storyja: US-09
+### ID Storyja: US-10
 **Naziv:** Otkazivanje termina (pacijent)
 
 ---
@@ -217,7 +216,7 @@
    - **Korisnik treba dobiti** jasnu poruku na ekranu: "Vaš termin je uspješno otkazan" odmah nakon što se akcija završi.
 
 
-### ID Storyja: US-10
+### ID Storyja: US-11
 **Naziv:** Dashboard za doktora – pregled rasporeda
 
 ---
@@ -232,7 +231,7 @@
    - **Kada** doktor pregleda listu pacijenata za taj dan, **ako** klikne na ime pacijenta, **tada** mu sistem mora otvoriti uvid u historiju prethodnih dolazaka i nalaza tog pacijenta radi boljeg uvida u slučaj.
 
 
-### ID Storyja: US-11
+### ID Storyja: US-12
 **Naziv:** Automatsko oslobađanje zaključanih termina
 
 ---
@@ -248,7 +247,7 @@
     - Sistem ne smije dozvoliti potvrdu termina ako pacijent nije popunio sva obavezna polja
     - Korisnik treba dobiti poruku "Ne smijete rezervisati termin bez popunjavanja obaveznih polja!" ako pokuša potvrditi termin bez unesenih podataka
 
-### ID Storyja: US-12
+### ID Storyja: US-13
 **Naziv:** Validacija i sprječavanje duplih rezervacija
 
 ---
@@ -267,7 +266,7 @@
    - Kada pacijent želi rezervisati termin, ako njegov zahtjev stigne na server poslije zahtjeva drugog pacijenta, tada pacijent dobija poruku na ekranu "Žao nam je. Termin je već rezervisan. Molimo izaberite drugi"
 
 
-### ID Storyja: US-13.1
+### ID Storyja: US-14
 **Naziv:** Upravljanje radnim vremenom doktora (admin)
 
 ---
@@ -284,7 +283,7 @@
 4. **Promjena radnog vremena od strane doktora**
     - Sistem ne smije dozvoliti doktoru da mijenja svoje radno vrijeme
 
-### ID Storyja: US-13.2
+### ID Storyja: US-15
 **Naziv:** Upravljanje radnim vremenom doktora
 
 ---
@@ -302,7 +301,7 @@
     - Sistem ne smije dozvoliti promjenu dužine termina ako bi nova dužina uzrokovala preklapanje sa već zakazanim terminima
 
 
-### ID Storyja: US-14
+### ID Storyja: US-16
 **Naziv:** Reset lozinke putem emaila
 
 ---
@@ -325,7 +324,7 @@
    - Sistem ne smije dozvoliti postavljanje lozinke koja ima manje od 8 karaktera, nema bar jedno veliko slovo i barem 1 broj
 
 
-### ID Storyja: US-15 
+### ID Storyja: US-17
 **Naziv:** Rezervacija termina kod specijaliste putem porodičnog doktora 
 
 ---
@@ -343,7 +342,7 @@
 
 
    
-### ID Storyja: US-16
+### ID Storyja: US-18
 **Naziv:** Menadžment panel
 
 ---
@@ -372,8 +371,8 @@
 
 
 
-### ID Storyja: US-17
-**Naziv:** Automatska odjava
+### ID Storyja: US-19
+**Naziv:** Automatska odjava nakon perioda neaktivnosti
 
 ---
 1. **Pokretanje timeout (Odgovor na otvoreno pitanje)**
@@ -394,7 +393,9 @@
 5. **Sigurnost sesije**
     - Nakon automatske odjave, korisnička sesija mora biti poništena
     - Pokušaj pristupa zaštićenim stranicama s isteknutom sesijom mora rezultirati preusmjeravanjem na login formu
-### ID Storyja: US-18
+
+
+### ID Storyja: US-20
 **Naziv:** Logovanje svih akcija u sistemu (audit log)
 
 ---
@@ -415,7 +416,7 @@
     - Zapisi u audit logu ne smiju biti izmjenjivi ni od strane administratora
     - Sistem mora osigurati da se svaka akcija zabilježi u realnom vremenu, bez mogućnosti preskakanja zapisa
 
-### ID Storyja: US-19.1
+### ID Storyja: US-21
 **Naziv:** Omogućavanje pregleda komentara termina
 
 --- 
@@ -436,8 +437,8 @@
     - Ukoliko termin nema komentara, u sekciji za komentare prikazuje se poruka "Nema komentara za ovaj termin"
 
 
-### ID Storyja: US-19.2
-**Naziv:** Omogućavanje dodavanje komentara prilikom zakazivanja termina
+### ID Storyja: US-22
+**Naziv:** Dodavanje komentara prilikom zakazivanja termina
 
 --- 
 1. **Dodavanje komentara**  
@@ -453,7 +454,7 @@
 3. **Klasifikacija hitnosti (Odgovor na otvoreno pitanje)**  
    - Sistem mora omogućiti samo doktoru da označi termin pod "HITNO"
 
-### ID Storyja: US-20
+### ID Storyja: US-23
 **Naziv:** Vodič za korištenje stranice
 
 ---
@@ -469,7 +470,7 @@
 4. **Ručno ažuriranje (Odgovor na otvoreno pitanje):**
    - **Sistem mora omogućiti** administratoru da ručno izmijeni vodič putem admin panela.
 
-### ID Storyja: US-21 
+### ID Storyja: US-24 
 **Naziv:** Panel medicinskog osoblja 
 ---
 1. **Glavni prikaz termina:** 
@@ -484,7 +485,7 @@
 
 
 
-### ID Storyja: US-22 
+### ID Storyja: US-25 
 **Naziv:** Two factor authentication (2FA) 
 --- 
 1. **Slanje sigurnosnog koda (Tip 2FA):**
@@ -502,7 +503,7 @@
 
 
 
-### ID Storyja: US-23 
+### ID Storyja: US-26 
 **Naziv:** Detekcija neobičnog ponašanja - blokiranje naloga
  --- 
 1. **Limit pokušaja prijave (Odgovor na otvoreno pitanje):**
@@ -516,7 +517,7 @@
 
 
 
-### ID Storyja: US-24
+### ID Storyja: US-27
  **Naziv:** Enkripcija osjetljivih podataka
  --- 
 1. **Enkripcija na nivou baze (Odgovor na otvoreno pitanje):
@@ -526,7 +527,7 @@
 3. **Enkripcija backup fajlova (Odgovor na otvoreno pitanje):**
    - **Ako** sistem kreira automatsku rezervnu kopiju (backup) baze podataka, **tada** i taj backup fajl mora biti enkriptovan kao i aktivna baza. 
 
-### ID Storyja: US-25
+### ID Storyja: US-28
  **Naziv:** Označavanje hitnosti prijavljenog termina 
 ---
 1. **Ručno označavanje hitnosti:**
@@ -538,8 +539,8 @@
 4. **Vidljivost za pacijenta (Odgovor na otvoreno pitanje):**
    - **Sistem ne smije prikazivati** internu oznaku "Hitno" na pacijentovoj strani aplikacije. Oznaka je namijenjena isključivo za internu organizaciju medicinskog osoblja. 
 
-### ID Storyja: US-26.1
-**Naziv:** Vizuelni pregled statistike (Admin)
+### ID Storyja: US-29
+**Naziv:** Statistika zdravstvene ustanove
 ---
 1. **Nivoi prikaza (Odgovor na otvoreno pitanje):**
    - **Kada** administrator otvori stranicu sa statistikom, **ako** izabere filter, **tada** sistem mora omogućiti prikaz podataka na tri nivoa: za cijelu ustanovu, za određeni odjel ili za pojedinačnog ljekara.
@@ -550,8 +551,8 @@
 3. **Ključne metrike (Odgovor na otvoreno pitanje):**
    - **Korisnik (admin) treba dobiti** uvid u sljedeće metrike: ukupan broj zakazanih termina, procenat otkazanih termina i prosječno vrijeme čekanja na slobodan termin kod određenog specijaliste.
   
-### ID Storyja: US-26.2
-**Naziv:** Export statistike u CSV (Uprava)
+### ID Storyja: US-30
+**Naziv:** Statistika zdravstvene ustanove
 ---
 1. **Eksport na zahtjev (Odgovor na otvoreno pitanje):**
    - **Kada** menadžment odabere željeni period, **ako** klikne na dugme "Export u CSV", **tada** sistem mora generisati traženi CSV file.
@@ -566,7 +567,7 @@
    - **Sistem mora osigurati** da su podaci u CSV fajlu pravilno razdvojeni i formatirani.
 
 
-### ID Storyja: US-27
+### ID Storyja: US-31
 **Naziv:** Automatski podsjetnik
 --- 
 1. **Slanje podsjetnika (Odgovor na otvoreno pitanje)**
@@ -590,7 +591,7 @@
     - Sistem mora evidentirati svaki poslani podsjetnik s datumom i vremenom slanja
     - Administrator može pregledati evidenciju poslanih podsjetnika za svakog pacijenta
 
-### ID Storyja: US-28
+### ID Storyja: US-32
 **Naziv:** Upload i evidencija laboratorijskih nalaza
 ---
 1. **Glavni proces uploada:**
@@ -605,7 +606,7 @@
 4. **Pregled nalaza:**
    - **Kada** pacijent ili doktor kliknu na naziv nalaza u istoriji, **tada** sistem mora otvoriti PDF dokument u novom tabu preglednika radi lakšeg čitanja.
 
-### ID Storyja: US-29
+### ID Storyja: US-33
 **Naziv:** Admin panel - backend
 
 ---
@@ -621,7 +622,7 @@
 4. **Validacija ulaznih podataka:**
    - **Kada** se šalju podaci na backend (npr. novi ljekar), **ako** neki obavezni podatak fali ili je u pogrešnom formatu, **tada** backend mora zaustaviti upis u bazu i vratiti jasnu poruku o grešci (npr. 400 Bad Request).
 
-### ID Storyja: US-30
+### ID Storyja: US-34
 **Naziv:** Kreirati ER model baze podataka
 
 ---
@@ -635,7 +636,7 @@
 3. **Podrška za proširenja (Odgovor na otvoreno pitanje):**
    - **Model baze mora biti projektovan** tako da omogućava lako dodavanje novih modula u budućnosti bez potrebe za mijenjanjem osnovnih tabela korisnika i ljekara.
 
-### ID Storyja: US-31 
+### ID Storyja: US-35
 **Naziv:** Kreiranje baze podataka 
 --- 
 1. **Izbor tipa baze podataka (Odgovor na otvoreno pitanje):**
@@ -647,7 +648,7 @@
 4. **Dostupnost i Replikacija (Odgovor na otvoreno pitanje):**
    - **Za veću dostupnost sistema**, baza podataka mora vršiti automatski dnevni backup. U slučaju kvara na glavnom serveru, administrator mora biti u mogućnosti da povrati podatke iz zadnje kopije. 
 
-### ID Storyja: US-32 
+### ID Storyja: US-36
 **Naziv:** Definisanje prava pristupa bazi podataka
  --- 
 1. **Definisanje uloga (Odgovor na otvoreno pitanje):**
@@ -659,7 +660,7 @@
 4. **Pristup medicinskog osoblja:**
    - **Kada** član medicinskog osoblja otvori panel, **tada** mu sistem mora dozvoliti upravljanje kalendarima svih ljekara.
 
-### ID Storyja: US-33
+### ID Storyja: US-37
 **Naziv:** Testiranje baze podataka
 ---
 1. **Provjera integriteta podataka (Validnost):**
