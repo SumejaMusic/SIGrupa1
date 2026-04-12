@@ -1,4 +1,4 @@
-# Model slučajeva korištenja
+# Use Case Model
 
 ## UC-01: Rezervacija termina kod doktora
 
