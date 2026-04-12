@@ -222,7 +222,7 @@
 ---
 
 1. **Dnevni i sedmični prikaz:**
-   - **Kada** je doktor na svom panelu (KAN-28), **ako** klikne na opciju "Sedmični prikaz", **tada** mu sistem mora prikazati tabelu sa svim terminima raspoređenim po danima u tekućoj sedmici.
+   - **Kada** je doktor na svom panelu, **ako** klikne na opciju "Sedmični prikaz", **tada** mu sistem mora prikazati tabelu sa svim terminima raspoređenim po danima u tekućoj sedmici.
 
 2. **Mijenjanje termina (Odgovor na otvoreno pitanje):**
    - **Sistem mora omogućiti** doktoru da pomjeri (izmjeni) termin pacijenta ako dođe do neplaniranih promjena. **Kada** doktor izmijeni termin, **tada** pacijent mora automatski dobiti email obavijest o novom vremenu pregleda.
