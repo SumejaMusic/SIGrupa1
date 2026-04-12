@@ -2,32 +2,32 @@
 
 ## Cilj testiranja  
 
-| **Cilj testiranja** | **Kako se mjeri uspjeh** |
+| **Cilj testiranja** | **Kriterij uspjeha** |
 |---------------------|--------------------------|
-|Verifikacija da sistem ne dozvoljava neovlašten pristup podacima| Korisnik bez odgovarajuće uloge ne može pristupiti odgovarajućim podacima, sistem ga preusmjerava na login|
-|Potvrditi ispravnost rada sistema na različitim web preglednicima||
-|Verificirati da sistem ispravno autentificira korisnike i preusmjerava ih prema ulozi  | |
-| Ustanoviti da sistem blokira nalog nakon 5 neuspješnih pokušaja  prijave                                                                                          ||
-|Potvrditi da sistem automatski odjavi korisnika nakon 15 minuta neaktivnosti||
-|Potvrditi da su osjetljivi podaci enkriptovani  heshirani||
-|Potvrditi da sistem sprječava duple rezervacije||
-|Potvrditi da sistem ispravno zaključava termin na 2 minute i oslobađa ga nakon 2 minute u slučaju da se termin ne potvrdi||
-|Potvrditi da sistem ne dozvoljava otkazivanje termina 24 h prije||
-| Potvrditi da medicinsko osoblje može otkazati termin bilo kad uz slanje obavijesti pacijentu||
-|Potvrditi da pacijent dobija podjsetnik 24 h prije termina ||
-| Potvrditi da pacijent dobije email prilikom otkazivanja termina||
-|Potvrditi ispravnost prikaza historije pregleda pacijenata prilikom sortiranja, prikaza detalja pregleda i otkazanih termina||
-|Potvrditi da audit log bilježi sve akcije korisnika sa tačnim podacima i da je dostupan samo administratoru||
-|Provjeriti ispravnost unosa, prikaza, brisanja i izmjene komentara||
-|Verificirati da li menadžment panel ispravno prikazuje kapacitet, zauzetost doktora i sala, rezervisane i otkazane termine||
-|Potvrditi ispravnost procesa resetovanja lozinke putem emaila uključujući validnost linka i limit pokušaja||
-|Potvrditi ispravnost označavanja hitnih termina||
-|Potvrditi da neuspješne operacije ne ostavljaju bazu u nekonzistentnom stanju||
-|Potvrditi da se promjene u zauzetosti termina prikazuju u realnom vremenu bez kašenjenja||
-|Potvrditi da sistem osigurava 99% dostupnosti u toku radnog vremena klinike||
-|Potvrditi slanje email obaijesti nakon uspješne rezervacije||
-|Potvrditi ispravnost eksporta podataka u CSV formatu||
-|Potvrditi da sistem odgovara u prihvatljivom vremenu pod normalnim i povećanim opterećenjem ||
+|Verifikacija da sistem ne dozvoljava neovlašten pristup podacima| NFR-01: Samo vlasnik i autorizovano medicinsko osoblje mogu pristupiti historiji pregleda pacijenta. NFR-06: Korisnik smije pristupiti samo funkcijama koje odgovaraju njegovoj ulozi. AC-02-01: Korisnik bez administratorskih ovlasti je automatski preusmjeren na login stranicu. AC-32-02: Sistem odbija zahtjev i vraća grešku ako uloga korisnika nije autorizovana za traženu akciju. AC-32-03: Doktor ima pristup samo terminima i historiji pacijenata koji su rezervisali pregled kod njega.|
+|Verificirati da sistem ispravno autentificira korisnike i preusmjerava ih prema ulozi  | AC-04-01: Sistem provjerava podatke u bazi i dozvoljava pristup. AC-04-02: Pacijent je preusmjeren na profil, doktor na ljekarski dashboard. AC-04-03: Ako je korisnik aktivirao 2FA, sistem nakon ispravne lozinke traži unos sigurnosnog koda prije konačnog pristupa. AC-04-05: Sistem prikazuje opštu poruku "Pogrešan email ili lozinka" i ne precizira koji je od podataka pogrešan. NFR-07: Sistem mora implementirati kontrolu pristupa zasnovanu na ulogama (RBAC).|
+| Ustanoviti da sistem blokira nalog nakon 5 neuspješnih pokušaja  prijave | AC-04-04: Sistem ne dozvoljava više od 5 neuspješnih pokušaja. AC-23-01: Nalog se automatski blokira. AC-23-02: Nakon 3. pokušaja prikazuje se upozorenje "Preostala su vam još 2 pokušaja". AC-23-03: Vlasniku se šalje email obavijest o blokiranju. AC-23-04: Administrator može ručno odblokiriti nalog iz admin panela prije isteka vremena blokade. NFR-05: Sistem mora blokirati korisnika nakon 5 neuspješnih pokušaja prijave.|
+|Potvrditi da sistem automatski odjavi korisnika nakon 15 minuta neaktivnosti| AC-17-01: Nakon 15 minuta prikazuje se obavijest sa opcijama "Otkaži" i "Produži sesiju". AC-17-02: Korisnik je preusmjeren na login formu. AC-17-03: Kada korisnik klikne "Produži sesiju", tajmer neaktivnosti se resetuje na 0 i obavijest se zatvara bez prekida rada. AC-17-04: Kada korisnik klikne "Otkaži", sistem ga odmah odjavljuje i preusmjerava na login formu. AC-17-05: Sesija je poništena, pristup zaštićenim stranicama sa isteklom sesijom vraća korisnika na login. NFR-13: Sesija korisnika mora automatski isteći nakon perioda neaktivnosti. NFR-14: Pokušaj pristupa sa isteklim tokenom mora vraćati grešku 401.|
+|Potvrditi da su osjetljivi podaci enkriptovani i heširani| AC-24-01: Osjetljivi podaci čuvaju se enkriptovani AES-256 algoritmom. AC-24-02: Lozinke su heširane, plain-text lozinka nije vidljiva ni administratoru. AC-24-03: Backup fajlovi su enkriptovani. NFR-04: Lozinke se moraju čuvati u hashiranom i sigurnom obliku. NFR-17: Medicinski dokumenti moraju biti sigurno i trajno pohranjeni te nedostupni bez autorizacije. NFR-24: Enkripcija se primjenjuje na JMBG, broj zdravstvene knjižice, dijagnoze, nalazi i medicinska historija.|
+|Potvrditi da sistem sprječava duple rezervacije| AC-12-01: Sistem vrši provjeru preklapanja u trenutku klika na termin, prikazuje poruku "Već imate rezervisan termin u ovo vrijeme". Provjera se vrši i s terminima kod drugog doktora — sistem ne dozvoljava rezervaciju koja se preklapa s bilo kojim već potvrđenim terminom, bez obzira na doktora. AC-12-02: Termin se zaključava za korisnika čiji zahtjev prvi stigne, drugi korisnik dobija poruku "Žao nam je. Termin je već rezervisan. Molimo izaberite drugi". AC-06.1-06: Sistem ne dozvoljava pacijentu rezervaciju više od jednog termina kod istog doktora u istom danu te prikazuje poruku "Nije dozvoljeno rezervisati više termina kod istog doktora u istom danu!". NFR-22: Sistem mora zaključati termin na 2 minute tokom unosa podataka kako bi se sprječile duple rezervacije.|
+|Potvrditi da sistem ispravno zaključava termin na 2 minute i oslobađa ga nakon 2 minute u slučaju da se termin ne potvrdi| AC-11-01: Nakon 2 minute bez potvrde termin dobija status slobodan, korisnik dobija poruku "Vrijeme za potvrdu termina je isteklo. Molimo Vas odaberite novi termin". AC-11-02: Sistem ne dozvoljava potvrdu bez popunjenih obaveznih polja, korisnik dobija poruku "Ne smijete rezervisati termin bez popunjavanja obaveznih polja!". AC-11 (granični slučaj): Ako korisnik klikne "Potvrdi" tačno u trenutku isteka 2 minute, sistem ga vraća na početni ekran s porukom o isteku vremena. NFR-22: Buffer zona od 2 minute je kritična tačka, u slučaju pada servera postoji rizik da se termin ne oslobodi na vrijeme.|
+|Potvrditi da sistem ne dozvoljava otkazivanje termina od strane pacijenta 24 h prije| AC-09-01: Sistem mijenja status termina u "OTKAZAN" i odmah oslobađa mjesto u bazi kada pacijent uspješno otkaže termin. AC-09-02: Sistem ne dozvoljava pacijentu otkazivanje ako je do pregleda ostalo manje od 24h. AC-09-04: Prije otkazivanja sistem prikazuje upit "Da li ste sigurni da želite otkazati ovaj termin?" i ne dozvoljava slučajno otkazivanje jednim klikom. AC-15-03: Korisnik dobija poruku "Rezervaciju nije moguće otkazati 24h prije".|
+| Potvrditi da medicinsko osoblje može otkazati termin bilo kad uz slanje obavijesti pacijentu| AC-08-01: Osoblje odabire termin i klikne "Otkaži", sistem oslobađa mjesto u bazi. AC-08-02: Medicinsko osoblje može otkazati termin samo prije početka pregleda. AC-08-03: Sistem automatski šalje email pacijentu sa informacijom o otkazivanju i kontakt telefonom. AC-08-04: Sistem traži potvrdu "Da li ste sigurni da želite otkazati ovaj termin?". AC-08-05: Otkazani termin se odmah prikazuje kao slobodan u kalendaru. NFR-11: Email mora sadržavati detalje otkazanog termina (datum, doktor).|
+|Potvrditi da pacijent dobija podsjetnik 24 h prije termina |AC-07-01: Sistem automatski šalje email potvrdu pacijentu odmah nakon uspješne rezervacije. AC-07-02: Email sadrži tačan datum i vrijeme, ime i prezime doktora i naziv odjela. AC-07-03: Sistem šalje dodatni podsjetnik 24 sata prije termina. AC-07-04: Email sadrži link za otkazivanje ili pomjeranje termina.|
+| Potvrditi da pacijent dobije email prilikom otkazivanja termina| AC-09-03: Sistem automatski šalje email potvrdu pacijentu kao dokaz da je termin uredno otkazan. AC-09-05: Otkazani termin se odmah prikazuje kao slobodan u realnom vremenu za sve ostale pacijente koji vrše pretragu. AC-09-06: Na ekranu se prikazuje poruka "Vaš termin je uspješno otkazan". NFR-11: Pacijent mora biti obaviješten o otkazivanju termina putem emaila.|
+|Potvrditi ispravnost prikaza historije pregleda pacijenata prilikom sortiranja, prikaza detalja pregleda i otkazanih termina| AC-01-01: Termini su sortirani od najnovijeg ka najstarijem. AC-01-02: Prikazuju se osnovni podaci (datum, ljekar, odjel), opis terapije i nalazi. AC-01-03: Otkazani termini su označeni statusom "OTKAZAN". AC-01-04: Pacijent bez pregleda dobija poruku "Trenutno nemate zabilježenih pregleda u historiji". NFR-01: Pristup historiji pregleda dozvoljen je samo vlasniku naloga i autorizovanom medicinskom osoblju.|
+|Potvrditi da audit log bilježi sve akcije korisnika sa tačnim podacima i da je dostupan samo administratoru| AC-18-01: Svaki zapis sadrži ID korisnika, vrstu akcije, naziv entiteta nad kojim je akcija izvršena, datum i vrijeme, stari i novi podatak pri svakoj izmjeni, uključujući neuspješne pokušaje prijave. AC-18-02: Samo administratori imaju pravo pregleda i mogu filtrirati zapise. AC-18-03: Podaci se čuvaju minimalno 12 mjeseci. AC-18-04: Zapisi nisu izmjenjivi ni od strane administratora. NFR-08: Svaki zapis mora sadržavati stari/novi podatak i vremensku oznaku.|
+|Provjeriti ispravnost unosa, prikaza, brisanja i izmjene komentara| AC-19.1-01: Doktor ne smije imati pristup komentarima termina koji nisu njegovi. AC-19.1 (prazno stanje): Ako termin nema komentara, prikazuje se poruka "Nema komentara za ovaj termin". AC-19.2-01: Komentar je sačuvan i prikazan uz detalje rezervacije, sistem ne dozvoljava više od 255 karaktera. AC-19.2-02: Izmjena i brisanje su mogući samo prije pregleda i samo od strane osobe koja je unijela komentar ili administratora. AC-19.2 (opcionalno polje): Sistem mora dozvoliti rezervaciju termina i bez unosa komentara. AC-19.1-03: Komentari su vidljivi i doktoru i pacijentu u detaljima termina. AC-19.1-04: Prikazuju se tekst komentara, ime osobe i datum unosa.|
+|Verificirati da li menadžment panel ispravno prikazuje kapacitet, zauzetost doktora i sala, rezervisane i otkazane termine| AC-16-01: Prikazuje se ukupan broj registrovanih korisnika i zakazanih termina. AC-16-02: Podaci se ažuriraju u realnom vremenu. AC-16-03: Sistem ne dozvoljava pristup menadžment panelu osobama koje nemaju ulogu administratora. AC-16-04: Prikazuje se broj korisnika po ulogama. AC-16-05: Prikazuje se broj zakazanih i slobodnih termina po doktoru i zauzetost sala. AC-16-06: Prikazuje se ko je i kada zakazao ili otkazao termin. AC-16-07: Administrator može eksportovati podatke o terminima za odabrani period u CSV formatu. NFR-16: Promjene moraju biti vidljive u roku od 2 sekunde.|
+|Potvrditi ispravnost procesa resetovanja lozinke putem emaila uključujući validnost linka i limit pokušaja| AC-14-01: Link je jednokratan i ne može se ponovo koristiti. AC-14-02: Link je validan 10 minuta, istekli link prikazuje poruku "Link za resetovanje je istekao". AC-14-03: Može se generisati maksimalno 3 puta u sat vremena. AC-14-04: Unos nepostojećeg maila prikazuje neutralnu poruku. AC-14 (validacija formata): Kada korisnik unese neispravan format email adrese, sistem prikazuje upozorenje "Neispravan format mail adrese!". AC-14-05: Nova lozinka mora imati minimum 8 karaktera, jedno veliko slovo i jedan broj.|
+|Potvrditi ispravnost označavanja hitnih termina| AC-25-01: Osoblje može označiti termin statusom "HITNO". AC-25-02: Hitni termini su označeni crvenom bojom na dashboardu doktora i admina. AC-25-03: Oznaka hitnosti može biti dodijeljena na osnovu pacijentovog opisa simptoma ili procjene sestre pri dolasku pacijenta. AC-25-04: Oznaka nije vidljiva pacijentu. AC-19.2-03: Samo doktor može označiti termin pod "HITNO".|
+|Potvrditi da neuspješne operacije ne ostavljaju bazu u nekonzistentnom stanju| NFR-12: Sistem mora osigurati da se operacije izvršavaju bez djelimičnih zapisa. AC-31-03: Sistem ne dozvoljava upisivanje termina ako pacijent ili ljekar sa tim ID-em ne postoje. NFR-19: Baza mora osigurati konzistentnost i integritet podataka kroz ograničenja foreign key, unique i not null.|
+|Potvrditi da se promjene u zauzetosti termina prikazuju u realnom vremenu bez kašnjenja| AC-05-04: Rezervisani termin više nije vidljiv kao slobodan za ostale pacijente. AC-08-05: Otkazani termin se odmah prikazuje kao slobodan. AC-09-05: Otkazani termin od strane pacijenta odmah postaje dostupan svim ostalim korisnicima. NFR-09: Otkazani termini moraju odmah postati dostupni drugim korisnicima. NFR-16: Promjene moraju biti vidljive u roku od 2 sekunde bez potrebe za ručnim osvježavanjem stranice.|
+|Potvrditi da sistem osigurava 99% dostupnosti u toku radnog vremena klinike| NFR-25: Sistem mora biti dostupan najmanje 99% vremena u toku radnog vremena klinike.|
+|Potvrditi slanje email obavijesti nakon uspješne rezervacije| AC-07-01: Sistem automatski šalje email potvrdu nakon rezervacije. AC-07-02: Email sadrži datum, vrijeme, ime doktora i naziv odjela. AC-07-04: Email sadrži link za otkazivanje ili pomjeranje termina. NFR-11: Pacijent mora biti obaviješten putem emaila — primjenjuje se i na potvrdu rezervacije.|
+|Potvrditi ispravnost eksporta podataka u CSV formatu| AC-26.2-01: Sistem generiše CSV fajl za odabrani period na zahtjev. AC-26.2-02: Pristup je dozvoljen samo administratoru. AC-26.2-03: Podaci u CSV-u su identični onima u bazi. AC-26.2-04: Podaci su pravilno razdvojeni i formatirani.|
+|Potvrditi da sistem odgovara u prihvatljivom vremenu pod normalnim i povećanim opterećenjem | NFR-03: Prijava korisnika mora biti završena u roku od maksimalno 2 sekunde. NFR-10: Otkazivanje termina mora biti završeno u roku od 2–3 sekunde. NFR-15: Dashboard sistema mora se učitati u roku od maksimalno 3 sekunde. NFR-18: Admin backend mora odgovarati u roku od 2 sekunde. NFR-20: Sistem mora omogućiti brze upite nad skupom od najmanje 50.000 zapisa u bazi podataka.|
+ 
 ## Nivoi testiranja
 
 | Nivo testiranja | Cilj | Odgovorna osoba | Alati | Frekvencija | Ulazni kriteriji | Izlazni kriteriji | Kriterij prihvaćanja |
@@ -37,11 +37,60 @@
 
 | Funkcionalnost | Unit | Integraciono | Sistemsko | UI | Sigurnosno | Performanse | Kompatibilnost | UAT |
 |---|---|---|---|---|---|---|---|---|
+| Registracija pacijenta od strane admina | DA (provjera| DA | DA | DA | DA | NE | DA | DA |
+| Validacija sigurnosti lozinke | DA | DA | DA | DA | DA | NE | NE | DA |
+| Login / autentifikacija | DA | DA | DA | DA | DA | NE | DA | DA |
+| Preusmjeravanje prema ulogama nakon logina | DA | DA | DA | DA | NE | NE | DA | DA |
+| Dvofaktorska autentifikacija (2FA) | DA | DA | DA | DA | DA | NE | DA | DA |
+| Reset lozinke putem emaila | DA | DA | DA | DA | DA | NE | DA | DA |
+| Automatska odjava nakon 15 minuta neaktivnosti | DA | DA | DA | DA | DA | NE | NE | DA |
+| Blokiranje naloga nakon 5 neuspješnih pokušaja | DA | DA | DA | DA | DA | NE | NE | DA |
+| Detekcija neobičnog ponašanja | DA | DA | DA | NE | DA | NE | NE | DA |
+| Pregled dostupnih doktora | DA | DA | DA | DA | NE | DA | DA | DA |
+| Pretraga doktora (ime, specijalnost, odjel) | DA | DA | DA | DA | NE | DA | DA | DA |
+| Prikaz kalendara doktora | DA | DA | DA | DA | NE | DA | DA | DA |
+| Prikaz zauzetosti termina u realnom vremenu | DA | DA | DA | DA | NE | DA | NE | DA |
+| Rezervacija termina (pacijent) | DA | DA | DA | DA | DA | DA | DA | DA |
+| Rezervacija termina (medicinsko osoblje) | DA | DA | DA | DA | DA | NE | DA | DA |
+| Zaključavanje termina na 2 minute | DA | DA | DA | NE | NE | DA | NE | NE |
+| Ograničenje rezervacija (1 dnevno, 60 dana) | DA | DA | DA | NE | NE | NE | NE | DA |
+| Izmjena termina od strane doktora | DA | DA | DA | DA | NE | NE | DA | DA |
+| Otkazivanje termina od strane pacijenta | DA | DA | DA | DA | NE | NE | DA | DA |
+| Otkazivanje termina od strane medicinskog osoblja | DA | DA | DA | DA | NE | NE | DA | DA |
+| Zabrana otkazivanja 24 h prije termina | DA | DA | DA | NE | NE | NE | NE | DA |
+| Obavijest pacijentu kada osoblje otkaže termin | NE | DA | DA | NE | NE | NE | NE | DA |
+| Email potvrda o rezervaciji | NE | DA | DA | NE | NE | NE | NE | DA |
+| Email podsjetnik 24h prije termina | NE | DA | DA | NE | NE | NE | NE | DA |
+| Dashboard za doktora (dnevni/sedmični) | DA | DA | DA | DA | NE | DA | DA | DA |
+| Historija pregleda (pacijent) | DA | DA | DA | DA | NE | NE | DA | DA |
+| Historija pregleda (doktor) | DA | DA | DA | DA | DA | NE | DA | DA |
+| Dodavanje komentara na termin | DA | DA | DA | DA | NE | NE | DA | DA |
+| Izmjena i brisanje komentara | DA | DA | DA | DA | DA | NE | DA | DA |
+| Označavanje hitnosti termina | DA | DA | DA | DA | NE | NE | DA | DA |
+| Prikaz informacija o pacijentu u panelu osoblja | DA | DA | DA | DA | DA | NE | DA | DA |
+| Upravljanje radnim vremenom doktora (admin) | DA | DA | DA | DA | NE | NE | DA | DA |
+| Upit doktora za promjenu dužine termina | DA | DA | DA | DA | NE | NE | DA | DA |
+| Odobravanje upita od strane admina | DA | DA | DA | DA | NE | NE | DA | DA |
+| Obavijest doktoru o odobrenju/odbijanju upita | NE | DA | DA | DA | NE | NE | NE | DA |
+| Admin panel (frontend) | DA | DA | DA | DA | DA | NE | DA | DA |
+| Admin panel (backend / REST API) | DA | DA | DA | NE | DA | DA | NE | NE |
+| Upravljanje korisnicima od strane admina | DA | DA | DA | DA | DA | NE | DA | DA |
+| Filtriranje podataka po vremenskom periodu | DA | DA | DA | DA | NE | NE | DA | DA |
+| Export statistike u CSV | NE | DA | DA | DA | DA | NE | DA | DA |
+| Upload laboratorijskih nalaza (PDF) | DA | DA | DA | DA | DA | NE | DA | DA |
+| Audit log (logovanje akcija) | DA | DA | DA | NE | DA | NE | NE | DA |
+| Enkripcija osjetljivih podataka (AES-256) | NE | DA | DA | NE | DA | NE | NE | NE |
+| Definisanje prava pristupa (RBAC) | DA | DA | DA | NE | DA | NE | NE | DA |
+|Automatsko oslobađanje termina nakon 2 minute|DA| DA| DA | NE |NE |DA| NE| NE |
+| Sprječavanje duplih rezervacija | DA | DA | DA | NE | NE | DA | NE | DA |
+
+**Napomena:** Regresiono testiranje će se provoditi nakon svake izmjene u sistemu. Najbitnije funkcionalnosti za regresiono testiranje su: login, rezervacija termina, otkazivanje termina, email obavijesti i sprječavanje duplih rezervacija, jer su međusobno zavisne i promjena jedne može uticati na drugu.
 
 ## Veza sa acceptance kriterijima
 
-| Zahtjev | Acceptance Criteria ID (ili samo AC) | Test Case ID | Nivo testiranja | Status |
-|---|---|---|---|---|
+| Zahtjev | Acceptance Criteria | Test Case ID | Status |
+|---|---|---|---|
+
 
 ## Način evidentiranja rezultata testiranja 
 | ID testa | Naziv / Opis testa | Ulazni podaci | Očekivani rezultat | Stvarni rezultat | Status | ID buga | Opis greške | Prioritet greške | Napomena |
@@ -52,12 +101,12 @@
 
 ## Glavni rizici kvaliteta
 
-- Opis rizika: Kratak opis potencijalog problema  
-- Vjerovatnoća (1-5): Koliko je vjerovatno da se rizik dogodi (1 = malo, 5 = sigurno).
-- Uticaj (1-5): Koliko bi problem uticao na sistem (1 = minimalno, 5 = kritično).
-- Nivo rizika (V * U): Proizvod vjerovatnoće i uticaja, od 1 do 25.
-- Prioritet testiranja: Na osnovu nivoa rizika, određuje se prioritet (visoki/srednji/niski).
-- Mjere ublažavanja: Konkretne akcije za smanjenje rizika
+- **Opis rizika**: Kratak opis potencijalog problema  
+- **Vjerovatnoća (1-5):** Koliko je vjerovatno da se rizik dogodi (1 = malo, 5 = sigurno).
+- **Uticaj (1-5):** Koliko bi problem uticao na sistem (1 = minimalno, 5 = kritično).
+- **Nivo rizika (V * U)**: Proizvod vjerovatnoće i uticaja, od 1 do 25.
+- **Prioritet testiranja:** Na osnovu nivoa rizika, određuje se prioritet (visoki/srednji/niski).
+- **Mjere ublažavanja:** Konkretne akcije za smanjenje rizika
 
 
 | ID rizika | Opis rizika | Vjerovatnoća (1-5) | Uticaj (1-5) | Nivo rizika (V×U) | Prioritet testiranja | Mjere ublažavanja |
