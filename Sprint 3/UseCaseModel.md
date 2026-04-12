@@ -1,22 +1,22 @@
 # Use Case Model
 
-# UC-01: Rezervacija termina kod doktora
+## UC-01: Rezervacija termina kod doktora
 
-## 1. Akter
+### 1. Akter
 **Pacijent**
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 **Rezervacija termina kod doktora**
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava pacijentu da pregleda slobodne termine kod izabranog doktora i izvrši digitalnu rezervaciju kako bi osigurao pregled bez čekanja.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Pacijent je uspješno prijavljen na sistem 
 - Postoje definisani slobodni termini u radnom vremenu doktora
 - Pacijent nema već rezervisan termin u isto vrijeme kod drugog doktora
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Pacijent pretražuje doktore po imenu ili specijalnosti  
 2. Sistem prikazuje listu doktora  
 3. Pacijent bira doktora i sistem otvara njegov interaktivni kalendar  
@@ -26,7 +26,7 @@ Proces omogućava pacijentu da pregleda slobodne termine kod izabranog doktora i
 7. Pacijent klikne na **"Potvrdi"**  
 8. Sistem upisuje termin u bazu kao **"ZAKAZAN"** i šalje email potvrdu  
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Termin je već zauzet**  
 Ako je drugi korisnik prvi kliknuo na termin, sistem prikazuje poruku:  
@@ -42,30 +42,30 @@ Ako pacijent već ima termin u to vrijeme, sistem blokira potvrdu uz poruku:
 **A4: Neispravni podaci**  
 Ako pacijent ne popuni obavezna polja, sistem prikazuje upozorenje i ne dozvoljava spašavanje podataka.
 
-## 7. Ishod
+### 7. Ishod
 - Termin je evidentiran u bazi pod statusom **"ZAKAZAN"**  
 - Pacijent je primio email sa detaljima (datum, vrijeme, doktor)  
 - Termin više nije vidljiv kao slobodan za druge korisnike  
 
 ---
 
-# UC-02: Prijava na sistem
+## UC-02: Prijava na sistem
 
-## 1. Akter
+### 1. Akter
 **Korisnik** (Pacijent, Doktor, Medicinsko osoblje ili Administrator)
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 **Prijava na sistem (Login)**
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava korisniku siguran pristup aplikaciji putem email adrese i lozinke, uz opcionalnu dvofaktorsku autentifikaciju (2FA) za dodatnu zaštitu podataka.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Korisnik ima kreiran i aktivan nalog u bazi podataka  
 - Sistem je dostupan i funkcionalan (Uptime 99%)  
 - Lozinka korisnika je prethodno heširana u bazi (AES-256)  
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Korisnik unosi svoju email adresu i lozinku na login formi  
 2. Sistem vrši validaciju formata email adrese  
 3. Sistem provjerava unesene podatke u bazi   
@@ -73,7 +73,7 @@ Proces omogućava korisniku siguran pristup aplikaciji putem email adrese i lozi
 5. Sistem preusmjerava korisnika na odgovarajući dashboard na osnovu njegove uloge  
 6. Prijava se završava  
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Pogrešni podaci**  
 Ako korisnik unese pogrešan email ili lozinku, sistem prikazuje poruku:  
@@ -91,31 +91,31 @@ Korisnik bira opciju **"Zaboravljena lozinka"** i sistem mu šalje link za reset
 **A5: Detekcija neobičnog ponašanja**  
 Na 3. neuspješnom pokušaju, sistem prikazuje upozorenje o preostala 2 pokušaja prije blokade.
 
-## 7. Ishod
+### 7. Ishod
 - Korisnik je uspješno autorizovan i ima pristup funkcijama koje odgovaraju njegovoj ulozi (RBAC)  
 - Kreirana je aktivna korisnička sesija koja će isteći nakon 15 minuta neaktivnosti  
 - U bazi je zabilježeno vrijeme i ID korisnika koji je pristupio sistemu 
 
 ---
 
-# UC-03: Upravljanje radnim vremenom i dužinom termina
+## UC-03: Upravljanje radnim vremenom i dužinom termina
 
-## 1. Akter
+### 1. Akter
 - **Administrator** (Glavni akter koji vrši izmjene)  
 - **Doktor** (Sekundarni akter koji šalje upite za promjenu)  
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 **Upravljanje radnim vremenom i dužinom termina**
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava administratoru da definiše i mijenja radno vrijeme doktora, dok doktor može slati formalne upite za promjenu dužine trajanja pregleda kako bi se sistem uskladio sa stvarnim stanjem u ustanovi.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Administrator i doktor su prijavljeni na sistem sa odgovarajućim ulogama  
 - Doktor je prethodno registrovan u sistemu  
 - Sistem ima definisane trenutne termine i njihovo trajanje  
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Administrator bira doktora iz liste registrovanih zaposlenika  
 2. Sistem prikazuje trenutni kalendar i radno vrijeme izabranog doktora  
 3. Administrator unosi novo radno vrijeme (početak i kraj smjene)  
@@ -124,7 +124,7 @@ Proces omogućava administratoru da definiše i mijenja radno vrijeme doktora, d
 6. Sistem ažurira kalendar u realnom vremenu i on postaje vidljiv pacijentima  
 7. Sistem evidentira promjenu u audit log (ko je izmijenio i kada)  
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Postojeći zakazani termini**  
 Ako administrator pokuša promijeniti radno vrijeme u periodu u kojem već postoje zakazani pacijenti, sistem blokira akciju i prikazuje poruku:  
@@ -139,9 +139,54 @@ Ako bi nova dužina termina (npr. sa 15 na 30 minuta) izazvala preklapanje sa ve
 **A4: Neovlašteni pristup**  
 Ako doktor pokuša direktno promijeniti svoje radno vrijeme (bez administratora), sistem mu to onemogućava.
 
-## 7. Ishod
+### 7. Ishod
 - Novo radno vrijeme je sačuvano u bazi podataka  
 - Kalendar doktora je ažuriran i dostupan pacijentima za nove rezervacije  
 - Doktor prima notifikaciju o statusu svog upita (odobreno/odbijeno)  
 
 ---
+
+## UC-04: Dodavanje i pregled laboratorijskih nalaza
+
+**Akteri:**  
+- Medicinsko osoblje (glavni akter)  
+- Doktor  
+- Pacijent  
+
+### 1. Kratak opis
+Proces omogućava medicinskom osoblju da u digitalni karton pacijenta doda laboratorijske nalaze u PDF formatu, čime se osigurava dostupnost relevantnih medicinskih podataka doktoru tokom pregleda.
+
+### 2. Preduslovi
+- Medicinsko osoblje je prijavljeno na sistem  
+- Pacijent ima kreiran nalog i historiju pregleda  
+- Nalaz je pripremljen u PDF formatu  
+
+### 3. Glavni tok
+1. Medicinsko osoblje pretražuje pacijenta po imenu ili ID-u  
+2. Otvara profil ili specifični termin pacijenta  
+3. Bira opciju **"Dodaj nalaz"**  
+4. Sistem otvara prozor za odabir datoteke  
+5. Korisnik bira PDF fajl i potvrđuje upload  
+6. Sistem vrši enkripciju fajla (AES-256) prije pohrane  
+7. Sistem povezuje nalaz sa historijom pregleda pacijenta  
+8. Sistem prikazuje poruku: **"Nalaz uspješno dodan"**  
+
+### 4. Alternativni tokovi
+
+**A1: Pogrešan format fajla**  
+Ako korisnik pokuša dodati JPG ili Word dokument, sistem blokira upload i prikazuje poruku:  
+> "Dozvoljeni su samo PDF fajlovi"
+
+**A2: Neovlašteni pristup**  
+Ako pacijent pokuša pristupiti tuđem nalazu, sistem odbija pristup na osnovu RBAC kontrole.
+
+**A3: Prekid veze tokom uploada**  
+Ako dođe do prekida interneta, sistem osigurava da nema djelimičnih zapisa u bazi (rollback).
+
+**A4: Pregled nalaza**  
+Kada doktor klikne na naziv nalaza, sistem dekriptuje fajl i otvara ga u novom tabu preglednika.
+
+### 5. Ishod
+- Laboratorijski nalaz je sigurno pohranjen u enkriptovanom obliku  
+- Nalaz je dostupan doktoru u sekciji **"Historija pregleda"**  
+- Pacijent može pregledati svoj nalaz kroz korisnički interfejs  
