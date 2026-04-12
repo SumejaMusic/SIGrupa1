@@ -192,25 +192,25 @@ Kada doktor klikne na naziv nalaza, sistem dekriptuje fajl i otvara ga u novom t
 - Nalaz je dostupan doktoru u sekciji **"Historija pregleda"**  
 - Pacijent može pregledati svoj nalaz kroz korisnički interfejs  
 =======
-# UC-04: Otkazivanje termina (medicinsko osoblje)
+## UC-05: Otkazivanje termina (medicinsko osoblje)
 
-## 1. Akter
+### 1. Akter
 **Medicinsko osoblje**
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 Otkazivanje termina od strane medicinskog osoblja
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava medicinskom osoblju da otkaže već rezervisan termin 
 pacijenta u slučaju promjena u rasporedu, uz automatsku obavijest 
 pacijentu i trenutno oslobađanje termina u kalendaru.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Medicinsko osoblje je prijavljeno na sistem sa odgovarajućom ulogom
 - Termin koji se otkazuje postoji u bazi i ima status **"ZAKAZAN"**
 - Termin još nije počeo (otkazivanje je moguće samo prije samog pregleda)
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Medicinsko osoblje otvara panel i pretražuje listu zakazanih termina
 2. Osoblje odabire konkretan termin pacijenta koji želi otkazati
 3. Osoblje klikne na opciju **"Otkaži"**
@@ -224,7 +224,7 @@ da je termin otkazan od strane bolnice i kontakt telefonom za novi dogovor
 9. Otkazani termin se odmah pojavljuje kao slobodan u kalendaru 
 za ostale korisnike
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Osoblje odustaje od otkazivanja**  
 Ako osoblje na upit za potvrdu klikne **"Ne"**, sistem odustaje od 
@@ -238,7 +238,7 @@ Ako je termin već počeo ili je prošao, sistem blokira akciju uz poruku:
 Ako sistem ne može poslati email pacijentu, termin se i dalje otkazuje, 
 ali sistem bilježi grešku u logu i prikazuje upozorenje osoblju.
 
-## 7. Ishod
+### 7. Ishod
 - Termin je evidentiran u bazi sa statusom **"OTKAZAN"**
 - Pacijent je obaviješten putem emaila o otkazivanju
 - Termin je vidljiv kao slobodan svim korisnicima u realnom vremenu
@@ -247,23 +247,23 @@ ali sistem bilježi grešku u logu i prikazuje upozorenje osoblju.
 ---
 
 
-# UC-05: Otkazivanje termina (pacijent)
+## UC-06: Otkazivanje termina (pacijent)
 
-## 1. Akter
+### 1. Akter
 **Pacijent**
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 Otkazivanje termina od strane pacijenta
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava pacijentu da samostalno otkaže svoj zakazani termin, uz uvjet da do pregleda ima više od 24 sata, nakon čega sistem šalje email potvrdu i oslobađa termin za ostale korisnike.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Pacijent je prijavljen na sistem
 - Pacijent ima termin sa statusom **"ZAKAZAN"**
 - Do termina je ostalo **više od 24 sata**
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Pacijent otvara sekciju **"Moji termini"**
 2. Sistem prikazuje listu svih pacijentovih zakazanih termina
 3. Pacijent klikne na dugme **"Otkaži"** pored željenog termina
@@ -275,7 +275,7 @@ Proces omogućava pacijentu da samostalno otkaže svoj zakazani termin, uz uvjet
 9. Otkazani termin postaje odmah vidljiv kao slobodan svim ostalim 
 korisnicima u realnom vremenu
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Pacijent odustaje od otkazivanja**  
 Ako pacijent na upit za potvrdu klikne **"Ne"**, sistem odustaje 
@@ -290,39 +290,39 @@ Kontaktirajte nas telefonom."*
 Ako sistem ne može poslati email potvrdu, termin se i dalje otkazuje 
 ali sistem bilježi grešku u logu.
 
-## 7. Ishod
+### 7. Ishod
 - Termin ima status **"OTKAZAN"** u bazi
 - Pacijent je primio email potvrdu o otkazivanju
 - Termin je vidljiv kao slobodan ostalim korisnicima u realnom vremenu
 
 ---
 
-# UC-06: Automatsko oslobađanje zaključanih termina
+### UC-07: Automatsko oslobađanje zaključanih termina
 
-## 1. Akter
+### 1. Akter
 **Sistem** (automatski proces — vremenski okidač)
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 Automatsko oslobađanje zaključanih termina
 
-## 3. Kratak opis
+### 3. Kratak opis
 Sistem automatski oslobađa termine koji su privremeno zaključani 
 tokom procesa rezervacije, a nisu potvrđeni u roku od 2 minute, 
 te vraća pacijenta na početni ekran za odabir novog termina.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - U bazi postoje termini sa statusom **"ZAKLJUČAN"**
 - Sistem aktivno prati vrijeme zaključavanja svakog termina
 - Definisan je vremenski limit od **2 minute** za potvrdu rezervacije
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Pacijent odabire slobodan termin i sistem ga zaključava
 2. Sistem počinje mjeriti vrijeme od trenutka zaključavanja
 3. Pacijent popunjava obavezna polja i klikne na **"Potvrdi termin"**
    prije isteka 2 minute
 4. Sistem potvrđuje rezervaciju i termin dobija status **"ZAKAZAN"**
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Istek roka od 2 minute bez potvrde**  
 Ako pacijent nije kliknuo na "Potvrdi termin" u roku od 2 minute,
@@ -344,7 +344,7 @@ Ako pacijent pokuša potvrditi termin bez popunjenih obaveznih polja,
 sistem blokira potvrdu uz poruku:
 > *"Ne smijete rezervisati termin bez popunjavanja obaveznih polja!"*
 
-## 7. Ishod
+### 7. Ishod
 - Termin je oslobođen i vidljiv kao **"SLOBODAN"** svim korisnicima
 - Pacijent je vraćen na početni ekran za odabir novog termina
 - Ako je termin potvrđen na vrijeme, status je **"ZAKAZAN"**
@@ -352,24 +352,24 @@ sistem blokira potvrdu uz poruku:
 
 ----
 
-# UC-07: Pregled menadžment panela
+## UC-08: Pregled menadžment panela
 
-## 1. Akter
+### 1. Akter
 **Administrator**
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 Pregled i upravljanje menadžment panelom
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava administratoru uvid u ključne metrike sistema 
 u realnom vremenu — broj korisnika, zakazanih termina i zauzetost 
 sala — uz mogućnost filtriranja podataka i exporta u CSV format.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Administrator je prijavljen na sistem sa administratorskom ulogom
 - Sistem sadrži podatke o korisnicima, terminima i salama
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Administrator pristupa menadžment panelu
 2. Sistem provjerava ulogu korisnika i dozvoljava pristup
 3. Sistem prikazuje ključne metrike u realnom vremenu:
@@ -382,7 +382,7 @@ sala — uz mogućnost filtriranja podataka i exporta u CSV format.
 4. Administrator filtrira podatke po željenom vremenskom periodu
 5. Sistem ažurira prikaz prema odabranom filteru u realnom vremenu
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Export podataka u CSV**  
 Ako administrator želi exportovati podatke, odabire željeni period
@@ -397,34 +397,34 @@ sistem blokira pristup i preusmjerava ga na login formu.
 Ako za odabrani vremenski period nema podataka, sistem prikazuje
 poruku: *"Nema dostupnih podataka za odabrani period."*
 
-## 7. Ishod
+### 7. Ishod
 - Administrator ima uvid u sve ključne metrike sistema u realnom vremenu
 - Podaci su filtrirani prema odabranom vremenskom periodu
 - CSV export je generisan ako je zatražen
 
 ------
 
-# UC-09: Pregled i upravljanje komentarima termina
+## UC-09: Pregled i upravljanje komentarima termina
 
-## 1. Akter
+### 1. Akter
 - **Doktor** (pregledava komentare)
 - **Pacijent** (dodaje i mijenja komentare)
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 Pregled i upravljanje komentarima termina
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava doktoru pregled komentara vezanih za njegov termin,
 dok pacijent i medicinsko osoblje mogu dodavati, mijenjati i brisati
 komentare prilikom zakazivanja termina, uz ograničenje od 255 karaktera
 i zabranu izmjene nakon obavljenog pregleda.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Doktor i pacijent su prijavljeni na sistem
 - Termin postoji u bazi sa statusom "ZAKAZAN"
 - Korisnik ima pristup konkretnom terminu
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Doktor otvara detalje svog termina
 2. Sistem provjerava da li termin pripada tom doktoru
 3. Sistem prikazuje sve komentare vezane za termin uz:
@@ -433,7 +433,7 @@ i zabranu izmjene nakon obavljenog pregleda.
    - Datum unosa
 4. Doktor pregledava komentare prije pregleda
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Termin nema komentara**  
 Ako uz termin nije unesen nijedan komentar, sistem prikazuje poruku:
@@ -458,7 +458,7 @@ Nakon pregleda sistem ne dozvoljava izmjenu ni brisanje.
 Ako doktor pokuša pregledati komentare termina koji nije njegov,
 sistem blokira pristup.
 
-## 7. Ishod
+### 7. Ishod
 - Doktor ima uvid u sve relevantne komentare prije pregleda
 - Komentar pacijenta je sačuvan uz detalje termina
 - Izmjena ili brisanje je evidentirano u sistemu
@@ -466,27 +466,27 @@ sistem blokira pristup.
 
 --------
 
-# UC-10: Dvofaktorska autentifikacija (2FA)
+## UC-10: Dvofaktorska autentifikacija (2FA)
 
-## 1. Akter
+### 1. Akter
 **Korisnik** (Pacijent, Doktor, Administrator)
 
-## 2. Naziv use case-a
+### 2. Naziv use case-a
 Dvofaktorska autentifikacija (2FA)
 
-## 3. Kratak opis
+### 3. Kratak opis
 Proces omogućava korisniku da aktivira i koristi dvofaktorsku 
 autentifikaciju kao dodatni sloj zaštite naloga. Nakon ispravne 
 lozinke, sistem šalje jednokratni kod na email koji korisnik 
 mora unijeti u roku od 5 minuta kako bi pristupio aplikaciji.
 
-## 4. Preduslovi
+### 4. Preduslovi
 - Korisnik ima aktivan nalog u sistemu
 - Korisnik ima validnu email adresu
 - Login sistem je implementiran i funkcionalan
 - Korisnik je aktivirao 2FA opciju u postavkama profila
 
-## 5. Glavni tok
+### 5. Glavni tok
 1. Korisnik uspješno unosi ispravnu email adresu i lozinku
 2. Sistem detektuje da korisnik ima aktiviran 2FA
 3. Sistem automatski šalje jednokratni kod na korisnikov email
@@ -497,7 +497,7 @@ mora unijeti u roku od 5 minuta kako bi pristupio aplikaciji.
 6. Sistem provjerava ispravnost i valjanost koda
 7. Sistem dozvoljava konačan pristup aplikaciji
 
-## 6. Alternativni tokovi
+### 6. Alternativni tokovi
 
 **A1: Pogrešan kod**  
 Ako korisnik unese pogrešan kod, sistem ne dozvoljava pristup
@@ -519,11 +519,62 @@ Ako korisnik nema aktiviran 2FA, sistem preskače ovaj korak
 i direktno preusmjerava korisnika na odgovarajući dashboard
 nakon ispravne lozinke.
 
-## 7. Ishod
+### 7. Ishod
 - Korisnik je uspješno autorizovan sa dva nivoa provjere
 - Korisnička sesija je kreirana i aktivna
 - Neuspješan pokušaj je evidentiran u audit logu
 
 
 -------
+
+## UC-11: Označavanje hitnosti termina
+
+### 1. Akter
+**Medicinsko osoblje** (medicinska sestra, administrator)
+
+### 2. Naziv use case-a
+Označavanje hitnosti termina
+
+### 3. Kratak opis
+Proces omogućava medicinskom osoblju da označi termin pacijenta 
+statusom "HITNO" na osnovu procjene simptoma ili stanja pacijenta,
+uz vizuelno isticanje hitnih termina crvenom bojom u panelima
+doktora i administratora. Oznaka nije vidljiva pacijentu.
+
+### 4. Preduslovi
+- Medicinsko osoblje je prijavljeno na sistem
+- Termin postoji u bazi sa statusom "ZAKAZAN"
+- Osoblje ima pristup listi zakazanih termina
+
+### 5. Glavni tok
+1. Medicinsko osoblje otvara listu zakazanih termina u panelu
+2. Osoblje odabire konkretan termin pacijenta
+3. Sistem prikazuje opciju **"Označi kao HITNO"**
+4. Osoblje označava termin kao hitan na osnovu:
+   - Pacijentovog opisa simptoma, ili
+   - Vlastite procjene pri dolasku pacijenta
+5. Sistem mijenja status termina u **"HITNO"**
+6. Sistem vizuelno ističe red tog termina
+   **crvenom bojom** na doktorovom i admin dashboardu
+
+### 6. Alternativni tokovi
+
+**A1: Uklanjanje oznake hitnosti**  
+Ako osoblje pogrešno označi termin kao hitan, može ukloniti
+oznaku i sistem vraća termin u normalan prikaz bez crvene boje.
+
+**A2: Pacijent pokušava vidjeti oznaku hitnosti**  
+Sistem ne prikazuje internu oznaku "HITNO" na pacijentovoj
+strani aplikacije. Oznaka je vidljiva isključivo medicinskom
+osoblju, doktorima i administratorima.
+
+**A3: Neovlašteni pristup označavanju**  
+Sistem ne dozvoljava pacijentu da sam označi svoj termin
+kao hitan.
+
+### 7. Ishod
+- Termin je označen statusom **"HITNO"** u bazi
+- Red termina je vizuelno istaknut crvenom bojom na
+  doktorovom i admin dashboardu
+- Oznaka nije vidljiva pacijentu
 >>>>>>> 29c87e2530aeb4ef75150c127f90d5400b8f3d76
