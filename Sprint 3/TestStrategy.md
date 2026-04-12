@@ -45,11 +45,7 @@
 
 | Funkcionalnost | Unit | Integraciono | Sistemsko | UI | Sigurnosno | Performanse | Kompatibilnost | UAT |
 |---|---|---|---|---|---|---|---|---|
-<<<<<<< HEAD
-| Registracija pacijenta od strane admina | DA| DA | DA | DA | DA | NE | DA | DA |
-=======
 | Registracija pacijenta od strane admina | DA | DA | DA | DA | DA | NE | DA | DA |
->>>>>>> 833663cac756b079eec17a9d984ed32a7df91357
 | Validacija sigurnosti lozinke | DA | DA | DA | DA | DA | NE | NE | DA |
 | Login / autentifikacija | DA | DA | DA | DA | DA | NE | DA | DA |
 | Preusmjeravanje prema ulogama nakon logina | DA | DA | DA | DA | NE | NE | DA | DA |
