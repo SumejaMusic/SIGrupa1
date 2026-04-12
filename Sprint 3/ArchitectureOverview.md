@@ -1,6 +1,7 @@
 # Architecture Overview
 
-Za arhitekturalni stil odabrana je monolitna arhitektura.
+Za arhitekturalni stil odabrana je monolitna arhitektura. Ovakav pristup odabran je iz razloga što je riječ o sistemu namijenjenom za jednu bolnicu, sa međusobno usko povezanim modulima, zbog čega kompleksnost mikroservisne arhitekture ne bi bila opravdana. 
+
 Sistem je interno dizajniran kroz tri različita sloja:
 1. Prezentacijski sloj (frontend), koji obuhvata korisnički interfejs kroz koji pacijenti, doktori, medicinsko osoblje i administrator pristupaju sistemu putem web preglednika
 2. Poslovni sloj (backend), Node.js/Express, koji je odgovoran za izvršavanje cjelokupne poslovne logike sistema, uključujući upravljanje rezervacijama, kontrolu pristupa zasnovanu na ulogama, i validaciju termina
@@ -28,7 +29,7 @@ Relacijska baza podataka
 
 **Modul za notifikacije**: odgovoran je za slanje email potvrde nakon uspješne rezervacije, obavještavanje pacijenata o otkazivanju termina te slanje automatskih podsjetnika pacijentima sa hroničnim oboljenjima. 
 
-**Modul za sigurnost**: odgovoran je za enkripciju osjetljivih zdravstvenih podataka, vođenje audit loga svih aktivnosti u sistemu, osiguranja integriteta podataka u bazi, te backup i oporavak podataka. 
+**Sigurnosni mehanizmi sistema**: odgovoran je za enkripciju osjetljivih zdravstvenih podataka, vođenje audit loga svih aktivnosti u sistemu, osiguranja integriteta podataka u bazi, te backup i oporavak podataka. 
 
 ## Tok podataka i interakcija
 
