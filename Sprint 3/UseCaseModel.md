@@ -193,7 +193,7 @@ Proces omogućava administratoru da definiše i mijenja radno vrijeme doktora, d
 ### 6. Alternativni tokovi
 
 **A1: Postojeći zakazani termini**
-Ako administrator pokuša promijeniti radno vrijeme u periodu u kojemu već postoje zakazani pacijenti, sistem blokira akciju i prikazuje poruku:
+Ako administrator pokuša promijeniti radno vrijeme u periodu u kojem već postoje zakazani pacijenti, sistem blokira akciju i prikazuje poruku:
 > "Nije moguće promijeniti radno vrijeme. Doktor ima rezervisane termine u ovom periodu."
 
 **A2: Upit doktora za promjenu dužine termina**
@@ -277,7 +277,7 @@ Proces omogućava medicinskom osoblju da otkaže već rezervisan termin pacijent
 
 ### 5. Glavni tok
 1. Medicinsko osoblje otvara panel i pretražuje listu zakazanih termina
-2. Osoblje odabira konkretan termin pacijenta koji želi otkazati
+2. Osoblje bira konkretan termin pacijenta koji želi otkazati
 3. Osoblje klikne na opciju **"Otkaži"**
 4. Sistem prikazuje upit za potvrdu: *"Da li ste sigurni da želite otkazati ovaj termin?"*
 5. Osoblje potvrđuje akciju
@@ -369,7 +369,7 @@ Sistem automatski oslobađa termine koji su privremeno zaključani tokom procesa
 - Definisan je vremenski limit od **2 minute** za potvrdu rezervacije
 
 ### 5. Glavni tok
-1. Pacijent odabira slobodan termin i sistem ga zaključava
+1. Pacijent bira slobodan termin i sistem ga zaključava
 2. Sistem počinje mjeriti vrijeme od trenutka zaključavanja
 3. Pacijent popunjava obavezna polja i klikne na **"Potvrdi termin"** prije isteka 2 minute
 4. Sistem potvrđuje rezervaciju i termin dobija status **"ZAKAZAN"**
@@ -414,7 +414,7 @@ Proces omogućava administratoru uvid u ključne metrike sistema u realnom vreme
 1. Administrator pristupa menadžment panelu
 2. Sistem provjerava ulogu korisnika i dozvoljava pristup
 3. Sistem prikazuje ključne metrike u realnom vremenu:
-   - Ukupan broj registrovanih korisnika po ulogama (doktor, pacijent, medicinska sestra, administrator)
+   - Ukupan broj registrovanih korisnika po ulogama (doktor, pacijent, medicinsko osoblje, administrator)
    - Broj zakazanih i slobodnih termina po svakom doktoru
    - Zauzetost sala po terminima
    - Ko je zakazao termin i kada
@@ -425,7 +425,7 @@ Proces omogućava administratoru uvid u ključne metrike sistema u realnom vreme
 ### 6. Alternativni tokovi
 
 **A1: Izvoz podataka u CSV**
-Ako administrator želi izvesti podatke, odabira željeni period i klikne na "Izvezi u CSV". Sistem generira CSV fajl sa podacima o terminima za odabrani period.
+Ako administrator želi izvesti podatke, bira željeni period i klikne na "Izvezi u CSV". Sistem generira CSV fajl sa podacima o terminima za odabrani period.
 
 **A2: Neovlašteni pristup**
 Ako korisnik bez administratorske uloge pokuša pristupiti panelu, sistem blokira pristup i preusmjerava ga na formu za prijavu.
@@ -664,14 +664,14 @@ doktora i administratora. Oznaka nije vidljiva pacijentu.
 
 ### 5. Glavni tok
 1. Medicinsko osoblje otvara listu zakazanih termina u panelu
-2. Osoblje odabira konkretan termin pacijenta
+2. Osoblje bira konkretan termin pacijenta
 3. Sistem prikazuje opciju **"Označi kao HITNO"**
 4. Osoblje označava termin kao hitan na osnovu:
    - Pacijentovog opisa simptoma, ili
    - Vlastite procjene pri dolasku pacijenta
 5. Sistem mijenja status termina u **"HITNO"**
 6. Sistem vizuelno ističe red tog termina crvenom bojom
-   na doktorovom i admin dashboardu
+   na doktorovom i admin kontrol panelu
 
 ### 6. Alternativni tokovi
 
@@ -691,7 +691,7 @@ kao hitan.
 ### 7. Ishod
 - Termin je označen statusom **"HITNO"** u bazi
 - Red termina je vizuelno istaknut crvenom bojom na
-  doktorovom i admin dashboardu
+  doktorovom i admin kontrol panelu
 - Oznaka nije vidljiva pacijentu
 
 ---
