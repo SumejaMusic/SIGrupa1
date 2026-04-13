@@ -126,14 +126,14 @@ Kada se uoči greška, ona će biti zabilježena u listu grešaka koja sadrži:
 
 ## Glavni rizici kvaliteta
 
-- **Opis rizika**: Kratak opis potencijalog problema  
-- **Vjerovatnoća (1-5):** Koliko je vjerovatno da se rizik dogodi (1 = malo, 5 = sigurno).
-- **Uticaj (1-5):** Koliko bi problem uticao na sistem (1 = minimalno, 5 = kritično).
-- **Nivo rizika (V * U)**: Proizvod vjerovatnoće i uticaja, od 1 do 25.
-- **Prioritet testiranja:** Na osnovu nivoa rizika, određuje se prioritet (visoki/srednji/niski).
-- **Mjere ublažavanja:** Konkretne akcije za smanjenje rizika
+U ovoj tabeli su navedeni najveći rizici koji mogu ugroziti rad sistema, uz planirane mjere ublažavanja tih rizika kroz proces testiranja.
 
+| Opis rizika | Vjerovatnoća | Uticaj | Mjere ublažavanja (Plan testiranja) |
+| :--- | :---: | :---: | :--- |
+| **Curenje osjetljivih podataka** – Neovlašten pristup medicinskim nalazima ili JMBG brojevima pacijenata. | Niska | Kritičan | Provođenje rigoroznog sigurnosnog testiranja uloga (RBAC) i inspekcija baze podataka radi potvrde AES-256 enkripcije. |
+| **Duple rezervacije (Race condition)** – Dva korisnika istovremeno rezervišu isti termin uslijed greške u buffer zoni. | Srednja | Visok | Primjena testiranja konkurentnosti (simulacija istovremenih zahtjeva) radi provjere mehanizma zaključavanja termina na serveru. |
+| **Gubitak podataka** – Pad baze podataka ili servera koji uzrokuje gubitak informacija o zakazanim terminima. | Niska | Kritičan | Verifikacija backup procesa i provođenje recovery testova kako bi se potvrdilo da se podaci mogu vratiti iz rezervne kopije. |
+| **Spor odziv sistema** – Sporo učitavanje kalendara pod velikim brojem korisnika, što dovodi do odustajanja pacijenata. | Srednja | Srednji | Testiranje performansi (Load testing) pomoću JMeter-a radi provjere brzine učitavanja stranica pod realnim opterećenjem. |
+| **Greške u email obavijestima** – Pacijenti ne dobijaju potvrde ili podsjetnike, što dovodi do propuštenih termina. | Srednja | Srednji | Detaljno testiranje toka procesa (Workflow testing) uz pomoć alata Mailtrap kako bi se potvrdila isporuka svake automatske poruke. |
+| **Pristupačnost (UX barijere)** – Stariji pacijenti se ne snalaze u interfejsu za rezervaciju termina. | Visoka | Srednji | Provođenje testiranja upotrebljivosti (Usability testing) sa fokusom na jednostavnost navigacije i ispravnost online vodiča. |
 
-| ID rizika | Opis rizika | Vjerovatnoća (1-5) | Uticaj (1-5) | Nivo rizika (V×U) | Prioritet testiranja | Mjere ublažavanja |
-|---|---|---|---|---|---|---|
-| R-01 | | | | | | |
