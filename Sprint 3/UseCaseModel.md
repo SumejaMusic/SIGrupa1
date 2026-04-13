@@ -181,8 +181,13 @@ Proces omogućava administratoru da definiše i mijenja radno vrijeme doktora, d
 ### 5. Alternativni tokovi
 
 **A1: Postojeći zakazani termini**
-Ako administrator pokuša promijeniti radno vrijeme u periodu u kojem već postoje zakazani pacijenti, sistem blokira akciju i prikazuje poruku:
-> "Nije moguće promijeniti radno vrijeme. Doktor ima rezervisane termine u ovom periodu."
+Ako administrator pokuša promijeniti radno vrijeme u periodu u kojem već postoje zakazani pacijenti, sistem prikazuje listu tih termina i nudi dvije opcije:
+
+1. **Ručno rješavanje**  
+   Administrator odustaje od promjene dok se termini ne pomjere.
+
+2. **Masovno otkazivanje**  
+   Sistem automatski otkazuje sve sporne termine, šalje e-mail obavijesti pacijentima o promjeni rasporeda i tada dozvoljava čuvanje novog radnog vremena.
 
 **A2: Upit doktora za promjenu dužine termina**
 Doktor šalje upit za promjenu trajanja pregleda uz obrazloženje. Administrator prima obavještenje, pregleda upit i može ga odobriti ili odbiti.
@@ -534,7 +539,7 @@ Proces omogućava ljekaru porodične medicine da, tokom pregleda, direktno rezer
 5. Ljekar bira pacijenta (ime ili JMBG)
 6. Ljekar klikne na **"Potvrdi rezervaciju"**
 7. Sistem upisuje termin kao **"ZAKAZAN"**
-8. Sistem šalje e-mail obavijest pacijentu
+8. Sistem šalje e-mail obavijest pacijentu, a specijalisti šalje internu notifikaciju o novom zakazanom terminu putem porodičnog ljekara.
 9. Sistem prikazuje poruku: *"Termin je uspješno rezervisan."*
 
 ### 5. Alternativni tokovi
