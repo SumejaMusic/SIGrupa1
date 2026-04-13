@@ -1,13 +1,13 @@
 # Architecture Overview
 
-Za arhitekturalni stil odabrana je monolitna arhitektura. Ovakav pristup odabran je iz razloga što je riječ o sistemu namijenjenom za jednu bolnicu, sa međusobno usko povezanim modulima, zbog čega kompleksnost mikroservisne arhitekture ne bi bila opravdana. 
+Za arhitekturalni stil odabrana je monolitna arhitektura. Ovakav pristup odabran je iz razloga što je riječ o sistemu namijenjenom za jednu bolnicu, sa međusobno usko povezanim modulima koji dijele isti sloj podataka i poslovnu logiku, a razvojni tim je manji, zbog čega kompleksnost mikroservisne arhitekture ne bi bila opravdana.
 
 Sistem je interno dizajniran kroz tri različita sloja:
 1. Prezentacijski sloj (frontend), razvijen u Reactu, koji obuhvata korisnički interfejs kroz koji pacijenti, doktori, medicinsko osoblje i administrator pristupaju sistemu putem web preglednika
 2. Poslovni sloj (backend), implementiran u Node.js/Express, koji je odgovoran za izvršavanje cjelokupne poslovne logike sistema, uključujući upravljanje rezervacijama, kontrolu pristupa zasnovanu na ulogama (RBAC), validaciju termina, i upravljanje sesijama putem JWT tokena
 3. Sloj podataka (baza podataka), implementiran u PostgreSQL, koji osigurava trajno čuvanje i upravljanje podacima o korisnicima, terminima, i medicinskim podacima
 
-Komunikacija između prezentacijskog i poslovnog sloja odvija se putem REST API-ja. Frontend šalje HTTP zahtjeve backendu, backend izvršava poslovnu logiku i komunicira sa bazom podataka te vraća odgovor frontendu. 
+Komunikacija između prezentacijskog i poslovnog sloja odvija se putem REST API-ja. Frontend šalje HTTP zahtjeve backendu, backend izvršava poslovnu logiku i komunicira sa bazom podataka te vraća odgovor frontendu. Sistem je predviđen za deployment u cloud okruženju kako bi se omogućio lak pristup aplikaciji sa različitih uređaja i jednostavnije održavanje sistema. 
 
 ## Glavne komponente sistema
 
@@ -71,25 +71,29 @@ Relacijska baza podataka (PostgreSQL)
 
 **REST API za komunikaciju između slojeva**: komunikacija između prezentacijskog i poslovnog sloja odvija se putem REST API-ja, što osigurava jasno razdvajanje slojeva i omogućava jednostavno proširenje sistema u budućnosti. 
 
-**React kao frontend framework**: za razvoj prezentacijskog sloja odabran je React zbog komponentne arhitekture pogodne za višerolni interfejs, te zaštite ruta zasnovane na ulogama putem React Routera.
+**React kao frontend framework**: za razvoj prezentacijskog sloja odabran je React zbog komponentne arhitekture pogodne za višerolni interfejs, te svaka uloga može imati vlastite komponente i prikaze bez dupliranja koda, a React Router omogućava zaštitu ruta zasnovanu na ulogama. React omogućava i efikasno upravljanje stanjem aplikacije, što je važno za dinamičke prikaze kao što su liste dostupnih termina, korisnički podaci i medicinska historija. React je ujedno i široko rasprostranjen framework na tržištu rada, što olakšava razvoj i dugoročno održavanje sistema. 
 
-**JWT tokeni za upravljanje sesijama**: JSON Web Tokeni omogućavaju stateless autentifikaciju, što znači da server ne mora čuvati stanje sesije, a svaki zahtjev nosi sve potrebne informacije za autorizaciju
+**Node.js/Express kao backend framework**: Za implementaciju poslovnog sloja odabran je Node.js sa Express frameworkom jer omogućava efikasnu obradu velikog broja istovremenih korisničkih zahtjeva, što je posebno važno za funkcionalnosti poput prijave korisnika, pregled dostupnih termina, i rezervaciju/otkazivanje pregleda. Express framework omogućava jednostavnu organizaciju aplikacije kroz jasno definisane rute i module, čime se olakšava razvoj i održavanje sistema. Također, Node.js omogućava korištenje istog programskog jezika, odnosno JavaScripta, na frontend i backend strani, čime se smanjuje kompleksnost razvoja i pojednostavljuje implementacija i održavanje sistema.
 
-**Kontrola pristupa zasnovana na ulogama (RBAC)**: svaki korisnik sistema ima dodijeljenu ulogu (pacijent, doktor, medicinsko osoblje, administrator) i može pristupiti isključivo funkcijama koje odgovaraju toj ulozi, čime se osigurava zaštita osjetljivih medicinskih podataka
+**JWT tokeni za upravljanje sesijama**: JSON Web Tokeni omogućavaju stateless autentifikaciju, što znači da server ne mora čuvati stanje sesije, a svaki zahtjev nosi sve potrebne informacije za autorizaciju.
 
-**Hashiranje lozinki**: lozinke se nikada ne pohranjuju u plain-text obliku već kao jednosmjerni hash, čime se osigurava da čak ni administratori sistema ne mogu vidjeti originalne lozinke
+**Kontrola pristupa zasnovana na ulogama (RBAC)**: svaki korisnik sistema ima dodijeljenu ulogu (pacijent, doktor, medicinsko osoblje, administrator) i može pristupiti isključivo funkcijama koje odgovaraju toj ulozi, čime se osigurava zaštita osjetljivih medicinskih podataka.
 
-**Dvofaktorska autentifikacija (2FA)**: dodatni sloj zaštite prilikom prijave, sistem šalje jednokratni kod na korisnikov mail
+**Hashiranje lozinki**: lozinke se nikada ne pohranjuju u plain-text obliku već kao jednosmjerni hash, čime se osigurava da čak ni administratori sistema ne mogu vidjeti originalne lozinke.
 
-**Enkripcija osjetljivih zdravstvenih podataka**: svi osjetljivi podaci kao što su JMBG, broj zdravstvene knjižice, dijagnoza, i medicinska historija se enkriptuju prije pohrane u bazu podataka, čime se osigurava zaštita privatnosti pacijenata
+**Dvofaktorska autentifikacija (2FA)**: dodatni sloj zaštite prilikom prijave, sistem šalje jednokratni kod na korisnikov mail.
+
+**Enkripcija osjetljivih zdravstvenih podataka**: svi osjetljivi podaci kao što su JMBG, broj zdravstvene knjižice, dijagnoza, i medicinska historija se enkriptuju prije pohrane u bazu podataka, čime se osigurava zaštita privatnosti pacijenata.
 
 **Audit log**: sve akcije i izmjene u sistemu se bilježe u audit logu pri čemu svaki zapis sadrži ID korisnika, tip akcije, stari i novi podatak, i vremensku oznaku, što je važno radi sigurnosti i transparentnosti, te u slučaju sigurnosnog incidenta ili spora pomoću audit loga moguće je rekonstruisati tok događaja.
 
-**Automatska odjava nakon perioda neaktivnosti**: sesija korisnika automatski ističe nakon perioda neaktivnosti, čime se smanjuje rizik od neovlaštenog pristupa
+**Automatska odjava nakon perioda neaktivnosti**: sesija korisnika automatski ističe nakon perioda neaktivnosti, čime se smanjuje rizik od neovlaštenog pristupa.
 
-**Zaključavanje termina na 2 minute**: kako bi se spriječile duple rezervacije pri istovremenim zahtjevima više korisnika, uvodi se mehanizam privremenog zaključavanja dok jedan korisnik dovršava rezervaciju
+**Zaključavanje termina na 2 minute**: kako bi se spriječile duple rezervacije pri istovremenim zahtjevima više korisnika, uvodi se mehanizam privremenog zaključavanja dok jedan korisnik dovršava rezervaciju.
 
-**Relacijska baza podataka (PostgreSQL)**: za pohranu podataka koristi se PostgreSQL, jer omogućava osiguravanje integriteta podataka putem primarnih i stranih ključeva, te podržava ACID transakcije neophodne za konzistentno zaključavanje termina
+**Relacijska baza podataka (PostgreSQL)**: za pohranu podataka koristi se relacijska baza podataka, jer su pacijenti, termini, doktori međusobno povezani entiteti sa jasno definisanim relacijama između njih (npr. pacijent - termin, doktor - termin i sl). Unutar relacijskih baza odabran je PostgreSQL jer pruža punu podršku za ACID transakcije neophodne za konzistentno zaključavanje termina i sprječavanje duplih rezervacija. U poređenju sa MySQL, PostgreSQL nudi napredniju podršku za kompleksne upite i bolju podršku za enkripciju na nivou kolona koja je neophodna za zaštitu osjetljivih zdravstvenih podataka. 
+
+**Cloud pristup za hosting sistema**: za deployment sistema odabran je cloud hosting koji omogućava lakše upravljanje infrastrukturom bez potrebe za vlastitim serverskim hardverom i IT osobljem zaduženim za njegovo održavanje. 
 
 ## Ograničenja i rizici arhitekture
 
@@ -101,13 +105,15 @@ Relacijska baza podataka (PostgreSQL)
 
 **Rizik prekida rada sistema tokom implementacije izmjena**: monolitne aplikacije deployaju se kao jedna cjelina, što znači da svaki restart sistema utiče na cijelu aplikaciju. To može rezultirati kratkotrajnim prekidom rada sistema, što direktno utiče na korisnike i dostupnost sistema u radnom vremenu klinike
 
+**Ovisnost o dostupnosti cloud infrastrukture**: sistem je ovisan o dostupnosti odabranog cloud provajdera, te u slučaju ispada njihove infrastrukture cijeli sistem postaje nedostupan. Također, pohrana osjetljivih medicinskih podataka na eksternim serverima zahtijeva pažljiv odabir cloud providera i striktnu konfiguraciju sigurnosnih postavki kako bi se osigurala usklađenost sa regulativama o zaštiti ličnih i zdravstvenih podataka.
 
 ## Otvorena pitanja
 
 1. Koje metode dvofaktorske autentifikacije će biti podržane?
-2. Potrebno je dodatno razmotriti način implementacije real-time ažuriranja rasporeda doktora?
+2. Na koji način implementirati real-time ažuriranja rasporeda doktora?
 3. Je li potrebno definisati fallback mehanizam u slučaju pada sistema tokom zaključavanja termina?
 4. Koji eksterni email servis će biti korišten za slanje notifikacija?
 5. Koji će biti maksimalni period čuvanja audit log zapisa?
 6. Treba li backup baze biti automatizovan i koliko često?
 7. Koji će biti period neaktivnosti nakon kojeg se sesija automatski gasi?
+8. Koji cloud provider će biti odabran?
