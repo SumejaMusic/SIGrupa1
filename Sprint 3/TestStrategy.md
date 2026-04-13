@@ -107,11 +107,22 @@
 
 
 ## Način evidentiranja rezultata testiranja 
-| ID testa | Naziv / Opis testa | Ulazni podaci | Očekivani rezultat | Stvarni rezultat | Status | ID buga | Opis greške | Prioritet greške | Napomena |
-|---|---|---|---|---|---|---|---|---|---|
-| TC-01 |  |  |  |  |  |  |  |  |  |
-| TC-02 |  |  |  |  |  |  |  |  |  |
-| TC-03 |  |  |  |  |  |  |  |  |  |
+### Statusi testiranja
+Za svaki planirani scenario koristićemo dva statusa:
+* **Uspješno (Passed):** Funkcionalnost radi tačno onako kako je opisano u Acceptance kriterijima.
+* **Neuspješno (Failed):** Pronađena je greška ili odstupanje od očekivanog.
+
+### Dokumentovanje dokaza
+Kao dokaz da je nešto provjereno, uz status ćemo prilagati:
+* **Snimke ekrana (Screenshots):** Prikaz interfejsa gdje se vidi uspješna akcija.
+* **Ispise iz baze:** Potvrda da su podaci (npr. termin) ispravno upisani u SQL tabelu.
+* **Poruke o greškama:** U slučaju neuspjeha, zapisaćemo tekst greške koji je sistem izbacio.
+
+### Postupak sa greškama
+Kada se uoči greška, ona će biti zabilježena u listu grešaka koja sadrži:
+* Kratak opis problema.
+* Koliko je greška ozbiljna.
+* Informaciju da li je greška ispravljena i ponovo testirana.
 
 ## Glavni rizici kvaliteta
 
