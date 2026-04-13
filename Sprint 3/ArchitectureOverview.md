@@ -115,5 +115,4 @@ Relacijska baza podataka (PostgreSQL)
 4. Koji eksterni email servis će biti korišten za slanje notifikacija?
 5. Koji će biti maksimalni period čuvanja audit log zapisa?
 6. Treba li backup baze biti automatizovan i koliko često?
-7. Koji će biti period neaktivnosti nakon kojeg se sesija automatski gasi?
-8. Koji cloud provider će biti odabran?
+7. Koji cloud provider će biti odabran?
