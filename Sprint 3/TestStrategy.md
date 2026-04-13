@@ -146,7 +146,7 @@
 | **US-10** | 2 | **TC-10-02** | **Preduslov:** Termin za 5h. **Koraci:** Pacijent pokuša otkazati. **Rezultat:** Blokada akcije zbog pravila od 24h. |
 | **US-10** | 3 | **TC-10-03** | **Preduslov:** Pacijent otkazao. **Koraci:** Provjera emaila. **Rezultat:** Email potvrda o otkazivanju poslata trenutno. |
 | **US-10** | 4 | **TC-10-04** | **Preduslov:** Klik na 'Otkaži'. **Koraci:** Provjera upita. **Rezultat:** Sistem traži potvrdu namjere prije brisanja. |
-| **US-10** | 5 | **TC-10-05** | **Preduslov:** Otkazano. **Koraci:** Kalendar pretrage. **Rezultat:** Slot vidljiv kao slobodan za ostale korisnike. |
+| **US-10** | 5 | **TC-10-05** | **Preduslov:** Otkazano. **Koraci:** Pregled slobodnih slotova. **Rezultat:** Slot vidljiv kao slobodan za ostale korisnike. |
 | **US-10** | 6 | **TC-10-06** | **Preduslov:** Akcija gotova. **Koraci:** Provjera interfejsa. **Rezultat:** Prikazana poruka: "Vaš termin je uspješno otkazan". |
 
 
