@@ -375,7 +375,7 @@ Ako za odabrani vremenski period nema podataka, sistem prikazuje poruku:
 
 ---
 
-## UC-10: Pregled i upravljanje komentarima termina
+## UC-9: Pregled i upravljanje komentarima termina
 
 ### 1. Akteri
 - **Doktor** (pregledava komentare)
@@ -427,7 +427,7 @@ Ako doktor pokuša pregledati komentare termina koji nije njegov, sistem blokira
 
 ---
 
-## UC-11: Dvofaktorska autentifikacija (2FA)
+## UC-10: Dvofaktorska autentifikacija (2FA)
 
 ### 1. Akter
 **Korisnik** (Pacijent, Doktor, Administrator)
@@ -476,7 +476,7 @@ Ako korisnik nema aktiviran 2FA, sistem preskače ovaj korak i direktno preusmje
 
 ---
 
-## UC-12: Rezervacija termina kod specijaliste od strane ljekara
+## UC-11: Rezervacija termina kod specijaliste od strane ljekara
 
 ### 1. Akteri
 - **Ljekar porodične medicine** (Glavni akter)
@@ -522,3 +522,322 @@ Ljekar može rezervisati termin do 12 mjeseci unaprijed.
 - Rezervacija je evidentirana u kalendaru specijaliste
 - Pacijent je primio e-mail sa detaljima termina
 - Termin više nije dostupan za druge korisnike
+
+---
+
+## UC-12: Pregled historije pregleda
+
+### 1. Akter
+**Pacijent**
+
+### 2. Naziv slučaja korištenja
+Pregled historije pregleda pacijenta
+
+### 3. Kratak opis
+Proces omogućava pacijentu pregled kompletne historije svojih 
+prošlih pregleda, uključujući detalje termina, opis terapije 
+i laboratorijske nalaze, poredane od najnovijeg ka najstarijem.
+
+### 4. Preduslovi
+- Pacijent je prijavljen na sistem
+- Sistem vodi evidenciju svih pregleda pacijenta
+- Pacijent ima kreiran nalog u bazi
+
+### 5. Glavni tok
+1. Pacijent otvara sekciju **"Historija"**
+2. Sistem dohvata sve prošle preglede pacijenta iz baze
+3. Sistem prikazuje listu pregleda poredanih po datumu
+   od najnovijeg ka najstarijem
+4. Pacijent odabire konkretan pregled iz liste
+5. Sistem prikazuje detalje odabranog pregleda:
+   - Datum, ljekar i odjel
+   - Tekstualni opis terapije
+   - Laboratorijski nalazi ako postoje
+
+### 6. Alternativni tokovi
+
+**A1: Prazna historija**  
+Ako pacijent nema nijedan prethodni pregled u bazi, 
+sistem prikazuje poruku:
+> *"Trenutno nemate zabilježenih pregleda u historiji."*
+
+**A2: Otkazani termini**  
+Otkazani termini su vidljivi u listi historije, ali su 
+jasno označeni statusom **"OTKAZAN"** kako bi se 
+razlikovali od obavljenih pregleda.
+
+**A3: Neovlašteni pristup**  
+Sistem ne dozvoljava pacijentu pregled historije 
+drugog pacijenta.
+
+### 7. Ishod
+- Pacijent ima uvid u kompletnu historiju svojih pregleda
+- Detalji svakog pregleda su dostupni na klik
+- Otkazani termini su vidljivi ali jasno označeni
+
+---
+
+## UC-13: Označavanje hitnosti termina
+
+### 1. Akter
+**Medicinsko osoblje** (medicinska sestra, administrator)
+
+### 2. Naziv slučaja korištenja
+**Označavanje hitnosti termina**
+
+### 3. Kratak opis
+Proces omogućava medicinskom osoblju da označi termin pacijenta 
+statusom "HITNO" na osnovu procjene simptoma ili stanja pacijenta,
+uz vizuelno isticanje hitnih termina crvenom bojom u panelima
+doktora i administratora. Oznaka nije vidljiva pacijentu.
+
+### 4. Preduslovi
+- Medicinsko osoblje je prijavljeno na sistem
+- Termin postoji u bazi sa statusom **"ZAKAZAN"**
+- Osoblje ima pristup listi zakazanih termina
+
+### 5. Glavni tok
+1. Medicinsko osoblje otvara listu zakazanih termina u panelu
+2. Osoblje odabira konkretan termin pacijenta
+3. Sistem prikazuje opciju **"Označi kao HITNO"**
+4. Osoblje označava termin kao hitan na osnovu:
+   - Pacijentovog opisa simptoma, ili
+   - Vlastite procjene pri dolasku pacijenta
+5. Sistem mijenja status termina u **"HITNO"**
+6. Sistem vizuelno ističe red tog termina crvenom bojom
+   na doktorovom i admin dashboardu
+
+### 6. Alternativni tokovi
+
+**A1: Uklanjanje oznake hitnosti**
+Ako osoblje pogrešno označi termin kao hitan, može ukloniti
+oznaku i sistem vraća termin u normalan prikaz bez crvene boje.
+
+**A2: Pacijent pokušava vidjeti oznaku hitnosti**
+Sistem ne prikazuje internu oznaku "HITNO" na pacijentovoj
+strani aplikacije. Oznaka je vidljiva isključivo medicinskom
+osoblju, doktorima i administratorima.
+
+**A3: Neovlašteni pristup označavanju**
+Sistem ne dozvoljava pacijentu da sam označi svoj termin
+kao hitan.
+
+### 7. Ishod
+- Termin je označen statusom **"HITNO"** u bazi
+- Red termina je vizuelno istaknut crvenom bojom na
+  doktorovom i admin dashboardu
+- Oznaka nije vidljiva pacijentu
+
+---
+
+## UC-14: Panel medicinskog osoblja
+
+### 1. Akter
+**Medicinsko osoblje**
+
+### 2. Naziv slučaja korištenja
+**Upravljanje terminima putem panela medicinskog osoblja**
+
+### 3. Kratak opis
+Proces omogućava medicinskom osoblju pregled svih termina 
+zakazanih za tekući dan, ručno kreiranje novih termina, 
+pretragu pacijenata te uvid u detalje svakog termina.
+
+### 4. Preduslovi
+- Medicinsko osoblje je prijavljeno na sistem
+- Sistem sadrži podatke o terminima i pacijentima
+- Panel prikazuje relevantne termine za tekući dan
+
+### 5. Glavni tok
+1. Medicinsko osoblje prijavljuje se i otvara svoj panel
+2. Sistem prikazuje listu svih termina zakazanih za taj dan
+3. Osoblje klikne na detalje konkretnog termina
+4. Sistem prikazuje relevantne informacije o pacijentu:
+   - Ime i prezime pacijenta
+   - Broj telefona
+   - Vrstu pregleda
+   - Razlog posjete koji je pacijent naveo
+
+### 6. Alternativni tokovi
+
+**A1: Ručno kreiranje novog termina**
+Ako pacijent zakaže termin telefonom, osoblje može ručno
+kreirati novi termin. Kada osoblje unese podatke pacijenta
+i izabere slobodan termin, sistem taj termin odmah upisuje
+u bazu kao **"ZAKAZAN"**.
+
+**A2: Pretraga pacijenta**
+Kada osoblje unese ime pacijenta u polje za pretragu,
+sistem filtrira listu i prikazuje samo termine vezane
+za tog pacijenta.
+
+**A3: Neovlašteni pristup**
+Sistem ne dozvoljava pacijentima pristup ovom panelu.
+Pristup je dozvoljen isključivo medicinskom osoblju
+i administratorima.
+
+### 7. Ishod
+- Medicinsko osoblje ima pregled svih termina za tekući dan
+- Novi termin je kreiran i vidljiv u sistemu ako je zatražen
+- Pretraga pacijenta je izvršena uspješno
+
+---
+
+## UC-15: Registracija pacijenta
+
+### 1. Akter
+**Administrator**
+
+### 2. Naziv slučaja korištenja
+**Registracija novog pacijenta od strane administratora**
+
+### 3. Kratak opis
+Proces omogućava administratoru da registruje novog pacijenta 
+u sistem putem admin panela, uz validaciju obaveznih podataka
+i automatsko dodjeljavanje uloge pacijenta u sistemu.
+
+### 4. Preduslovi
+- Administrator je prijavljen na sistem sa administratorskom ulogom
+- Administrator ima pristup panelu za upravljanje pacijentima
+- Sistem validira unesene podatke
+
+### 5. Glavni tok
+1. Administrator otvara panel za upravljanje pacijentima
+2. Administrator klikne na dugme **"Novi pacijent"**
+3. Sistem prikazuje formu za unos podataka
+4. Administrator popunjava obavezna polja:
+   - Ime i prezime
+   - Validna email adresa
+   - Broj telefona
+5. Administrator klikne na **"Potvrdi"**
+6. Sistem kreira novi profil u bazi i dodjeljuje mu ulogu **"PACIJENT"**
+7. Sistem prikazuje poruku: *"Pacijent uspješno registrovan."*
+
+### 6. Alternativni tokovi
+
+**A1: Nepopunjena obavezna polja**
+Ako administrator ostavi bilo koje obavezno polje prazno,
+sistem ne dozvoljava čuvanje uz poruku upozorenja
+pored nepopunjenog polja.
+
+**A2: Email već postoji u bazi**
+Ako administrator unese email koji već postoji u sistemu,
+sistem blokira registraciju uz poruku:
+> *"Korisnik sa ovim emailom je već registrovan."*
+
+**A3: Samostalna registracija pacijenta**
+Pacijent se može samostalno registrovati putem javne
+stranice za registraciju. Administrator ima uvid u sve
+takve profile unutar svog panela.
+
+### 7. Ishod
+- Novi profil pacijenta je kreiran u bazi sa ulogom **"PACIJENT"**
+- Administrator je primio potvrdu o uspješnoj registraciji
+- Pacijent može odmah koristiti sistem
+
+---
+
+## UC-16: Automatska odjava korisnika
+
+### 1. Akter
+**Sistem** (automatski proces — vremenski okidač)
+
+### 2. Naziv slučaja korištenja
+**Automatska odjava nakon perioda neaktivnosti**
+
+### 3. Kratak opis
+Sistem automatski odjavljuje korisnika nakon 15 minuta 
+neaktivnosti radi zaštite podataka, uz prethodno upozorenje
+sa opcijama produženja ili odustajanja od sesije.
+
+### 4. Preduslovi
+- Korisnik je prijavljen na sistem sa aktivnom sesijom
+- Sistem prati aktivnost korisnika
+- Definisan je vremenski limit neaktivnosti od **15 minuta**
+
+### 5. Glavni tok
+1. Korisnik je aktivan na sistemu
+2. Sistem mjeri vrijeme neaktivnosti korisnika
+3. Nakon 13 minuta neaktivnosti sistem prikazuje upozorenje:
+   *"Biti ćete odjavljeni s vašeg profila za 2 minute."*
+4. Sistem prikazuje dva dugmeta: **"Produži sesiju"** i **"Otkaži"**
+5. Korisnik klikne na **"Produži sesiju"**
+6. Sistem resetuje tajmer neaktivnosti na 0 minuta
+7. Korisnik nastavlja rad bez prekida
+
+### 6. Alternativni tokovi
+
+**A1: Istek 15 minuta bez reakcije**
+Ako korisnik ne reaguje na upozorenje i istekne 15 minuta,
+sistem automatski odjavljuje korisnika, poništava sesiju
+i preusmjerava ga na formu za prijavu.
+
+**A2: Korisnik klikne "Otkaži"**
+Ako korisnik klikne na dugme "Otkaži", sistem odmah
+odjavljuje korisnika i preusmjerava ga na formu za prijavu.
+
+**A3: Pokušaj pristupa sa isteklom sesijom**
+Ako korisnik pokuša pristupiti zaštićenoj stranici
+sa isteklom sesijom, sistem ga automatski preusmjerava
+na formu za prijavu.
+
+### 7. Ishod
+- Korisnička sesija je poništena nakon isteka neaktivnosti
+- Korisnik je preusmjeren na formu za prijavu
+- Ako je sesija produžena, korisnik nastavlja rad normalno
+
+---
+
+## UC-17: Pregled audit loga
+
+### 1. Akter
+**Administrator**
+
+### 2. Naziv slučaja korištenja
+**Pregled i pretraga audit loga sistema**
+
+### 3. Kratak opis
+Proces omogućava administratoru pregled svih akcija koje su 
+korisnici izvršili unutar sistema, uz mogućnost pretrage i 
+filtriranja zapisa prema korisniku, vrsti akcije i vremenskom 
+periodu. Zapisi nisu izmjenjivi ni od strane administratora.
+
+### 4. Preduslovi
+- Administrator je prijavljen na sistem sa administratorskom ulogom
+- Sistem bilježi sve CRUD akcije u realnom vremenu
+- Audit log sadrži zapise sa ID korisnika, vrstom akcije,
+  nazivom entiteta, datumom i vremenom
+
+### 5. Glavni tok
+1. Administrator pristupa sekciji **"Audit log"**
+2. Sistem provjerava ulogu korisnika i dozvoljava pristup
+3. Sistem prikazuje listu svih zabilježenih akcija u sistemu
+4. Administrator filtrira zapise po željenom kriteriju:
+   - Po korisniku
+   - Po vrsti akcije
+   - Po vremenskom periodu
+5. Sistem prikazuje filtrirane rezultate u realnom vremenu
+
+### 6. Alternativni tokovi
+
+**A1: Nema rezultata za odabrani filter**
+Ako za odabrane kriterije nema zapisa, sistem prikazuje poruku:
+> *"Nema pronađenih zapisa za odabrane kriterije."*
+
+**A2: Pokušaj izmjene zapisa**
+Sistem ne dozvoljava izmjenu ni brisanje zapisa u audit logu
+ni od strane administratora. Zapisi su samo za čitanje.
+
+**A3: Neovlašteni pristup**
+Ako korisnik bez administratorske uloge pokuša pristupiti
+audit logu, sistem blokira pristup i preusmjerava ga
+na formu za prijavu.
+
+**A4: Automatsko arhiviranje starih zapisa**
+Zapisi stariji od 12 mjeseci se automatski arhiviraju
+ili brišu u skladu sa politikom privatnosti sistema.
+
+### 7. Ishod
+- Administrator ima uvid u sve akcije korisnika u sistemu
+- Filtrirani rezultati su prikazani prema odabranim kriterijima
+- Integritet zapisa je očuvan — izmjena nije moguća
