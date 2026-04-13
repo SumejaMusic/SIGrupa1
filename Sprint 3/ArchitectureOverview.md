@@ -114,5 +114,4 @@ Relacijska baza podataka (PostgreSQL)
 3. Je li potrebno definisati fallback mehanizam u slučaju pada sistema tokom zaključavanja termina?
 4. Koji eksterni email servis će biti korišten za slanje notifikacija?
 5. Koji će biti maksimalni period čuvanja audit log zapisa?
-6. Treba li backup baze biti automatizovan i koliko često?
-7. Koji cloud provider će biti odabran?
+6. Koji cloud provider će biti odabran?
