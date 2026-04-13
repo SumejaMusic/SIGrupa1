@@ -98,7 +98,73 @@ Na 3. neuspješnom pokušaju, sistem prikazuje upozorenje o preostala 2 pokušaj
 
 ---
 
-## UC-03: Upravljanje radnim vremenom i dužinom termina
+## UC-03: Reset lozinke
+
+### 1. Akter
+**Korisnik** (Pacijent, Doktor, Administrator)
+
+### 2. Naziv slučaja korištenja
+**Reset lozinke putem emaila**
+
+### 3. Kratak opis
+Proces omogućava korisniku da resetuje svoju lozinku putem 
+email linka u slučaju da je zaboravi, uz vremensko ograničenje 
+linka od 10 minuta i maksimalno 3 pokušaja u roku od sat vremena.
+
+### 4. Preduslovi
+- Korisnik ima aktivan nalog u sistemu
+- Korisnik ima validnu email adresu registrovanu u sistemu
+- Sistem može slati emailove
+
+### 5. Glavni tok
+1. Korisnik klikne na opciju **"Zaboravljena lozinka"**
+2. Korisnik unosi svoju email adresu
+3. Sistem šalje link za resetovanje na korisnikov email
+4. Korisnik klikne na link i unosi novu lozinku
+5. Sistem bilježi novu lozinku i preusmjerava korisnika
+   na formu za prijavu
+
+### 6. Alternativni tokovi
+
+**A1: Istekao link**
+Ako je od slanja linka prošlo više od 10 minuta,
+sistem prikazuje poruku:
+> *"Link za resetovanje je istekao."*
+
+**A2: Link već iskorišten**
+Sistem ne dozvoljava ponovnu upotrebu linka koji
+je već jednom iskorišten za resetovanje lozinke.
+
+**A3: Prekoračen limit pokušaja**
+Ako korisnik pokuša generisati link više od 3 puta
+u roku od sat vremena, sistem blokira zahtjev uz poruku:
+> *"Morate čekati 1h do sljedećeg pokušaja 
+generisanja linka za promjenu lozinke."*
+
+**A4: Email ne postoji u sistemu**
+Ako korisnik unese email koji ne postoji u bazi,
+sistem prikazuje neutralnu poruku:
+> *"Link za resetovanje lozinke će biti poslan 
+na Vašu mail adresu."*
+
+**A5: Neispravan format email adrese**
+Ako korisnik unese email u neispravnom formatu,
+sistem prikazuje poruku:
+> *"Neispravan format mail adrese!"*
+
+**A6: Lozinka ne ispunjava sigurnosne zahtjeve**
+Ako nova lozinka nema minimum 8 karaktera, najmanje
+jedno veliko slovo i jedan broj, sistem blokira
+čuvanje uz poruku o sigurnosnim zahtjevima.
+
+### 7. Ishod
+- Nova lozinka je sačuvana u sistemu
+- Korisnik je preusmjeren na formu za prijavu
+- Iskorišteni link više nije validan
+
+---
+
+## UC-04: Upravljanje radnim vremenom i dužinom termina
 
 ### 1. Akteri
 - **Administrator** (Glavni akter koji vrši izmjene)
@@ -146,7 +212,7 @@ Ako doktor pokuša direktno promijeniti svoje radno vrijeme (bez administratora)
 
 ---
 
-## UC-04: Dodavanje i pregled laboratorijskih nalaza
+## UC-05: Dodavanje i pregled laboratorijskih nalaza
 
 ### 1. Akteri
 - **Medicinsko osoblje** (glavni akter)
@@ -193,7 +259,7 @@ Kada doktor klikne na naziv nalaza, sistem dekriptuje fajl i otvara ga u novom t
 
 ---
 
-## UC-05: Otkazivanje termina (medicinsko osoblje)
+## UC-06: Otkazivanje termina (medicinsko osoblje)
 
 ### 1. Akter
 **Medicinsko osoblje**
@@ -240,7 +306,7 @@ Ako sistem ne može poslati e-mail pacijentu, termin se i dalje otkazuje, ali si
 
 ---
 
-## UC-06: Otkazivanje termina (pacijent)
+## UC-07: Otkazivanje termina (pacijent)
 
 ### 1. Akter
 **Pacijent**
@@ -286,7 +352,7 @@ Ako sistem ne može poslati e-mail potvrdu, termin se i dalje otkazuje, ali sist
 
 ---
 
-## UC-07: Automatsko oslobađanje zaključanih termina
+## UC-08: Automatsko oslobađanje zaključanih termina
 
 ### 1. Akter
 **Sistem** (automatski proces — vremenski okidač)
@@ -329,7 +395,7 @@ Ako pacijent pokuša potvrditi termin bez popunjenih obaveznih polja, sistem blo
 
 ---
 
-## UC-08: Pregled menadžment panela
+## UC-09: Pregled menadžment panela
 
 ### 1. Akter
 **Administrator**
@@ -375,7 +441,7 @@ Ako za odabrani vremenski period nema podataka, sistem prikazuje poruku:
 
 ---
 
-## UC-9: Pregled i upravljanje komentarima termina
+## UC-10: Pregled i upravljanje komentarima termina
 
 ### 1. Akteri
 - **Doktor** (pregledava komentare)
@@ -427,7 +493,7 @@ Ako doktor pokuša pregledati komentare termina koji nije njegov, sistem blokira
 
 ---
 
-## UC-10: Dvofaktorska autentifikacija (2FA)
+## UC-11: Dvofaktorska autentifikacija (2FA)
 
 ### 1. Akter
 **Korisnik** (Pacijent, Doktor, Administrator)
@@ -476,7 +542,7 @@ Ako korisnik nema aktiviran 2FA, sistem preskače ovaj korak i direktno preusmje
 
 ---
 
-## UC-11: Rezervacija termina kod specijaliste od strane ljekara
+## UC-12: Rezervacija termina kod specijaliste od strane ljekara
 
 ### 1. Akteri
 - **Ljekar porodične medicine** (Glavni akter)
@@ -525,7 +591,7 @@ Ljekar može rezervisati termin do 12 mjeseci unaprijed.
 
 ---
 
-## UC-12: Pregled historije pregleda
+## UC-13: Pregled historije pregleda
 
 ### 1. Akter
 **Pacijent**
@@ -577,7 +643,7 @@ drugog pacijenta.
 
 ---
 
-## UC-13: Označavanje hitnosti termina
+## UC-14: Označavanje hitnosti termina
 
 ### 1. Akter
 **Medicinsko osoblje** (medicinska sestra, administrator)
@@ -630,7 +696,7 @@ kao hitan.
 
 ---
 
-## UC-14: Panel medicinskog osoblja
+## UC-15: Panel medicinskog osoblja
 
 ### 1. Akter
 **Medicinsko osoblje**
@@ -683,7 +749,7 @@ i administratorima.
 
 ---
 
-## UC-15: Registracija pacijenta
+## UC-16: Registracija pacijenta
 
 ### 1. Akter
 **Administrator**
@@ -737,7 +803,7 @@ takve profile unutar svog panela.
 
 ---
 
-## UC-16: Automatska odjava korisnika
+## UC-17: Automatska odjava korisnika
 
 ### 1. Akter
 **Sistem** (automatski proces — vremenski okidač)
@@ -788,7 +854,7 @@ na formu za prijavu.
 
 ---
 
-## UC-17: Pregled audit loga
+## UC-18: Pregled audit loga
 
 ### 1. Akter
 **Administrator**
