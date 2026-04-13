@@ -96,58 +96,14 @@
 
 ## Veza sa acceptance kriterijima
 
-| US | AC br. | ID testa | Opis TC |
-| :--- | :---: | :--- | :--- |
-| **US-01** | 1 | **TC-01-01** | **Preduslov:** Pacijent logovan. **Koraci:** Otvoriti sekciju 'Historija'. **Rezultat:** Termini izlistani hronološki (najnoviji na vrhu). |
-| **US-01** | 2 | **TC-01-02** | **Preduslov:** Postoji nalaz. **Koraci:** Klik na završen termin. **Rezultat:** Prikazan datum, ljekar, odjel, opis terapije i PDF nalaz. |
-| **US-01** | 3 | **TC-01-03** | **Preduslov:** Postoji otkazan termin. **Koraci:** Pregled liste. **Rezultat:** Otkazani termini jasno označeni statusom "OTKAZAN". |
-| **US-01** | 4 | **TC-01-04** | **Preduslov:** Pacijent bez historije. **Koraci:** Otvoriti 'Historija'. **Rezultat:** Poruka: "Trenutno nemate zabilježenih pregleda u historiji". |
-| **US-02** | 1 | **TC-02-01** | **Preduslov:** Korisnik nije admin. **Koraci:** Ručni unos URL-a za admin panel. **Rezultat:** Sistem preusmjerava na login stranicu. |
-| **US-02** | 2 | **TC-02-02** | **Preduslov:** Admin logovan. **Koraci:** Otvoriti dashboard. **Rezultat:** Prikazan tačan broj pacijenata i današnjih termina iz baze. |
-| **US-02** | 3 | **TC-02-03** | **Preduslov:** Lista korisnika. **Koraci:** Klik na korisnika, izmjena podataka. **Rezultat:** Promjena je uspješno spašena u SQL bazu podataka. |
-| **US-02** | 4 | **TC-02-04** | **Preduslov:** Postoje termini. **Koraci:** Unijeti datum u filter termina. **Rezultat:** Tabela prikazuje samo rezervacije za taj datum. |
-| **US-02** | 5 | **TC-02-05** | **Preduslov:** Admin panel. **Koraci:** Unos prezimena u pretragu. **Rezultat:** Sistem prikazuje pacijente koji imaju to prezime. |
-| **US-03** | 1 | **TC-03-01** | **Preduslov:** Nalog aktivan. **Koraci:** Unos emaila i lozinke. **Rezultat:** Uspješna autentifikacija i ulaz u aplikaciju. |
-| **US-03** | 2 | **TC-03-02** | **Preduslov:** Korisnik je ljekar. **Koraci:** Prijava. **Rezultat:** Sistem otvara ljekarski dashboard, ne pacijentov profil. |
-| **US-03** | 3 | **TC-03-03** | **Preduslov:** 2FA aktivan. **Koraci:** Unos lozinke. **Rezultat:** Sistem traži 6-cifreni kod sa emaila prije konačnog pristupa. |
-| **US-03** | 4 | **TC-03-04** | **Preduslov:** Login ekran. **Koraci:** 5 pogrešnih lozinki. **Rezultat:** Nalog privremeno blokiran; onemogućen login na 15 min. |
-| **US-03** | 5 | **TC-03-05** | **Preduslov:** Pogrešan email. **Koraci:** Klik 'Prijavi se'. **Rezultat:** Poruka "Pogrešan email ili lozinka" bez detalja. |
-| **US-04** | 1 | **TC-04-01** | **Preduslov:** Admin panel. **Koraci:** Klik na 'Novi pacijent', unos podataka. **Rezultat:** Novi profil sa ulogom 'PACIJENT' kreiran u bazi. |
-| **US-04** | 2 | **TC-04-02** | **Preduslov:** Registracija. **Koraci:** Ostaviti polje email prazno. **Rezultat:** Sistem blokira spašavanje i označava polje kao obavezno. |
-| **US-04** | 3 | **TC-04-03** | **Preduslov:** User postoji. **Koraci:** Pokušaj duple registracije. **Rezultat:** Poruka: "Korisnik sa ovim emailom je već registrovan". |
-| **US-04** | 4 | **TC-04-04** | **Preduslov:** Javna stranica. **Koraci:** Pacijent se sam registruje. **Rezultat:** Admin vidi taj profil u svom panelu korisnika. |
-| **US-04** | 5 | **TC-04-05** | **Preduslov:** Kraj unosa. **Koraci:** Provjera ekrana. **Rezultat:** Prikazana potvrda: "Pacijent uspješno registrovan". |
-| **US-05** | 1 | **TC-05-01** | **Preduslov:** Pregled resursa. **Koraci:** Izbor odjela 'RTG'. **Rezultat:** Lista prikazuje isključivo ljekare sa RTG odjela. |
-| **US-05** | 2 | **TC-05-02** | **Preduslov:** Lista ljekara. **Koraci:** Pregled informacija. **Rezultat:** Vidljivo ime, titula i slika svakog ljekara. |
-| **US-05** | 3 | **TC-05-03** | **Preduslov:** Klik na ljekara. **Koraci:** Otvaranje kalendara. **Rezultat:** Prikazan interaktivni kalendar sa slobodnim slotovima. |
-| **US-05** | 4 | **TC-05-04** | **Preduslov:** Dva korisnika. **Koraci:** Jedan potvrdi slot. **Rezultat:** Slot automatski postaje nevidljiv drugom korisniku (real-time). |
-| **US-05** | 5 | **TC-05-05** | **Preduslov:** Kalendar. **Koraci:** Provjera boja. **Rezultat:** Jasna razlika između slobodnih, popunjenih i blokiranih slotova. |
-| **US-06** | 1 | **TC-06-01** | **Preduslov:** Pacijent logovan. **Koraci:** Izbor termina i potvrda. **Rezultat:** Termin u bazi dobija status 'ZAKAZAN'. |
-| **US-06** | 2 | **TC-06-02** | **Preduslov:** Opšta praksa. **Koraci:** Rezervacija za 65 dana. **Rezultat:** Sistem onemogućava izbor datuma preko 60 dana. |
-| **US-06** | 3 | **TC-06-03** | **Preduslov:** Specijalista. **Koraci:** Rezervacija za 11 mjeseci. **Rezultat:** Sistem dozvoljava rezervaciju (limit 12 mjeseci). |
-| **US-06** | 4 | **TC-06-04** | **Preduslov:** Kalendar. **Koraci:** Pregled slotova. **Rezultat:** Vidljivi samo termini unutar radnog vremena ljekara. |
-| **US-06** | 5 | **TC-06-05** | **Preduslov:** Dva korisnika. **Koraci:** Istovremeni klik. **Rezultat:** Sistem prihvata samo jedan zahtjev (sprječavanje duplih). |
-| **US-06** | 6 | **TC-06-06** | **Preduslov:** Pacijent ima termin. **Koraci:** Rezervacija drugog. **Rezultat:** Blokada uz poruku o limitu od jednog termina dnevno. |
-| **US-07** | 1 | **TC-07-01** | **Preduslov:** Pretraga. **Koraci:** Unos dijela imena ljekara. **Rezultat:** Lista ljekara koji odgovaraju pojmu se ispravno ispisuje. |
-| **US-07** | 2 | **TC-07-02** | **Preduslov:** Pogrešan unos. **Koraci:** Unos nepostojećeg pojma. **Rezultat:** Poruka: "Nije pronađen nijedan ljekar". |
-| **US-07** | 3 | **TC-07-03** | **Preduslov:** Profil ljekara. **Koraci:** Pregled detalja. **Rezultat:** Vidljivo radno vrijeme i specijalnost ljekara. |
-| **US-07** | 4 | **TC-07-04** | **Preduslov:** Izbor ljekara. **Koraci:** Klik na slobodan slot. **Rezultat:** Preusmjeravanje na formu za potvrdu rezervacije. |
-| **US-07** | 5 | **TC-07-05** | **Preduslov:** Specijalista. **Koraci:** Pacijent bez uputnice zakazuje. **Rezultat:** Akcija dozvoljena samo ljekaru opšte prakse za pacijenta. |
-| **US-08** | 1 | **TC-08-01** | **Preduslov:** Kraj rezervacije. **Koraci:** Provjera emaila. **Rezultat:** Potvrda poslata automatski na adresu pacijenta. |
-| **US-08** | 2 | **TC-08-02** | **Preduslov:** Email primljen. **Koraci:** Pregled sadržaja. **Rezultat:** Email sadrži datum, vrijeme, ime ljekara i odjel. |
-| **US-08** | 3 | **TC-08-03** | **Preduslov:** Dan prije. **Koraci:** Provjera inboxa. **Rezultat:** Podsjetnik poslat automatski 24 sata prije pregleda. |
-| **US-08** | 4 | **TC-08-04** | **Preduslov:** Link u emailu. **Koraci:** Klik na link. **Rezultat:** Korisnik prebačen na opciju otkazivanja u aplikaciji. |
-| **US-09** | 1 | **TC-09-01** | **Preduslov:** Sestra u panelu. **Koraci:** Klik 'Otkaži' na terminu. **Rezultat:** Mjesto u bazi oslobođeno; status promijenjen. |
-| **US-09** | 2 | **TC-09-02** | **Preduslov:** Promjena plana. **Koraci:** Otkazivanje 10 min prije. **Rezultat:** Sistem dozvoljava osoblju otkazivanje bilo kada. |
-| **US-09** | 3 | **TC-09-03** | **Preduslov:** Otkazano od osoblja. **Koraci:** Provjera emaila pacijenta. **Rezultat:** Pacijent obaviješten o otkazivanju od strane bolnice. |
-| **US-09** | 4 | **TC-09-04** | **Preduslov:** Klik na 'Otkaži'. **Koraci:** Odgovor na upit. **Rezultat:** Sistem traži potvrdu: "Da li ste sigurni?" prije akcije. |
-| **US-09** | 5 | **TC-09-05** | **Preduslov:** Termin otkazan. **Koraci:** Pretraga drugih. **Rezultat:** Otkazani termin odmah vidljiv kao slobodan u kalendaru. |
-| **US-10** | 1 | **TC-10-01** | **Preduslov:** Profil pacijenta. **Koraci:** Klik na 'Otkaži'. **Rezultat:** Status termina postaje 'OTKAZAN'; slot oslobođen. |
-| **US-10** | 2 | **TC-10-02** | **Preduslov:** Termin za 5h. **Koraci:** Pacijent pokuša otkazati. **Rezultat:** Blokada akcije zbog pravila od 24h. |
-| **US-10** | 3 | **TC-10-03** | **Preduslov:** Pacijent otkazao. **Koraci:** Provjera emaila. **Rezultat:** Email potvrda o otkazivanju poslata trenutno. |
-| **US-10** | 4 | **TC-10-04** | **Preduslov:** Klik na 'Otkaži'. **Koraci:** Provjera upita. **Rezultat:** Sistem traži potvrdu namjere prije brisanja. |
-| **US-10** | 5 | **TC-10-05** | **Preduslov:** Otkazano. **Koraci:** Pregled slobodnih slotova. **Rezultat:** Slot vidljiv kao slobodan za ostale korisnike. |
-| **US-10** | 6 | **TC-10-06** | **Preduslov:** Akcija gotova. **Koraci:** Provjera interfejsa. **Rezultat:** Prikazana poruka: "Vaš termin je uspješno otkazan". |
+| Zahtjevi (US) | Fokus provjere (ŠTA) | Strategija verifikacije (KAKO) |
+| :--- | :--- | :--- |
+| US-03, US-04, US-16, US-19, US-25, US-26, US-36 | Autentifikacija, 2FA zaštita, sigurnosni reset lozinke, automatska odjava, blokada naloga i prava pristupa prema ulogama. | Verifikacija putem **negativnog testiranja** (unos netačnih podataka) i provjera session timeout mehanizma. Prava pristupa se testiraju pokušajima ulaska na admin rute sa pacijentovim nalogom, uz provjeru logova blokade. |
+| US-05, US-06, US-07, US-11, US-12, US-13, US-17, US-22, US-28 | Logika rezervisanja, dupli termini kod ljekara, ispravnost buffer zone od 2 min i vizuelne oznake hitnosti. | Primjena **testiranja konkurentnosti** (Concurrency testing). Simuliraćemo istovremene zahtjeve više korisnika nad istim terminom radi potvrde ispravnog zaključavanja baze i rješavanja konflikata. |
+| US-08, US-09, US-10, US-23, US-31 | Email potvrde, podsjetnici pacijentima, procesi otkazivanja i interaktivni vodič za korištenje stranice. | **Testiranje toka procesa** (Workflow testing). Provjera automatskih okidača (triggers) koji šalju email poruke pacijentima u zavisnosti od njihove akcije ili proteklog vremena (npr. podsjetnik 24h ranije). |
+| US-01, US-21, US-27, US-32 | Historija pregleda, enkripcija medicinskih podataka (AES-256), ljekarske napomene i upload PDF nalaza. | **Inspekcija baze podataka** i provjera integriteta dokumenata. Verifikacija čitljivosti dekriptovanih podataka u UI panelu naspram nečitljivih enkriptovanih vrijednosti direktno unutar SQL tabela. |
+| US-02, US-14, US-15, US-18, US-24, US-29, US-30 | Rad admin panela, menadžment dashboard, statistički grafikoni, upravljanje smjenama ljekara i export CSV podataka. | **Uporedna analiza podataka**. Provjera usklađenosti statističkih prikaza i izvezenih dokumenata sa stvarnim stanjem termina i resursa unutar baze podataka u realnom vremenu. |
+| US-20, US-33, US-34, US-35, US-37 | Integritet audit logova, stabilnost REST API-ja, ispravnost ER modela baze i tehničko testiranje integriteta podataka. | **Tehnička verifikacija baze i API-ja**. Provjera stranih ključeva (FK) i ograničenja baze putem automatizovanih SQL skripti. Testiranje neizmjenjivosti audit logova direktnim pokušajem izmjene zapisa. |
 
 
 ## Način evidentiranja rezultata testiranja 
