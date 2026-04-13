@@ -105,7 +105,7 @@ Relacijska baza podataka (PostgreSQL)
 
 **Rizik prekida rada sistema tokom implementacije izmjena**: monolitne aplikacije deployaju se kao jedna cjelina, što znači da svaki restart sistema utiče na cijelu aplikaciju. To može rezultirati kratkotrajnim prekidom rada sistema, što direktno utiče na korisnike i dostupnost sistema u radnom vremenu klinike
 
-**Ovisnost o dostupnosti cloud infrastrukture**: sistem je ovisan o dostupnosti odabranog cloud provajdera, te u slučaju ispada njihove infrastrukture cijeli sistem postaje nedostupan. Također, pohrana osjetljivih medicinskih podataka na eksternim serverima zahtijeva pažljiv odabir cloud providera i striktnu konfiguraciju sigurnosnih postavki kako bi se osigurala usklađenost sa regulativama o zaštiti ličnih i zdravstvenih podataka.
+**Ovisnost o dostupnosti cloud infrastrukture**: sistem je ovisan o dostupnosti odabranog cloud providera, te u slučaju ispada njihove infrastrukture cijeli sistem postaje nedostupan. Također, pohrana osjetljivih medicinskih podataka na eksternim serverima zahtijeva pažljiv odabir cloud providera i striktnu konfiguraciju sigurnosnih postavki kako bi se osigurala usklađenost sa regulativama o zaštiti ličnih i zdravstvenih podataka.
 
 ## Otvorena pitanja
 
