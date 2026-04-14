@@ -196,6 +196,32 @@ Sistem se sastoji od sljedećih **entiteta**:
 | `DokumentPDF`   | BYTEA  | Priloženi PDF dokument nalaza                         |
 
 ---
+Sistem koristi sljedeće enumeracijske tipove:
+ 
+### 3.13 Uloga
+ Definira moguće uloge korisnika u sistemu.
+ 
+| Vrijednost           | Opis                                      |
+|----------------------|-------------------------------------------|
+| `ADMINISTRATOR`      | Administrator sistema                     |
+| `PACIJENT`           | Pacijent                                  |
+| `DOKTOR`             | Doktor                                    |
+| `MEDICINSKO_OSOBLJE` | Medicinsko osoblje (sestre, tehničari...) |
+| `VLASNIK`            | Vlasnik zdravstvene ustanove              |
+ 
+---
+ 
+### 3.14 Status
+ Definira moguće statuse termina.
+ 
+| Vrijednost  | Opis                          |
+|-------------|-------------------------------|
+| `ZAKAZAN`   | Termin je zakazan             |
+| `POTVRĐEN`  | Termin je potvrđen/ zaključan         |
+| `OTKAZAN`   | Termin je otkazan             |
+ 
+
+---
 
 ## 4. Veze Između Entiteta
 

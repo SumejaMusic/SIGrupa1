@@ -79,7 +79,7 @@ Relacijska baza podataka (PostgreSQL)
 
 **Kontrola pristupa zasnovana na ulogama (RBAC)**: svaki korisnik sistema ima dodijeljenu ulogu (pacijent, doktor, medicinsko osoblje, administrator) i može pristupiti isključivo funkcijama koje odgovaraju toj ulozi, čime se osigurava zaštita osjetljivih medicinskih podataka.
 
-**Hashiranje lozinki**: lozinke se nikada ne pohranjuju u plain-text obliku već kao jednosmjerni hash, čime se osigurava da čak ni administratori sistema ne mogu vidjeti originalne lozinke.
+**Hashiranje lozinki**: lozinke se nikada ne pohranjuju u plain-text obliku već kao jednosmjerni hash generisan pomoću bcrypt algoritma, koji uključuje automatsko dodavanje salt vrijednosti i podržava podešavanje faktora složenosti (cost factor), čime se osigurava da čak ni administratori sistema ne mogu vidjeti originalne lozinke.
 
 **Dvofaktorska autentifikacija (2FA)**: dodatni sloj zaštite prilikom prijave, sistem šalje jednokratni kod na korisnikov mail.
 
@@ -91,11 +91,18 @@ Relacijska baza podataka (PostgreSQL)
 
 **Zaključavanje termina na 2 minute**: kako bi se spriječile duple rezervacije pri istovremenim zahtjevima više korisnika, uvodi se mehanizam privremenog zaključavanja dok jedan korisnik dovršava rezervaciju.
 
-**Relacijska baza podataka (PostgreSQL)**: za pohranu podataka koristi se relacijska baza podataka, jer su pacijenti, termini, doktori međusobno povezani entiteti sa jasno definisanim relacijama između njih (npr. pacijent - historija pregleda, doktor - rezervacije i sl). Unutar relacijskih baza odabran je PostgreSQL jer pruža punu podršku za ACID transakcije neophodne za konzistentno zaključavanje termina i sprječavanje duplih rezervacija. U poređenju sa MySQL, PostgreSQL nudi napredniju podršku za kompleksne upite i bolju podršku za enkripciju na nivou kolona koja je neophodna za zaštitu osjetljivih zdravstvenih podataka. 
+**Relacijska baza podataka (PostgreSQL)**: za pohranu podataka koristi se relacijska baza podataka, jer su pacijenti, termini, doktori međusobno povezani entiteti sa jasno definisanim relacijama između njih (npr. pacijent - historija pregleda, doktor - rezervacije i sl). 
 
 **Cloud pristup za hosting sistema**: za deployment sistema odabran je cloud hosting koji omogućava lakše upravljanje infrastrukturom bez potrebe za vlastitim serverskim hardverom i IT osobljem zaduženim za njegovo održavanje. 
 
 **WebSocket za real-time ažuriranje dostupnosti termina**: Za funkcionalnosti koje zahtijevaju trenutno ažuriranje podataka, kao što su rezervacija i otkazivanje termina, te pregled rasporeda doktora, koristi se WebSocket komunikacija između frontenda i backenda. WebSocket omogućava dvosmjernu komunikaciju u realnom vremenu bez potrebe za stalnim slanjem HTTP zahtjeva, čime se smanjuje opterećenje servera i omogućava da svi aktivni korisnici odmah vide promjene u dostupnosti termina. 
+
+**Nodemailer za slanje email notifikacija**: za implementaciju slanja emailova odabrana je Nodemailer biblioteka koja se integriše sa eksternim SMTP servisom, čime se osigurava pouzdana i skalabilna isporuka email potvrda, obavještenja o otkazivanju termina i automatskih podsjetnika, bez potrebe za implementacijom i održavanjem vlastitog mail servera.
+
+## Zašto baš ove tehnologije? — Obrazloženje tehničkih odluka
+
+Odabrane tehnologije čine tehnološki sklad koji smanjuje kompleksnost razvoja i povećava efikasnost tima. **React** je odabran kao frontend framework zbog svoje komponentne arhitekture koja omogućava kreiranje zasebnih prikaza za svaku korisničku ulogu (pacijent, doktor, medicinsko osoblje, administrator) bez dupliranja koda, a u poređenju sa alternativama poput Angulara, React nudi veću fleksibilnost. Na backend strani, **Node.js sa Express frameworkom** omogućava asinhronu, neblokirajuću obradu velikog broja istovremenih zahtjeva, što je ključno za sistem u kojem više korisnika istovremeno pretražuje i rezerviše termine, a dodatna prednost je korištenje JavaScripta na obje strane aplikacije čime se smanjuje raznolikost tehnologija u timu. **PostgreSQL** je odabran kao rješenje za pohranu podataka jer, za razliku od MySQL-a, pruža napredniju podršku za enkripciju na nivou kolona neophodnu za zaštitu osjetljivih zdravstvenih podataka, kao i punu ACID kompatibilnost koja garantuje konzistentnost pri istovremenim rezervacijama. **JWT tokeni** omogućavaju stateless autentifikaciju bez potrebe za serverskim čuvanjem stanja sesija, a **WebSocket** je integrisan za real-time sinhronizaciju dostupnosti termina između svih aktivnih korisnika, što REST API sam po sebi ne može efikasno riješiti bez stalnog polling-a.
+
 
 ## Ograničenja i rizici arhitekture
 
@@ -113,6 +120,5 @@ Relacijska baza podataka (PostgreSQL)
 
 1. Koje metode dvofaktorske autentifikacije će biti podržane?
 2. Je li potrebno definisati fallback mehanizam u slučaju pada sistema tokom zaključavanja termina?
-3. Koji eksterni email servis će biti korišten za slanje notifikacija?
-4. Koji će biti maksimalni period čuvanja audit log zapisa?
-5. Koji cloud provider će biti odabran?
+3. Koji će biti maksimalni period čuvanja audit log zapisa?
+4. Koji cloud provider će biti odabran?
