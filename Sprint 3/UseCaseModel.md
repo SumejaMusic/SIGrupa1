@@ -325,7 +325,7 @@ Proces omogućava pacijentu da samostalno otkaže svoj zakazani termin, uz uvjet
 **A1: Pacijent odustaje od otkazivanja**
 Ako pacijent na upit za potvrdu klikne **"Ne"**, sistem odustaje i termin ostaje sa statusom "ZAKAZAN".
 
-**A2: Vremensko ograničenje — manje od 24 sata**
+**A2: Vremensko ograničenje - manje od 24 sata**
 Ako je do termina ostalo manje od 24 sata, sistem blokira akciju uz poruku:
 > "Nije moguće otkazati termin koji počinje za manje od 24 sata. Kontaktirajte nas telefonom."
 
@@ -342,7 +342,7 @@ Ako sistem ne može poslati e-mail potvrdu, termin se i dalje otkazuje, ali sist
 ## UC-08: Automatsko oslobađanje zaključanih termina
 
 ### 1. Akter
-**Sistem** (automatski proces — vremenski okidač)
+**Sistem** (automatski proces - vremenski okidač)
 
 ### 2. Kratak opis
 Sistem automatski oslobađa termine koji su privremeno zaključani tokom procesa rezervacije, a nisu potvrđeni u roku od 2 minute, te vraća pacijenta na početni ekran za odabir novog termina.
@@ -385,7 +385,7 @@ Ako pacijent pokuša potvrditi termin bez popunjenih obaveznih polja, sistem blo
 **Administrator**
 
 ### 2. Kratak opis
-Proces omogućava administratoru uvid u ključne metrike sistema u realnom vremenu — broj korisnika, zakazanih termina i zauzetost sala — uz mogućnost filtriranja podataka i izvoza u CSV format.
+Proces omogućava administratoru uvid u ključne metrike sistema u realnom vremenu - broj korisnika, zakazanih termina i zauzetost sala - uz mogućnost filtriranja podataka i izvoza u CSV format.
 
 ### 3. Preduslovi
 - Administrator je prijavljen na sistem sa administratorskom ulogom
@@ -500,7 +500,7 @@ Proces omogućava korisniku da aktivira i koristi dvofaktorsku autentifikaciju k
 Ako korisnik unese pogrešan kod, sistem ne dozvoljava pristup uz poruku:
 > "Uneseni kod nije ispravan. Molimo pokušajte ponovo."
 
-**A2: Istekao kod — više od 5 minuta**
+**A2: Istekao kod - više od 5 minuta**
 Ako je od slanja koda prošlo više od 5 minuta, sistem automatski poništava kod i ne dozvoljava pristup uz poruku:
 > "Sigurnosni kod je istekao. Molimo zatražite novi kod."
 
@@ -766,7 +766,7 @@ takve profile unutar svog panela.
 ## UC-17: Automatska odjava korisnika
 
 ### 1. Akter
-**Sistem** (automatski proces — vremenski okidač)
+**Sistem** (automatski proces - vremenski okidač)
 
 ### 2. Kratak opis
 Sistem automatski odjavljuje korisnika nakon 15 minuta 
@@ -860,4 +860,4 @@ ili brišu u skladu sa politikom privatnosti sistema.
 ### 6. Ishod
 - Administrator ima uvid u sve akcije korisnika u sistemu
 - Filtrirani rezultati su prikazani prema odabranim kriterijima
-- Integritet zapisa je očuvan — izmjena nije moguća
+- Integritet zapisa je očuvan - izmjena nije moguća
