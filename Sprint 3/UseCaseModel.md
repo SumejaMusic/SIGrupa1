@@ -2,7 +2,7 @@
 
 ## UC-01: Rezervacija termina kod doktora
 
-### 1. Akter
+### 1. Akteri
 **Pacijent**
 
 ### 2. Kratak opis
@@ -48,7 +48,7 @@ Ako pacijent ne popuni obavezna polja, sistem prikazuje upozorenje i ne dozvolja
 
 ## UC-02: Prijava na sistem
 
-### 1. Akter
+### 1. Akteri
 **Korisnik** (Pacijent, Doktor, Medicinsko osoblje ili Administrator)
 
 ### 2. Kratak opis
@@ -94,7 +94,7 @@ Na 3. neuspješnom pokušaju, sistem prikazuje upozorenje o preostala 2 pokušaj
 
 ## UC-03: Reset lozinke
 
-### 1. Akter
+### 1. Akteri
 **Korisnik** (Pacijent, Doktor, Administrator)
 
 ### 2. Kratak opis
@@ -254,7 +254,7 @@ Kada doktor klikne na naziv nalaza, sistem dekriptuje fajl i otvara ga u novom t
 
 ## UC-06: Otkazivanje termina (medicinsko osoblje)
 
-### 1. Akter
+### 1. Akteri
 **Medicinsko osoblje**
 
 ### 2. Kratak opis
@@ -298,7 +298,7 @@ Ako sistem ne može poslati e-mail pacijentu, termin se i dalje otkazuje, ali si
 
 ## UC-07: Otkazivanje termina (pacijent)
 
-### 1. Akter
+### 1. Akteri
 **Pacijent**
 
 ### 2. Kratak opis
@@ -341,7 +341,7 @@ Ako sistem ne može poslati e-mail potvrdu, termin se i dalje otkazuje, ali sist
 
 ## UC-08: Automatsko oslobađanje zaključanih termina
 
-### 1. Akter
+### 1. Akteri
 **Sistem** (automatski proces - vremenski okidač)
 
 ### 2. Kratak opis
@@ -381,7 +381,7 @@ Ako pacijent pokuša potvrditi termin bez popunjenih obaveznih polja, sistem blo
 
 ## UC-09: Pregled menadžment panela
 
-### 1. Akter
+### 1. Akteri
 **Administrator**
 
 ### 2. Kratak opis
@@ -473,7 +473,7 @@ Ako doktor pokuša pregledati komentare termina koji nije njegov, sistem blokira
 
 ## UC-11: Dvofaktorska autentifikacija (2FA)
 
-### 1. Akter
+### 1. Akteri
 **Korisnik** (Pacijent, Doktor, Administrator)
 
 ### 2. Kratak opis
@@ -565,7 +565,7 @@ Ljekar može rezervisati termin do 12 mjeseci unaprijed.
 
 ## UC-13: Pregled historije pregleda
 
-### 1. Akter
+### 1. Akteri
 **Pacijent**
 
 ### 2. Kratak opis
@@ -614,7 +614,7 @@ drugog pacijenta.
 
 ## UC-14: Označavanje hitnosti termina
 
-### 1. Akter
+### 1. Akteri
 **Medicinsko osoblje** (medicinska sestra, administrator)
 
 ### 2. Kratak opis
@@ -664,7 +664,7 @@ kao hitan.
 
 ## UC-15: Panel medicinskog osoblja
 
-### 1. Akter
+### 1. Akteri
 **Medicinsko osoblje**
 
 ### 2. Kratak opis
@@ -714,7 +714,7 @@ i administratorima.
 
 ## UC-16: Registracija pacijenta
 
-### 1. Akter
+### 1. Akteri
 **Administrator**
 
 ### 2. Kratak opis
@@ -765,7 +765,7 @@ takve profile unutar svog panela.
 
 ## UC-17: Automatska odjava korisnika
 
-### 1. Akter
+### 1. Akteri
 **Sistem** (automatski proces - vremenski okidač)
 
 ### 2. Kratak opis
@@ -813,7 +813,7 @@ na formu za prijavu.
 
 ## UC-18: Pregled audit loga
 
-### 1. Akter
+### 1. Akteri
 **Administrator**
 
 ### 2. Kratak opis
