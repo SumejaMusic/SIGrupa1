@@ -7,7 +7,7 @@ Sistem je interno dizajniran kroz tri različita sloja:
 2. Poslovni sloj (backend), implementiran u Node.js/Express, koji je odgovoran za izvršavanje cjelokupne poslovne logike sistema, uključujući upravljanje rezervacijama, kontrolu pristupa zasnovanu na ulogama (RBAC), validaciju termina, i upravljanje sesijama putem JWT tokena
 3. Sloj podataka (baza podataka), implementiran u PostgreSQL, koji osigurava trajno čuvanje i upravljanje podacima o korisnicima, terminima, i medicinskim podacima
 
-Komunikacija između prezentacijskog i poslovnog sloja odvija se putem REST API-ja. Frontend šalje HTTP zahtjeve backendu, backend izvršava poslovnu logiku i komunicira sa bazom podataka te vraća odgovor frontendu. Sistem je predviđen za deployment u cloud okruženju kako bi se omogućio lak pristup aplikaciji sa različitih uređaja i jednostavnije održavanje sistema. 
+Komunikacija između prezentacijskog i poslovnog sloja odvija se primarno putem REST API-ja, dok se za funkcionalnosti koje zahtijevaju ažuriranje podataka u realnom vremenu koristi WebSocket. Frontend šalje HTTP zahtjeve backendu, backend izvršava poslovnu logiku i komunicira sa bazom podataka te vraća odgovor frontendu. Sistem je predviđen za deployment u cloud okruženju kako bi se omogućio lak pristup aplikaciji sa različitih uređaja i jednostavnije održavanje sistema. 
 
 ## Glavne komponente sistema
 
@@ -69,7 +69,7 @@ Relacijska baza podataka (PostgreSQL)
 
 ## Ključne tehničke odluke
 
-**REST API za komunikaciju između slojeva**: komunikacija između prezentacijskog i poslovnog sloja odvija se putem REST API-ja, što osigurava jasno razdvajanje slojeva i omogućava jednostavno proširenje sistema u budućnosti. 
+**REST API za komunikaciju između slojeva**: komunikacija između prezentacijskog i poslovnog sloja primarno se odvija putem REST API-ja, što osigurava jasno razdvajanje slojeva i omogućava jednostavno proširenje sistema u budućnosti. 
 
 **React kao frontend framework**: za razvoj prezentacijskog sloja odabran je React zbog komponentne arhitekture pogodne za višerolni interfejs, te svaka uloga može imati vlastite komponente i prikaze bez dupliranja koda, a React Router omogućava zaštitu ruta zasnovanu na ulogama. React omogućava i efikasno upravljanje stanjem aplikacije, što je važno za dinamičke prikaze kao što su liste dostupnih termina, korisnički podaci i medicinska historija. React je ujedno i široko rasprostranjen framework na tržištu rada, što olakšava razvoj i dugoročno održavanje sistema. 
 
@@ -95,6 +95,8 @@ Relacijska baza podataka (PostgreSQL)
 
 **Cloud pristup za hosting sistema**: za deployment sistema odabran je cloud hosting koji omogućava lakše upravljanje infrastrukturom bez potrebe za vlastitim serverskim hardverom i IT osobljem zaduženim za njegovo održavanje. 
 
+**WebSocket za real-time ažuriranje dostupnosti termina**: Za funkcionalnosti koje zahtijevaju trenutno ažuriranje podataka, kao što su rezervacija i otkazivanje termina, te pregled rasporeda doktora, koristi se WebSocket komunikacija između frontenda i backenda. WebSocket omogućava dvosmjernu komunikaciju u realnom vremenu bez potrebe za stalnim slanjem HTTP zahtjeva, čime se smanjuje opterećenje servera i omogućava da svi aktivni korisnici odmah vide promjene u dostupnosti termina. 
+
 ## Ograničenja i rizici arhitekture
 
 **Buffer zona od 2 minute**: ukoliko server padne u trenutku dok je termin zaključan, postoji rizik da se zaključavanje ne oslobodi na vrijeme, što bi privremeno onemogućilo rezervaciju tog termina
@@ -110,8 +112,7 @@ Relacijska baza podataka (PostgreSQL)
 ## Otvorena pitanja
 
 1. Koje metode dvofaktorske autentifikacije će biti podržane?
-2. Na koji način implementirati real-time ažuriranja rasporeda doktora?
-3. Je li potrebno definisati fallback mehanizam u slučaju pada sistema tokom zaključavanja termina?
-4. Koji eksterni email servis će biti korišten za slanje notifikacija?
-5. Koji će biti maksimalni period čuvanja audit log zapisa?
-6. Koji cloud provider će biti odabran?
+2. Je li potrebno definisati fallback mehanizam u slučaju pada sistema tokom zaključavanja termina?
+3. Koji eksterni email servis će biti korišten za slanje notifikacija?
+4. Koji će biti maksimalni period čuvanja audit log zapisa?
+5. Koji cloud provider će biti odabran?
