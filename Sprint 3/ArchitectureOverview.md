@@ -91,7 +91,7 @@ Relacijska baza podataka (PostgreSQL)
 
 **Zaključavanje termina na 2 minute**: kako bi se spriječile duple rezervacije pri istovremenim zahtjevima više korisnika, uvodi se mehanizam privremenog zaključavanja dok jedan korisnik dovršava rezervaciju.
 
-**Relacijska baza podataka (PostgreSQL)**: za pohranu podataka koristi se relacijska baza podataka, jer su pacijenti, termini, doktori međusobno povezani entiteti sa jasno definisanim relacijama između njih (npr. pacijent - termin, doktor - termin i sl). Unutar relacijskih baza odabran je PostgreSQL jer pruža punu podršku za ACID transakcije neophodne za konzistentno zaključavanje termina i sprječavanje duplih rezervacija. U poređenju sa MySQL, PostgreSQL nudi napredniju podršku za kompleksne upite i bolju podršku za enkripciju na nivou kolona koja je neophodna za zaštitu osjetljivih zdravstvenih podataka. 
+**Relacijska baza podataka (PostgreSQL)**: za pohranu podataka koristi se relacijska baza podataka, jer su pacijenti, termini, doktori međusobno povezani entiteti sa jasno definisanim relacijama između njih (npr. pacijent - historija pregleda, doktor - rezervacije i sl). Unutar relacijskih baza odabran je PostgreSQL jer pruža punu podršku za ACID transakcije neophodne za konzistentno zaključavanje termina i sprječavanje duplih rezervacija. U poređenju sa MySQL, PostgreSQL nudi napredniju podršku za kompleksne upite i bolju podršku za enkripciju na nivou kolona koja je neophodna za zaštitu osjetljivih zdravstvenih podataka. 
 
 **Cloud pristup za hosting sistema**: za deployment sistema odabran je cloud hosting koji omogućava lakše upravljanje infrastrukturom bez potrebe za vlastitim serverskim hardverom i IT osobljem zaduženim za njegovo održavanje. 
 
