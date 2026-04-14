@@ -26,6 +26,8 @@ Sistem se sastoji od sljedećih **entiteta**:
 | 9 | 'AuditLog'        | Evidencija svih promjena i aktivnosti u sistemu                      |
 | 10 | 'HistorijaPregleda'|Trajni zapis o svim obavljenim medicinskim intervencijama i dijagnozama|
 |11 | 'RezervacijaSpecijaliste' | Rezervisanje termina od strane doktora |
+| 12 | 'Nalaz'                   | Medicinski nalaz vezan za pregled pacijenta                           |
+ 
 ---
 
 ## 3. Ključni Atributi po Entitetu
@@ -45,7 +47,7 @@ Sistem se sastoji od sljedećih **entiteta**:
 | `BrojTelefona`        | int      |                                   |
 | `DatumRegistracije`   | Date     |                                   |
 | `BrojNeuspjelihPrijava` | int   | Za zaključavanje naloga           |
-| `Uloga`               | String   | Npr. `admin`, `doktor`, `pacijent`|
+| `Uloga`                 | **Uloga** | Enum tip – npr. `ADMINISTRATOR`, `DOKTOR`, `PACIJENT` |
 
 ---
 
@@ -106,8 +108,7 @@ Sistem se sastoji od sljedećih **entiteta**:
 | `Datum`      | Date   |                                       |
 | `Vrijeme`    | int    |                                       |
 | `Opis`       | String | Napomena uz termin                    |
-| `Potvrđen`   | String | Status potvrde                        |
-| `Otkazivanje`| String | Razlog ili status otkazivanja         |
+| `Status`  | **Status** | Enum tip – `ZAKAZAN`, `POTVRĐEN` ili `OTKAZAN`        |
 
 ---
 
@@ -170,6 +171,7 @@ Sistem se sastoji od sljedećih **entiteta**:
 | `Dijagnoza`      | String | Medicinska dijagnoza                            |
 | `Terapija`       | String | Propisana terapija ili lijek                    |
 | `Biljeske`       | String | Dodatne napomene doktora                        |
+| `IDNalaz`        | int  | Strani ključ - Nalaz                             |
  
 ---
  
@@ -182,7 +184,16 @@ Sistem se sastoji od sljedećih **entiteta**:
 | `IDDoktorOpste`   | int    | Strani ključ - Doktor              |
 | `IDRezervacije`   | int    | Strani ključ - Rezervacije         |
 | `RazlogPregleda`  | String | Medicinski razlog upućivanja specijalistu              |
+
+### 3.12 Nalaz
  
+| Atribut         | Tip    | Napomena                                              |
+|-----------------|--------|-------------------------------------------------------|
+| `ID`            | int    | Primarni ključ                                        |
+| `Naziv`         | String | Naziv nalaza                                          |
+| `VrijemeNalaza` | Date   | Datum i vrijeme izdavanja nalaza                      |
+| `Opis`          | String | Opis ili detalji nalaza                               |
+| `DokumentPDF`   | BYTEA  | Priloženi PDF dokument nalaza                         |
 
 ---
 
@@ -200,13 +211,14 @@ Doktor   ──────────── Rezervacije       (1 : N)   Doktor
 Termin   ──────────── Rezervacije       (1 : N)   Termin može imati više rezervacija
 Pacijent ──────────── Podsjetnik        (1 : N)   Pacijent prima više podsjetnika
 Rezervacije ───────── Podsjetnik        (1 : 1)   Rezervacija ima jedan podsjetnik
-Pacijent ──────────── Termin            (N : M)   Pacijent može imati više termina
+Pacijent ──────────── Termin            (1 : N)   Pacijent može imati više termina
 Pacijent ──────────── HistorijaPregleda        (1 : N)   Pacijent ima više zapisa u historiji
 Doktor   ──────────── HistorijaPregleda        (1 : N)   Doktor kreira više zapisa u historiji
 Rezervacije ───────── HistorijaPregleda        (1 : 1)   Jedna rezervacija - jedan zapis historije
 Doktor (specijalist)  ──── RezervacijaSpec.    (1 : N)   Specijalist prima više upućivanja
 Doktor (opšti)        ──── RezervacijaSpec.    (1 : N)   Opšti doktor upućuje više pacijenata
 Rezervacije ───────── RezervacijaSpecijalista  (1 : 1)   Jedna rezervacija - jedno upućivanje
+HistorijaPregleda ─── Nalaz                     (1 : N)   Jedan pregled može imati više nalaza
 
 ```
 
@@ -256,6 +268,11 @@ Rezervacije ───────── RezervacijaSpecijalista  (1 : 1)   Jedna
 - Jedna rezervacija može rezultovati **tačno jednim upućivanjem** specijalistu (1:1 veza sa `Rezervacije`).
 - `RazlogPregleda` je **obavezno polje** – upućivanje bez medicinskog razloga nije validno.
 - `IDSpecijaliste` i `IDDoktorOpste` referišu isti entitet `Doktor`, ali s **različitim ulogama** u kontekstu upućivanja.
+### 5.9 Nalaz
+- Nalaz se kreira kao rezultat medicinskog pregleda i **vezan je za zapis u `HistorijaPregleda`**.
+- Jedan pregled može imati **više nalaza** (npr. laboratorijski, radiološki).
+- Polje `DokumentPDF` (tipa `BYTEA`) čuva binarni sadržaj PDF dokumenta nalaza.
+- `VrijemeNalaza` bilježi tačan datum i vrijeme izdavanja nalaza.
 
 ---
 
@@ -267,5 +284,6 @@ Predstavljeni domenski model pokriva sve ključne aspekte sistema za upravljanje
 - **Fleksibilnost** je postignuta odvajanjem `Termin`  od `Rezervacije` (zakazana posjeta).
 - **Notifikacije** su modelovane kroz entitet `Podsjetnik` sa podrškom za više kanala slanja.
 - **Organizacijska hijerarhija** je jasno definisana kroz entitet `Odjel`.
+- **Medicinska dokumentacija** je kompletirana entitetom `Nalaz` koji omogućava prilaganje PDF dokumenata uz preglede
 
 ---
