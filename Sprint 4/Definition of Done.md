@@ -10,7 +10,7 @@ User Story se smatra implementiranim i kompletiranim ako:
 4. **Uspješno mergan:** Kod je bez konflikata spojen u glavnu granu projekta (**main branch**).
 
 
-User Story se smatra gotovim (Done) tek kada:
-1. **Feature radi na dev okolini:** Funkcionalnost je testirana i dokazano radi u razvojnom (development) okruženju.
-2. **Provjereni edge case-ovi:** Sistem stabilno hendla granične slučajeve (npr. neispravni unosi, istovremeni klikovi).
+User Story se smatra gotovim tek kada:
+1. **Feature radi na dev okolini:** Funkcionalnost je testirana i dokazano radi u razvojnom okruženju.
+2. **Provjereni edge case-ovi:**  Potvrđeno je da sistem stabilno obrađuje neispravne unose i uspješno rješava konflikte nastale istovremenim zahtjevima.
 3. **Urađen finalni review:** Izvršena je završna provjera koda i dokumentacije unutar tima.
