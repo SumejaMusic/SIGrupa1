@@ -112,6 +112,18 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 **Ključna isporuka:** Admin panel za registraciju pacijenata i doktora, upravljanje radnim vremenom i rasporedom doktora, menadžment panel sa statistikama
 **Zavisnosti:** Release 1 mora biti završen. CRUD operacije zahtijevaju funkcionalan JWT i RBAC sistem, bez autentikacije nije moguće razlikovati administratora od pacijenta.
 
+
+**Deliverable-i:**
+
+- Implementiran admin interfejs za registraciju novih pacijenata u sistem
+- Implementirana funkcionalnost upravljanja radnim vremenom i rasporedom doktora
+- Razvijen kompletan administratorski korisnički interfejs (frontend)
+- Implementirane backend funkcionalnosti admin panela (API endpointi, poslovna logika)
+- Razvijen menadžment panel za nadzor aktivnosti sistema
+- Implementiran statistički pregled rada zdravstvene ustanove
+- Funkcionalnost exporta statistike zakazanih pregleda u CSV formatu
+
+
 | User Story | Naziv | 
 |:---|:---|
 | US-04 | Admin panel - registracija pacijenta | 
@@ -141,6 +153,18 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 **Obuhvaćeni sprintovi:** Sprint 7 i Sprint 8
 **Ključna isporuka:** Funkcionalan end-to-end tok rezervacije i otkazivanja termina sa zaštitom od duplih rezervacija i email notifikacijama
 **Zavisnosti:** Release 2 mora biti završen. Rezervacijski sistem ne može funkcionisati bez prethodno kreiranog inventara: doktori, radna vremena i termini moraju postojati u bazi.
+
+**Deliverable-i:**
+
+- Implementiran pregled dostupnih doktora i slobodnih termina u realnom vremenu
+- Funkcionalan tok rezervacije termina sa zaštitom od duplih rezervacija
+- Mehanizam privremenog zaključavanja termina (buffer zona - 2 minute)
+- Automatsko oslobađanje nepotvrđenih termina
+- Funkcionalnost otkazivanja termina od strane pacijenta i medicinskog osoblja
+- Mogućnost dodavanja komentara prilikom zakazivanja termina
+- Email potvrda o rezervaciji putem Nodemailer-a
+- Automatski podsjetnik za pacijente sa hroničnim oboljenjima
+- Upit za promjenu dužine termina od strane doktora
 
 | User Story | Naziv                                                    |
 | :--------- | :------------------------------------------------------- |
@@ -184,6 +208,17 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 **Ključna isporuka:** Personalizovani interfejsi za sve korisničke uloge, medicinska historija pacijenta sa nalazima, označavanje hitnosti, dashboard doktora i panel medicinskog osoblja
 **Zavisnosti:** Release 3 mora biti završen. Paneli doktora i medicinskog osoblja direktno ovise o rezervacijskom toku koji mora biti testiran i stabilan.
 
+**Deliverable-i:**
+
+- Implementiran dashboard doktora sa dnevnim i sedmičnim pregledom rasporeda
+- Mogućnost pregleda komentara uz termine od strane doktora
+- Razvijen panel medicinskog osoblja za upravljanje aktivnim terminima
+- Funkcionalnost označavanja hitnosti prijavljenog termina
+- Implementirana rezervacija termina kod specijaliste putem doktora porodične medicine
+- Prikaz kompletne medicinske historije pacijenta
+- Upload i evidencija laboratorijskih nalaza u PDF formatu
+- Interaktivni vodič za korištenje aplikacije
+
 | User Story | Naziv                                                                 |
 | :--------- | :-------------------------------------------------------------------- |
 | US-11      | Dashboard za doktora - pregled dnevnog i sedmičnog rasporeda          |
@@ -191,9 +226,9 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 | US-24      | Panel medicinskog osoblja                                             |
 | US-28      | Označavanje hitnosti prijavljenog termina                             |
 | US-17      | Rezervacija termina kod specijaliste putem doktora porodične medicine |
-| US-01      | Historija pregleda korisnika                              |
-| US-32      | Upload i evidencija laboratorijskih nalaza                |
-| US-23      | Vodič za korištenje stranice - interaktivna dokumentacija |
+| US-01      | Historija pregleda korisnika                                          |
+| US-32      | Upload i evidencija laboratorijskih nalaza                            |
+| US-23      | Vodič za korištenje stranice - interaktivna dokumentacija             |
 
 **Relevantni NFR zahtjevi:**
 - NFR-01: Samo vlasnik i autorizovano medicinsko osoblje mogu pristupiti historiji pregleda pacijenta
@@ -221,7 +256,7 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 **Ključna isporuka:** Stabilizovan sistem, kompletna test evidencija, korisnička i tehnička dokumentacija, release notes
 **Zavisnosti:** Releasi 1–4 moraju biti završeni. Stabilizacija i finalno testiranje direktno ovise o kompletnosti prethodnih inkremenata.
 
-**Fokus aktivnosti:**
+**Deliverable-i:**
 - Performansno testiranje pod opterećenjem - JMeter (NFR-03, NFR-10, NFR-15, NFR-18, NFR-20)
 - Testiranje upita nad skupom od najmanje 50 000 zapisa u bazi (NFR-20)
 - Sigurnosno testiranje - provjera RBAC scenarija, penetration testing (NFR-05, NFR-07, NFR-23)
