@@ -16,4 +16,4 @@ User Story se smatra gotovim tek kada:
 3. **Urađen finalni review:** Izvršena je završna provjera koda i dokumentacije unutar tima.
 
 Finalni uslov za proglašavanje zadatka završenim:
-**PO prihvati:** Product Owner je pregledao funkcionalnost, potvrdio da ona ispunjava njegove zahtjeve.
+- **PO prihvati:** Product Owner je pregledao funkcionalnost, potvrdio da ona ispunjava njegove zahtjeve.
