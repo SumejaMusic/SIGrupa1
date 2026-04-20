@@ -72,19 +72,75 @@ Kako bi se konflikti sveli na minimum, preporučuje se svakodnevno povlačenje n
 | Cache / Locks | Redis | 7.x |
 | Autentifikacija | JWT + bcrypt | jsonwebtoken 9.x, bcrypt 5.x |
 | Email servis | Nodemailer + SMTP | Nodemailer 6.x |
-| Pohrana fajlova (PDF) | Cloudinary | SDK 2.x |
 | Real-time komunikacija | Socket.io (WebSocket) | 4.x |
 | Kontejnerizacija | Docker + Docker Compose | Docker 26.x |
 | Web server / Proxy | Nginx | 1.26.x |
 | CI/CD | GitHub Actions | — |
 
 ---
+### Obrazloženje izbora tehnologija
+**Frontend — React.js + TypeScript** 
+---
+React je odabran jer omogućava izgradnju dinamičnih, reaktivnih interfejsa — što je ključno za kalendar termina koji se ažurira u realnom vremenu. React omogućava da napravimo interfejs koji je brz i reaktivan. Pacijent ne mora osvježavati stranicu da bi vidio promjene, sve se dešava bez problema, što smanjuje stres korisnika pri zakazivanju. Alternativa poput Vue.js ili Angular-a bila bi jednako sposobna, ali React ima najveći ekosistem biblioteka (react-big-calendar, recharts) koje direktno pokrivaju potrebe ovog sistema. TypeScript je dodan jer tip-sigurnost sprječava čitavu klasu grešaka pri radu s kompleksnim domenskim objektima kao što su termini, uloge korisnika (doktor/pacijent/admin) i medicinski podaci. On ne dozvoljava da se aplikacija uopšte pokrene ako postoji rizik od pogrešnog tipa podataka.
+
+**Vite**  
+---
+Vite je izabran umjesto Create React App jer pruža brže pokretanje razvojnog servera i HMR (Hot Module Replacement). Vite koristi modernu tehnologiju (nativne ES module) koja omogućava da se promjena u kodu vidi u browseru istog trenutka. Vite ne obrađuje cijeli kod odjednom pri pokretanju. On prikazuje samo onaj dio koda koji trenutno gledamo u browseru. Kada završimo projekt, Vite koristi alat pod nazivom Rollup koji ekstremno dobro "spakuje" kod. On uklanja sav nepotreban kod i pravi datoteke koje su male i koje se jako brzo učitavaju pacijentima, čak i na sporijem internetu. Vite je postao novi industrijski standard. Biranjem Vite-a osiguravamo da projekt koristi najmodernije prakse i da će ga biti lako održavati u narednim godinama.
+
+**Backend — Node.js + Express + TypeScript**  
+---
+Node.js je poznat po tome što može opsluživati hiljade ljudi istovremeno bez "zagušenja". On ne čeka da se jedan upit završi da bi počeo drugi, što ga čini idealnim za sistem sa mnogo brzih interakcija.
+Express nam daje potpunu kontrolu nad sigurnosnim protokolima (middleware) koje moramo primijeniti na svaki zahtjev.
+
+**PostgreSQL (baza podataka)**  
+---
+Medicinski podaci su visoko relacioni — pacijent ima termine, termin pripada doktoru, doktor radi u odjelu, itd. Ima najstrožija pravila o tome kako se podaci čuvaju (ACID standard), što znači da se nikada neće desiti da se termin "polovično" upiše. Ili je upisano sve, ili ništa. NoSQL baze poput MongoDB-a bile bi neprikladne jer je schema medicinskih podataka stabilna i strogo definisana, a relacijski integritet je obavezan.  
+
+**Prisma**  
+---
+Prisma generiše TypeScript tipove direktno iz database scheme, što znači da svaki upit prema bazi ima potpunu tip-provjeru u compile-time. Prisma je izabrana jer nam omogućava sigurnost i brzinu. Ona eliminira greške pri pisanju upita tako što nam pruža uvid u strukturu baze direktno u kodu, a njeni automatizovani alati za migracije osiguravaju da baza podataka uvijek prati razvoj naše aplikacije bez rizika od gubitka podataka. Alternativa kao Sequelize ili raw SQL bila bi podložnija greškama pri refaktoringu kompleksne sheme. Sistem za rezervacije termina ima složene upite (slobodni termini po doktoru, po datumu, po odjelu) gdje tip-sigurnost sprječava skupe greške u produkciji.  
+
+**Redis (cache i zaključavanje)** 
+---
+Redis je neophodan za ovaj sistem upravo zbog problema istovremenih rezervacija — bez distribuiranog zaključavanja, dva pacijenta mogu istovremeno rezervisati isti termin. TTL mehanizam Redisa (2-minutni lock) rješava ovaj problem elegantno i bez blokiranja baze podataka. Alternativa — optimistički locking direktno u PostgreSQL-u — bila bi kompleksnija za implementaciju i manje fleksibilna. Redis se koristi i za JWT blacklist i rate limiting, što znači da jedna komponenta rješava tri sigurnosna problema.  
+
+**Socket.io (WebSocket)**   
+---
+Real-time sinhronizacija dostupnosti termina zahtijeva dvosmjernu konekciju između servera i klijenta. Bez WebSocket-a, jedina alternativa bi bilo polling (klijent pita server svakih N sekundi) što je rasipno i nepouzdano. Socket.io je odabran umjesto native WebSocket API-ja jer automatski handluje reconnect logiku, fallback na long-polling za okruženja koja blokiraju WebSocket, i pruža room/namespace koncepte korisne za notifikacije specifičnih korisnika.  
+
+**JWT autentifikacija (access + refresh token)** 
+---
+JWT pristup omogućava stateless autentifikaciju — backend ne mora čuvati sesije u bazi, što smanjuje opterećenje. Kombinacija kratkog access tokena (15 min) i httpOnly refresh tokena (7 dana) daje optimalan balans između sigurnosti i korisničkog iskustva. Session-based autentifikacija bila bi alternativa, no zahtijevala bi stickysse sione ili centralnu session bazu, što komplicira skaliranje. JWT blacklist u Redisu rješava jedinu slabost JWT-a — nemogućnost trenutne invalidacije tokena pri odjavi.  
+
+**bcrypt (hashiranje lozinki)**  
+---
+bcrypt je industrijski standard za hashiranje lozinki jer je namjerno spor — cost factor 12 znači da svako hashiranje traje ~300ms, što napad rječnikom čini praktično neizvedivim. Alternativa kao SHA-256 bila bi neprihvatljiva jer je prebrza i ranjiva na GPU brute-force napade. Za medicinski sistem koji čuva osjetljive podatke, ovo je nepregovarajući standard.  
+
+**Nodemailer + SMTP (email notifikacije)** 
+---
+Nodemailer pruža fleksibilnost rada s bilo kojim SMTP provajderom (Gmail, SendGrid, Mailgun) bez vendor lock-ina. Alternativa — direktna integracija s jednim transakcijskim servisom poput SendGrid-a — bila bi jednostavnija za setup, ali vezivala bi sistem za jednog provajdera. Za obavještenja o terminima, podsjetnicima i 2FA kodovima, pouzdanost SMTP-a je dovoljna i troškovno efikasna.
+
+**Docker + Docker Compose** 
+---
+Docker pakuje cijelu aplikaciju u "kontejner" sa svim njenim postavkama. Gdje god taj kontejner spustimo (Hetzner, AWS, tvoj laptop), on će raditi identično. To nam garantuje stabilnost sistema pri svakom novom ažuriranju. Alternativa — direktna instalacija servisa na VPS — bila bi podložna konfliktima verzija i otežavala bi horizontalno skaliranje i migraciju na drugi server.  
+
+**Nginx (reverse proxy)**  
+---
+Nginx je odabran jer optimalno obavlja dvije uloge istovremeno: servisira React statičke fajlove s izuzetnom brzinom i prosljeđuje API zahtjeve backendu. SSL terminacija na Nginx nivou znači da se Node.js backend ne bavi enkripcijom, što poboljšava performanse. Alternativa kao Apache bila bi jednako funkcionalna, ali Nginx ima manju potrošnju memorije i bolji throughput za statičke fajlove.
+
+**VPS hosting (Hetzner/DigitalOcean)** 
+---
+VPS pruža punu kontrolu nad okruženjem uz nisku cijenu (4–10 EUR/mj.), što je optimalno za MVP fazu medicinskog sistema. Managed cloud platforme poput Heroku ili Railway bile bi jednostavnije za deployment, ali skuplje pri rastu i s manje kontrole nad sigurnosnom konfiguracijom — što je posebno važno za sistem koji obrađuje medicinske podatke. Fizički server ne dolazi u obzir zbog visokih inicijalnih troškova i potrebe za fizičkim održavanjem.  
+
+**GitHub Actions (CI/CD)** 
+---
+GitHub Actions je integrisan direktno u repozitorij, eliminiše potrebu za zasebnim CI/CD alatom poput Jenkins-a ili CircleCI-a. Automatizacija deploymenta štiti od ljudskih grešaka pri ručnom deploymentu medicinskog sistema koji mora biti stabilan. Health check korak s automatskim rollback-om osigurava da produkcioni sistem nikad ne ostane u neispravnom stanju nakon neuspješnog deploymenta  
 
 ### Frontend — React + TypeScript
 
 - **Programski jezik** — TypeScript (ES2022+)
 - **Framework** — React 18 s funkcionalnim komponentama i Hooks-ima
-- **Build alat** — Vite — brži od Create React App, nativan ESM support
+- **Build alat** — Vite — nativan ESM support
 
 #### Ključne biblioteke
 
@@ -144,7 +200,7 @@ Kako bi se konflikti sveli na minimum, preporučuje se svakodnevno povlačenje n
 | Mrežna izolacija | Baza nije izložena na internet — dostupna isključivo backendu unutar Docker mreže |
 | Enkripcija podataka | Osjetljive kolone (JMBG, dijagnoza, historija) enkriptovane AES-256-GCM na aplikacijskom sloju |
 
- **Napomena:** U produkciji se preporučuje upravljani servis (Supabase free tier ili Neon) umjesto PostgreSQL Docker kontejnera — automatski backup, failover i patching su tada u nadležnosti provajdera.
+ **Napomena:** U produkciji ćemo koristitiupravljani servis Neon umjesto PostgreSQL Docker kontejnera — automatski backup, failover i patching su tada u nadležnosti provajdera.
 
 **Strategija migracija (Prisma Workflow):** Izmjene na šemi baze vrše se isključivo putem Prisma migracija. U CI/CD pipeline-u koristi se komanda `npx prisma migrate deploy` koja sigurno primjenjuje nove migracije na produkcionu bazu bez rizika od gubitka podataka, osiguravajući da su kod i šema uvijek usklađeni.
 
@@ -185,7 +241,7 @@ services:
   db:       # PostgreSQL — samo lokalno razvoj (interni port 5432)
 ```
 
-**Napomena:** U produkciji kontejner `db` se zamjenjuje upravljanim PostgreSQL servisom (Supabase / Neon). Redis i baza podataka nisu izloženi prema internetu — dostupni su isključivo unutar Docker interne mreže.
+**Napomena:** U produkciji kontejner `db` se zamjenjuje upravljanim PostgreSQL servisom (Neon). Redis i baza podataka nisu izloženi prema internetu — dostupni su isključivo unutar Docker interne mreže.
 
 ---
 
@@ -250,17 +306,7 @@ Jedan VPS je dovoljan za sve Docker kontejnere. Ne trebaju se zasebne VM-e za sv
 
 ---
 
-###  Pohrana fajlova (PDF nalazi)
 
-Laboratorijski nalazi u PDF formatu (US-32) ne smiju se čuvati na VPS disku — nestali bi pri svakom ponovnom deploymentu. Koristi se cloud object storage kompatibilan s Cloudinary SDK-om.
-
-| Aspekt | Rješenje |
-|--------|---------|
-| Servis | Cloudinary (SDK 2.x) |
-| Tok uploada | Backend prima PDF zatim validira format onda šalje na Cloudinary i u bazi čuva URL |
-| Dozvoljeni format | Isključivo PDF (validacija na backend sloju) |
-| Trajnost | Fajlovi se čuvaju trajno dok je nalog aktivan |
-| Pristup | Pacijent i doktor pristupaju putem sigurnog URL-a, PDF se otvara u novom tabu |
 
 ---
 
