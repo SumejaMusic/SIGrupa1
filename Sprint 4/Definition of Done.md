@@ -24,5 +24,6 @@ Potvrđeno je da sistem stabilno obrađuje neispravne unose i uspješno rješava
 ### 3. Urađen finalni review:
 Izvršena je završna provjera koda i dokumentacije unutar tima.
 
-Finalni uslov za proglašavanje zadatka završenim:
-- **PO prihvati:** Product Owner je pregledao funkcionalnost, potvrdio da ona ispunjava njegove zahtjeve.
+## Finalni uslov za proglašavanje zadatka završenim:
+### PO prihvati: 
+Product Owner je pregledao funkcionalnost, potvrdio da ona ispunjava njegove zahtjeve.
