@@ -23,6 +23,8 @@ Funkcionalnost je testirana i dokazano radi u razvojnom okruženju.
 Potvrđeno je da sistem stabilno obrađuje neispravne unose i uspješno rješava konflikte nastale istovremenim zahtjevima.
 ### 3. Urađen finalni review:
 Izvršena je završna provjera koda i dokumentacije unutar tima.
+### 4. Dokumentacija ažurirana:
+Relevantna tehnička i korisnička dokumentacija je dopunjena ili ažurirana u skladu sa implementiranim promjenama.
 
 ## Finalni uslov za proglašavanje zadatka završenim:
 ### PO prihvati: 
