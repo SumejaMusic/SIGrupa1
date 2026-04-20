@@ -2,7 +2,7 @@
 
 Za branching strategiju odabran je GitHub Flow, iz razloga što je riječ o manjem razvojnom timu od osam članova, i radu organizovanom kroz redovne sedmične sprintove. GitHub Flow nudi jednostavnost i preglednost koja odgovara veličini i prirodi ovog projekta, te je idealan za kontinuirani razvoj i česte izmjene. 
 
-GitFlow nije odabran jer uvodi složenu strukturu grana koja uključuje main, develop, feature, release i hotfix grane, što donosi nepotrebnu kompleksnost za tim ove veličine. GitFlow je prikladan za projekte sa strogo definisanim release ciklusima i velikim timovima, što nije slučaj u ovom projektu. 
+GitFlow nije odabran jer uvodi složenu strukturu grana koja uključuje main, develop, feature, release i hotfix grane, te je prvenstveno namijenjen projektima sa paralelnim verzijama sistema i kompleksnijim procesom verzioniranja. Iako projekat sadrži planirane release faze razvoja, one predstavljaju logičke inkremente funkcionalnosti realizovane kroz sprintove, a ne zasebne verzije sistema koje zahtijevaju posebne release grane.
 
 GitLab Flow nije odabran jer je dizajniran za projekte koji zahtijevaju održavanje više okruženja istovremeno, kao što su staging i production grane, ili više verzija aplikacije koje se paralelno razvijaju i održavaju. Budući da se radi o jednoj aplikaciji namijenjenoj jednoj bolnici sa jednim okruženjem za deployment, GitLab Flow bi uveo nepotrebnu kompleksnost bez ikakve koristi za ovaj projekt.
 
