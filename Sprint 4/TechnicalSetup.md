@@ -85,16 +85,16 @@ React je odabran jer omogućava izgradnju dinamičnih, reaktivnih interfejsa —
 
 **Vite**  
 ---
-Vite je izabran umjesto Create React App jer pruža brže pokretanje razvojnog servera i HMR (Hot Module Replacement). Vite koristi modernu tehnologiju (nativne ES module) koja omogućava da se promjena u kodu vidi u browseru istog trenutka. Vite ne obrađuje cijeli kod odjednom pri pokretanju. On prikazuje samo onaj dio koda koji trenutno gledamo u browseru. Kada završimo projekt, Vite koristi alat pod nazivom Rollup koji ekstremno dobro "spakuje" kod. On uklanja sav nepotreban kod i pravi datoteke koje su male i koje se jako brzo učitavaju pacijentima, čak i na sporijem internetu. Vite je postao novi industrijski standard. Biranjem Vite-a osiguravamo da projekt koristi najmodernije prakse i da će ga biti lako održavati u narednim godinama.
+Vite je izabran umjesto Create React App jer pruža brže pokretanje razvojnog servera i HMR (Hot Module Replacement). Vite koristi modernu tehnologiju (nativne ES module) koja omogućava da se promjena u kodu vidi u browseru istog trenutka. Vite ne obrađuje cijeli kod odjednom pri pokretanju. On prikazuje samo onaj dio koda koji trenutno gledamo u browseru. Kada završimo projekt, Vite koristi alat pod nazivom Rollup koji ekstremno dobro spakuje kod. On uklanja sav nepotreban kod i pravi datoteke koje su male i koje se jako brzo učitavaju pacijentima, čak i na sporijem internetu. Vite je postao novi industrijski standard. Biranjem Vite-a osiguravamo da projekt koristi najmodernije prakse i da će ga biti lako održavati u narednim godinama.
 
 **Backend — Node.js + Express + TypeScript**  
 ---
-Node.js je poznat po tome što može opsluživati hiljade ljudi istovremeno bez "zagušenja". On ne čeka da se jedan upit završi da bi počeo drugi, što ga čini idealnim za sistem sa mnogo brzih interakcija.
+Node.js je poznat po tome što može opsluživati hiljade ljudi istovremeno bez zagušenja. On ne čeka da se jedan upit završi da bi počeo drugi, što ga čini idealnim za sistem sa mnogo brzih interakcija.
 Express nam daje potpunu kontrolu nad sigurnosnim protokolima (middleware) koje moramo primijeniti na svaki zahtjev.
 
 **PostgreSQL (baza podataka)**  
 ---
-Medicinski podaci su visoko relacioni — pacijent ima termine, termin pripada doktoru, doktor radi u odjelu, itd. Ima najstrožija pravila o tome kako se podaci čuvaju (ACID standard), što znači da se nikada neće desiti da se termin "polovično" upiše. Ili je upisano sve, ili ništa. NoSQL baze poput MongoDB-a bile bi neprikladne jer je schema medicinskih podataka stabilna i strogo definisana, a relacijski integritet je obavezan.  
+Medicinski podaci su visoko relacioni — pacijent ima termine, termin pripada doktoru, doktor radi u odjelu, itd. Ima najstrožija pravila o tome kako se podaci čuvaju (ACID standard), što znači da se nikada neće desiti da se termin polovično upiše. Ili je upisano sve, ili ništa. NoSQL baze poput MongoDB-a bile bi neprikladne jer je schema medicinskih podataka stabilna i strogo definisana, a relacijski integritet je obavezan.  
 
 **Prisma**  
 ---
@@ -122,7 +122,7 @@ Nodemailer pruža fleksibilnost rada s bilo kojim SMTP provajderom (Gmail, SendG
 
 **Docker + Docker Compose** 
 ---
-Docker pakuje cijelu aplikaciju u "kontejner" sa svim njenim postavkama. Gdje god taj kontejner spustimo (Hetzner, AWS, tvoj laptop), on će raditi identično. To nam garantuje stabilnost sistema pri svakom novom ažuriranju. Alternativa — direktna instalacija servisa na VPS — bila bi podložna konfliktima verzija i otežavala bi horizontalno skaliranje i migraciju na drugi server.  
+Docker pakuje cijelu aplikaciju u "kontejner" sa svim njenim postavkama. Gdje god taj kontejner spustimo (Hetzner, AWS), on će raditi identično. To nam garantuje stabilnost sistema pri svakom novom ažuriranju. Alternativa — direktna instalacija servisa na VPS — bila bi podložna konfliktima verzija i otežavala bi horizontalno skaliranje i migraciju na drugi server.  
 
 **Nginx (reverse proxy)**  
 ---
@@ -202,13 +202,13 @@ GitHub Actions je integrisan direktno u repozitorij, eliminiše potrebu za zaseb
 
  **Napomena:** U produkciji ćemo koristitiupravljani servis Neon umjesto PostgreSQL Docker kontejnera — automatski backup, failover i patching su tada u nadležnosti provajdera.
 
-**Strategija migracija (Prisma Workflow):** Izmjene na šemi baze vrše se isključivo putem Prisma migracija. U CI/CD pipeline-u koristi se komanda `npx prisma migrate deploy` koja sigurno primjenjuje nove migracije na produkcionu bazu bez rizika od gubitka podataka, osiguravajući da su kod i šema uvijek usklađeni.
+**Strategija migracija:** Izmjene na šemi baze vrše se isključivo putem Prisma migracija. U CI/CD pipeline-u koristi se komanda `npx prisma migrate deploy` koja sigurno primjenjuje nove migracije na produkcionu bazu bez rizika od gubitka podataka, osiguravajući da su kod i šema uvijek usklađeni.
 
 ---
 
 ###  Cache i session management — Redis
 
-Verzija: Redis 7.x — Docker kontejner na aplikacijskom serveru, ili Upstash (serverless, besplatni tier). Redis se u sistemu koristi za tri konkretne namjene:
+Verzija: Redis 7.x — Docker kontejner na aplikacijskom serveru. Redis se u sistemu koristi za tri konkretne namjene:
 
 | Namjena | Opis implementacije |
 |---------|---------------------|
