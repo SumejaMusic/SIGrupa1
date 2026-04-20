@@ -73,7 +73,7 @@ Na sedmičnom sastanku tim mora demonstrirati da:
 
 | ID zadatka | Zadatak | Odgovorna osoba | Status |
 |---|---|---|---|
-| 1 | Definition of Done | Hatibović Kenan| Done|
+| 1 | Definition of Done | Hatibović Kenan, Šehić Almedin| Done|
 | 2 | Tehnički skeleton sistema |Alispahić Amina | Done|
 | 3 | Initial Release Plan | Halilović Lamija, Hamza Huskić| Done|
 | 4 | Struktura repozitorija | Mahmutović Hana, Milišić Merjem | Done| 
