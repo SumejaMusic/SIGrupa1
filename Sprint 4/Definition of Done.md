@@ -7,13 +7,13 @@ Definition of Done važi za sve User Storyje kroz cijelo trajanje projekta i pri
 
 ## Zadatak se smatra tehnički završenim tek kada:
 ### 1. Zadovoljava AC:
-Funkcionalnost u potpunosti ispunjava sve definisane Acceptance Criteria.
+Funkcionalnost u potpunosti ispunjava sve definisane Acceptance Criteria, uključujući i osnovne i dodatne scenarije korištenja.
 ### 2. Urađen Code Review: 
-Barem jedan kolega iz tima je pregledao kod i potvrdio njegovu kvalitetu.
+Barem jedan kolega iz tima je pregledao kod, dao eventualne sugestije i potvrdio njegovu kvalitetu, čitljivost i usklađenost sa standardima projekta.
 ### 3. Svi testovi prošli: 
-Svi planirani testovi (Unit, Integracijski,...) su izvršeni bez grešaka.
+Svi planirani testovi (Unit, integracijski i po potrebi funkcionalni) su izvršeni bez grešaka, uz adekvatnu pokrivenost ključnih dijelova sistema.
 ### 4. Uspješno mergan:
-Kod je bez konflikata spojen u glavnu granu projekta (**main branch**).
+Kod je bez konflikata spojen u glavnu granu projekta, uz očuvanu stabilnost postojećih funkcionalnosti i bez regresija.(**main branch**).
 
 
 ## User Story se smatra gotovim tek kada:
