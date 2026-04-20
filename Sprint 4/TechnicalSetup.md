@@ -1,6 +1,12 @@
 ## Branching strategy
 
-Za branching strategiju odabran je GitHub Flow, iz razloga što je riječ o manjem razvojnom timu od osam članova, i redovnim sedmičnim sprintovima. GitHub Flow nudi jednostavnost i preglednost koja odgovara veličini i prirodi ovog projekta, bez nepotrebne kompleksnosti koju bi donijele alternative poput GitFlowa, te je idealan za kontinuirani razvoj i česte izmjene. 
+Za branching strategiju odabran je GitHub Flow, iz razloga što je riječ o manjem razvojnom timu od osam članova, i radu organizovanom kroz redovne sedmične sprintove. GitHub Flow nudi jednostavnost i preglednost koja odgovara veličini i prirodi ovog projekta, te je idealan za kontinuirani razvoj i česte izmjene. 
+
+GitFlow nije odabran jer uvodi složenu strukturu grana koja uključuje main, develop, feature, release i hotfix grane, što donosi nepotrebnu kompleksnost za tim ove veličine. GitFlow je prikladan za projekte sa strogo definisanim release ciklusima i velikim timovima, što nije slučaj u ovom projektu. 
+
+GitLab Flow nije odabran jer je dizajniran za projekte koji zahtijevaju održavanje više okruženja istovremeno, kao što su staging i production grane, ili više verzija aplikacije koje se paralelno razvijaju i održavaju. Budući da se radi o jednoj aplikaciji namijenjenoj jednoj bolnici sa jednim okruženjem za deployment, GitLab Flow bi uveo nepotrebnu kompleksnost bez ikakve koristi za ovaj projekt.
+
+GitHub Flow je odabran jer pokriva sve potrebe ovog projekta, tj. svaka nova funkcionalnost razvija se na zasebnom branchu, te se nakon završetka i odobrenog reviewa mergea direktno u main koji je uvijek spreman za deployment.
 
 ### Osnovna struktura grana 
 
@@ -23,6 +29,8 @@ Način rada je sljedeći:
 6.	Nakon mergea u main granu kod je spreman za deployment
 
 Nova grana kreira se uvijek iz najnovije verzije main grane kako bi se izbjegle zastarjele izmjene. Za imenovanje grana koristi se standardizovana konvencija: feature/naziv-funkcionalnosti i bugfix/opis-greške.
+
+Testovi se pišu na istom feature branchu zajedno sa kodom koji implementira funkcionalnost. Svaki feature branch treba sadržavati implementaciju i odgovarajuće testove, te se ne može mergeati nazad u main bez testova koji prolaze bez grešaka. 
 
 **Pull request** otvara se u trenutku kada je funkcionalnost gotova i spremna za review. Review obavljaju drugi članovi tima koji nisu radili na implementaciji funkcionalnosti, te uključuje:
 
