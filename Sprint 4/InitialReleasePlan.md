@@ -17,10 +17,10 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 | Release | Naziv | Sprintovi | Ključna isporuka |
 |:---:|:---|:---:|:---|
 | **R0** | Projektna dokumentacija i tehnički temelji | Sprint 1–4 | Kompletna projektna dokumentacija, ER model, arhitektura sistema |
-| **R1** | Autentikacija i sigurnost | Sprint 5 | Funkcionalan login sistem sa JWT tokenima, RBAC, 2FA i enkripcijom |
-| **R2** | Administracija i upravljanje korisnicima | Sprint 6 | Admin panel za upravljanje korisnicima, doktorima i radnim vremenom |
-| **R3** | Rezervacijski sistem | Sprint 7–8 | Funkcionalan end-to-end tok rezervacije i otkazivanja termina |
-| **R4** | Paneli korisnika, medicinska historija i statistika | Sprint 9–10 | Personalizovani interfejsi za sve uloge, historija i izvještaji |
+| **R1** | Rezervacijski sistem | Sprint 5–6 | Funkcionalan end-to-end tok rezervacije i otkazivanja termina |
+| **R2** | Administracija i upravljanje korisnicima | Sprint 7 | Admin panel za upravljanje korisnicima, doktorima i radnim vremenom |
+| **R3** | Paneli korisnika, medicinska historija i statistika | Sprint 8–9 | Personalizovani interfejsi za sve uloge, historija i izvještaji |
+| **R4** | Autentikacija i sigurnost | Sprint 10 | Funkcionalan login sistem sa JWT tokenima, RBAC, 2FA i enkripcijom |
 | **R5** | Stabilizacija, testiranje i finalna isporuka | Sprint 11–12 | Stabilizovan sistem, korisnička dokumentacija, release notes |
 
 ---
@@ -59,100 +59,11 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 
 ---
 
-### Release 1 - Autentikacija i sigurnost
+### Release 1 - Rezervacijski sistem
 
-**Obuhvaćeni sprintovi:** Sprint 5
-**Ključna isporuka:** Funkcionalan login sistem sa JWT tokenima, RBAC kontrolom pristupa, dvofaktorskom autentikacijom i enkripcijom osjetljivih podataka
-**Zavisnosti:** Release 0 mora biti završen. JWT i RBAC sistem su preduslov za sve ostale module jer svaki zahtjev mora biti autentikovan i autorizovan prema korisničkoj ulozi.
-
-**Deliverable-i:**
-- Implementiran Auth servis (Login, Reset lozinke).
-- Konfigurisan RBAC (Role-Based Access Control) mehanizam.
-- Implementirana AES-256 enkripcija za osjetljive podatke u bazi.
-- Integrisana 2FA (Two-Factor Authentication) putem emaila.
-- Tehnička dokumentacija sigurnosnih protokola.
-
-**Realizovani User Storiji:**
-
-| User Story | Naziv | 
-|:---|:---|
-| US-03 | Login sistem |
-| US-16 | Reset lozinke putem emaila | 
-| US-19 | Automatska odjava nakon perioda neaktivnosti | 
-| US-25 | Two factor authentication |
-| US-26 | Detekcija neobičnog ponašanja - blokiranje naloga nakon neuspješnih pokušaja |
-| US-27 | Enkripcija osjetljivih podataka |
-| US-20 | Logovanje svih akcija u sistemu - audit log | 
-
-**Relevantni NFR zahtjevi:**
-- NFR-03: Prijava korisnika mora biti završena u roku od maksimalno 2 sekunde
-- NFR-04: Lozinke se moraju čuvati u hashiranom obliku - bcrypt
-- NFR-05: Sistem mora blokirati korisnika nakon 5 neuspješnih pokušaja prijave
-- NFR-06: Korisnik smije pristupiti samo funkcijama koje odgovaraju njegovoj ulozi
-- NFR-07: Sistem mora implementirati RBAC
-- NFR-08: Sve izmjene moraju biti evidentirane u audit log sistemu
-- NFR-13: Sesija korisnika mora automatski isteći nakon perioda neaktivnosti
-- NFR-14: Nakon isteka sesije korisniku mora biti onemogućen pristup prethodnim podacima
-- NFR-23: Sistem mora omogućiti two factor authentication
-- NFR-24: Sistem mora implementirati enkripciju za osjetljive zdravstvene podatke
-
-**Glavni rizici:**
-- RR-08: Neovlašten pristup podacima usljed slabe autentikacije
-- RR-11: Neautorizovan pristup admin panelu ako RBAC nije ispravno implementiran
-- RR-21: Curenje medicinskih podataka pacijenata
-- RR-12: Gubitak sesije korisnika usljed isteka session tokena
-
-> **Sažetak:** Na kraju ovog releasea, sistem ima uspostavljen "sigurnosni perimetar". Korisnici mogu sigurno pristupiti sistemu, identiteti su verifikovani putem 2FA, a svi osjetljivi podaci u bazi su zaštićeni enkripcijom. Implementirani RBAC osigurava da korisnici (pacijenti, doktori, admini) imaju pristup samo onim resursima koji su im dodijeljeni, čime je stvorena stabilna osnova za razvoj funkcionalnosti iz narednih sprintova.
-
----
-
-### Release 2 - Administracija i upravljanje korisnicima
-
-**Obuhvaćeni sprintovi:** Sprint 6
-**Ključna isporuka:** Admin panel za registraciju pacijenata i doktora, upravljanje radnim vremenom i rasporedom doktora, menadžment panel sa statistikama
-**Zavisnosti:** Release 1 mora biti završen. CRUD operacije zahtijevaju funkcionalan JWT i RBAC sistem, bez autentikacije nije moguće razlikovati administratora od pacijenta.
-
-
-**Deliverable-i:**
-
-- Implementiran admin interfejs za registraciju novih pacijenata u sistem
-- Implementirana funkcionalnost upravljanja radnim vremenom i rasporedom doktora
-- Razvijen kompletan administratorski korisnički interfejs (frontend)
-- Implementirane backend funkcionalnosti admin panela (API endpointi, poslovna logika)
-- Razvijen menadžment panel za nadzor aktivnosti sistema
-- Implementiran statistički pregled rada zdravstvene ustanove
-- Funkcionalnost exporta statistike zakazanih pregleda u CSV formatu
-
-
-| User Story | Naziv | 
-|:---|:---|
-| US-04 | Admin panel - registracija pacijenta | 
-| US-14 | Upravljanje radnim vremenom doktora (admin) | 
-| US-02 | Admin panel - korisnički interfejs za administraciju | 
-| US-33 | Admin panel - backend funkcionalnosti |
-| US-18 | Menadžment panel | 
-| US-29 | Statistika zdravstvene ustanove (admin) |
-| US-30 | Export statistike zakazanih pregleda u CSV formatu | 
-
-**Relevantni NFR zahtjevi:**
-- NFR-01: Samo ovlašteno osoblje može pristupiti historiji pregleda pacijenta
-- NFR-15: Dashboard sistema mora se učitati u roku od maksimalno 3 sekunde
-- NFR-18: Admin backend mora odgovarati u roku od 2 sekunde
-- NFR-19: Baza podataka mora osigurati konzistentnost i integritet podataka
-- NFR-26: Sistem mora imati intuitivan interfejs za upravljanje i rezervaciju termina
-
-**Glavni rizici:**
-- RR-09: Neispravni podaci o pacijentima usljed greške pri unosu od strane administratora
-- RR-06: Loše korisničko iskustvo usljed kompleksnosti interfejsa
-- RR-24: Neažurni podaci o dostupnosti doktora
-
----
-
-### Release 3 - Rezervacijski sistem
-
-**Obuhvaćeni sprintovi:** Sprint 7 i Sprint 8
+**Obuhvaćeni sprintovi:** Sprint 5 i Sprint 6
 **Ključna isporuka:** Funkcionalan end-to-end tok rezervacije i otkazivanja termina sa zaštitom od duplih rezervacija i email notifikacijama
-**Zavisnosti:** Release 2 mora biti završen. Rezervacijski sistem ne može funkcionisati bez prethodno kreiranog inventara: doktori, radna vremena i termini moraju postojati u bazi.
+**Zavisnosti:** Release 0 mora biti završen. Rezervacijski sistem zahtijeva postavljenu bazu podataka i definirani domenski model kao preduslov za razvoj poslovne logike zakazivanja.
 
 **Deliverable-i:**
 
@@ -202,11 +113,53 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 
 ---
 
-### Release 4 - Paneli korisnika, medicinska historija i statistika
+### Release 2 - Administracija i upravljanje korisnicima
 
-**Obuhvaćeni sprintovi:** Sprint 9 i Sprint 10
+**Obuhvaćeni sprintovi:** Sprint 7
+**Ključna isporuka:** Admin panel za registraciju pacijenata i doktora, upravljanje radnim vremenom i rasporedom doktora, menadžment panel sa statistikama
+**Zavisnosti:** Release 1 mora biti završen. Upravljanje doktorima i rasporedima zahtijeva stabilan rezervacijski sistem kao kontekst - bez postojećeg toka rezervacije, administracija radnog vremena nema funkcionalni okvir.
+
+
+**Deliverable-i:**
+
+- Implementiran admin interfejs za registraciju novih pacijenata u sistem
+- Implementirana funkcionalnost upravljanja radnim vremenom i rasporedom doktora
+- Razvijen kompletan administratorski korisnički interfejs (frontend)
+- Implementirane backend funkcionalnosti admin panela (API endpointi, poslovna logika)
+- Razvijen menadžment panel za nadzor aktivnosti sistema
+- Implementiran statistički pregled rada zdravstvene ustanove
+- Funkcionalnost exporta statistike zakazanih pregleda u CSV formatu
+
+
+| User Story | Naziv | 
+|:---|:---|
+| US-04 | Admin panel - registracija pacijenta | 
+| US-14 | Upravljanje radnim vremenom doktora (admin) | 
+| US-02 | Admin panel - korisnički interfejs za administraciju | 
+| US-33 | Admin panel - backend funkcionalnosti |
+| US-18 | Menadžment panel | 
+| US-29 | Statistika zdravstvene ustanove (admin) |
+| US-30 | Export statistike zakazanih pregleda u CSV formatu | 
+
+**Relevantni NFR zahtjevi:**
+- NFR-01: Samo ovlašteno osoblje može pristupiti historiji pregleda pacijenta
+- NFR-15: Dashboard sistema mora se učitati u roku od maksimalno 3 sekunde
+- NFR-18: Admin backend mora odgovarati u roku od 2 sekunde
+- NFR-19: Baza podataka mora osigurati konzistentnost i integritet podataka
+- NFR-26: Sistem mora imati intuitivan interfejs za upravljanje i rezervaciju termina
+
+**Glavni rizici:**
+- RR-09: Neispravni podaci o pacijentima usljed greške pri unosu od strane administratora
+- RR-06: Loše korisničko iskustvo usljed kompleksnosti interfejsa
+- RR-24: Neažurni podaci o dostupnosti doktora
+
+---
+
+### Release 3 - Paneli korisnika, medicinska historija i statistika
+
+**Obuhvaćeni sprintovi:** Sprint 8 i Sprint 9
 **Ključna isporuka:** Personalizovani interfejsi za sve korisničke uloge, medicinska historija pacijenta sa nalazima, označavanje hitnosti, dashboard doktora i panel medicinskog osoblja
-**Zavisnosti:** Release 3 mora biti završen. Paneli doktora i medicinskog osoblja direktno ovise o rezervacijskom toku koji mora biti testiran i stabilan.
+**Zavisnosti:** Release 2 mora biti završen. Paneli doktora i medicinskog osoblja direktno ovise o admin infrastrukturi i rezervacijskom toku koji moraju biti testirani i stabilni.
 
 **Deliverable-i:**
 
@@ -250,6 +203,54 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 
 ---
 
+### Release 4 - Autentikacija i sigurnost
+
+**Obuhvaćeni sprintovi:** Sprint 10
+**Ključna isporuka:** Funkcionalan login sistem sa JWT tokenima, RBAC kontrolom pristupa, dvofaktorskom autentikacijom i enkripcijom osjetljivih podataka
+**Zavisnosti:** Release 3 mora biti završen. Sigurnosni sloj se primjenjuje nad kompletnim, funkcionalno završenim sistemom kako bi RBAC i enkripcija bili validirani u kontekstu svih modula.
+
+**Deliverable-i:**
+
+- Implementiran Auth servis (Login, Reset lozinke).
+- Konfigurisan RBAC (Role-Based Access Control) mehanizam.
+- Implementirana AES-256 enkripcija za osjetljive podatke u bazi.
+- Integrisana 2FA (Two-Factor Authentication) putem emaila.
+- Tehnička dokumentacija sigurnosnih protokola.
+
+**Realizovani User Storiji:**
+
+| User Story | Naziv | 
+|:---|:---|
+| US-03 | Login sistem |
+| US-16 | Reset lozinke putem emaila | 
+| US-19 | Automatska odjava nakon perioda neaktivnosti | 
+| US-25 | Two factor authentication |
+| US-26 | Detekcija neobičnog ponašanja - blokiranje naloga nakon neuspješnih pokušaja |
+| US-27 | Enkripcija osjetljivih podataka |
+| US-20 | Logovanje svih akcija u sistemu - audit log | 
+
+**Relevantni NFR zahtjevi:**
+- NFR-03: Prijava korisnika mora biti završena u roku od maksimalno 2 sekunde
+- NFR-04: Lozinke se moraju čuvati u hashiranom obliku - bcrypt
+- NFR-05: Sistem mora blokirati korisnika nakon 5 neuspješnih pokušaja prijave
+- NFR-06: Korisnik smije pristupiti samo funkcijama koje odgovaraju njegovoj ulozi
+- NFR-07: Sistem mora implementirati RBAC
+- NFR-08: Sve izmjene moraju biti evidentirane u audit log sistemu
+- NFR-13: Sesija korisnika mora automatski isteći nakon perioda neaktivnosti
+- NFR-14: Nakon isteka sesije korisniku mora biti onemogućen pristup prethodnim podacima
+- NFR-23: Sistem mora omogućiti two factor authentication
+- NFR-24: Sistem mora implementirati enkripciju za osjetljive zdravstvene podatke
+
+**Glavni rizici:**
+- RR-08: Neovlašten pristup podacima usljed slabe autentikacije
+- RR-11: Neautorizovan pristup admin panelu ako RBAC nije ispravno implementiran
+- RR-21: Curenje medicinskih podataka pacijenata
+- RR-12: Gubitak sesije korisnika usljed isteka session tokena
+
+> **Sažetak:** Na kraju ovog releasea, sistem ima uspostavljen "sigurnosni perimetar". Korisnici mogu sigurno pristupiti sistemu, identiteti su verifikovani putem 2FA, a svi osjetljivi podaci u bazi su zaštićeni enkripcijom. Implementirani RBAC osigurava da korisnici (pacijenti, doktori, admini) imaju pristup samo onim resursima koji su im dodijeljeni, čime je stvorena stabilna osnova za finalnu fazu projekta.
+
+---
+
 ### Release 5 - Stabilizacija, testiranje i finalna isporuka
 
 **Obuhvaćeni sprintovi:** Sprint 11 i Sprint 12
@@ -286,11 +287,11 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 
 | Release | Ovisi o | Razlog zavisnosti |
 |:---:|:---|:---|
-| **R1 - Sprint 5** | R0 (Sprint 1–4) | Tehnički temelji i baza podataka moraju biti postavljeni prije prvog commita poslovne logike |
-| **R2 - Sprint 6** | R1 (Sprint 5) | CRUD operacije zahtijevaju funkcionalan JWT i RBAC sistem - bez autentikacije nije moguće razlikovati administratora od pacijenta |
-| **R3 - Sprint 7–8** | R2 (Sprint 6) | Rezervacijski sistem ne može funkcionisati bez prethodno kreiranog inventara - doktori, radna vremena i termini moraju postojati u bazi |
-| **R4 - Sprint 9–10** | R3 (Sprint 7–8) | Paneli doktora i medicinskog osoblja direktno ovise o rezervacijskom toku koji mora biti testiran i stabilan |
-| **R5 - Sprint 11–12** | R4 (Sprint 9–10) | Stabilizacija i finalno testiranje ovise o kompletnosti svih prethodnih inkremenata |
+| **R1 - Sprint 5–6** | R0 (Sprint 1–4) | Baza podataka i domenski model moraju biti postavljeni prije razvoja rezervacijskog sistema |
+| **R2 - Sprint 7** | R1 (Sprint 5–6) | Upravljanje doktorima i rasporedima zahtijeva stabilan rezervacijski sistem kao kontekst |
+| **R3 - Sprint 8–9** | R2 (Sprint 7) | Paneli doktora i medicinskog osoblja ovise o admin infrastrukturi i potpunom rezervacijskom toku |
+| **R4 - Sprint 10** | R3 (Sprint 8–9) | Sigurnosni sloj se primjenjuje nad kompletnim, funkcionalno završenim sistemom |
+| **R5 - Sprint 11–12** | R4 (Sprint 10) | Stabilizacija i finalno testiranje ovise o kompletnosti svih prethodnih inkremenata |
 
 ---
 
@@ -298,25 +299,24 @@ Sistem je podijeljen na **5 releasea** koji odgovaraju logičkim skupinama funkc
 
 | NFR ID | Opis (skraćeno) | Kategorija | Release |
 |:---|:---|:---:|:---:|
-| NFR-03 | Prijava korisnika ≤2 sekunde | Performanse | R1 |
-| NFR-04, NFR-05 | Hashiranje lozinki, blokiranje naloga nakon 5 pokušaja | Sigurnost | R1 |
-| NFR-06, NFR-07 | Pristup samo dozvoljenoj sadržini, RBAC | Sigurnost | R1 |
-| NFR-08 | Audit log svih akcija | Pouzdanost | R1 |
-| NFR-13, NFR-14 | Session timeout i redirect na login | Sigurnost | R1 |
-| NFR-23, NFR-24 | 2FA i enkripcija osjetljivih podataka | Sigurnost | R1 |
+| NFR-09 | Otkazani termin odmah dostupan (≤2s) | Konzistentnost | R1 |
+| NFR-10 | Otkazivanje završeno ≤3s | Performanse | R1 |
+| NFR-11 | Email obavijest o otkazivanju termina | Pouzdanost | R1 |
+| NFR-12 | Atomičnost operacija - bez djelimičnih zapisa | Pouzdanost | R1 |
+| NFR-16 | Real-time ažuriranje rasporeda - WebSocket | Konzistentnost | R1 |
+| NFR-22 | Zaključavanje termina na 2 minute - buffer zona | Konzistentnost | R1 |
+| NFR-25 | Dostupnost sistema ≥99% radnog vremena | Pouzdanost | R1 |
 | NFR-15 | Dashboard učitava se ≤3s | Performanse | R2 |
 | NFR-18 | Admin backend odgovara ≤2s | Performanse | R2 |
 | NFR-19 | Konzistentnost i integritet baze podataka | Pouzdanost | R2 |
-| NFR-09 | Otkazani termin odmah dostupan (≤2s) | Konzistentnost | R3 |
-| NFR-10 | Otkazivanje završeno ≤3s | Performanse | R3 |
-| NFR-11 | Email obavijest o otkazivanju termina | Pouzdanost | R3 |
-| NFR-12 | Atomičnost operacija - bez djelimičnih zapisa | Pouzdanost | R3 |
-| NFR-16 | Real-time ažuriranje rasporeda - WebSocket | Konzistentnost | R3 |
-| NFR-22 | Zaključavanje termina na 2 minute - buffer zona | Konzistentnost | R3 |
-| NFR-01 | Pristup historiji samo ovlaštenim ulogama | Sigurnost | R4 |
-| NFR-02 | Historija dostupna u ≤3 klika | Upotrebljivost | R4 |
-| NFR-17 | Medicinski dokumenti sigurno pohranjeni | Pouzdanost | R4 |
-| NFR-20 | Brzi upiti nad 50 000+ zapisa | Performanse | R5 |
-| NFR-25 | Dostupnost sistema ≥99% radnog vremena | Pouzdanost | R5 |
+| NFR-01 | Pristup historiji samo ovlaštenim ulogama | Sigurnost | R3 |
+| NFR-02 | Historija dostupna u ≤3 klika | Upotrebljivost | R3 |
+| NFR-17 | Medicinski dokumenti sigurno pohranjeni | Pouzdanost | R3 |
+| NFR-20 | Brzi upiti nad 50 000+ zapisa | Performanse | R3 |
+| NFR-03 | Prijava korisnika ≤2 sekunde | Performanse | R4 |
+| NFR-04, NFR-05 | Hashiranje lozinki, blokiranje naloga nakon 5 pokušaja | Sigurnost | R4 |
+| NFR-06, NFR-07 | Pristup samo dozvoljenoj sadržini, RBAC | Sigurnost | R4 |
+| NFR-08 | Audit log svih akcija | Pouzdanost | R4 |
+| NFR-13, NFR-14 | Session timeout i redirect na login | Sigurnost | R4 |
+| NFR-23, NFR-24 | 2FA i enkripcija osjetljivih podataka | Sigurnost | R4 |
 | NFR-26 | Intuitivan interfejs - rezervacija bez nepotrebnih koraka | Upotrebljivost | R5 |
-
