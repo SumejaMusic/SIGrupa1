@@ -27,3 +27,6 @@ Izvršena je završna provjera koda i dokumentacije unutar tima.
 ## Finalni uslov za proglašavanje zadatka završenim:
 ### PO prihvati: 
 Product Owner je pregledao funkcionalnost, potvrdio da ona ispunjava njegove zahtjeve.
+
+## Odstupanje od definisanih pravila
+Ako neka stavka iz Definition of Done nije relevantna za određeni User Story, takvo odstupanje mora biti unaprijed usaglašeno unutar tima i jasno evidentirano u okviru samog Story-ja (npr. kroz komentar u alatu za praćenje zadataka). Odluka o odstupanju donosi se kolektivno, a ne na nivou pojedinca.
