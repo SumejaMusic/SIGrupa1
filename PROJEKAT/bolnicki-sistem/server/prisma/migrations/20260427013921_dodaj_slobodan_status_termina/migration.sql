@@ -1,0 +1,1 @@
+ALTER TYPE "StatusTermina" ADD VALUE 'SLOBODAN';

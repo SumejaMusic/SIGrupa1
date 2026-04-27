@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ioredis": "^5.10.1"
+  }
+  
+}
