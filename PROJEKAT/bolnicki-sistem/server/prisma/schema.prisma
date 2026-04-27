@@ -83,7 +83,7 @@ model Termin {
   datum       DateTime
   vrijeme     Int
   opis        String?
-  status      StatusTermina @default(ZAKAZAN)
+  status      StatusTermina @default(SLOBODAN)
   pacijentId  Int?
   idDoktor    Int
   rezervacije Rezervacije[]
@@ -244,6 +244,7 @@ enum Uloga {
 }
 
 enum StatusTermina {
+  SLOBODAN
   ZAKAZAN
   POTVRDJEN
   OTKAZAN

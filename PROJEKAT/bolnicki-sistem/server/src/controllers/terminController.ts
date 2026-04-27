@@ -20,7 +20,7 @@ export const getSlobodniTermini = async (
       where: {
         idDoktor: doktorId ? Number(doktorId) : undefined,
         datum: datum ? new Date(datum as string) : undefined,
-        status: "ZAKAZAN", // samo slobodni termini
+        status: "SLOBODAN", // samo slobodni termini
       },
       include: {
         doktor: {

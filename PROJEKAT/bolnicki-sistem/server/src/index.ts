@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 //import { PrismaClient } from '@prisma/client';
 
 import routes from "./routes/router.js";
-
-
+import app from "./app.js";
+/*
 dotenv.config();
 
 const app = express();
@@ -25,7 +25,11 @@ app.use("/api", routes);
 app.get('/', (req, res) => {
   res.send('Bolnički sistem API radi!');
 });
+*/
+// src/index.ts
 
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server trči na http://localhost:${PORT}`);
 });
