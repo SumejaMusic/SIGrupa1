@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, dev, OsnoveRezervacije ]
+    branches: [ main, dev, osnoveRezervacije ]
   pull_request:
-    branches: [ main, dev, OsnoveRezervacije ]
+    branches: [ main, dev, osnoveRezervacije ]
 
 jobs:
   test:
