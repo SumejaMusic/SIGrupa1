@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,7 +7,233 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//enum
+model Korisnik {
+  id                    Int               @id @default(autoincrement())
+  jmbg                  String            @unique
+  ime                   String
+  prezime               String
+  datumRodjenja         DateTime
+  email                 String            @unique
+  pristupnaSifra        String
+  brojTelefona          String?
+  datumRegistracije     DateTime          @default(now())
+  brojNeuspjelihPrijava Int               @default(0)
+  uloga                 Uloga             @default(PACIJENT)
+  auditLogs             AuditLog[]
+  doktorProfile         Doktor?
+  osobljeProfile        MediciskoOsoblje?
+  pacijentProfile       Pacijent?
+}
+
+model Pacijent {
+  id               Int                 @id @default(autoincrement())
+  idKorisnik       Int                 @unique
+  brojKnjizice     Int                 @unique
+  hronicniBolesnik Boolean             @default(false)
+  historija        HistorijaPregleda[]
+  listaCekanja     ListaCekanja[]
+  korisnik         Korisnik            @relation(fields: [idKorisnik], references: [id])
+  podsjetnici      Podsjetnik[]
+  rezervacije      Rezervacije[]
+  termini          Termin[]
+}
+
+model Doktor {
+  id               Int                       @id @default(autoincrement())
+  idKorisnik       Int                       @unique
+  idOdjela         Int
+  idSobe           Int?
+  brojPregleda     Int                       @default(0)
+  brojLicence      Int                       @unique
+  specijalizacija  String
+  trajanjePregleda Int                       @default(15)
+  korisnik         Korisnik                  @relation(fields: [idKorisnik], references: [id])
+  odjel            Odjel                     @relation(fields: [idOdjela], references: [id])
+  soba             Soba?                     @relation(fields: [idSobe], references: [id])
+  historija        HistorijaPregleda[]
+  listaCekanja     ListaCekanja[]
+  rasporedi        RasporedDoktora[]
+  recepti          Recept[]
+  uputioKaoOpsti   RezervacijaSpecijalista[] @relation("OpstiDoktor")
+  primioKaoSpec    RezervacijaSpecijalista[] @relation("Specijalista")
+  rezervacije      Rezervacije[]
+  termini          Termin[]
+}
+
+model MediciskoOsoblje {
+  id           Int      @id @default(autoincrement())
+  idKorisnik   Int      @unique
+  idOdjel      Int
+  pozicija     String
+  radnoVrijeme Int
+  korisnik     Korisnik @relation(fields: [idKorisnik], references: [id])
+  odjel        Odjel    @relation(fields: [idOdjel], references: [id])
+}
+
+model Odjel {
+  id      Int                @id @default(autoincrement())
+  naziv   String
+  opis    String?
+  doktori Doktor[]
+  osoblje MediciskoOsoblje[]
+}
+
+model Termin {
+  id          Int           @id @default(autoincrement())
+  datum       DateTime
+  vrijeme     Int
+  opis        String?
+  status      StatusTermina @default(SLOBODAN)
+  pacijentId  Int?
+  idDoktor    Int
+  rezervacije Rezervacije[]
+  doktor      Doktor        @relation(fields: [idDoktor], references: [id])
+  pacijent    Pacijent?     @relation(fields: [pacijentId], references: [id])
+}
+
+model Rezervacije {
+  id               Int                      @id @default(autoincrement())
+  idTermina        Int
+  idPacijent       Int
+  idDoktor         Int
+  idSobe           Int?
+  idTipPregleda    Int?
+  doktorRezervisao Boolean                  @default(false)
+  komentar         String?
+  hitnost          Boolean                  @default(false)
+  datumKreiranja   DateTime                 @default(now())
+  datumOtkazivanja DateTime?
+  doktorOtkazao    Boolean                  @default(false)
+  zavrseno         Boolean                  @default(false)
+  historija        HistorijaPregleda?
+  podsjetnik       Podsjetnik?
+  specijalista     RezervacijaSpecijalista?
+  doktor           Doktor                   @relation(fields: [idDoktor], references: [id])
+  pacijent         Pacijent                 @relation(fields: [idPacijent], references: [id])
+  soba             Soba?                    @relation(fields: [idSobe], references: [id])
+  termin           Termin                   @relation(fields: [idTermina], references: [id])
+  tipPregleda      TipPregleda?             @relation(fields: [idTipPregleda], references: [id])
+}
+
+model Podsjetnik {
+  id             Int         @id @default(autoincrement())
+  idPacijent     Int
+  idRezervacije  Int         @unique
+  vrijemeTermina Int
+  datumTermina   DateTime
+  datumSlanja    DateTime    @default(now())
+  statusSlanja   String
+  nacinSlanja    String
+  pacijent       Pacijent    @relation(fields: [idPacijent], references: [id])
+  rezervacija    Rezervacije @relation(fields: [idRezervacije], references: [id])
+}
+
+model AuditLog {
+  id              Int      @id @default(autoincrement())
+  idKorisnika     Int
+  tipAkcije       String
+  vrijemeAkcije   DateTime @default(now())
+  stariPodaci     String?
+  noviPodaci      String?
+  izmenjenaTabela String
+  ipAdresa        String?
+  korisnik        Korisnik @relation(fields: [idKorisnika], references: [id])
+}
+
+model HistorijaPregleda {
+  id            Int         @id @default(autoincrement())
+  idPacijent    Int
+  idDoktor      Int
+  idRezervacija Int         @unique
+  idNalaz       Int?
+  datumPregleda DateTime    @default(now())
+  dijagnoza     String
+  terapija      String
+  biljeske      String?
+  doktor        Doktor      @relation(fields: [idDoktor], references: [id])
+  nalaz         Nalaz?      @relation(fields: [idNalaz], references: [id])
+  pacijent      Pacijent    @relation(fields: [idPacijent], references: [id])
+  rezervacija   Rezervacije @relation(fields: [idRezervacija], references: [id])
+  recepti       Recept[]
+}
+
+model RezervacijaSpecijalista {
+  id             Int         @id @default(autoincrement())
+  idSpecijaliste Int
+  idDoktorOpste  Int
+  idRezervacije  Int         @unique
+  razlogPregleda String
+  doktorOpste    Doktor      @relation("OpstiDoktor", fields: [idDoktorOpste], references: [id])
+  rezervacija    Rezervacije @relation(fields: [idRezervacije], references: [id])
+  specijalista   Doktor      @relation("Specijalista", fields: [idSpecijaliste], references: [id])
+}
+
+model Nalaz {
+  id            Int                 @id @default(autoincrement())
+  naziv         String
+  vrijemeNalaza DateTime            @default(now())
+  opis          String?
+  dokumentPDF   Bytes?
+  pregledi      HistorijaPregleda[]
+}
+
+model Soba {
+  id          Int           @id @default(autoincrement())
+  naziv       String
+  tip         TipSobe
+  sprat       Int
+  kapacitet   Int           @default(1)
+  opis        String?
+  statusSobe  StatusSobe    @default(AKTIVNA)
+  doktori     Doktor[]
+  rezervacije Rezervacije[]
+}
+
+model RasporedDoktora {
+  id          Int         @id @default(autoincrement())
+  idDoktor    Int
+  danUSedmici DanUSedmici
+  vrijemeOd   DateTime    @db.Time(6)
+  vrijemeDo   DateTime    @db.Time(6)
+  datumOd     DateTime
+  datumDo     DateTime?
+  aktivan     Boolean     @default(true)
+  doktor      Doktor      @relation(fields: [idDoktor], references: [id])
+}
+
+model Recept {
+  id                  Int               @id @default(autoincrement())
+  idHistorijaPregleda Int
+  idDoktor            Int
+  nazivLijeka         String
+  doza                String
+  trajanje            Int
+  napomena            String?
+  datumIzdavanja      DateTime          @default(now())
+  doktor              Doktor            @relation(fields: [idDoktor], references: [id])
+  historijaPregleda   HistorijaPregleda @relation(fields: [idHistorijaPregleda], references: [id])
+}
+
+model ListaCekanja {
+  id            Int                @id @default(autoincrement())
+  idPacijent    Int
+  idDoktor      Int
+  datumZahtjeva DateTime           @default(now())
+  status        StatusListeCekanja @default(CEKA)
+  prioritet     Prioritet          @default(NORMALAN)
+  napomena      String?
+  doktor        Doktor             @relation(fields: [idDoktor], references: [id])
+  pacijent      Pacijent           @relation(fields: [idPacijent], references: [id])
+}
+
+model TipPregleda {
+  id             Int           @id @default(autoincrement())
+  naziv          String
+  opis           String?
+  trajanjeMinuta Int
+  zahtijevaSalu  Boolean       @default(false)
+  rezervacije    Rezervacije[]
+}
 
 enum Uloga {
   ADMINISTRATOR
@@ -23,6 +244,7 @@ enum Uloga {
 }
 
 enum StatusTermina {
+  SLOBODAN
   ZAKAZAN
   POTVRDJEN
   OTKAZAN
@@ -60,250 +282,4 @@ enum Prioritet {
   HITAN
   HRONICNI_BOLESNIK
   NORMALAN
-}
-
-//modeli
-
-model Korisnik {
-  id                    Int                 @id @default(autoincrement())
-  jmbg                  String              @unique // Koristimo String jer JMBG ima 13 cifara
-  ime                   String
-  prezime               String
-  datumRodjenja         DateTime
-  email                 String              @unique
-  pristupnaSifra        String              //pass hash je uvijek String
-  brojTelefona          String?
-  datumRegistracije     DateTime            @default(now())
-  brojNeuspjelihPrijava Int                 @default(0)
-  uloga                 Uloga               @default(PACIJENT)
-  
-  // Relacije 1:1
-  pacijentProfile       Pacijent?
-  doktorProfile         Doktor?
-  osobljeProfile        MediciskoOsoblje?
-  
-  // Relacije 1:N
-  auditLogs             AuditLog[]
-}
-
-model Pacijent {
-  id               Int                @id @default(autoincrement())
-  korisnik         Korisnik           @relation(fields: [idKorisnik], references: [id])
-  idKorisnik       Int                @unique
-  brojKnjizice     Int                @unique
-  hronicniBolesnik Boolean            @default(false)
-  
-  // Relacije
-  rezervacije      Rezervacije[]
-  podsjetnici      Podsjetnik[]
-  historija        HistorijaPregleda[]
-  listaCekanja     ListaCekanja[]
-  termini          Termin[]           
-}
-
-model Doktor {
-  id               Int                @id @default(autoincrement())
-  korisnik         Korisnik           @relation(fields: [idKorisnik], references: [id])
-  idKorisnik       Int                @unique
-  odjel            Odjel              @relation(fields: [idOdjela], references: [id])
-  idOdjela         Int
-  soba             Soba?              @relation(fields: [idSobe], references: [id])
-  idSobe           Int?
-  
-  brojPregleda     Int                @default(0)
-  brojLicence      Int                @unique
-  specijalizacija  String
-  trajanjePregleda Int                @default(15)
-
-  // Relacije
-  rezervacije      Rezervacije[]
-  historija        HistorijaPregleda[]
-  rasporedi        RasporedDoktora[]
-  listaCekanja     ListaCekanja[]
-  recepti          Recept[]
-  
-  // Relacije za specijaliste
-  uputioKaoOpsti   RezervacijaSpecijalista[] @relation("OpstiDoktor")
-  primioKaoSpec    RezervacijaSpecijalista[] @relation("Specijalista")
-}
-
-model MediciskoOsoblje {
-  id           Int      @id @default(autoincrement())
-  korisnik     Korisnik @relation(fields: [idKorisnik], references: [id])
-  idKorisnik   Int      @unique
-  odjel        Odjel    @relation(fields: [idOdjel], references: [id])
-  idOdjel      Int
-  pozicija     String
-  radnoVrijeme Int
-}
-
-model Odjel {
-  id               Int                @id @default(autoincrement())
-  naziv            String
-  opis             String?
-  doktori          Doktor[]
-  osoblje          MediciskoOsoblje[]
-}
-
-model Termin {
-  id          Int           @id @default(autoincrement())
-  datum       DateTime
-  vrijeme     Int           // Predstavlja npr. minute od početka dana ili slot
-  opis        String?
-  status      StatusTermina @default(ZAKAZAN)
-  
-  // Relacije
-  rezervacije Rezervacije[]
-  pacijent    Pacijent?      @relation(fields: [pacijentId], references: [id])
-  pacijentId  Int?
-}
-
-model Rezervacije {
-  id               Int          @id @default(autoincrement())
-  termin           Termin       @relation(fields: [idTermina], references: [id])
-  idTermina        Int
-  pacijent         Pacijent     @relation(fields: [idPacijent], references: [id])
-  idPacijent       Int
-  doktor           Doktor       @relation(fields: [idDoktor], references: [id])
-  idDoktor         Int
-  soba             Soba?        @relation(fields: [idSobe], references: [id])
-  idSobe           Int?
-  tipPregleda      TipPregleda? @relation(fields: [idTipPregleda], references: [id])
-  idTipPregleda    Int?
-
-  doktorRezervisao Boolean      @default(false)
-  komentar         String?
-  hitnost          Boolean      @default(false)
-  datumKreiranja   DateTime     @default(now())
-  datumOtkazivanja DateTime?
-  doktorOtkazao    Boolean      @default(false)
-  zavrseno         Boolean      @default(false)
-
-  // Relacije 1:1
-  podsjetnik       Podsjetnik?
-  historija        HistorijaPregleda?
-  specijalista     RezervacijaSpecijalista?
-}
-
-model Podsjetnik {
-  id             Int         @id @default(autoincrement())
-  pacijent       Pacijent    @relation(fields: [idPacijent], references: [id])
-  idPacijent     Int
-  rezervacija    Rezervacije @relation(fields: [idRezervacije], references: [id])
-  idRezervacije  Int         @unique
-  vrijemeTermina Int
-  datumTermina   DateTime
-  datumSlanja    DateTime    @default(now())
-  statusSlanja   String      // 'poslano', 'ceka', 'greska'
-  nacinSlanja    String      // 'email', 'SMS'
-}
-
-model AuditLog {
-  id               Int      @id @default(autoincrement())
-  korisnik         Korisnik @relation(fields: [idKorisnika], references: [id])
-  idKorisnika      Int
-  tipAkcije        String
-  vrijemeAkcije    DateTime @default(now())
-  stariPodaci      String?  @db.Text
-  noviPodaci       String?  @db.Text
-  izmenjenaTabela  String
-  ipAdresa         String?
-}
-
-model HistorijaPregleda {
-  id            Int         @id @default(autoincrement())
-  pacijent      Pacijent    @relation(fields: [idPacijent], references: [id])
-  idPacijent    Int
-  doktor        Doktor      @relation(fields: [idDoktor], references: [id])
-  idDoktor      Int
-  rezervacija   Rezervacije @relation(fields: [idRezervacija], references: [id])
-  idRezervacija Int         @unique
-  nalaz         Nalaz?      @relation(fields: [idNalaz], references: [id])
-  idNalaz       Int?
-  
-  datumPregleda DateTime    @default(now())
-  dijagnoza     String      @db.Text
-  terapija      String      @db.Text
-  biljeske      String?     @db.Text
-  
-  recepti       Recept[]
-}
-
-model RezervacijaSpecijalista {
-  id              Int         @id @default(autoincrement())
-  specijalista    Doktor      @relation("Specijalista", fields: [idSpecijaliste], references: [id])
-  idSpecijaliste  Int
-  doktorOpste     Doktor      @relation("OpstiDoktor", fields: [idDoktorOpste], references: [id])
-  idDoktorOpste   Int
-  rezervacija     Rezervacije @relation(fields: [idRezervacije], references: [id])
-  idRezervacije   Int         @unique
-  razlogPregleda  String      @db.Text
-}
-
-model Nalaz {
-  id            Int                 @id @default(autoincrement())
-  naziv         String
-  vrijemeNalaza DateTime            @default(now())
-  opis          String?             @db.Text
-  dokumentPDF   Bytes?              // BYTEA tip u Postgresu
-  pregledi      HistorijaPregleda[]
-}
-
-model Soba {
-  id          Int           @id @default(autoincrement())
-  naziv       String
-  tip         TipSobe
-  sprat       Int
-  kapacitet   Int           @default(1)
-  opis        String?
-  statusSobe  StatusSobe    @default(AKTIVNA)
-  
-  doktori     Doktor[]
-  rezervacije Rezervacije[]
-}
-
-model RasporedDoktora {
-  id         Int         @id @default(autoincrement())
-  doktor     Doktor      @relation(fields: [idDoktor], references: [id])
-  idDoktor   Int
-  danUSedmici DanUSedmici
-  vrijemeOd  DateTime    @db.Time
-  vrijemeDo  DateTime    @db.Time
-  datumOd    DateTime
-  datumDo    DateTime?
-  aktivan    Boolean     @default(true)
-}
-
-model Recept {
-  id                  Int               @id @default(autoincrement())
-  historijaPregleda   HistorijaPregleda @relation(fields: [idHistorijaPregleda], references: [id])
-  idHistorijaPregleda Int
-  doktor              Doktor            @relation(fields: [idDoktor], references: [id])
-  idDoktor            Int
-  nazivLijeka         String
-  doza                String
-  trajanje            Int               // broj dana
-  napomena            String?
-  datumIzdavanja      DateTime          @default(now())
-}
-
-model ListaCekanja {
-  id            Int                 @id @default(autoincrement())
-  pacijent      Pacijent            @relation(fields: [idPacijent], references: [id])
-  idPacijent    Int
-  doktor        Doktor              @relation(fields: [idDoktor], references: [id])
-  idDoktor      Int
-  datumZahtjeva DateTime            @default(now())
-  status        StatusListeCekanja  @default(CEKA)
-  prioritet     Prioritet           @default(NORMALAN)
-  napomena      String?
-}
-
-model TipPregleda {
-  id             Int           @id @default(autoincrement())
-  naziv          String
-  opis           String?
-  trajanjeMinuta Int
-  zahtijevaSalu  Boolean       @default(false)
-  rezervacije    Rezervacije[]
 }
