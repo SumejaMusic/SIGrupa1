@@ -17,10 +17,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './server/package-lock.json'
 
       - name: Install dependencies
         working-directory: ./server
         run: npm install
+
+      # Iako su testovi mock-ovani, Prisma klijent se mora generisati 
+      # jer tvoj kod uvozi tipove i klase iz @prisma/client
+      - name: Generate Prisma Client
+        working-directory: ./server
+        run: npx prisma generate
 
       - name: Run tests
         working-directory: ./server
