@@ -81,7 +81,8 @@ export const zaključajTermin = async (
 ) => {
   try {
     const terminId = Number(req.params.id);
-    const korisnikId = (req as any).korisnik.id;
+    // Hardkodirano za testiranje - kasnije će doći iz JWT middleware-a
+    const korisnikId = 1; // (req as any).korisnik.id;
     const lockKey = `termin:lock:${terminId}`;
 
     // Provjeri da li je već zaključan od nekog drugog

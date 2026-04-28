@@ -158,7 +158,7 @@ async function main() {
       datum: new Date("2026-04-13"),//u tsu je "godina-mjesec-dan"
       vrijeme: 540,
       opis: "Jutarnji termin",
-      status: "ZAKAZAN",
+      status: "SLOBODAN",
     },
   });
 
@@ -171,7 +171,7 @@ async function main() {
       datum: new Date("2026-04-13"),
       vrijeme: 570,
       opis: "Drugi jutarnji termin",
-      status: "ZAKAZAN",
+      status: "SLOBODAN",
     },
   });
   console.log("Termini kreirani:", termin1.vrijeme, termin2.vrijeme);

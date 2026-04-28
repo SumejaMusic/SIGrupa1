@@ -14,7 +14,8 @@ export const kreirajRezervaciju = async (
 ) => {
   try {
     const { terminId, doktorId, komentar, hitnost, tipPregledaId } = req.body;
-    const korisnikId = (req as any).korisnik.id; //for now hardcodirana vrijednost za korisnika
+    // Hardkodirano za testiranje - kasnije će doći iz JWT middleware-a
+    const korisnikId = 1; // (req as any).korisnik.id;
 
     // US-13 — Provjera duplikata: isti pacijent, isti doktor, isti termin
     const pacijent = await prisma.pacijent.findFirst({ where: { idKorisnik: korisnikId } });
@@ -86,15 +87,17 @@ export const kreirajRezervaciju = async (
 };
 
 
-// GET /api/rezervacije/moje
+// GET /api/rezervacije/pacijent/:pacijentId
+// US-05 — Sve rezervacije konkretnog pacijenta
 export const getRezervacijeZaPacijenta = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const korisnikId = (req as any).korisnik.id; 
-    const pacijent = await prisma.pacijent.findFirst({ where: { idKorisnik: korisnikId } });
+    const pacijent = await prisma.pacijent.findUnique({
+      where: { id: Number(req.params.pacijentId) }
+    });
 
     if (!pacijent) {
       res.status(404).json({ poruka: "Profil pacijenta nije pronađen." });
