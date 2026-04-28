@@ -32,6 +32,8 @@ const RezervacijaSpecijalista: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] =
     useState<Department>("Svi");
 
+  const [search, setSearch] = useState("");
+
   const departments: Department[] = [
     "Svi",
     "Kardiologija",
@@ -60,9 +62,12 @@ const RezervacijaSpecijalista: React.FC = () => {
   ];
 
   const filteredDoctors =
-    selectedDepartment === "Svi"
+    (selectedDepartment === "Svi"
       ? doctors
-      : doctors.filter((doc) => doc.department === selectedDepartment);
+      : doctors.filter((doc) => doc.department === selectedDepartment)
+    ).filter((doc) =>
+      doc.fullName.toLowerCase().includes(search.toLowerCase())
+    );
 
   const handleSelectDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -81,147 +86,141 @@ const RezervacijaSpecijalista: React.FC = () => {
     <div className="page">
       <div className="container">
 
-        <Link to="/doctor-panel" className="backLink">
+        <div className="navLinks">
+          <Link to="/doctor-panel" className="backLink">
           <ArrowLeft size={18} /> Nazad na panel
         </Link>
+
+        <Link to="/" className="backLink">
+          <ArrowLeft size={18} /> Nazad na početnu stranicu
+        </Link>
+        </div>
 
         <h1 className="title">Rezervacija specijaliste</h1>
         <p className="subtitle">Odabir doktora i zakazivanje termina</p>
 
-        <div className="layout">
+        {/* SEARCH + FILTER */}
+        <div className="filterBar">
+          <input
+            type="text"
+            placeholder="Pretraži doktora..."
+            className="input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-          {/* FILTER */}
-          <div className="sidebar">
-            <h3 className="sectionTitle">
-              <Search size={16} /> Filter
-            </h3>
+          <select
+            value={selectedDepartment}
+            onChange={(e) =>
+              setSelectedDepartment(e.target.value as Department)
+            }
+            className="input"
+          >
+            {departments.map((dep) => (
+              <option key={dep} value={dep}>
+                {dep}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            <label>Odjel</label>
-            <select
-              value={selectedDepartment}
-              onChange={(e) =>
-                setSelectedDepartment(e.target.value as Department)
-              }
-              className="input"
-            >
-              {departments.map((dep) => (
-                <option key={dep} value={dep}>
-                  {dep}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="content">
 
-          {/* CONTENT */}
-          <div className="content">
+          {step === 1 ? (
+            <>
+              <h3 className="sectionTitle">Dostupni specijalisti</h3>
 
-            {step === 1 ? (
-              <>
-                <h3 className="sectionTitle">Dostupni specijalisti</h3>
+              {filteredDoctors.map((doctor) => (
+                <div key={doctor.id} className="card">
+                  <div>
+                    <h4 className="doctorName">{doctor.fullName}</h4>
+                    <p className="department">{doctor.department}</p>
 
-                {filteredDoctors.map((doctor) => (
-                  <div key={doctor.id} className="card">
-                    <div>
-                      <h4 className="doctorName">{doctor.fullName}</h4>
-                      <p className="department">{doctor.department}</p>
-
-                      <p className="slot">
-                        <Calendar size={12} /> {doctor.nextAvailableSlot}
-                      </p>
-                    </div>
-
-                    <button
-                      className="btn"
-                      onClick={() => handleSelectDoctor(doctor)}
-                    >
-                      Rezerviši
-                    </button>
+                    <p className="slot">
+                      <Calendar size={12} /> {doctor.nextAvailableSlot}
+                    </p>
                   </div>
-                ))}
-              </>
-            ) : (
-              <div className="confirmBox">
-                <h3>Potvrda rezervacije</h3>
-
-                {/* DOCTOR */}
-                <div className="infoRow">
-                  <span>Doktor:</span>
-                  <strong>{selectedDoctor?.fullName}</strong>
-                </div>
-
-                {/* PATIENT - FIXED + VISIBLE */}
-                <div className="sectionBox">
-                  <h4 className="sectionTitle">Pacijent</h4>
-
-                  <select
-                    className="input"
-                    value={selectedPatient?.id || ""}
-                    onChange={(e) => {
-                      const patient = patients.find(
-                        (p) => p.id === Number(e.target.value)
-                      );
-                      setSelectedPatient(patient || null);
-                    }}
-                  >
-                    <option value="">-- Odaberi pacijenta --</option>
-
-                    {patients.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.fullName}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* 👇 VIDLJIV PRIKAZ */}
-                  <div className="patientPreview">
-                    {selectedPatient ? (
-                      <>
-                        <p className="patientName">
-                          {selectedPatient.fullName}
-                        </p>
-                        <p className="patientMeta">
-                          JMBG: {selectedPatient.jmbg}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="patientEmpty">
-                        Nema odabranog pacijenta
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* SLOT */}
-                <div className="infoRow">
-                  <span>Termin:</span>
-                  <strong className="green">
-                    {selectedDoctor?.nextAvailableSlot}
-                  </strong>
-                </div>
-
-                {/* ACTIONS */}
-                <div className="actions">
-                  <button className="btnSecondary" onClick={resetBooking}>
-                    Nazad
-                  </button>
 
                   <button
-                    className="btnSuccess"
-                    disabled={!canConfirm}
-                    onClick={() => {
-                      alert(
-                        `Termin zakazan za ${selectedPatient?.fullName}`
-                      );
-                      resetBooking();
-                    }}
+                    className="btn"
+                    onClick={() => handleSelectDoctor(doctor)}
                   >
-                    <CheckCircle size={16} /> Potvrdi
+                    Rezerviši
                   </button>
                 </div>
-              </div>
-            )}
+              ))}
+            </>
+          ) : (
+            <div className="confirmBox">
+              <h3>Potvrda rezervacije</h3>
 
-          </div>
+              <div className="infoRow">
+                <span>Doktor:</span>
+                <strong>{selectedDoctor?.fullName}</strong>
+              </div>
+
+              <div className="sectionBox">
+                <h4 className="sectionTitle">Pacijent</h4>
+
+                <select
+                  className="input"
+                  value={selectedPatient?.id || ""}
+                  onChange={(e) => {
+                    const patient = patients.find(
+                      (p) => p.id === Number(e.target.value)
+                    );
+                    setSelectedPatient(patient || null);
+                  }}
+                >
+                  <option value="">-- Odaberi pacijenta --</option>
+
+                  {patients.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.fullName}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedPatient && (
+                  <div className="patientPreview">
+                    <p className="patientName">
+                      {selectedPatient.fullName}
+                      </p>
+                      <p className="patientMeta">
+                        JMBG: {selectedPatient.jmbg}
+                        </p>
+                        </div>
+                      )}
+              </div>
+
+              <div className="infoRow">
+                <span>Termin:</span>
+                <strong className="green">
+                  {selectedDoctor?.nextAvailableSlot}
+                </strong>
+              </div>
+
+              <div className="actions">
+                <button className="btnSecondary" onClick={resetBooking}>
+                  Nazad
+                </button>
+
+                <button
+                  className="btnSuccess"
+                  disabled={!canConfirm}
+                  onClick={() => {
+                    alert(
+                      `Termin zakazan za ${selectedPatient?.fullName}`
+                    );
+                    resetBooking();
+                  }}
+                >
+                  <CheckCircle size={16} /> Potvrdi
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

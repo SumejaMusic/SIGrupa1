@@ -1,150 +1,133 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, XCircle, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  User,
+  Clock,
+  XCircle,
+  CalendarX,
+  ArrowLeft
+} from "lucide-react";
+
+interface Rezervacija {
+  id: number;
+  doktorIme: string;
+  datum: string;
+  vrijeme: string;
+  komentar: string;
+}
+
+interface Poruka {
+  tip: 'success' | 'error';
+  tekst: string;
+}
+
+const mockRezervacije = [
+  { id: 1, doktorIme: "Dr. Amar Kovačević", datum: "2026-05-10", vrijeme: "09:00", komentar: "Kontrolni pregled" },
+  { id: 2, doktorIme: "Dr. Sara Hadžić", datum: "2026-04-29", vrijeme: "08:30", komentar: "" },
+  { id: 3, doktorIme: "Dr. Emir Selimović", datum: "2026-05-02", vrijeme: "11:00", komentar: "Donijeti nalaze" },
+];
 
 const MojeRezervacije = () => {
-  const [rezervacije, setRezervacije] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [poruka, setPoruka] = useState(null);
+  const [rezervacije, setRezervacije] = useState<Rezervacija[]>(mockRezervacije);
+  const [poruka, setPoruka] = useState<Poruka | null>(null);
 
-  // 1. DOHVATANJE PODATAKA SA BACKENDA (US-05/US-10)
-  useEffect(() => {
-    const fetchRezervacije = async () => {
-      try {
-        setLoading(true);
-        // Zamijeni URL sa tvojom pravom API rutom, npr. 'http://localhost:5000/api/rezervacije'
-        const response = await fetch('/api/rezervacije'); 
-        const data = await response.json();
-        setRezervacije(data);
-      } catch (err) {
-        console.error("Greška pri učitavanju:", err);
-        setPoruka({ tip: 'error', tekst: "Nije moguće učitati rezervacije." });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const mozeSeOtkazati = (datum: string, vrijeme: string) => {
+  const termin = new Date(`${datum}T${vrijeme}`);
+  const sada = new Date();
+  return (termin.getTime() - sada.getTime()) / (1000 * 60 * 60) > 24;
+};
 
-    fetchRezervacije();
-  }, []);
-
-  // 2. LOGIKA ZA PROVJERU 24h
-  const mozeSeOtkazati = (datum, vrijeme) => {
-    const termin = new Date(`${datum}T${vrijeme}`);
-    const sada = new Date();
-    const razlikaUSatima = (termin - sada) / (1000 * 60 * 60);
-    return razlikaUSatima > 24;
-  };
-
-  // 3. OTKAZIVANJE TERMINA (NFR-10, NFR-11)
-  const handleOtkazi = async (id) => {
+  const handleOtkazi = (id: number) => {
     if (!window.confirm("Da li ste sigurni da želite otkazati ovaj termin?")) return;
-
-    try {
-      // Slanje zahtjeva backendu za brisanje/otkazivanje
-      const response = await fetch(`/api/rezervacije/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        // Ako je backend uspješno obrisao, ažuriramo UI odmah (NFR-09: ≤2s)
-        setRezervacije(rezervacije.filter(res => res.id !== id));
-        setPoruka({ tip: 'success', tekst: "Termin uspješno otkazan. Email obavijest je poslana." });
-      } else {
-        throw new Error("Greška na serveru");
-      }
-    } catch (err) {
-      setPoruka({ tip: 'error', tekst: "Otkazivanje nije uspjelo. Pokušajte ponovo." });
-    }
-
-    setTimeout(() => setPoruka(null), 5000);
+    setRezervacije(prev => prev.filter(r => r.id !== id));
+    setPoruka({ tip: 'success', tekst: "Termin uspješno otkazan." });
+    setTimeout(() => setPoruka(null), 4000);
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="animate-spin text-blue-600" size={48} />
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-blue-900 mb-6 flex items-center gap-2">
-          <Calendar className="text-blue-600" /> Moje Rezervacije
+    <div className="mr-page">
+      <div className="mr-container">
+
+        <div className="mr-top-nav">
+          <a href="/" className="mr-nazad-btn">
+            <ArrowLeft size={16} />
+            Nazad na početnu stranicu
+          </a>
+        </div>
+
+        <h1 className="mr-heading">
+          <Calendar size={26} color="#2563eb" />
+          Moje Rezervacije
         </h1>
 
         {poruka && (
-          <div className={`mb-6 p-4 rounded-lg border flex items-center gap-3 ${
-            poruka.tip === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
-            {poruka.tip === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+          <div className={`mr-alert mr-alert--${poruka.tip}`}>
+            {poruka.tip === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
             {poruka.tekst}
           </div>
         )}
 
-        <div className="grid gap-4">
+        <div className="mr-list">
           {rezervacije.length > 0 ? (
             rezervacije.map((res) => {
               const dozvoljeno = mozeSeOtkazati(res.datum, res.vrijeme);
-
               return (
-                <div key={res.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:border-blue-300 transition-colors">
-                  <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xl font-bold text-gray-800">
-                        <User size={20} className="text-blue-600" />
-                        {res.doktorIme}
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-4 text-gray-600 font-medium">
-                        <span className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-md">
-                          <Calendar size={16} /> {new Date(res.datum).toLocaleDateString('hr-HR')}
-                        </span>
-                        <span className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-md">
-                          <Clock size={16} /> {res.vrijeme}
-                        </span>
-                      </div>
-
-                      {res.komentar && (
-                        <div className="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-                          <p className="text-sm text-blue-800 font-medium">Napomena:</p>
-                          <p className="text-sm text-blue-600 italic">{res.komentar}</p>
-                        </div>
-                      )}
+                <div key={res.id} className="mr-card">
+                  <div className="mr-card__left">
+                    <div className="mr-doctor-name">
+                      <User size={18} color="#2563eb" />
+                      {res.doktorIme}
                     </div>
 
-                    <div className="flex flex-col md:items-end justify-center gap-3">
-                      {dozvoljeno ? (
-                        <button
-                          onClick={() => handleOtkazi(res.id)}
-                          className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg font-bold hover:bg-red-600 hover:text-white transition-all flex items-center gap-2"
-                        >
-                          <XCircle size={18} /> Otkaži termin
-                        </button>
-                      ) : (
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-2 py-1 rounded">
-                            Zaključano
-                          </span>
-                          <p className="text-[10px] text-gray-400 mt-1 max-w-[150px]">
-                            Manje od 24h do termina. Otkazivanje nije moguće.
-                          </p>
-                        </div>
-                      )}
+                    <div className="mr-meta-row">
+                      <span className="mr-meta-badge">
+                        <Calendar size={14} />
+                        {new Date(res.datum).toLocaleDateString('hr-HR')}
+                      </span>
+                      <span className="mr-meta-badge">
+                        <Clock size={14} />
+                        {res.vrijeme}
+                      </span>
                     </div>
+
+                    {res.komentar && (
+                      <div className="mr-komentar">
+                        <p className="mr-komentar__label">Napomena</p>
+                        <p className="mr-komentar__tekst">{res.komentar}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mr-card__right">
+                    {dozvoljeno ? (
+                      <button className="mr-otkazi-btn" onClick={() => handleOtkazi(res.id)}>
+                        <XCircle size={16} /> Otkaži termin
+                      </button>
+                    ) : (
+                      <div className="mr-zakljucano">
+                        <span className="mr-zakljucano__badge">Zaključano</span>
+                        <p className="mr-zakljucano__tekst">
+                          Manje od 24h do termina. Otkazivanje nije moguće.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-300">
-              <p className="text-gray-400 text-xl mb-4">Nemate zakazanih termina.</p>
-              <a href="/rezervacija-pacijent" className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition shadow-md">
+            <div className="mr-prazno">
+              <CalendarX size={52} className="mr-prazno__ikona" />
+              <p className="mr-prazno__tekst">Nemate zakazanih termina.</p>
+              <a href="/rezervacija-pacijent" className="mr-zakazi-btn">
                 Zakaži odmah
               </a>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

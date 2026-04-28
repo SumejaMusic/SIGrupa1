@@ -120,7 +120,7 @@ function RezervacijaPacijent() {
           Potvrdi i Rezerviši
         </button>
         <Link to="/" className="dugme-odustani">
-          Odustani
+          Nazad na početnu stranicu
         </Link>
       </form>
     </div>

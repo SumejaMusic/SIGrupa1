@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Calendar, Users, Clock, ArrowRight } from "lucide-react";
+import { Calendar, Users, Clock, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Appointment {
@@ -42,7 +42,7 @@ const DoctorPanel: React.FC = () => {
 
       {/* SIDEBAR */}
       <aside className="sidebar">
-        <h2 className="logo">Bolnica Dr.</h2>
+        <h2 className="logo">Bolnički Sistem</h2>
 
         <nav className="nav">
           <div className="navItem active">
@@ -60,6 +60,10 @@ const DoctorPanel: React.FC = () => {
       {/* MAIN */}
       <main className="main">
 
+        <Link to="/" className="backLink">
+          <ArrowLeft size={16} /> Nazad na početnu stranicu
+        </Link>
+
         {/* HEADER */}
         <header className="header">
           <div>
@@ -73,15 +77,16 @@ const DoctorPanel: React.FC = () => {
           </Link>
         </header>
 
+        <h3 className="cardTitle">
+          <Clock size={18} />
+          Današnji pregledi
+          </h3>
+
         {/* CONTENT */}
         <section className="grid">
 
           {/* APPOINTMENTS */}
-          <div className="card">
-            <h3 className="cardTitle">
-              <Clock size={18} />
-              Današnji pregledi
-            </h3>
+
 
             <div className="list">
               {appointments.map((a) => (
@@ -102,22 +107,19 @@ const DoctorPanel: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* INFO */}
-          <div className="card">
+            {/* INFO */}
             <h3 className="cardTitle">Informacije</h3>
-
-            <div className="infoBox blue">
-              <p className="label">Sljedeći pacijent</p>
-              <p className="value">Marko Marković</p>
-            </div>
-
-            <div className="infoBox orange">
-              <p className="label">Napomena</p>
-              <p className="value">Provjeriti nalaz krvi</p>
-            </div>
-          </div>
+            <div className="list">
+              <div className="listItem">
+                <span className="name">Sljedeći pacijent:</span>
+                <span>Marko Marković</span>
+                </div>
+                <div className="listItem">
+                  <span className="name">Napomena:</span>
+                  <span>Provjeriti nalaz krvi</span>
+                </div>
+              </div>
 
         </section>
       </main>

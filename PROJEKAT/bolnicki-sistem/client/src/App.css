@@ -3,23 +3,26 @@
    ============================================ */
 body {
   margin: 0;
-  display: flex;
-  justify-content: center; /* Centriranje horizontalno */
-  align-items: center;     /* Centriranje vertikalno */
-  min-height: 100vh;       /* Uzima punu visinu ekrana */
-  background-color: #f5f5f5; /* Opciono: boja pozadine cijele stranice */
+  padding: 0;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  font-family: 'Inter', sans-serif;
+}
+
+#root {
+  width: 100%;
 }
 
 /* Tvoj postojeći stil (uz malu izmjenu margina) */
 .stranica {
-  width: 100%;             /* Osigurava responzivnost */
-  max-width: 520px;
-  margin: 10px auto; 
-  padding: 32px;
+  width: 100%;
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 40px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  font-family: 'Segoe UI', sans-serif;}
+}
 /* ============================================
    PACIJENT-KARTICA — prikaz prijavljenog korisnika
    ============================================ */
@@ -206,7 +209,6 @@ body {
   min-height: 100vh;
   background: #f5f7fb;
   padding: 30px;
-  font-family: Arial, sans-serif;
 }
 
 .container {
@@ -237,16 +239,27 @@ body {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 20px;
+  background-color: white;
 }
 
 .sidebar {
-  background: white;
   padding: 16px;
   border-radius: 12px;
   height: fit-content;
 }
 
+.dashboard .sidebar {
+  width: 240px;
+  background: #0f2d5c;
+  color: white;
+  padding: 20px;
+  min-height: 100vh;
+  height: auto;
+  border-radius: 0;
+}
+
 .sectionTitle {
+  color: black;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -257,17 +270,22 @@ body {
 .input {
   width: 100%;
   padding: 8px;
+  margin: auto;
   border: 1px solid #ddd;
   border-radius: 6px;
+  background-color: #f3f4f6;
+  color: #111827;
 }
 
 .content {
+  color: black;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .card {
+  color: black;
   background: white;
   padding: 16px;
   border-radius: 12px;
@@ -307,7 +325,31 @@ body {
   padding: 10px;
   border: 1px solid #ccc;
   background: white;
+  color:#6b7280;
   border-radius: 8px;
+}
+
+.filterBar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.navLinks {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filterBar .input {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.filterBar .input:focus {
+  background-color: #ffffff;
+  border-color: #2563eb;
 }
 
 .btnSuccess {
@@ -331,6 +373,8 @@ body {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
+  margin-top: 10px;
+  padding: 10px;
 }
 
 .green {
@@ -347,13 +391,11 @@ body {
   display: flex;
   min-height: 100vh;
   background: #f5f7fb;
-  font-family: Arial;
 }
 
 /* SIDEBAR */
 .sidebar {
   width: 240px;
-  background: #0f2d5c;
   color: white;
   padding: 20px;
 }
@@ -411,13 +453,16 @@ body {
   gap: 8px;
   align-items: center;
   text-decoration: none;
+  width: fit-content;
+  align-self: flex-start;
 }
 
 /* GRID */
 .grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
   gap: 20px;
+  color: black;
 }
 
 /* CARD */
@@ -432,6 +477,7 @@ body {
   gap: 8px;
   font-weight: bold;
   margin-bottom: 15px;
+  color: black;
 }
 
 /* LIST */
@@ -507,7 +553,9 @@ body {
 }
 .patientPreview {
   margin-top: 10px;
-  padding: 10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  padding-bottom: 20px;
   border-radius: 8px;
   background: #f3f4f6;
 }
@@ -533,7 +581,6 @@ body {
   min-height: 100vh;
   background: #f5f7fb;
   padding: 30px;
-  font-family: Arial, sans-serif;
 }
 
 /* CONTAINER */
@@ -554,6 +601,7 @@ body {
 
 /* CARD */
 .lab-card {
+  color: black;
   background: white;
   padding: 30px;
   border-radius: 16px;
@@ -569,7 +617,9 @@ body {
 
 /* SEARCH */
 .lab-search-section {
-  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .lab-label {
@@ -581,10 +631,10 @@ body {
 
 
 .lab-input-icon {
-  position: absolute;
+  margin: auto;
   left: 10px;
   top: 10px;
-  color: #9ca3af;
+  color: #f3f4f6;
 }
 
 .lab-input {
@@ -592,6 +642,8 @@ body {
   padding: 10px 10px 10px 35px;
   border-radius: 10px;
   border: 1px solid #ddd;
+  margin: auto;
+  background-color: #f3f4f6;
 }
 
 /* FORM */
@@ -611,7 +663,7 @@ body {
 }
 
 .lab-upload-box:hover {
-  border-color: #2563eb;
+  border-color: #f9fafb;
 }
 
 .lab-file-input {
@@ -668,13 +720,13 @@ body {
   display: flex;
   min-height: 100vh;
   background: #f5f7fb;
-  font-family: Arial;
+  color: black;
 }
 
 /* SIDEBAR */
 .staff-sidebar {
   width: 240px;
-  background: #1e293b;
+  background: #0f2d5c;
   color: white;
   padding: 20px;
 }
@@ -700,17 +752,12 @@ body {
 }
 
 .nav-item:hover {
-  background: #334155;
+  background: #f9fafb;
 }
 
 .nav-item.active {
-  background: #475569;
+  background: #1d4ed8;
   color: white;
-}
-
-.logout {
-  margin-top: 30px;
-  color: #9ca3af;
 }
 
 /* MAIN */
@@ -740,12 +787,22 @@ body {
 .add-button {
   background: #16a34a;
   color: white;
-  padding: 10px 14px;
+  padding: 8px 20px;
   border-radius: 10px;
   border: none;
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
   cursor: pointer;
+  font-size: 16px;
+  width: fit-content;
+  white-space: nowrap; 
+}
+
+.add-button:hover {
+  background: #16a34a;
+  color: white;
+  text-decoration: none;
 }
 
 /* TABLE */
@@ -840,7 +897,11 @@ th, td {
 }
 
 .icon-button:hover {
-  background: #f1f5f9;
+  background: #f9fafb;
+}
+
+.primaryButton:hover {
+  color: white;
 }
 
 .icon-button.danger {
@@ -849,4 +910,270 @@ th, td {
 
 .icon-button.disabled {
   color: #9ca3af;
+}
+
+.homepage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f0f4f8;
+  padding: 32px;
+}
+
+.homepage-title {
+  font-size: 40px;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.homepage-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.homepage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 200px);
+  gap: 80px;
+  justify-content: center;
+}
+
+.hp-card {
+  background: white;
+  border-radius: 20px;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-decoration: none;
+  color: #1e3a5f;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid transparent;
+}
+
+.hp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.mr-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 30px;
+}
+
+.mr-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.mr-heading {
+  padding: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #0f2d5c;
+  margin: 0 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mr-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  border: 1px solid;
+}
+
+.mr-alert--success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.mr-alert--error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.mr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mr-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s;
+}
+
+.mr-card:hover {
+  border-color: #bfdbfe;
+}
+
+.mr-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mr-card__right {
+  flex-shrink: 0;
+}
+
+.mr-doctor-name {
+  font-size: 17px;
+  font-weight: bold;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mr-meta-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mr-meta-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #f3f4f6;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.mr-komentar {
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+}
+
+.mr-komentar__label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #1d4ed8;
+  text-transform: uppercase;
+  margin: 0 0 2px;
+}
+
+.mr-komentar__tekst {
+  font-size: 13px;
+  color: #1e40af;
+  font-style: italic;
+  margin: 0;
+}
+
+.mr-otkazi-btn {
+  background: #fff1f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mr-otkazi-btn:hover {
+  background: #fee2e2;
+}
+
+.mr-zakljucano {
+  text-align: right;
+}
+
+.mr-zakljucano__badge {
+  background: #f3f4f6;
+  color: #9ca3af;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mr-zakljucano__tekst {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 4px 0 0;
+  max-width: 160px;
+}
+
+.mr-prazno {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 2px dashed #d1d5db;
+}
+
+.mr-prazno__ikona {
+  color: #d1d5db;
+  margin-bottom: 12px;
+}
+
+.mr-prazno__tekst {
+  color: #9ca3af;
+  font-size: 18px;
+  margin: 0 0 20px;
+}
+
+.mr-zakazi-btn {
+  display: inline-block;
+  background: #2563eb;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.mr-zakazi-btn:hover {
+  background: #1d4ed8;
+  color: white;
 }

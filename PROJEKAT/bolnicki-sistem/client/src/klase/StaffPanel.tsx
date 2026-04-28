@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Clock, AlertTriangle, XCircle, UserPlus, FileText } from "lucide-react";
+import { Clock, AlertTriangle, XCircle, UserPlus, FileText, Calendar } from "lucide-react";
 
 
 interface Appointment {
@@ -42,15 +42,11 @@ const StaffPanel: React.FC = () => {
 
         <nav className="staff-nav">
           <Link to="/staff-panel" className="nav-item active">
-            <Clock size={18} /> Dnevni plan
+            <Calendar size={18} /> Raspored
           </Link>
 
           <Link to="/laboratorija" className="nav-item">
             <FileText size={18} /> Laboratorija
-          </Link>
-
-          <Link to="/" className="nav-item logout">
-            <XCircle size={18} /> Odjava
           </Link>
         </nav>
       </aside>

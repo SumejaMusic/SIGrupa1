@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
-// DODAJ OVE IMPORTE ZA IKONICE
-import { ClipboardList, Beaker } from 'lucide-react'; 
+import { ClipboardList, Beaker, Calendar, Stethoscope, UserCog, FileText } from 'lucide-react'; 
 
 import DoctorPanel from './klase/DoctorPanel'; 
 import RezervacijaPacijent from './klase/RezervacijaPacijent';
@@ -10,37 +9,41 @@ import StaffPanel from './klase/StaffPanel';
 import Laboratorija from './klase/Laboratorija';
 import MojeRezervacije from './klase/MojeRezervacije';
 
-// --- KOMPONENTA: HOMEPAGE ---
 const HomePage = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center p-6">
-      <h1 className="text-4xl font-bold text-blue-900 mb-4">Dobrodošli u Bolnički Sistem</h1>
-      
-      {/* Koristimo grid za ljepši raspored dugmadi */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        
-        <Link to="/RezervacijaPacijent" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg flex items-center justify-center gap-2">
-          Zakaži Termin (Pacijent)
+    <div className="homepage">
+      <h1 className="homepage-title">Bolnički Sistem</h1>
+      <p className="homepage-subtitle">Odaberite uslugu</p>
+      <div className="homepage-grid">
+
+        <Link to="/RezervacijaPacijent" className="hp-card">
+          <Calendar size={40} />
+          <span>Zakaži Termin</span>
         </Link>
 
-        <Link to="/doctor-panel" className="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
-          Doktorski Panel
+        <Link to="/doctor-panel" className="hp-card">
+          <Stethoscope size={40} />
+          <span>Doktorski Panel</span>
         </Link>
 
-        <Link to="/rezervacija-specijalista" className="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
-          Uputi kod specijaliste
+        <Link to="/rezervacija-specijalista" className="hp-card">
+          <UserCog size={40} />
+          <span>Uputi specijalisti</span>
         </Link>
 
-        {/* POPRAVLJEN LINK (zatvoren tag i dodata ikonica) */}
-        <Link to="/staff-panel" className="bg-blue-600 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg">
-          <ClipboardList size={20} /> Panel medicinskog osoblja
+        <Link to="/staff-panel" className="hp-card">
+          <ClipboardList size={40} />
+          <span>Medicinsko Osoblje</span>
         </Link>
-  
-        <Link to="/laboratorija" className="bg-purple-600 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-purple-700 shadow-lg">
-          <Beaker size={20} /> Laboratorija
+
+        <Link to="/laboratorija" className="hp-card">
+          <Beaker size={40} />
+          <span>Laboratorija</span>
         </Link>
-        <Link to="/moje-rezervacije" className="border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2">
-          Moje Rezervacije
+
+        <Link to="/moje-rezervacije" className="hp-card">
+          <FileText size={40} />
+          <span>Moje Rezervacije</span>
         </Link>
 
       </div>
@@ -48,12 +51,10 @@ const HomePage = () => {
   );
 };
 
-// --- GLAVNI APP ---
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Promijenio sam path sa "/home" na "/" da se vidi odmah pri pokretanju */}
         <Route path="/" element={<HomePage />} />
         <Route path="/RezervacijaPacijent" element={<RezervacijaPacijent />} />
         <Route path="/doctor-panel" element={<DoctorPanel />} />

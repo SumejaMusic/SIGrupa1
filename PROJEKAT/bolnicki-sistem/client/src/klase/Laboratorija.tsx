@@ -2,21 +2,17 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Upload, FileCheck, ArrowLeft } from "lucide-react";
 
-
 const Laboratorija: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploadSuccess, setIsUploadSuccess] = useState(false);
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!selectedFile) return;
-
     if (selectedFile.type !== "application/pdf") {
       alert("Dozvoljeni su samo PDF fajlovi.");
       return;
     }
-
     setIsUploadSuccess(true);
     setTimeout(() => setIsUploadSuccess(false), 3000);
   };
@@ -25,71 +21,56 @@ const Laboratorija: React.FC = () => {
     <div className="lab-page">
       <div className="lab-container">
 
-        <Link to="/staff-panel" className="lab-back-link">
-          <ArrowLeft size={18} /> Povratak u panel
-        </Link>
+        <div className="navLinks">
+          <Link to="/staff-panel" className="backLink">
+            <ArrowLeft size={18} /> Nazad na panel
+          </Link>
+          <Link to="/" className="backLink">
+            <ArrowLeft size={18} /> Nazad na početnu stranicu
+          </Link>
+        </div>
 
         <div className="lab-card">
+          <h1 className="lab-title">Dodavanje laboratorijskog nalaza</h1>
 
-          <h1 className="lab-title">
-            Dodavanje laboratorijskog nalaza
-          </h1>
-
-          {/* SEARCH PACIJENT */}
-          <div className="lab-search-section">
-            <label className="lab-label">
-              Pretraži pacijenta (ID ili JMBG)
-            </label>
-
-            <div className="lab-input-wrapper">
-              <Search className="lab-input-icon" size={18} />
-              <input
-                type="text"
-                placeholder="Unesite podatke pacijenta..."
-                className="lab-input"
-              />
-            </div>
-          </div>
-
-          {/* UPLOAD */}
           <form onSubmit={handleUpload} className="lab-form">
+            <div className="lab-search-section">
+              <label className="lab-label">
+                Pretraži pacijenta (JMBG):
+              </label>
+              <div className="lab-input-wrapper">
+                <input
+                  type="text"
+                  placeholder="Unesite podatke pacijenta..."
+                  className="lab-input"
+                />
+              </div>
+            </div>
 
+            {/* UPLOAD */}
             <div className="lab-upload-box">
               <input
                 type="file"
                 accept=".pdf"
-                onChange={(e) =>
-                  setSelectedFile(e.target.files?.[0] || null)
-                }
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                 className="lab-file-input"
                 id="pdf-upload"
               />
-
               <label htmlFor="pdf-upload" className="lab-upload-label">
                 <Upload className="lab-upload-icon" size={40} />
-
                 <p className="lab-upload-text">
-                  {selectedFile
-                    ? selectedFile.name
-                    : "Kliknite za odabir PDF nalaza"}
+                  {selectedFile ? selectedFile.name : "Kliknite za odabir PDF nalaza"}
                 </p>
-
-                <p className="lab-upload-hint">
-                  Maksimalna veličina: 5MB
-                </p>
+                <p className="lab-upload-hint">Maksimalna veličina: 5MB</p>
               </label>
             </div>
 
             {/* BUTTON */}
             <button
               type="submit"
-              className={`lab-submit-button ${
-                isUploadSuccess ? "success" : ""
-              }`}
+              className={`lab-submit-button ${isUploadSuccess ? "success" : ""}`}
             >
-              {isUploadSuccess
-                ? "Nalaz uspješno dodan!"
-                : "Potvrdi i pošalji"}
+              {isUploadSuccess ? "Nalaz uspješno dodan!" : "Potvrdi i pošalji"}
             </button>
 
             {/* SUCCESS */}
