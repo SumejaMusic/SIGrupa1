@@ -24,18 +24,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './bolnicki-sistem/server/package-lock.json'
+          node-version: '24'
 
       - name: Install dependencies
-        working-directory: ./bolnicki-sistem/server
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npm install
 
       - name: Generate Prisma Client
-        working-directory: ./bolnicki-sistem/server
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npx prisma generate
 
       - name: Run tests
-        working-directory: ./bolnicki-sistem/server
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npm test
