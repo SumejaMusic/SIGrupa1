@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import './App.css';
+import { ClipboardList, Beaker, Calendar, Stethoscope, UserCog, FileText } from 'lucide-react'; 
+
+import DoctorPanel from './klase/DoctorPanel'; 
+import RezervacijaPacijent from './klase/RezervacijaPacijent';
+import RezervacijaSpecijalista from './klase/RezervacijaSpecijalista'; 
+import StaffPanel from './klase/StaffPanel';
+import Laboratorija from './klase/Laboratorija';
+import MojeRezervacije from './klase/MojeRezervacije';
+
+const HomePage = () => {
+  return (
+    <div className="homepage">
+      <h1 className="homepage-title">Bolnički Sistem</h1>
+      <p className="homepage-subtitle">Odaberite uslugu</p>
+      <div className="homepage-grid">
+
+        <Link to="/RezervacijaPacijent" className="hp-card">
+          <Calendar size={40} />
+          <span>Zakaži Termin</span>
+        </Link>
+
+        <Link to="/doctor-panel" className="hp-card">
+          <Stethoscope size={40} />
+          <span>Doktorski Panel</span>
+        </Link>
+
+        <Link to="/rezervacija-specijalista" className="hp-card">
+          <UserCog size={40} />
+          <span>Uputi specijalisti</span>
+        </Link>
+
+        <Link to="/staff-panel" className="hp-card">
+          <ClipboardList size={40} />
+          <span>Medicinsko Osoblje</span>
+        </Link>
+
+        <Link to="/laboratorija" className="hp-card">
+          <Beaker size={40} />
+          <span>Laboratorija</span>
+        </Link>
+
+        <Link to="/moje-rezervacije" className="hp-card">
+          <FileText size={40} />
+          <span>Moje Rezervacije</span>
+        </Link>
+
+      </div>
+    </div>
+  );
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/RezervacijaPacijent" element={<RezervacijaPacijent />} />
+        <Route path="/doctor-panel" element={<DoctorPanel />} />
+        <Route path="/rezervacija-specijalista" element={<RezervacijaSpecijalista />} />
+        <Route path="/staff-panel" element={<StaffPanel />} />
+        <Route path="/laboratorija" element={<Laboratorija />} />
+        <Route path="/moje-rezervacije" element={<MojeRezervacije />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
