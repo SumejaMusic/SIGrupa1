@@ -16,13 +16,9 @@ const router = Router();
 // Body: { terminId, doktorId, pacijentId, komentar?, hitnost?, tipPregledaId }
 router.post("/", kreirajRezervaciju);
 
-// GET /api/rezervacije/moje
-// US-05 — Rezervacije trenutno prijavljenog pacijenta
-router.get("/moje", getRezervacijeZaPacijenta);
-
 // GET /api/rezervacije/pacijent/:pacijentId
 // US-05 — Sve rezervacije konkretnog pacijenta
-router.get("/pacijent/:pacijentId", getRezervacijeZaPacijenta);
+router.get("/moje", getRezervacijeZaPacijenta);
 
 // GET /api/rezervacije/doktor/:doktorId
 // US-05 — Sve rezervacije konkretnog doktora
