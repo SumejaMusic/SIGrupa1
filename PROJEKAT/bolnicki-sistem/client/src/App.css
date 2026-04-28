@@ -1,42 +1,852 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ============================================
+   STRANICA — glavni wrapper
+   ============================================ */
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center; /* Centriranje horizontalno */
+  align-items: center;     /* Centriranje vertikalno */
+  min-height: 100vh;       /* Uzima punu visinu ekrana */
+  background-color: #f5f5f5; /* Opciono: boja pozadine cijele stranice */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Tvoj postojeći stil (uz malu izmjenu margina) */
+.stranica {
+  width: 100%;             /* Osigurava responzivnost */
+  max-width: 520px;
+  margin: 10px auto; 
+  padding: 32px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;}
+/* ============================================
+   PACIJENT-KARTICA — prikaz prijavljenog korisnika
+   ============================================ */
+.pacijent-kartica {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 28px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.pacijent-oznaka {
+  font-size: 12px;
+  font-weight: 500;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 4px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.pacijent-ime {
+  font-size: 20px;
+  font-weight: 700;
+  color: #14532d;
+  margin: 0;
+}
+
+/* ============================================
+   FORMA-NASLOV — naslov stranice / forme
+   ============================================ */
+.forma-naslov {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 24px;
+}
+
+/* ============================================
+   FORMA-SADRZAJ — wrapper svih polja forme
+   ============================================ */
+.forma-sadrzaj {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ============================================
+   FORMA-POLJE — group: oznaka + input/select/textarea
+   ============================================ */
+.forma-polje {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ============================================
+   POLJE-OZNAKA — label iznad inputa
+   ============================================ */
+.polje-oznaka {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* ============================================
+   POLJE-SELECT — dropdown za doktora i termin
+   ============================================ */
+.polje-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: #111827;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.polje-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background-color: #fff;
+}
+
+/* ============================================
+   HITNOST-RED — red s checkboxom za hitnost
+   ============================================ */
+.hitnost-red {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+}
+
+/* ============================================
+   HITNOST-CHECKBOX — checkbox unutar hitnost-red
+   ============================================ */
+.hitnost-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #dc2626;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   HITNOST-OZNAKA — tekst pored checkboxa
+   ============================================ */
+.hitnost-oznaka {
+  font-size: 15px;
+  font-weight: 600;
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+/* ============================================
+   POLJE-TEXTAREA — tekstualno polje za komentar
+   ============================================ */
+.polje-textarea {
+  width: 100%;
+  padding: 10px 0px;
+  font-size: 15px;
+  color: #111827;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.polje-textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background-color: #fff;
+}
+
+.polje-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* ============================================
+   DUGME-REZERVISI — submit dugme
+   ============================================ */
+.dugme-rezervisi {
+  width: 100%;
+  padding: 13px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.30);
+  letter-spacing: 0.01em;
+}
+
+.dugme-rezervisi:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.40);
+}
+
+.dugme-rezervisi:active {
+  transform: scale(0.98);
+  background: #1e40af;
+}
+
+.page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.backLink {
+  display: flex;
+  gap: 8px;
+  color: #2563eb;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+}
+
+.sidebar {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  height: fit-content;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .card {
-  padding: 2em;
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e5e7eb;
 }
 
-.read-the-docs {
-  color: #888;
+.doctorName {
+  font-weight: bold;
+}
+
+.department {
+  color: #2563eb;
+  font-size: 14px;
+}
+
+.slot {
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btnSecondary {
+  padding: 10px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 8px;
+}
+
+.btnSuccess {
+  padding: 10px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.confirmBox {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.green {
+  color: green;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7fb;
+  font-family: Arial;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: #0f2d5c;
+  color: white;
+  padding: 20px;
+}
+
+.logo {
+  font-size: 20px;
+  margin-bottom: 30px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.navItem.active {
+  background: #1d4ed8;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  padding: 30px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.subtitle {
+  color: #6b7280;
+}
+
+.primaryButton {
+  background: #2563eb;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.cardTitle {
+  display: flex;
+  gap: 8px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* LIST */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.time {
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.name {
+  flex: 1;
+  margin-left: 10px;
+}
+
+/* STATUS */
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.završeno {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.u.toku {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.čeka {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+/* INFO BOX */
+.infoBox {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.blue {
+  background: #eff6ff;
+}
+
+.orange {
+  background: #fff7ed;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.value {
+  font-size: 14px;
+  margin-top: 4px;
+}
+.patientPreview {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.patientName {
+  font-weight: bold;
+  color: #111827;
+}
+
+.patientMeta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.patientEmpty {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* PAGE */
+.lab-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+}
+
+/* CONTAINER */
+.lab-container {
+  max-width: 700px;
+  margin: auto;
+}
+
+/* BACK LINK */
+.lab-back-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2563eb;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+
+/* CARD */
+.lab-card {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* TITLE */
+.lab-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* SEARCH */
+.lab-search-section {
+  margin-bottom: 15px;
+}
+
+.lab-label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+
+.lab-input-icon {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  color: #9ca3af;
+}
+
+.lab-input {
+  width: 100%;
+  padding: 10px 10px 10px 35px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* FORM */
+.lab-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* UPLOAD */
+.lab-upload-box {
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.lab-upload-box:hover {
+  border-color: #2563eb;
+}
+
+.lab-file-input {
+  display: none;
+}
+
+.lab-upload-label {
+  cursor: pointer;
+}
+
+.lab-upload-icon {
+  color: #2563eb;
+  margin-bottom: 10px;
+}
+
+.lab-upload-text {
+  font-weight: 500;
+  color: #374151;
+}
+
+.lab-upload-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* BUTTON */
+.lab-submit-button {
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.lab-submit-button.success {
+  background: #16a34a;
+}
+
+/* SUCCESS */
+.lab-success-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #15803d;
+  font-weight: 500;
+}
+
+
+/* LAYOUT */
+.staff-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7fb;
+  font-family: Arial;
+}
+
+/* SIDEBAR */
+.staff-sidebar {
+  width: 240px;
+  background: #1e293b;
+  color: white;
+  padding: 20px;
+}
+
+.staff-logo {
+  font-size: 20px;
+  margin-bottom: 25px;
+}
+
+.staff-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #cbd5f5;
+}
+
+.nav-item:hover {
+  background: #334155;
+}
+
+.nav-item.active {
+  background: #475569;
+  color: white;
+}
+
+.logout {
+  margin-top: 30px;
+  color: #9ca3af;
+}
+
+/* MAIN */
+.staff-main {
+  flex: 1;
+  padding: 30px;
+}
+
+.back-link {
+  color: #2563eb;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.add-button {
+  background: #16a34a;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* TABLE */
+.table-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f1f5f9;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.table-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-row:hover {
+  background: #f9fafb;
+}
+
+/* CELLS */
+.time {
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.patient-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* BADGES */
+.urgent-badge {
+  background: #dc2626;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.scheduled {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.canceled {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* ROW STATES */
+.urgent-row {
+  background: #fef2f2;
+}
+
+/* ACTIONS */
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.icon-button {
+  padding: 6px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: #f1f5f9;
+}
+
+.icon-button.danger {
+  color: #dc2626;
+}
+
+.icon-button.disabled {
+  color: #9ca3af;
 }
