@@ -6,11 +6,13 @@ on:
       - main
       - dev
       - osnoveRezervacije
+      - fix/github-actions
   pull_request:
     branches:
       - main
       - dev
       - osnoveRezervacije
+      - fix/github-actions
 
 jobs:
   test:
@@ -24,18 +26,16 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './server/package-lock.json'
+          cache-dependency-path: './bolnicki-sistem/server/package-lock.json'
 
       - name: Install dependencies
-        working-directory: ./server
+        working-directory: ./bolnicki-sistem/server
         run: npm install
 
-      # Iako su testovi mock-ovani, Prisma klijent se mora generisati 
-      # jer tvoj kod uvozi tipove i klase iz @prisma/client
       - name: Generate Prisma Client
-        working-directory: ./server
+        working-directory: ./bolnicki-sistem/server
         run: npx prisma generate
 
       - name: Run tests
-        working-directory: ./server
+        working-directory: ./bolnicki-sistem/server
         run: npm test
