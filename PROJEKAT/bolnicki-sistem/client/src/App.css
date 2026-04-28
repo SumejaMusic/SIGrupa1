@@ -73,6 +73,7 @@ body {
    FORMA-POLJE — group: oznaka + input/select/textarea
    ============================================ */
 .forma-polje {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -83,7 +84,7 @@ body {
    ============================================ */
 .polje-oznaka {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
 }
 
@@ -913,13 +914,19 @@ th, td {
 }
 
 .homepage {
-  min-height: 100vh;
+  height: 100vh;         
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  background: #f0f4f8;
-  padding: 32px;
+  align-items: center;     
+  text-align: center;
+}
+
+.homepage-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .homepage-title {
@@ -935,13 +942,6 @@ th, td {
   color: #6b7280;
   margin-bottom: 48px;
   text-align: center;
-}
-
-.homepage-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 200px);
-  gap: 80px;
-  justify-content: center;
 }
 
 .hp-card {
@@ -1176,4 +1176,17 @@ th, td {
 .mr-zakazi-btn:hover {
   background: #1d4ed8;
   color: white;
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  background-color: #f9fafb;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
 }
