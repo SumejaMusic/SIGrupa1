@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar,
@@ -14,7 +14,7 @@ import {
 
 interface Termin {
   datum: string;
-  vrijeme: string;
+  vrijeme: number; // backend vraca broj minuta od ponoći (npr. 540 = 09:00)
 }
 
 interface Doktor {
@@ -35,6 +35,13 @@ interface Poruka {
   tip: 'success' | 'error';
   tekst: string;
 }
+
+// Pretvara minute od ponoći u string (npr. 540 → "09:00")
+const minuteUVrijeme = (minute: number): string => {
+  const h = Math.floor(minute / 60).toString().padStart(2, '0');
+  const m = (minute % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
 
 const MojeRezervacije = () => {
   const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
@@ -62,8 +69,9 @@ const MojeRezervacije = () => {
   }, []);
 
   // PROVJERA 24h (NFR-10)
-  const mozeSeOtkazati = (datum: string, vrijeme: string) => {
-    const termin = new Date(`${datum}T${vrijeme}`);
+  const mozeSeOtkazati = (datum: string, vrijeme: number) => {
+    const vrijemeStr = minuteUVrijeme(vrijeme);
+    const termin = new Date(`${datum.split('T')[0]}T${vrijemeStr}:00`);
     const sada = new Date();
     return (termin.getTime() - sada.getTime()) / (1000 * 60 * 60) > 24;
   };
@@ -79,7 +87,7 @@ const MojeRezervacije = () => {
 
       if (response.ok) {
         setRezervacije(prev => prev.filter(r => r.id !== id));
-        setPoruka({ tip: 'success', tekst: "Rezervacija uspješno otkazana. Email obavijest je poslana." });
+        setPoruka({ tip: 'success', tekst: "Rezervacija uspješno otkazana." });
       } else {
         const data = await response.json();
         throw new Error(data.poruka || "Greška na serveru");
@@ -142,7 +150,7 @@ const MojeRezervacije = () => {
                       </span>
                       <span className="mr-meta-badge">
                         <Clock size={14} />
-                        {res.termin.vrijeme}
+                        {minuteUVrijeme(res.termin.vrijeme)}
                       </span>
                     </div>
 
