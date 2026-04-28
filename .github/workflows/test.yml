@@ -1,7 +1,6 @@
 name: Tests
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
@@ -28,13 +27,13 @@ jobs:
           node-version: '24'
 
       - name: Install dependencies
-        working-directory: ./bolnicki-sistem/server
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npm install
 
       - name: Generate Prisma Client
-        working-directory: ./bolnicki-sistem/server
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npx prisma generate
 
       - name: Run tests
-        working-directory: ./bolnicki-sistem/server
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npm test
