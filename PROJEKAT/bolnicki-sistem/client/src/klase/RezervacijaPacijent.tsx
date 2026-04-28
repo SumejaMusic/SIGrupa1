@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 type KorisnikInfo = {
   ime: string;
@@ -8,58 +8,103 @@ type KorisnikInfo = {
 };
 
 type RezervacijaFormData = {
-  idPacijent: number;
-  idDoktor: number;
-  idTermina: number;
-  idTipPregleda: number;
-  komentar: string;
-  hitnost: boolean;
+  odjelId: number;
+  doktorId: number;
+  terminId: number;
+  tipPregledaId: number;
 };
 
 function RezervacijaPacijent() {
   const [korisnik, setKorisnik] = useState<KorisnikInfo | null>(null);
 
   const [form, setForm] = useState<RezervacijaFormData>({
-    idPacijent: 1,
-    idDoktor: 0,
-    idTermina: 0,
-    idTipPregleda: 0,
-    komentar: "",
-    hitnost: false
+    odjelId: 0,
+    doktorId: 0,
+    terminId: 0,
+    tipPregledaId: 0,
   });
 
-  // SIMULACIJA ULOGOVANOG KORISNIKA
-  // useEffect simulira poziv API-ju koji provjerava ko je ulogovan
+// mock podaci
+  const odjeli = [
+    { id: 1, naziv: "Opća medicina" },
+    { id: 2, naziv: "Pedijatrija" },
+  ];
+
+  const doktori = [
+    { id: 1, ime: "Dr. Amar Hadžić", odjelId: 1 },
+    { id: 2, ime: "Dr. Aida Nukić", odjelId: 2 },
+  ];
+
+  const termini = [
+    { id: 1, label: "13.04.2026 09:00", doktorId: 1 },
+    { id: 2, label: "13.04.2026 09:30", doktorId: 1 },
+    { id: 3, label: "13.04.2026 10:00", doktorId: 2 },
+  ];
+
+  // ─────────────────────────────────────────────
   useEffect(() => {
-    // Ovako bi izgledao poziv: fetch('/api/auth/me').then(...)
     setKorisnik({
       ime: "Marko",
       prezime: "Marković",
-      uloga: "PACIJENT"
+      uloga: "PACIJENT",
     });
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const val = type === 'checkbox'
-      ? (e.target as HTMLInputElement).checked
-      : name.startsWith('id') ? parseInt(value) : value;
+  const filtriraniDoktori = doktori.filter(
+    (d) => d.odjelId === form.odjelId
+  );
 
-    setForm({ ...form, [name]: val });
+  const filtriraniTermini = termini.filter(
+    (t) => t.doktorId === form.doktorId
+  );
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const num = parseInt(value);
+
+    setForm((prev) => {
+      if (name === "odjelId") {
+        return {
+          ...prev,
+          odjelId: num,
+          doktorId: 0,
+          terminId: 0,
+        };
+      }
+
+      if (name === "doktorId") {
+        return {
+          ...prev,
+          doktorId: num,
+          terminId: 0,
+        };
+      }
+
+      return { ...prev, [name]: num };
+    });
   };
 
+  // ─────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Slanje rezervacije za pacijenta ID:", form.idPacijent);
-    alert(`Pacijent ${korisnik?.ime} ${korisnik?.prezime} je uspješno rezervisao termin!`);
+
+    if (
+      form.odjelId === 0 ||
+      form.doktorId === 0 ||
+      form.terminId === 0 ||
+      form.tipPregledaId === 0
+    ) {
+      alert("Molimo odaberite sva polja.");
+      return;
+    }
+
+    console.log("FORM DATA:", form);
+    alert("Uspješno rezervisano");
   };
 
+  // ─────────────────────────────────────────────
   return (
     <div className="stranica">
-
-      {/* Kartica s imenom prijavljenog pacijenta */}
       <div className="pacijent-kartica">
         <p className="pacijent-oznaka">Prijavljeni pacijent</p>
         <h2 className="pacijent-ime">
@@ -67,58 +112,82 @@ function RezervacijaPacijent() {
         </h2>
       </div>
 
-      <h1 className="forma-naslov">Nova Rezervacija</h1>
+      <h1 className="forma-naslov">Nova rezervacija</h1>
 
       <form onSubmit={handleSubmit} className="forma-sadrzaj">
+
+        {/* ODJEL */}
+        <div className="forma-polje">
+          <label className="polje-oznaka">Izaberite odjel:</label>
+          <select
+            name="odjelId"
+            onChange={handleChange}
+            value={form.odjelId}
+            className="polje-select"
+          >
+            <option value={0}>--- Odaberite ---</option>
+            {odjeli.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.naziv}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* DOKTOR */}
         <div className="forma-polje">
           <label className="polje-oznaka">Izaberite doktora:</label>
-          <select name="idDoktor" onChange={handleChange} className="polje-select">
-            <option value="0">--- Odaberite ---</option>
-            <option value="10">Dr. Amar Arslanagić</option>
-            <option value="11">Dr. Sara Sarić</option>
+          <select
+            name="doktorId"
+            onChange={handleChange}
+            value={form.doktorId}
+            className="polje-select"
+          >
+            <option value={0}>--- Prvo odaberite odjel ---</option>
+            {filtriraniDoktori.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.ime}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* TERMIN */}
+        {/* TIP PREGLEDA */}
         <div className="forma-polje">
-          <label className="polje-oznaka">Dostupni termini:</label>
-          <select name="idTermina" onChange={handleChange} className="polje-select">
-            <option value="0">--- Odaberite vrijeme ---</option>
-            <option value="101">Danas, 10:00h</option>
-            <option value="102">Danas, 11:30h</option>
+          <label className="polje-oznaka">Tip pregleda:</label>
+          <select
+            name="tipPregledaId"
+            onChange={handleChange}
+            value={form.tipPregledaId}
+            className="polje-select"
+          >
+            <option value={0}>--- Odaberite ---</option>
+            <option value={1}>Preventivni pregled</option>
           </select>
         </div>
 
-        {/* HITNOST */}
-        <div className="hitnost-red">
-          <input
-            type="checkbox"
-            name="hitnost"
-            checked={form.hitnost}
-            onChange={handleChange}
-            id="hitno"
-            className="hitnost-checkbox"
-          />
-          <label htmlFor="hitno" className="hitnost-oznaka">Označi kao HITAN slučaj</label>
-        </div>
-
-        {/* KOMENTAR */}
+        {/* TERMINI */}
         <div className="forma-polje">
-          <label className="polje-oznaka">Dodatna napomena:</label>
-          <textarea
-            name="komentar"
-            value={form.komentar}
+          <label className="polje-oznaka">Slobodni termini:</label>
+          <select
+            name="terminId"
             onChange={handleChange}
-            className="polje-textarea"
-            placeholder="Unesite simptome ili razlog posjete..."
-          />
+            value={form.terminId}
+            className="polje-select"
+          >
+            <option value={0}>--- Prvo odaberite doktora ---</option>
+            {filtriraniTermini.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button type="submit" className="dugme-rezervisi">
-          Potvrdi i Rezerviši
+          Potvrdi i rezerviši
         </button>
+
         <Link to="/" className="dugme-odustani">
           Nazad na početnu stranicu
         </Link>

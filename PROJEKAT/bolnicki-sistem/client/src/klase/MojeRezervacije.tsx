@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Calendar,
   CheckCircle2,
@@ -15,7 +16,6 @@ interface Rezervacija {
   doktorIme: string;
   datum: string;
   vrijeme: string;
-  komentar: string;
 }
 
 interface Poruka {
@@ -24,9 +24,9 @@ interface Poruka {
 }
 
 const mockRezervacije = [
-  { id: 1, doktorIme: "Dr. Amar Kovačević", datum: "2026-05-10", vrijeme: "09:00", komentar: "Kontrolni pregled" },
-  { id: 2, doktorIme: "Dr. Sara Hadžić", datum: "2026-04-29", vrijeme: "08:30", komentar: "" },
-  { id: 3, doktorIme: "Dr. Emir Selimović", datum: "2026-05-02", vrijeme: "11:00", komentar: "Donijeti nalaze" },
+  { id: 1, doktorIme: "Dr. Amar Kovačević", datum: "2026-05-10", vrijeme: "09:00" },
+  { id: 2, doktorIme: "Dr. Sara Hadžić", datum: "2026-04-29", vrijeme: "08:30" },
+  { id: 3, doktorIme: "Dr. Emir Selimović", datum: "2026-05-02", vrijeme: "11:00" },
 ];
 
 const MojeRezervacije = () => {
@@ -34,15 +34,33 @@ const MojeRezervacije = () => {
   const [poruka, setPoruka] = useState<Poruka | null>(null);
 
   const mozeSeOtkazati = (datum: string, vrijeme: string) => {
-  const termin = new Date(`${datum}T${vrijeme}`);
-  const sada = new Date();
-  return (termin.getTime() - sada.getTime()) / (1000 * 60 * 60) > 24;
-};
+    const termin = new Date(`${datum}T${vrijeme}`);
+    const sada = new Date();
+    return (termin.getTime() - sada.getTime()) / (1000 * 60 * 60) > 24;
+  };
 
   const handleOtkazi = (id: number) => {
-    if (!window.confirm("Da li ste sigurni da želite otkazati ovaj termin?")) return;
+    const rezervacija = rezervacije.find(r => r.id === id);
+    if (!rezervacija) return;
+
+    if (!window.confirm("Jeste li sigurni da želite otkazati ovaj termin?")) return;
+
+    if (!mozeSeOtkazati(rezervacija.datum, rezervacija.vrijeme)) {
+      setPoruka({
+        tip: "error",
+        tekst: "Nije moguće otkazati termin manje od 24 sata unaprijed."
+      });
+      setTimeout(() => setPoruka(null), 4000);
+      return;
+    }
+
     setRezervacije(prev => prev.filter(r => r.id !== id));
-    setPoruka({ tip: 'success', tekst: "Termin uspješno otkazan." });
+
+    setPoruka({
+      tip: "success",
+      tekst: "Rezervacija uspješno otkazana."
+    });
+
     setTimeout(() => setPoruka(null), 4000);
   };
 
@@ -51,10 +69,10 @@ const MojeRezervacije = () => {
       <div className="mr-container">
 
         <div className="mr-top-nav">
-          <a href="/" className="mr-nazad-btn">
+          <Link to="/" className="mr-nazad-btn">
             <ArrowLeft size={16} />
             Nazad na početnu stranicu
-          </a>
+          </Link>
         </div>
 
         <h1 className="mr-heading">
@@ -73,6 +91,7 @@ const MojeRezervacije = () => {
           {rezervacije.length > 0 ? (
             rezervacije.map((res) => {
               const dozvoljeno = mozeSeOtkazati(res.datum, res.vrijeme);
+
               return (
                 <div key={res.id} className="mr-card">
                   <div className="mr-card__left">
@@ -91,18 +110,14 @@ const MojeRezervacije = () => {
                         {res.vrijeme}
                       </span>
                     </div>
-
-                    {res.komentar && (
-                      <div className="mr-komentar">
-                        <p className="mr-komentar__label">Napomena</p>
-                        <p className="mr-komentar__tekst">{res.komentar}</p>
-                      </div>
-                    )}
                   </div>
 
                   <div className="mr-card__right">
                     {dozvoljeno ? (
-                      <button className="mr-otkazi-btn" onClick={() => handleOtkazi(res.id)}>
+                      <button
+                        className="mr-otkazi-btn"
+                        onClick={() => handleOtkazi(res.id)}
+                      >
                         <XCircle size={16} /> Otkaži termin
                       </button>
                     ) : (
@@ -121,9 +136,9 @@ const MojeRezervacije = () => {
             <div className="mr-prazno">
               <CalendarX size={52} className="mr-prazno__ikona" />
               <p className="mr-prazno__tekst">Nemate zakazanih termina.</p>
-              <a href="/rezervacija-pacijent" className="mr-zakazi-btn">
+              <Link to="/rezervacija-pacijent" className="mr-zakazi-btn">
                 Zakaži odmah
-              </a>
+              </Link>
             </div>
           )}
         </div>

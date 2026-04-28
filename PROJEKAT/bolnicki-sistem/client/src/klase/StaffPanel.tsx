@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Clock, AlertTriangle, XCircle, UserPlus, FileText, Calendar } from "lucide-react";
-
+import { Calendar, UserPlus, FileText } from "lucide-react";
 
 interface Appointment {
   id: number;
@@ -9,29 +8,14 @@ interface Appointment {
   doctorName: string;
   time: string;
   status: "ZAKAZAN" | "OTKAZAN";
-  isUrgent: boolean;
 }
 
 const StaffPanel: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    { id: 1, patientName: "Adnan Cerić", doctorName: "Dr. Amar", time: "08:00", status: "ZAKAZAN", isUrgent: false },
-    { id: 2, patientName: "Emina Begić", doctorName: "Dr. Sara", time: "08:30", status: "ZAKAZAN", isUrgent: true },
-    { id: 3, patientName: "Haris Mujić", doctorName: "Dr. Amar", time: "09:00", status: "ZAKAZAN", isUrgent: false },
+  const [appointments] = useState<Appointment[]>([
+    { id: 1, patientName: "Adnan Cerić", doctorName: "Dr. Amar", time: "08:00", status: "ZAKAZAN" },
+    { id: 2, patientName: "Emina Begić", doctorName: "Dr. Sara", time: "08:30", status: "ZAKAZAN" },
+    { id: 3, patientName: "Haris Mujić", doctorName: "Dr. Amar", time: "09:00", status: "ZAKAZAN" },
   ]);
-
-  const toggleUrgent = (id: number) => {
-    setAppointments(prev =>
-      prev.map(a => a.id === id ? { ...a, isUrgent: !a.isUrgent } : a)
-    );
-  };
-
-  const cancelAppointment = (id: number) => {
-    if (window.confirm("Da li ste sigurni da želite otkazati termin?")) {
-      setAppointments(prev =>
-        prev.map(a => a.id === id ? { ...a, status: "OTKAZAN" } : a)
-      );
-    }
-  };
 
   return (
     <div className="staff-layout">
@@ -43,10 +27,6 @@ const StaffPanel: React.FC = () => {
         <nav className="staff-nav">
           <Link to="/staff-panel" className="nav-item active">
             <Calendar size={18} /> Raspored
-          </Link>
-
-          <Link to="/laboratorija" className="nav-item">
-            <FileText size={18} /> Laboratorija
           </Link>
         </nav>
       </aside>
@@ -76,29 +56,16 @@ const StaffPanel: React.FC = () => {
                 <th>Pacijent</th>
                 <th>Doktor</th>
                 <th>Status</th>
-                <th className="center">Akcije</th>
               </tr>
             </thead>
 
             <tbody>
               {appointments.map(a => (
-                <tr
-                  key={a.id}
-                  className={`table-row ${
-                    a.isUrgent && a.status !== "OTKAZAN" ? "urgent-row" : ""
-                  }`}
-                >
+                <tr key={a.id} className="table-row">
+
                   <td className="time">{a.time}</td>
 
-                  <td>
-                    <div className="patient-cell">
-                      {a.patientName}
-
-                      {a.isUrgent && a.status !== "OTKAZAN" && (
-                        <span className="urgent-badge">HITNO</span>
-                      )}
-                    </div>
-                  </td>
+                  <td>{a.patientName}</td>
 
                   <td>{a.doctorName}</td>
 
@@ -112,27 +79,6 @@ const StaffPanel: React.FC = () => {
                     </span>
                   </td>
 
-                  <td className="actions-cell">
-                    {a.status !== "OTKAZAN" && (
-                      <>
-                        <button
-                          onClick={() => toggleUrgent(a.id)}
-                          className={`icon-button ${
-                            a.isUrgent ? "disabled" : "danger"
-                          }`}
-                        >
-                          <AlertTriangle size={18} />
-                        </button>
-
-                        <button
-                          onClick={() => cancelAppointment(a.id)}
-                          className="icon-button"
-                        >
-                          <XCircle size={18} />
-                        </button>
-                      </>
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>
