@@ -1,13 +1,9 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../app.js";
-import { Redis } from "ioredis";
+import { redis } from "../lib/redis.js";
 
-const redis = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: 3 });
-
-// Seed kreira: korisnik doktora(1), doktor2(2), doktor3(3) → pacijent(4)
-// Zbog toga je idKorisnik pacijenta = 4
-const PACIJENT_KORISNIK_ID = "4";
+const PACIJENT_KORISNIK_ID = "2";
 
 describe("GET /api/termini", () => {
   it("vraća slobodne termine za doktora i datum", async () => {
@@ -36,7 +32,6 @@ describe("GET /api/termini", () => {
   });
 
   it("ne vraća zaključane termine (Redis lock)", async () => {
-    // Zaključaj termin 1 od strane nekog drugog korisnika
     await redis.setex("termin:lock:1", 120, "999");
 
     const res = await request(app)
@@ -45,8 +40,8 @@ describe("GET /api/termini", () => {
 
     expect(res.status).toBe(200);
     const ids = res.body.map((t: any) => t.id);
-    expect(ids).not.toContain(1); // termin 1 je zaključan
-    expect(ids).toContain(2);     // termin 2 je slobodan
+    expect(ids).not.toContain(1);
+    expect(ids).toContain(2);
 
     await redis.del("termin:lock:1");
   });
@@ -88,9 +83,8 @@ describe("POST /api/termini/:id/zakljucaj", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("poruka");
-    expect(res.body).toHaveProperty("ttl", 120); // NFR-22: 2 minute lock
+    expect(res.body).toHaveProperty("ttl", 120);
 
-    // Provjeri da je lock postavljen sa ispravnim korisnik ID-em
     const lock = await redis.get("termin:lock:1");
     expect(lock).toBe(PACIJENT_KORISNIK_ID);
 
@@ -98,7 +92,6 @@ describe("POST /api/termini/:id/zakljucaj", () => {
   });
 
   it("vraća 409 ako je termin zaključan od drugog korisnika", async () => {
-    // Zaključaj od korisnika 999
     await redis.setex("termin:lock:1", 120, "999");
 
     const res = await request(app)
@@ -112,7 +105,6 @@ describe("POST /api/termini/:id/zakljucaj", () => {
   });
 
   it("isti korisnik može osvježiti vlastiti lock (idempotentno)", async () => {
-    // Lock je postavljen na isti korisnik ID koji šaljemo u headeru
     await redis.setex("termin:lock:1", 120, PACIJENT_KORISNIK_ID);
 
     const res = await request(app)
@@ -142,7 +134,6 @@ describe("POST /api/termini/:id/oslobodi", () => {
   });
 
   it("oslobađanje već slobodnog termina vraća 200 (idempotentno)", async () => {
-    // redis.del ne greši ako key ne postoji — kontroler uvijek vraća 200
     const res = await request(app)
       .post("/api/termini/1/oslobodi")
       .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);

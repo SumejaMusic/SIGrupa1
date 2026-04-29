@@ -1,22 +1,19 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import app from "../app.js";
-import { Redis } from "ioredis";
+import { redis } from "../lib/redis.js";
 import { PrismaClient } from "@prisma/client";
 
-const redis = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: 3 });
 const prisma = new PrismaClient();
 
 const DOKTOR_ID = 1;
 const TERMIN_ID = 1;
 const TIP_PREGLEDA_ID = 1;
 
-// idKorisnik koji getCurrentPacijent() stvarno vraća — učitavamo iz baze
 let STVARNI_KORISNIK_ID: number;
 let STVARNI_PACIJENT_ID: number;
 
 beforeAll(async () => {
-  // Replicira logiku getCurrentPacijent() iz currentPatient.ts
   const testKorisnikId = Number(process.env.TEST_KORISNIK_ID);
   let pacijent = null;
 
@@ -44,11 +41,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await redis.quit();
   await prisma.$disconnect();
 });
 
 async function resetujTermin(terminId = TERMIN_ID) {
+  await prisma.historijaPregleda.deleteMany({
+    where: { rezervacija: { idTermina: terminId } },
+  });
   await prisma.rezervacije.deleteMany({ where: { idTermina: terminId } });
   await prisma.termin.update({
     where: { id: terminId },
@@ -73,6 +72,9 @@ async function kreirajRezervacijuHelper(terminId = TERMIN_ID) {
 }
 
 async function obrisiCustomTermin(id: number) {
+  await prisma.historijaPregleda.deleteMany({
+    where: { rezervacija: { idTermina: id } },
+  });
   await prisma.rezervacije.deleteMany({ where: { idTermina: id } });
   await prisma.termin.deleteMany({ where: { id } });
   await redis.del(`termin:lock:${id}`);
@@ -326,8 +328,6 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     expect(kreirajRes.status).toBe(201);
     const rezervacijaId = kreirajRes.body.id;
 
-    // getCurrentPacijent ignorira header — da dobijemo 403, trebamo promijeniti
-    // vlasnika rezervacije u bazi na nekog drugog pacijenta
     const drugiPacijent = await prisma.pacijent.findFirst({
       where: { id: { not: STVARNI_PACIJENT_ID } },
     });

@@ -7,23 +7,8 @@ on:
     branches: [main, dev, osnoveRezervacije, fix/github-actions]
 
 jobs:
-  test:
+  unit-tests:
     runs-on: ubuntu-latest
-
-    # DODAJ OVO: Servisi koji će raditi tokom testova
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: bolnica_test
-        ports:
-          - 5433:5432 # Mapiramo port baš kao u tvom docker-compose.test.yml
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6380:6379
 
     steps:
       - uses: actions/checkout@v3
@@ -37,18 +22,62 @@ jobs:
         working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npm install
 
-      # DODAJ OVO: Postavljanje baze prije testova
-      - name: Migrate Database
+      - name: Run unit tests
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
+        run: npm test
+
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: bolnica_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
+        run: npm install
+
+      - name: Migrate database
         working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: "postgresql://testuser:testpass@localhost:5433/bolnica_test"
 
-      - name: Run tests
+      - name: Run integration tests
         working-directory: ./PROJEKAT/bolnicki-sistem/server
-        # DODAJ OVO: Environment varijable koje tvoj kod čita
         env:
           NODE_ENV: test
           DATABASE_URL: "postgresql://testuser:testpass@localhost:5433/bolnica_test"
           REDIS_URL: "redis://localhost:6380"
-        run: npm test
+          TEST_KORISNIK_ID: "2"
+          TEST_PATIENT_EMAIL: "pacijent@test.com"
+          SKIP_DOCKER: "true"
+        run: npx dotenv -e .env.test -- vitest run --config vitest.integration.config.ts
