@@ -19,14 +19,47 @@ const mockReqRes = (params = {}, query = {}) => ({
   next: vi.fn(),
 });
 
+const mockDoktorZaListu = (overrides = {}) => ({
+  id: 1,
+  specijalizacija: "Kardiologija",
+  idOdjela: 2,
+  trajanjePregleda: 30,
+  korisnik: {
+    ime: "Ime",
+    prezime: "Prezime",
+    email: "doktor@test.com",
+    brojTelefona: "061111111",
+  },
+  odjel: { id: 2, naziv: "Odjel" },
+  ...overrides,
+});
+
 describe("getSviDoktori", () => {
     //testiramo da li se vracaju ispravne vrijednosti i da li su sve prisutne
  it("vraća listu svih doktora kada nema filtera", async () => {
   // 1. Definišeš više doktora
   const lažniDoktori = [
-    { id: 1, specijalizacija: "Kardiologija" },
-    { id: 2, specijalizacija: "Neurologija" },
-    { id: 3, specijalizacija: "Pedijatrija" }
+    mockDoktorZaListu(),
+    mockDoktorZaListu({
+      id: 2,
+      specijalizacija: "Neurologija",
+      korisnik: {
+        ime: "Drugi",
+        prezime: "Doktor",
+        email: "drugi@test.com",
+        brojTelefona: "062222222",
+      },
+    }),
+    mockDoktorZaListu({
+      id: 3,
+      specijalizacija: "Pedijatrija",
+      korisnik: {
+        ime: "Treći",
+        prezime: "Doktor",
+        email: "treci@test.com",
+        brojTelefona: "063333333",
+      },
+    })
   ];
   
   vi.mocked(prismaMock.doktor.findMany).mockResolvedValue(lažniDoktori as any);
@@ -35,7 +68,11 @@ describe("getSviDoktori", () => {
   await getSviDoktori(req, res, next);
 
   // 2. Provjeravaš da li je res.json pozvan sa TAČNO tim nizom
-  expect(res.json).toHaveBeenCalledWith(lažniDoktori);
+  expect(res.json).toHaveBeenCalledWith([
+    expect.objectContaining({ id: 1, ime: "Ime", odjelId: 2, specijalizacija: "Kardiologija" }),
+    expect.objectContaining({ id: 2, ime: "Drugi", odjelId: 2, specijalizacija: "Neurologija" }),
+    expect.objectContaining({ id: 3, ime: "Treći", odjelId: 2, specijalizacija: "Pedijatrija" }),
+  ]);
   
   // Dodatna provjera (opcionalno): Provjeri da li niz ima tačno 3 elementa
   const pozvaniPodaci = vi.mocked(res.json).mock.calls[0][0];
@@ -83,9 +120,9 @@ it("ignoriše prazne stringove u query parametrima", async () => {
 it("filtrira po specijalizaciji i odjelId istovremeno (precizna provjera)", async () => {
   // 1. Pripremamo bazu sa raznim slučajevima
   const sviDoktoriUBazi = [
-    { id: 1, specijalizacija: "Kardiologija", idOdjela: 2 }, // PROLAZI
-    { id: 2, specijalizacija: "Neurologija", idOdjela: 2 },  // PADA (pogrešna spec)
-    { id: 3, specijalizacija: "Kardiologija", idOdjela: 5 }  // PADA (pogrešan odjel)
+    mockDoktorZaListu({ id: 1, specijalizacija: "Kardiologija", idOdjela: 2 }), // PROLAZI
+    mockDoktorZaListu({ id: 2, specijalizacija: "Neurologija", idOdjela: 2 }),  // PADA (pogrešna spec)
+    mockDoktorZaListu({ id: 3, specijalizacija: "Kardiologija", idOdjela: 5 })  // PADA (pogrešan odjel)
   ];
 
   // Simuliramo šta bi prava baza uradila (vratila bi samo prvog)
@@ -108,7 +145,13 @@ it("filtrira po specijalizaciji i odjelId istovremeno (precizna provjera)", asyn
   );
 
   // 4. Provjeravamo izlaz (da li je korisnik dobio tačno ono što treba)
-  expect(res.json).toHaveBeenCalledWith(ocekivaniRezultat);
+  expect(res.json).toHaveBeenCalledWith([
+    expect.objectContaining({
+      id: 1,
+      specijalizacija: "Kardiologija",
+      odjelId: 2,
+    }),
+  ]);
   expect(vi.mocked(res.json).mock.calls[0][0]).toHaveLength(1);
 });
 
@@ -139,10 +182,10 @@ it("filtrira po specijalizaciji i odjelId istovremeno (precizna provjera)", asyn
  it("filtrira doktore po odjelId (provjerava konverziju stringa i rezultat)", async () => {
   // 1. Simuliramo da u bazi imamo doktore sa raznih odjela
   const sviDoktoriUBazi = [
-    { id: 1, ime: "Dr. Mujo", idOdjela: 2 },
-    { id: 2, ime: "Dr. Suljo", idOdjela: 2 },
-    { id: 3, ime: "Dr. Fata", idOdjela: 5 }, // Ovaj ne bi trebao biti u rezultatu
-    { id: 4, ime: "Dr. Dzeko", idOdjela: 5 } // Ovaj ne bi trebao biti u rezultatu
+    mockDoktorZaListu({ id: 1, idOdjela: 2, korisnik: { ime: "Mujo", prezime: "M", email: "m@test.com", brojTelefona: "1" } }),
+    mockDoktorZaListu({ id: 2, idOdjela: 2, korisnik: { ime: "Suljo", prezime: "S", email: "s@test.com", brojTelefona: "2" } }),
+    mockDoktorZaListu({ id: 3, idOdjela: 5, korisnik: { ime: "Fata", prezime: "F", email: "f@test.com", brojTelefona: "3" } }), // Ovaj ne bi trebao biti u rezultatu
+    mockDoktorZaListu({ id: 4, idOdjela: 5, korisnik: { ime: "Dzeko", prezime: "D", email: "d@test.com", brojTelefona: "4" } }) // Ovaj ne bi trebao biti u rezultatu
   ];
 
   // Filtriramo ih ručno za potrebe mock-a (da simuliramo šta bi prava baza uradila)
@@ -164,9 +207,12 @@ it("filtrira po specijalizaciji i odjelId istovremeno (precizna provjera)", asyn
   );
 
   // 4. PROVJERA 2: Da li je korisnik dobio samo doktore sa odjela 2?
-  expect(res.json).toHaveBeenCalledWith(filtriraniDoktori);
   expect(res.json).toHaveBeenCalledWith(expect.arrayContaining([
-    expect.objectContaining({ idOdjela: 2 })
+    expect.objectContaining({ id: 1, odjelId: 2 }),
+    expect.objectContaining({ id: 2, odjelId: 2 })
+  ]));
+  expect(res.json).toHaveBeenCalledWith(expect.arrayContaining([
+    expect.objectContaining({ odjelId: 2 })
   ]));
 });
 
@@ -243,13 +289,15 @@ describe("getSviDoktori - kombinacije filtera gdje jedna od vrijednosti ne posto
   });
 
   it("vraća doktore kada specijalizacija postoji ali odjelId ne postoji", async () => {
-    const lažniDoktori = [{ id: 1, specijalizacija: "Kardiologija" }];
+    const lažniDoktori = [mockDoktorZaListu({ id: 1, specijalizacija: "Kardiologija", idOdjela: 999 })];
     vi.mocked(prismaMock.doktor.findMany).mockResolvedValue(lažniDoktori as any);
 
     const { req, res, next } = mockReqRes({}, { specijalizacija: "Kardiologija", odjelId: "999" });
     await getSviDoktori(req, res, next);
 
-    expect(res.json).toHaveBeenCalledWith(lažniDoktori);
+    expect(res.json).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 1, specijalizacija: "Kardiologija", odjelId: 999 })
+    ]);
     expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -261,13 +309,15 @@ describe("getSviDoktori - kombinacije filtera gdje jedna od vrijednosti ne posto
   });
 
   it("vraća doktore kada odjelId postoji ali specijalizacija ne postoji", async () => {
-    const lažniDoktori = [{ id: 2, specijalizacija: "Neurologija" }];
+    const lažniDoktori = [mockDoktorZaListu({ id: 2, specijalizacija: "Neurologija", idOdjela: 2 })];
     vi.mocked(prismaMock.doktor.findMany).mockResolvedValue(lažniDoktori as any);
 
     const { req, res, next } = mockReqRes({}, { specijalizacija: "Nepostojeca", odjelId: "2" });
     await getSviDoktori(req, res, next);
 
-    expect(res.json).toHaveBeenCalledWith(lažniDoktori);
+    expect(res.json).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 2, specijalizacija: "Neurologija", odjelId: 2 })
+    ]);
     expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({

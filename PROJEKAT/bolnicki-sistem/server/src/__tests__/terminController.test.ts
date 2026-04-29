@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import { prismaMock } from "../lib/__mocks__/prisma.js";
 import { redisMock } from "../lib/__mocks__/redis.js";
 import {
@@ -7,9 +7,11 @@ import {
   zaključajTermin,
   oslobodiTermin,
 } from "../controllers/terminController.js";
+import { getCurrentKorisnikId } from "../lib/currentPatient.js";
 
 vi.mock("../lib/prisma.js");
 vi.mock("../lib/redis.js");
+vi.mock("../lib/currentPatient.js");
 
 const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) => ({
   req: { params, query, body, korisnik } as any,
@@ -18,6 +20,10 @@ const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) =>
     status: vi.fn().mockReturnThis(),
   } as any,
   next: vi.fn(),
+});
+
+beforeEach(() => {
+  vi.mocked(getCurrentKorisnikId).mockReset();
 });
 
 // ─────────────────────────────────────────────
@@ -365,6 +371,7 @@ describe("zaključajTermin", () => {
   // ─── HAPPY PATH ───────────────────────────────
 
   it("uspješno zaključava slobodan termin i vraća potvrdu — US-12 AC1", async () => {
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
 
@@ -381,6 +388,7 @@ describe("zaključajTermin", () => {
   });
 
   it("lock traje tačno 120 sekundi (2 minute) — US-12 AC1", async () => {
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(3);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
 
@@ -395,6 +403,7 @@ describe("zaključajTermin", () => {
   });
 
   it("dozvoljava istom korisniku da obnovi lock i vraća potvrdu — US-12", async () => {
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
 
@@ -413,6 +422,7 @@ describe("zaključajTermin", () => {
   // ─── 409 SLUČAJEVI — US-13 AC2 ───────────────
 
   it("vraća 409 kada termin zaključao drugi korisnik i ne postavlja novi lock — US-13 AC2", async () => {
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockResolvedValue("999");
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, {}, { id: 1 });
@@ -430,6 +440,7 @@ describe("zaključajTermin", () => {
   // ─── EDGE CASES ───────────────────────────────
 
   it("konvertuje string ID termina u ispravan Redis ključ", async () => {
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(7);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
 
@@ -445,6 +456,7 @@ describe("zaključajTermin", () => {
   });
 
   it("sprječava zaključavanje od strane korisnika čiji ID je sličan ali nije isti — US-13 AC2", async () => {
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(10);
     vi.mocked(redisMock.get).mockResolvedValue("1");
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, {}, { id: 10 });
@@ -462,6 +474,7 @@ describe("zaključajTermin", () => {
 
   it("poziva next pri Redis grešci na get i ne vraća odgovor", async () => {
     const greška = new Error("Redis greška");
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockRejectedValue(greška);
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, {}, { id: 1 });
@@ -474,6 +487,7 @@ describe("zaključajTermin", () => {
 
   it("poziva next pri Redis grešci na setex i ne vraća odgovor", async () => {
     const greška = new Error("Redis setex greška");
+    vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockRejectedValue(greška);
 
