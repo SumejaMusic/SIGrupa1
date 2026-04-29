@@ -18,5 +18,9 @@
     "experimentalSpecifierResolution": "node"
   },
   "include": ["src/**/*", "prisma/**/*"],
-  "exclude": ["node_modules"]
-}
+ "exclude": [
+  "node_modules",
+  "dist",
+  "src/__tests__",
+  "src/lib/__mocks__"
+]
