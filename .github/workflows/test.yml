@@ -34,6 +34,20 @@ jobs:
         working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npx prisma generate
 
-      - name: Run tests
+      - name: Create .env.test
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
+        run: |
+          cat > .env.test << 'ENVEOF'
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5433/bolnica_test
+          REDIS_URL=redis://localhost:6380
+          TEST_PATIENT_EMAIL=pacijent@test.com
+          NODE_ENV=test
+          ENVEOF
+
+      - name: Run unit tests
         working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npm test
+
+      - name: Run integration tests
+        working-directory: ./PROJEKAT/bolnicki-sistem/server
+        run: npm run test:integration
