@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar,
@@ -8,14 +8,27 @@ import {
   Clock,
   XCircle,
   CalendarX,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
+
+interface Termin {
+  datum: string;
+  vrijeme: number; // backend vraca broj minuta od ponoći (npr. 540 = 09:00)
+}
+
+interface Doktor {
+  korisnik: {
+    ime: string;
+    prezime: string;
+  };
+}
 
 interface Rezervacija {
   id: number;
-  doktorIme: string;
-  datum: string;
-  vrijeme: string;
+  termin: Termin;
+  doktor: Doktor;
+  komentar?: string;
 }
 
 interface Poruka {
@@ -23,46 +36,76 @@ interface Poruka {
   tekst: string;
 }
 
-const mockRezervacije = [
-  { id: 1, doktorIme: "Dr. Amar Kovačević", datum: "2026-05-10", vrijeme: "09:00" },
-  { id: 2, doktorIme: "Dr. Sara Hadžić", datum: "2026-04-29", vrijeme: "08:30" },
-  { id: 3, doktorIme: "Dr. Emir Selimović", datum: "2026-05-02", vrijeme: "11:00" },
-];
+// Pretvara minute od ponoći u string (npr. 540 → "09:00")
+const minuteUVrijeme = (minute: number): string => {
+  const h = Math.floor(minute / 60).toString().padStart(2, '0');
+  const m = (minute % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
 
 const MojeRezervacije = () => {
-  const [rezervacije, setRezervacije] = useState<Rezervacija[]>(mockRezervacije);
+  const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
+  const [loading, setLoading] = useState(true);
   const [poruka, setPoruka] = useState<Poruka | null>(null);
 
-  const mozeSeOtkazati = (datum: string, vrijeme: string) => {
-    const termin = new Date(`${datum}T${vrijeme}`);
+  // DOHVATANJE PODATAKA SA BACKENDA (US-05/US-10)
+  useEffect(() => {
+    const fetchRezervacije = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/rezervacije/moje');
+        if (!response.ok) throw new Error('Greška na serveru');
+        const data = await response.json();
+        setRezervacije(data);
+      } catch (err) {
+        console.error("Greška pri učitavanju:", err);
+        setPoruka({ tip: 'error', tekst: "Nije moguće učitati rezervacije." });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRezervacije();
+  }, []);
+
+  // PROVJERA 24h (NFR-10)
+  const mozeSeOtkazati = (datum: string, vrijeme: number) => {
+    const vrijemeStr = minuteUVrijeme(vrijeme);
+    const termin = new Date(`${datum.split('T')[0]}T${vrijemeStr}:00`);
     const sada = new Date();
     return (termin.getTime() - sada.getTime()) / (1000 * 60 * 60) > 24;
   };
 
-  const handleOtkazi = (id: number) => {
-    const rezervacija = rezervacije.find(r => r.id === id);
-    if (!rezervacija) return;
-
+  // OTKAZIVANJE TERMINA (US-10, NFR-09, NFR-11)
+  const handleOtkazi = async (id: number) => {
     if (!window.confirm("Jeste li sigurni da želite otkazati ovaj termin?")) return;
 
-    if (!mozeSeOtkazati(rezervacija.datum, rezervacija.vrijeme)) {
-      setPoruka({
-        tip: "error",
-        tekst: "Nije moguće otkazati termin manje od 24 sata unaprijed."
+    try {
+      const response = await fetch(`/api/rezervacije/${id}/otkazi/pacijent`, {
+        method: 'PATCH',
       });
-      setTimeout(() => setPoruka(null), 4000);
-      return;
+
+      if (response.ok) {
+        setRezervacije(prev => prev.filter(r => r.id !== id));
+        setPoruka({ tip: 'success', tekst: "Rezervacija uspješno otkazana." });
+      } else {
+        const data = await response.json();
+        throw new Error(data.poruka || "Greška na serveru");
+      }
+    } catch (err: any) {
+      setPoruka({ tip: 'error', tekst: err.message || "Otkazivanje nije uspjelo. Pokušajte ponovo." });
     }
-
-    setRezervacije(prev => prev.filter(r => r.id !== id));
-
-    setPoruka({
-      tip: "success",
-      tekst: "Rezervacija uspješno otkazana."
-    });
 
     setTimeout(() => setPoruka(null), 4000);
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="animate-spin text-blue-600" size={48} />
+      </div>
+    );
+  }
 
   return (
     <div className="mr-page">
@@ -90,26 +133,33 @@ const MojeRezervacije = () => {
         <div className="mr-list">
           {rezervacije.length > 0 ? (
             rezervacije.map((res) => {
-              const dozvoljeno = mozeSeOtkazati(res.datum, res.vrijeme);
+              const dozvoljeno = mozeSeOtkazati(res.termin.datum, res.termin.vrijeme);
 
               return (
                 <div key={res.id} className="mr-card">
                   <div className="mr-card__left">
                     <div className="mr-doctor-name">
                       <User size={18} color="#2563eb" />
-                      {res.doktorIme}
+                      Dr. {res.doktor.korisnik.ime} {res.doktor.korisnik.prezime}
                     </div>
 
                     <div className="mr-meta-row">
                       <span className="mr-meta-badge">
                         <Calendar size={14} />
-                        {new Date(res.datum).toLocaleDateString('hr-HR')}
+                        {new Date(res.termin.datum).toLocaleDateString('hr-HR')}
                       </span>
                       <span className="mr-meta-badge">
                         <Clock size={14} />
-                        {res.vrijeme}
+                        {minuteUVrijeme(res.termin.vrijeme)}
                       </span>
                     </div>
+
+                    {res.komentar && (
+                      <div className="mr-komentar">
+                        <p className="mr-komentar__label">Napomena:</p>
+                        <p className="mr-komentar__tekst">{res.komentar}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mr-card__right">

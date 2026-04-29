@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
-import { Calendar, FileText } from 'lucide-react'; 
+import { Calendar, FileText } from 'lucide-react';
 
 
 import RezervacijaPacijent from './klase/RezervacijaPacijent';
@@ -14,7 +14,7 @@ const HomePage = () => {
       <p className="homepage-subtitle">Odaberite uslugu</p>
       <div className="homepage-grid">
 
-        <Link to="/RezervacijaPacijent" className="hp-card">
+        <Link to="/rezervacija-pacijent" className="hp-card">
           <Calendar size={40} />
           <span>Zakaži termin</span>
         </Link>
@@ -34,6 +34,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/rezervacija-pacijent" element={<RezervacijaPacijent />} />
         <Route path="/RezervacijaPacijent" element={<RezervacijaPacijent />} />
         <Route path="/moje-rezervacije" element={<MojeRezervacije />} />
       </Routes>

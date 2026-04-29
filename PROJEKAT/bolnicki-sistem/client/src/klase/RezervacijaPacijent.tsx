@@ -7,112 +7,182 @@ type KorisnikInfo = {
   uloga: string;
 };
 
+type Odjel = {
+  id: number;
+  naziv: string;
+};
+
+type Doktor = {
+  id: number;
+  ime: string;
+  prezime: string;
+  specijalizacija: string;
+};
+
+type Termin = {
+  id: number;
+  datum: string;
+  vrijeme: number;
+  status: string;
+};
+
 type RezervacijaFormData = {
   odjelId: number;
-  doktorId: number;
-  terminId: number;
-  tipPregledaId: number;
+  idDoktor: number;
+  idTermina: number;
+  idTipPregleda: number;
+};
+
+const formatVrijeme = (minute: number): string => {
+  const sati = Math.floor(minute / 60).toString().padStart(2, "0");
+  const min = (minute % 60).toString().padStart(2, "0");
+  return `${sati}:${min}`;
 };
 
 function RezervacijaPacijent() {
-  const [korisnik, setKorisnik] = useState<KorisnikInfo | null>(null);
+  const [korisnik] = useState<KorisnikInfo>({ ime: "Marko", prezime: "Marković", uloga: "PACIJENT" });
+  const [doktori, setDoktori] = useState<Doktor[]>([]);
+  const [termini, setTermini] = useState<Termin[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uspjeh, setUspjeh] = useState(false);
 
   const [form, setForm] = useState<RezervacijaFormData>({
     odjelId: 0,
-    doktorId: 0,
-    terminId: 0,
-    tipPregledaId: 0,
+    idDoktor: 0,
+    idTermina: 0,
+    idTipPregleda: 1,
   });
 
-// mock podaci
-  const odjeli = [
+  const odjeli: Odjel[] = [
     { id: 1, naziv: "Opća medicina" },
     { id: 2, naziv: "Pedijatrija" },
   ];
 
-  const doktori = [
-    { id: 1, ime: "Dr. Amar Hadžić", odjelId: 1 },
-    { id: 2, ime: "Dr. Aida Nukić", odjelId: 2 },
+  const tipoviPregleda = [
+    { id: 1, naziv: "Preventivni pregled" },
+    { id: 2, naziv: "Kontrolni pregled" },
+    { id: 3, naziv: "Hitni pregled" },
   ];
 
-  const termini = [
-    { id: 1, label: "13.04.2026 09:00", doktorId: 1 },
-    { id: 2, label: "13.04.2026 09:30", doktorId: 1 },
-    { id: 3, label: "13.04.2026 10:00", doktorId: 2 },
-  ];
-
-  // ─────────────────────────────────────────────
+  // DOHVATI DOKTORE kad se izabere odjel
   useEffect(() => {
-    setKorisnik({
-      ime: "Marko",
-      prezime: "Marković",
-      uloga: "PACIJENT",
-    });
-  }, []);
+    if (form.odjelId === 0) {
+      setDoktori([]);
+      return;
+    }
+    const fetchDoktori = async () => {
+      try {
+        const res = await fetch(`/api/doktori?odjelId=${form.odjelId}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setDoktori(data);
+      } catch {
+        setError("Nije moguće učitati doktore.");
+      }
+    };
+    fetchDoktori();
+  }, [form.odjelId]);
 
-  const filtriraniDoktori = doktori.filter(
-    (d) => d.odjelId === form.odjelId
-  );
-
-  const filtriraniTermini = termini.filter(
-    (t) => t.doktorId === form.doktorId
-  );
+  // DOHVATI TERMINE kad se izabere doktor
+  useEffect(() => {
+    if (form.idDoktor === 0) {
+      setTermini([]);
+      return;
+    }
+    const fetchTermini = async () => {
+      try {
+        const res = await fetch(`/api/termini?doktorId=${form.idDoktor}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setTermini(data);
+      } catch {
+        setError("Nije moguće učitati termine.");
+      }
+    };
+    fetchTermini();
+  }, [form.idDoktor]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const num = parseInt(value);
+    const broj = parseInt(value);
 
     setForm((prev) => {
       if (name === "odjelId") {
-        return {
-          ...prev,
-          odjelId: num,
-          doktorId: 0,
-          terminId: 0,
-        };
+        return { ...prev, odjelId: broj, idDoktor: 0, idTermina: 0 };
       }
-
-      if (name === "doktorId") {
-        return {
-          ...prev,
-          doktorId: num,
-          terminId: 0,
-        };
+      if (name === "idDoktor") {
+        return { ...prev, idDoktor: broj, idTermina: 0 };
       }
-
-      return { ...prev, [name]: num };
+      return { ...prev, [name]: broj };
     });
   };
 
-  // ─────────────────────────────────────────────
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (
-      form.odjelId === 0 ||
-      form.doktorId === 0 ||
-      form.terminId === 0 ||
-      form.tipPregledaId === 0
-    ) {
-      alert("Molimo odaberite sva polja.");
+    if (form.idDoktor === 0 || form.idTermina === 0) {
+      alert("Molimo odaberite doktora i termin.");
       return;
     }
 
-    console.log("FORM DATA:", form);
-    alert("Uspješno rezervisano");
+    try {
+      setLoading(true);
+      setError(null);
+      setUspjeh(false);
+
+      // 1. Zaključaj termin (NFR-22)
+      const lockRes = await fetch(`/api/termini/${form.idTermina}/zakljucaj`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!lockRes.ok) throw new Error("Termin je nedostupan. Pokušajte drugi termin.");
+
+      // 2. Kreiraj rezervaciju
+      const rezervRes = await fetch("/api/rezervacije", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idTermina: form.idTermina,
+          idDoktor: form.idDoktor,
+          idTipPregleda: form.idTipPregleda,
+        }),
+      });
+
+      if (!rezervRes.ok) {
+        const data = await rezervRes.json();
+        throw new Error(data.poruka || "Greška pri rezervaciji.");
+      }
+
+      setUspjeh(true);
+      setForm({ odjelId: 0, idDoktor: 0, idTermina: 0, idTipPregleda: 1 });
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ─────────────────────────────────────────────
   return (
     <div className="stranica">
       <div className="pacijent-kartica">
         <p className="pacijent-oznaka">Prijavljeni pacijent</p>
-        <h2 className="pacijent-ime">
-          {korisnik ? `${korisnik.ime} ${korisnik.prezime}` : "Učitavanje..."}
-        </h2>
+        <h2 className="pacijent-ime">{korisnik.ime} {korisnik.prezime}</h2>
       </div>
 
       <h1 className="forma-naslov">Nova rezervacija</h1>
+
+      {uspjeh && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          Rezervacija uspješno kreirana!
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="forma-sadrzaj">
 
@@ -121,15 +191,13 @@ function RezervacijaPacijent() {
           <label className="polje-oznaka">Izaberite odjel:</label>
           <select
             name="odjelId"
-            onChange={handleChange}
             value={form.odjelId}
+            onChange={handleChange}
             className="polje-select"
           >
             <option value={0}>--- Odaberite ---</option>
             {odjeli.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.naziv}
-              </option>
+              <option key={o.id} value={o.id}>{o.naziv}</option>
             ))}
           </select>
         </div>
@@ -138,15 +206,16 @@ function RezervacijaPacijent() {
         <div className="forma-polje">
           <label className="polje-oznaka">Izaberite doktora:</label>
           <select
-            name="doktorId"
+            name="idDoktor"
+            value={form.idDoktor}
             onChange={handleChange}
-            value={form.doktorId}
             className="polje-select"
+            disabled={form.odjelId === 0}
           >
             <option value={0}>--- Prvo odaberite odjel ---</option>
-            {filtriraniDoktori.map((d) => (
+            {doktori.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.ime}
+                Dr. {d.ime} {d.prezime} — {d.specijalizacija}
               </option>
             ))}
           </select>
@@ -156,41 +225,50 @@ function RezervacijaPacijent() {
         <div className="forma-polje">
           <label className="polje-oznaka">Tip pregleda:</label>
           <select
-            name="tipPregledaId"
+            name="idTipPregleda"
+            value={form.idTipPregleda}
             onChange={handleChange}
-            value={form.tipPregledaId}
             className="polje-select"
           >
-            <option value={0}>--- Odaberite ---</option>
-            <option value={1}>Preventivni pregled</option>
+            {tipoviPregleda.map((t) => (
+              <option key={t.id} value={t.id}>{t.naziv}</option>
+            ))}
           </select>
         </div>
 
         {/* TERMINI */}
         <div className="forma-polje">
-          <label className="polje-oznaka">Slobodni termini:</label>
+          <label className="polje-oznaka">Dostupni termini:</label>
           <select
-            name="terminId"
+            name="idTermina"
+            value={form.idTermina}
             onChange={handleChange}
-            value={form.terminId}
             className="polje-select"
+            disabled={form.idDoktor === 0}
           >
             <option value={0}>--- Prvo odaberite doktora ---</option>
-            {filtriraniTermini.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
-              </option>
-            ))}
+            {termini
+              .filter((t) => t.status === "SLOBODAN")
+              .map((t) => (
+                <option key={t.id} value={t.id}>
+                  {new Date(t.datum).toLocaleDateString("hr-HR")}, {formatVrijeme(t.vrijeme)}
+                </option>
+              ))}
           </select>
         </div>
 
-        <button type="submit" className="dugme-rezervisi">
-          Potvrdi i rezerviši
+        <button
+          type="submit"
+          className="dugme-rezervisi"
+          disabled={loading || form.idDoktor === 0 || form.idTermina === 0}
+        >
+          {loading ? "Rezervišem..." : "Potvrdi i rezerviši"}
         </button>
 
         <Link to="/" className="dugme-odustani">
           Nazad na početnu stranicu
         </Link>
+
       </form>
     </div>
   );

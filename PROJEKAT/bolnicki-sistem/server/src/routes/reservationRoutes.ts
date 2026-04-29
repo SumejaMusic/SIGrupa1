@@ -18,7 +18,7 @@ router.post("/", kreirajRezervaciju);
 
 // GET /api/rezervacije/pacijent/:pacijentId
 // US-05 — Sve rezervacije konkretnog pacijenta
-router.get("/pacijent/:pacijentId", getRezervacijeZaPacijenta);
+router.get("/moje", getRezervacijeZaPacijenta);
 
 // GET /api/rezervacije/doktor/:doktorId
 // US-05 — Sve rezervacije konkretnog doktora
