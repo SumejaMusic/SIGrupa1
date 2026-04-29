@@ -14,30 +14,8 @@ let STVARNI_KORISNIK_ID: number;
 let STVARNI_PACIJENT_ID: number;
 
 beforeAll(async () => {
-  const testKorisnikId = Number(process.env.TEST_KORISNIK_ID);
-  let pacijent = null;
-
-  if (Number.isInteger(testKorisnikId) && testKorisnikId > 0) {
-    pacijent = await prisma.pacijent.findFirst({
-      where: { idKorisnik: testKorisnikId },
-    });
-  }
-
-  if (!pacijent) {
-    const email = process.env.TEST_PATIENT_EMAIL ?? "pacijent@test.com";
-    pacijent = await prisma.pacijent.findFirst({
-      where: { korisnik: { email } },
-    });
-  }
-
-  if (!pacijent) {
-    pacijent = await prisma.pacijent.findFirst({ orderBy: { id: "asc" } });
-  }
-
-  if (!pacijent) throw new Error("Nije pronađen nijedan pacijent u test bazi!");
-
-  STVARNI_KORISNIK_ID = pacijent.idKorisnik;
-  STVARNI_PACIJENT_ID = pacijent.id;
+  STVARNI_KORISNIK_ID = Number(process.env.TEST_KORISNIK_ID ?? "2");
+  STVARNI_PACIJENT_ID = 1;
 });
 
 afterAll(async () => {
