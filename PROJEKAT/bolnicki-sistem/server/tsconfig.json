@@ -22,5 +22,5 @@
   "node_modules",
   "dist",
   "src/__tests__",
-  "src/lib/__mocks__"
-]
+  "src/lib/__mocks__"]
+}
