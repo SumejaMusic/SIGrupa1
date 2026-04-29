@@ -11,11 +11,13 @@ describe("GET /api/doktori", () => {
     expect(res.body.length).toBeGreaterThan(0);
 
     const doktor = res.body[0];
+    // getSviDoktori flattenuje podatke — nema nested korisnik objekta
     expect(doktor).toHaveProperty("id");
+    expect(doktor).toHaveProperty("ime");
+    expect(doktor).toHaveProperty("prezime");
     expect(doktor).toHaveProperty("specijalizacija");
-    expect(doktor).toHaveProperty("korisnik");
-    expect(doktor.korisnik).toHaveProperty("ime");
-    expect(doktor.korisnik).toHaveProperty("prezime");
+    expect(doktor).toHaveProperty("email");
+    expect(doktor).toHaveProperty("trajanjePregleda");
   });
 
   it("filtrira doktore po specijalizaciji", async () => {
@@ -44,6 +46,7 @@ describe("GET /api/doktori", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toHaveProperty("odjelId", 1);
   });
 });
 
@@ -54,6 +57,7 @@ describe("GET /api/doktori/:id", () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("id", 1);
     expect(res.body).toHaveProperty("specijalizacija");
+    // getDoktorById koristi include direktno — vraća nested korisnik i odjel
     expect(res.body).toHaveProperty("korisnik");
     expect(res.body).toHaveProperty("odjel");
     expect(res.body.korisnik).toHaveProperty("email");

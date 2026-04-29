@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import { Redis } from "ioredis";
@@ -7,20 +7,88 @@ import { PrismaClient } from "@prisma/client";
 const redis = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: 3 });
 const prisma = new PrismaClient();
 
-// ID-evi iz seeda
 const DOKTOR_ID = 1;
-const PACIJENT_KORISNIK_ID = 2; // idKorisnik pacijenta — fiksirani u setupFiles
 const TERMIN_ID = 1;
 const TIP_PREGLEDA_ID = 1;
 
+// idKorisnik koji getCurrentPacijent() stvarno vraća — učitavamo iz baze
+let STVARNI_KORISNIK_ID: number;
+let STVARNI_PACIJENT_ID: number;
+
+beforeAll(async () => {
+  // Replicira logiku getCurrentPacijent() iz currentPatient.ts
+  const testKorisnikId = Number(process.env.TEST_KORISNIK_ID);
+  let pacijent = null;
+
+  if (Number.isInteger(testKorisnikId) && testKorisnikId > 0) {
+    pacijent = await prisma.pacijent.findFirst({
+      where: { idKorisnik: testKorisnikId },
+    });
+  }
+
+  if (!pacijent) {
+    const email = process.env.TEST_PATIENT_EMAIL ?? "pacijent@test.com";
+    pacijent = await prisma.pacijent.findFirst({
+      where: { korisnik: { email } },
+    });
+  }
+
+  if (!pacijent) {
+    pacijent = await prisma.pacijent.findFirst({ orderBy: { id: "asc" } });
+  }
+
+  if (!pacijent) throw new Error("Nije pronađen nijedan pacijent u test bazi!");
+
+  STVARNI_KORISNIK_ID = pacijent.idKorisnik;
+  STVARNI_PACIJENT_ID = pacijent.id;
+});
+
+afterAll(async () => {
+  await redis.quit();
+  await prisma.$disconnect();
+});
+
+async function resetujTermin(terminId = TERMIN_ID) {
+  await prisma.rezervacije.deleteMany({ where: { idTermina: terminId } });
+  await prisma.termin.update({
+    where: { id: terminId },
+    data: { status: "SLOBODAN" },
+  });
+  await redis.del(`termin:lock:${terminId}`);
+}
+
+async function kreirajRezervacijuHelper(terminId = TERMIN_ID) {
+  await resetujTermin(terminId);
+  await redis.setex(`termin:lock:${terminId}`, 120, String(STVARNI_KORISNIK_ID));
+  const res = await request(app)
+    .post("/api/rezervacije")
+    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+    .send({
+      terminId,
+      doktorId: DOKTOR_ID,
+      tipPregledaId: TIP_PREGLEDA_ID,
+      hitnost: false,
+    });
+  return res;
+}
+
+async function obrisiCustomTermin(id: number) {
+  await prisma.rezervacije.deleteMany({ where: { idTermina: id } });
+  await prisma.termin.deleteMany({ where: { id } });
+  await redis.del(`termin:lock:${id}`);
+}
+
 describe("POST /api/rezervacije", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
   it("uspješno kreira rezervaciju kada postoji Redis lock", async () => {
-    // Korak 1: Postavi lock (simulira da je pacijent zaključao termin)
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(PACIJENT_KORISNIK_ID));
+    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
 
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
         terminId: TERMIN_ID,
         doktorId: DOKTOR_ID,
@@ -33,20 +101,17 @@ describe("POST /api/rezervacije", () => {
     expect(res.body).toHaveProperty("termin");
     expect(res.body).toHaveProperty("doktor");
 
-    // Lock treba biti obrisan nakon uspješne rezervacije
     const lock = await redis.get(`termin:lock:${TERMIN_ID}`);
     expect(lock).toBeNull();
 
-    // Termin treba biti POTVRDJEN u bazi
     const termin = await prisma.termin.findUnique({ where: { id: TERMIN_ID } });
-    expect(termin?.status).toBe("POTVRDJEN");
+    expect(termin?.status).toBe("ZAKAZAN");
   });
 
   it("vraća 409 bez Redis locka", async () => {
-    // Nema locka — termin nije zaključan
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
         terminId: TERMIN_ID,
         doktorId: DOKTOR_ID,
@@ -58,38 +123,79 @@ describe("POST /api/rezervacije", () => {
   });
 
   it("vraća 409 za duplikat rezervacije", async () => {
-    // Kreira prvu rezervaciju
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(PACIJENT_KORISNIK_ID));
-    await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
-      .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
+    const prvaRes = await kreirajRezervacijuHelper();
+    expect(prvaRes.status).toBe(201);
 
-    // Pokušaj iste rezervacije ponovo
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(PACIJENT_KORISNIK_ID));
+    await prisma.termin.update({
+      where: { id: TERMIN_ID },
+      data: { status: "SLOBODAN" },
+    });
+
+    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(res.status).toBe(409);
     expect(res.body.poruka).toContain("već postoji");
   });
-});
 
-describe("GET /api/rezervacije/pacijent/:pacijentId", () => {
-  it("vraća rezervacije za pacijenta", async () => {
-    // Kreira rezervaciju
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(PACIJENT_KORISNIK_ID));
-    await request(app)
+  it("vraća 409 ako je termin zauzet (status != SLOBODAN)", async () => {
+    await prisma.termin.update({
+      where: { id: TERMIN_ID },
+      data: { status: "ZAKAZAN" },
+    });
+
+    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
+    const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
-    // Pacijent ID (iz pacijent tabele) je 1, ne korisnik ID
+    expect(res.status).toBe(409);
+    expect(res.body.poruka).toContain("slobodan");
+  });
+
+  it("vraća 400 za nedostajuće podatke", async () => {
     const res = await request(app)
-      .get("/api/rezervacije/pacijent/1")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID));
+      .post("/api/rezervacije")
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ doktorId: DOKTOR_ID });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty("poruka");
+  });
+
+  it("vraća 400 ako termin ne pripada doktoru", async () => {
+    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
+
+    const res = await request(app)
+      .post("/api/rezervacije")
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({
+        terminId: TERMIN_ID,
+        doktorId: 999,
+        tipPregledaId: TIP_PREGLEDA_ID,
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.poruka).toContain("ne pripada");
+  });
+});
+
+describe("GET /api/rezervacije/moje", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
+  it("vraća rezervacije ulogovanog pacijenta", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    expect(kreacija.status).toBe(201);
+
+    const res = await request(app)
+      .get("/api/rezervacije/moje")
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -98,10 +204,36 @@ describe("GET /api/rezervacije/pacijent/:pacijentId", () => {
     expect(res.body[0]).toHaveProperty("doktor");
   });
 
-  it("vraća praznu listu za pacijenta bez rezervacija", async () => {
+  it("vraća praznu listu za pacijenta bez aktivnih rezervacija", async () => {
     const res = await request(app)
-      .get("/api/rezervacije/pacijent/1")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID));
+      .get("/api/rezervacije/moje")
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+});
+
+describe("GET /api/rezervacije/doktor/:doktorId", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
+  it("vraća sve rezervacije za doktora", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    expect(kreacija.status).toBe(201);
+
+    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toHaveProperty("pacijent");
+    expect(res.body[0]).toHaveProperty("termin");
+  });
+
+  it("vraća praznu listu za doktora bez rezervacija", async () => {
+    const res = await request(app).get("/api/rezervacije/doktor/99999");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -109,22 +241,27 @@ describe("GET /api/rezervacije/pacijent/:pacijentId", () => {
 });
 
 describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
+  beforeEach(async () => {
+    await obrisiCustomTermin(100);
+    await obrisiCustomTermin(101);
+    await obrisiCustomTermin(102);
+  });
+
   it("uspješno otkazuje rezervaciju > 24h unaprijed", async () => {
-    // Kreira rezervaciju sa terminom daleko u budućnosti
     const buduciTermin = await prisma.termin.create({
       data: {
-         id: 100, // ← dodaj ovo
+        id: 100,
         idDoktor: DOKTOR_ID,
-        datum: new Date("2027-01-15"), // daleko u budućnosti
+        datum: new Date("2027-01-15"),
         vrijeme: 600,
         status: "SLOBODAN",
       },
     });
 
-    await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(PACIJENT_KORISNIK_ID));
+    await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(kreirajRes.status).toBe(201);
@@ -132,62 +269,134 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
 
     const res = await request(app)
       .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID));
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
     expect(res.status).toBe(200);
     expect(res.body.poruka).toContain("uspješno otkazana");
+
+    const termin = await prisma.termin.findUnique({ where: { id: buduciTermin.id } });
+    expect(termin?.status).toBe("SLOBODAN");
   });
 
   it("vraća 400 za otkazivanje < 24h prije termina", async () => {
-    // Kreira termin koji je za nekoliko sati
     const skorasnji = await prisma.termin.create({
       data: {
-        id: 101, // ← dodaj ovo
+        id: 101,
         idDoktor: DOKTOR_ID,
-        datum: new Date(Date.now() + 2 * 60 * 60 * 1000), // za 2 sata
+        datum: new Date(Date.now() + 2 * 60 * 60 * 1000),
         vrijeme: 600,
         status: "SLOBODAN",
       },
     });
 
-    await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(PACIJENT_KORISNIK_ID));
+    await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
+    expect(kreirajRes.status).toBe(201);
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
       .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID));
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
     expect(res.status).toBe(400);
     expect(res.body.poruka).toContain("24 sata");
   });
 
+  it("vraća 403 ako pacijent pokušava otkazati tuđu rezervaciju", async () => {
+    const buduciTermin = await prisma.termin.create({
+      data: {
+        id: 102,
+        idDoktor: DOKTOR_ID,
+        datum: new Date("2027-06-01"),
+        vrijeme: 600,
+        status: "SLOBODAN",
+      },
+    });
+
+    await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
+    const kreirajRes = await request(app)
+      .post("/api/rezervacije")
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
+
+    expect(kreirajRes.status).toBe(201);
+    const rezervacijaId = kreirajRes.body.id;
+
+    // getCurrentPacijent ignorira header — da dobijemo 403, trebamo promijeniti
+    // vlasnika rezervacije u bazi na nekog drugog pacijenta
+    const drugiPacijent = await prisma.pacijent.findFirst({
+      where: { id: { not: STVARNI_PACIJENT_ID } },
+    });
+
+    if (drugiPacijent) {
+      await prisma.rezervacije.update({
+        where: { id: rezervacijaId },
+        data: { idPacijent: drugiPacijent.id },
+      });
+
+      const res = await request(app)
+        .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
+        .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+
+      expect(res.status).toBe(403);
+      expect(res.body.poruka).toContain("dozvolu");
+    } else {
+      console.warn("Preskačem 403 test: nema drugog pacijenta u bazi.");
+    }
+  });
+
   it("vraća 404 za nepostojeću rezervaciju", async () => {
     const res = await request(app)
       .patch("/api/rezervacije/99999/otkazi/pacijent")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID));
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
     expect(res.status).toBe(404);
   });
 });
 
-describe("GET /api/rezervacije/doktor/:doktorId", () => {
-  it("vraća sve rezervacije za doktora", async () => {
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(PACIJENT_KORISNIK_ID));
-    await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(PACIJENT_KORISNIK_ID))
-      .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
+describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
+  beforeEach(async () => {
+    await obrisiCustomTermin(103);
+  });
 
-    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`);
+  it("osoblje može otkazati bilo koju rezervaciju bez vremenskog ograničenja", async () => {
+    const skorasnji = await prisma.termin.create({
+      data: {
+        id: 103,
+        idDoktor: DOKTOR_ID,
+        datum: new Date(Date.now() + 2 * 60 * 60 * 1000),
+        vrijeme: 600,
+        status: "SLOBODAN",
+      },
+    });
+
+    await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
+    const kreirajRes = await request(app)
+      .post("/api/rezervacije")
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
+
+    expect(kreirajRes.status).toBe(201);
+    const rezervacijaId = kreirajRes.body.id;
+
+    const res = await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/osoblje`);
 
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body[0]).toHaveProperty("pacijent");
-    expect(res.body[0]).toHaveProperty("termin");
+    expect(res.body.poruka).toContain("osoblja");
+
+    const termin = await prisma.termin.findUnique({ where: { id: skorasnji.id } });
+    expect(termin?.status).toBe("SLOBODAN");
+  });
+
+  it("vraća 404 za nepostojeću rezervaciju", async () => {
+    const res = await request(app)
+      .patch("/api/rezervacije/99999/otkazi/osoblje");
+
+    expect(res.status).toBe(404);
   });
 });

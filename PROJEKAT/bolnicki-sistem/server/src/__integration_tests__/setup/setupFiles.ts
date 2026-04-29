@@ -2,7 +2,6 @@ import { beforeEach, afterAll } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { Redis } from "ioredis";
 
-// Direktne instance koje gledaju na test bazu/redis iz .env.test
 const prisma = new PrismaClient({
   datasources: {
     db: { url: process.env.DATABASE_URL },
@@ -14,9 +13,8 @@ const redis = new Redis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: 3,
 });
 
-// Briše sve redove u ispravnom redoslijedu (foreign key constraints)
-// ali ostavlja seed podatke — seed se ponovo pokreće u globalSetup
 beforeEach(async () => {
+  // Brisanje u ispravnom redoslijedu — djeca prije roditelja (FK constraints)
   await prisma.podsjetnik.deleteMany();
   await prisma.recept.deleteMany();
   await prisma.historijaPregleda.deleteMany();
@@ -27,17 +25,20 @@ beforeEach(async () => {
   await prisma.rasporedDoktora.deleteMany();
   await prisma.nalaz.deleteMany();
 
-  // Resetuj autoincrement sekvencu za termine
+  // Resetuj autoincrement sekvence da ID-evi budu predvidivi u testovima
   await prisma.$executeRaw`ALTER SEQUENCE "Termin_id_seq" RESTART WITH 1`;
+  await prisma.$executeRaw`ALTER SEQUENCE "Rezervacije_id_seq" RESTART WITH 1`;
+  await prisma.$executeRaw`ALTER SEQUENCE "RasporedDoktora_id_seq" RESTART WITH 1`;
 
-  // Ponovo ubaci seed podatke da svaki test ima čistu ali popunjenu bazu
-  const odjel = await prisma.odjel.upsert({
+  // ── Seed: Odjel ──────────────────────────────────────────────
+  await prisma.odjel.upsert({
     where: { id: 1 },
     update: {},
     create: { id: 1, naziv: "Opća medicina", opis: "Testni odjel" },
   });
 
-  const soba = await prisma.soba.upsert({
+  // ── Seed: Soba ───────────────────────────────────────────────
+  await prisma.soba.upsert({
     where: { id: 1 },
     update: {},
     create: {
@@ -50,6 +51,7 @@ beforeEach(async () => {
     },
   });
 
+  // ── Seed: Korisnik doktora ───────────────────────────────────
   const korisnikDoktor = await prisma.korisnik.upsert({
     where: { email: "doktor@test.com" },
     update: {},
@@ -65,20 +67,22 @@ beforeEach(async () => {
     },
   });
 
+  // ── Seed: Doktor ─────────────────────────────────────────────
   const doktor = await prisma.doktor.upsert({
     where: { id: 1 },
     update: {},
     create: {
       id: 1,
       idKorisnik: korisnikDoktor.id,
-      idOdjela: odjel.id,
-      idSobe: soba.id,
+      idOdjela: 1,
+      idSobe: 1,
       brojLicence: 123456,
       specijalizacija: "Opća medicina",
       trajanjePregleda: 30,
     },
   });
 
+  // ── Seed: Raspored doktora ───────────────────────────────────
   await prisma.rasporedDoktora.create({
     data: {
       idDoktor: doktor.id,
@@ -90,11 +94,13 @@ beforeEach(async () => {
     },
   });
 
+  // ── Seed: Korisnik pacijenta ─────────────────────────────────
+  // ID=2 je fiksirani — PACIJENT_KORISNIK_ID u testovima ovisi o ovome
   const korisnikPacijent = await prisma.korisnik.upsert({
     where: { email: "pacijent@test.com" },
     update: {},
     create: {
-      id: 2, // ← fiksirani ID da PACIJENT_KORISNIK_ID = 2 uvijek radi
+      id: 2,
       jmbg: "876543210987",
       ime: "Amra",
       prezime: "Testić",
@@ -105,6 +111,7 @@ beforeEach(async () => {
     },
   });
 
+  // ── Seed: Pacijent ───────────────────────────────────────────
   await prisma.pacijent.upsert({
     where: { id: 1 },
     update: {},
@@ -116,6 +123,7 @@ beforeEach(async () => {
     },
   });
 
+  // ── Seed: Tip pregleda ───────────────────────────────────────
   await prisma.tipPregleda.upsert({
     where: { id: 1 },
     update: {},
@@ -127,13 +135,15 @@ beforeEach(async () => {
     },
   });
 
+  // ── Seed: Termini ─────────────────────────────────────────────
+  // ID=1 i ID=2 su fiksirani — termin testovi ovise o njima
   await prisma.termin.createMany({
     data: [
       {
         id: 1,
         idDoktor: doktor.id,
         datum: new Date("2026-04-13"),
-        vrijeme: 540,
+        vrijeme: 540, // 9:00
         opis: "Jutarnji termin",
         status: "SLOBODAN",
       },
@@ -141,7 +151,7 @@ beforeEach(async () => {
         id: 2,
         idDoktor: doktor.id,
         datum: new Date("2026-04-13"),
-        vrijeme: 570,
+        vrijeme: 570, // 9:30
         opis: "Drugi jutarnji termin",
         status: "SLOBODAN",
       },
@@ -149,7 +159,7 @@ beforeEach(async () => {
     skipDuplicates: true,
   });
 
-  // Očisti sve Redis lockove
+  // ── Redis: Očisti sve lockove ────────────────────────────────
   const keys = await redis.keys("termin:lock:*");
   if (keys.length > 0) await redis.del(...keys);
 });

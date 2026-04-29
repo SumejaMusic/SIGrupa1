@@ -3,22 +3,14 @@ import request from "supertest";
 import app from "../app.js";
 import { Redis } from "ioredis";
 
-// Pravi Redis koji gleda na test instancu
 const redis = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: 3 });
 
-// ─────────────────────────────────────────────
-// Helper: simulira middleware za autentifikaciju
-// Tvoj app čita (req as any).korisnik.id iz middlewarea
-// Za integracione testove mockamo middleware direktno na app nivou
-// ─────────────────────────────────────────────
-
-// NAPOMENA: Ako imaš auth middleware, trebaš ga ili:
-// a) Zaobići u test modu (provjeri NODE_ENV=test u middlewareu), ili
-// b) Dodati test helper koji ubacuje korisnika u request
-// Korisnik ID 2 = pacijent iz seeda (idKorisnik pacijenta)
+// Seed kreira: korisnik doktora(1), doktor2(2), doktor3(3) → pacijent(4)
+// Zbog toga je idKorisnik pacijenta = 4
+const PACIJENT_KORISNIK_ID = "4";
 
 describe("GET /api/termini", () => {
-  it("vraća slobodne termine za doktora", async () => {
+  it("vraća slobodne termine za doktora i datum", async () => {
     const res = await request(app)
       .get("/api/termini")
       .query({ doktorId: 1, datum: "2026-04-13" });
@@ -30,6 +22,7 @@ describe("GET /api/termini", () => {
     const termin = res.body[0];
     expect(termin).toHaveProperty("id");
     expect(termin).toHaveProperty("vrijeme");
+    expect(termin).toHaveProperty("doktor");
     expect(termin.status).toBe("SLOBODAN");
   });
 
@@ -57,6 +50,15 @@ describe("GET /api/termini", () => {
 
     await redis.del("termin:lock:1");
   });
+
+  it("vraća termine bez filtera datuma", async () => {
+    const res = await request(app)
+      .get("/api/termini")
+      .query({ doktorId: 1 });
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
 });
 
 describe("GET /api/termini/:id", () => {
@@ -66,6 +68,8 @@ describe("GET /api/termini/:id", () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("id", 1);
     expect(res.body).toHaveProperty("doktor");
+    expect(res.body).toHaveProperty("status");
+    expect(res.body).toHaveProperty("datum");
   });
 
   it("vraća 404 za nepostojeći termin", async () => {
@@ -78,18 +82,19 @@ describe("GET /api/termini/:id", () => {
 
 describe("POST /api/termini/:id/zakljucaj", () => {
   it("uspješno zaključava slobodan termin", async () => {
-    // Simuliraj korisnika ID=2 kroz auth middleware
     const res = await request(app)
       .post("/api/termini/1/zakljucaj")
-      .set("x-test-korisnik-id", "2"); // vidi napomenu ispod
+      .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("poruka");
-    expect(res.body).toHaveProperty("ttl");
+    expect(res.body).toHaveProperty("ttl", 120); // NFR-22: 2 minute lock
 
-    // Provjeri da je lock stvarno postavljen u Redisu
+    // Provjeri da je lock postavljen sa ispravnim korisnik ID-em
     const lock = await redis.get("termin:lock:1");
-    expect(lock).toBe("2");
+    expect(lock).toBe(PACIJENT_KORISNIK_ID);
+
+    await redis.del("termin:lock:1");
   });
 
   it("vraća 409 ako je termin zaključan od drugog korisnika", async () => {
@@ -98,34 +103,50 @@ describe("POST /api/termini/:id/zakljucaj", () => {
 
     const res = await request(app)
       .post("/api/termini/1/zakljucaj")
-      .set("x-test-korisnik-id", "2");
+      .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(409);
     expect(res.body.poruka).toContain("zauzet");
+
+    await redis.del("termin:lock:1");
   });
 
-  it("isti korisnik može osvježiti vlastiti lock", async () => {
-    await redis.setex("termin:lock:1", 120, "2");
+  it("isti korisnik može osvježiti vlastiti lock (idempotentno)", async () => {
+    // Lock je postavljen na isti korisnik ID koji šaljemo u headeru
+    await redis.setex("termin:lock:1", 120, PACIJENT_KORISNIK_ID);
 
     const res = await request(app)
       .post("/api/termini/1/zakljucaj")
-      .set("x-test-korisnik-id", "2");
+      .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("ttl", 120);
+
+    await redis.del("termin:lock:1");
   });
 });
 
 describe("POST /api/termini/:id/oslobodi", () => {
   it("uspješno oslobađa zaključan termin", async () => {
-    await redis.setex("termin:lock:1", 120, "2");
+    await redis.setex("termin:lock:1", 120, PACIJENT_KORISNIK_ID);
 
     const res = await request(app)
       .post("/api/termini/1/oslobodi")
-      .set("x-test-korisnik-id", "2");
+      .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("poruka");
 
     const lock = await redis.get("termin:lock:1");
     expect(lock).toBeNull();
+  });
+
+  it("oslobađanje već slobodnog termina vraća 200 (idempotentno)", async () => {
+    // redis.del ne greši ako key ne postoji — kontroler uvijek vraća 200
+    const res = await request(app)
+      .post("/api/termini/1/oslobodi")
+      .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
+
+    expect(res.status).toBe(200);
   });
 });
