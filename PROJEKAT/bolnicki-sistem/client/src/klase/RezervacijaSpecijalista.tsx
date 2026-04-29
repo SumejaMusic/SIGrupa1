@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Search, Calendar, ArrowLeft, CheckCircle } from "lucide-react";
 
@@ -6,9 +6,9 @@ type Department = "Svi" | "Kardiologija" | "Dermatologija";
 
 interface Doctor {
   id: number;
-  fullName: string;
-  department: Exclude<Department, "Svi">;
-  nextAvailableSlot: string;
+  ime: string;
+  prezime: string;
+  specijalizacija: string;
 }
 
 interface Patient {
@@ -17,6 +17,7 @@ interface Patient {
   jmbg: string;
 }
 
+// Hardkodirani pacijenti — zamijeniti API pozivom kada login bude implementiran (R4)
 const patients: Patient[] = [
   { id: 1, fullName: "Marko Marković", jmbg: "1234567890123" },
   { id: 2, fullName: "Emina Hadžić", jmbg: "9876543210987" },
@@ -25,49 +26,42 @@ const patients: Patient[] = [
 
 const RezervacijaSpecijalista: React.FC = () => {
   const [step, setStep] = useState<1 | 2>(1);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-
-  const [selectedDepartment, setSelectedDepartment] =
-    useState<Department>("Svi");
-
+  const [selectedDepartment, setSelectedDepartment] = useState<Department>("Svi");
   const [search, setSearch] = useState("");
 
-  const departments: Department[] = [
-    "Svi",
-    "Kardiologija",
-    "Dermatologija",
-  ];
+  const departments: Department[] = ["Svi", "Kardiologija", "Dermatologija"];
 
-  const doctors: Doctor[] = [
-    {
-      id: 1,
-      fullName: "Dr. Nejra Karić",
-      department: "Kardiologija",
-      nextAvailableSlot: "Danas 14:00",
-    },
-    {
-      id: 2,
-      fullName: "Dr. Ivan Jurić",
-      department: "Dermatologija",
-      nextAvailableSlot: "Sutra 09:30",
-    },
-    {
-      id: 3,
-      fullName: "Dr. Selman Krnjić",
-      department: "Kardiologija",
-      nextAvailableSlot: "Četvrtak 11:00",
-    },
-  ];
+  // DOHVATI DOKTORE SA BACKENDA (US-05)
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/doktori');
+        if (!response.ok) throw new Error('Greška pri učitavanju doktora');
+        const data = await response.json();
+        setDoctors(data);
+      } catch (err) {
+        console.error('Greška pri učitavanju doktora:', err);
+        setDoctors([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
 
-  const filteredDoctors =
-    (selectedDepartment === "Svi"
+  const filteredDoctors = (
+    selectedDepartment === "Svi"
       ? doctors
-      : doctors.filter((doc) => doc.department === selectedDepartment)
-    ).filter((doc) =>
-      doc.fullName.toLowerCase().includes(search.toLowerCase())
-    );
+      : doctors.filter((doc) => doc.specijalizacija === selectedDepartment)
+  ).filter((doc) =>
+    `${doc.ime} ${doc.prezime}`.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleSelectDoctor = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
@@ -80,20 +74,17 @@ const RezervacijaSpecijalista: React.FC = () => {
     setSelectedPatient(null);
   };
 
-  const canConfirm = selectedDoctor && selectedPatient;
-
   return (
     <div className="page">
       <div className="container">
 
         <div className="navLinks">
           <Link to="/doctor-panel" className="backLink">
-          <ArrowLeft size={18} /> Nazad na panel
-        </Link>
-
-        <Link to="/" className="backLink">
-          <ArrowLeft size={18} /> Nazad na početnu stranicu
-        </Link>
+            <ArrowLeft size={18} /> Nazad na panel
+          </Link>
+          <Link to="/" className="backLink">
+            <ArrowLeft size={18} /> Nazad na početnu stranicu
+          </Link>
         </div>
 
         <h1 className="title">Rezervacija specijaliste</h1>
@@ -111,15 +102,11 @@ const RezervacijaSpecijalista: React.FC = () => {
 
           <select
             value={selectedDepartment}
-            onChange={(e) =>
-              setSelectedDepartment(e.target.value as Department)
-            }
+            onChange={(e) => setSelectedDepartment(e.target.value as Department)}
             className="input"
           >
             {departments.map((dep) => (
-              <option key={dep} value={dep}>
-                {dep}
-              </option>
+              <option key={dep} value={dep}>{dep}</option>
             ))}
           </select>
         </div>
@@ -130,35 +117,36 @@ const RezervacijaSpecijalista: React.FC = () => {
             <>
               <h3 className="sectionTitle">Dostupni specijalisti</h3>
 
-              {filteredDoctors.map((doctor) => (
-                <div key={doctor.id} className="card">
-                  <div>
-                    <h4 className="doctorName">{doctor.fullName}</h4>
-                    <p className="department">{doctor.department}</p>
+              {loading ? (
+                <p>Učitavanje doktora...</p>
+              ) : filteredDoctors.length > 0 ? (
+                filteredDoctors.map((doctor) => (
+                  <div key={doctor.id} className="card">
+                    <div>
+                      <h4 className="doctorName">Dr. {doctor.ime} {doctor.prezime}</h4>
+                      <p className="department">{doctor.specijalizacija}</p>
+                    </div>
 
-                    <p className="slot">
-                      <Calendar size={12} /> {doctor.nextAvailableSlot}
-                    </p>
+                    <button className="btn" onClick={() => handleSelectDoctor(doctor)}>
+                      Rezerviši
+                    </button>
                   </div>
-
-                  <button
-                    className="btn"
-                    onClick={() => handleSelectDoctor(doctor)}
-                  >
-                    Rezerviši
-                  </button>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p>Nema dostupnih specijalista.</p>
+              )}
             </>
           ) : (
             <div className="confirmBox">
               <h3>Potvrda rezervacije</h3>
 
+              {/* DOKTOR */}
               <div className="infoRow">
                 <span>Doktor:</span>
-                <strong>{selectedDoctor?.fullName}</strong>
+                <strong>Dr. {selectedDoctor?.ime} {selectedDoctor?.prezime}</strong>
               </div>
 
+              {/* PACIJENT */}
               <div className="sectionBox">
                 <h4 className="sectionTitle">Pacijent</h4>
 
@@ -166,40 +154,35 @@ const RezervacijaSpecijalista: React.FC = () => {
                   className="input"
                   value={selectedPatient?.id || ""}
                   onChange={(e) => {
-                    const patient = patients.find(
-                      (p) => p.id === Number(e.target.value)
-                    );
+                    const patient = patients.find((p) => p.id === Number(e.target.value));
                     setSelectedPatient(patient || null);
                   }}
                 >
                   <option value="">-- Odaberi pacijenta --</option>
-
                   {patients.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.fullName}
-                    </option>
+                    <option key={p.id} value={p.id}>{p.fullName}</option>
                   ))}
                 </select>
 
-                {selectedPatient && (
-                  <div className="patientPreview">
-                    <p className="patientName">
-                      {selectedPatient.fullName}
-                      </p>
-                      <p className="patientMeta">
-                        JMBG: {selectedPatient.jmbg}
-                        </p>
-                        </div>
-                      )}
+                <div className="patientPreview">
+                  {selectedPatient ? (
+                    <>
+                      <p className="patientName">{selectedPatient.fullName}</p>
+                      <p className="patientMeta">JMBG: {selectedPatient.jmbg}</p>
+                    </>
+                  ) : (
+                    <p className="patientEmpty">Nema odabranog pacijenta</p>
+                  )}
+                </div>
               </div>
 
+              {/* TERMIN INFO */}
               <div className="infoRow">
                 <span>Termin:</span>
-                <strong className="green">
-                  {selectedDoctor?.nextAvailableSlot}
-                </strong>
+                <strong className="green">Termin će biti dogovoren</strong>
               </div>
 
+              {/* AKCIJE */}
               <div className="actions">
                 <button className="btnSecondary" onClick={resetBooking}>
                   Nazad
@@ -207,10 +190,10 @@ const RezervacijaSpecijalista: React.FC = () => {
 
                 <button
                   className="btnSuccess"
-                  disabled={!canConfirm}
+                  disabled={!selectedPatient}
                   onClick={() => {
                     alert(
-                      `Termin zakazan za ${selectedPatient?.fullName}`
+                      `Termin za specijalista Dr. ${selectedDoctor?.ime} ${selectedDoctor?.prezime} zakazan za ${selectedPatient?.fullName}`
                     );
                     resetBooking();
                   }}

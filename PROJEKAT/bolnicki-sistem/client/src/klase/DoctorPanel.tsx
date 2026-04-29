@@ -1,40 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Users, Clock, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Appointment {
   id: number;
-  patientName: string;
-  time: string;
-  status: "ZAVRŠENO" | "U TOKU" | "ČEKA";
+  termin: {
+    vrijeme: number;
+    datum: string;
+  };
+  pacijent: {
+    korisnik: {
+      ime: string;
+      prezime: string;
+    };
+  };
+  status?: string;
 }
 
 const DoctorPanel: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    { id: 1, patientName: "Emina Hadžić", time: "09:00", status: "ZAVRŠENO" },
-    { id: 2, patientName: "Marko Marković", time: "10:30", status: "U TOKU" },
-    { id: 3, patientName: "Kenan Delić", time: "11:15", status: "ČEKA" },
-  ]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // DOHVATI REZERVACIJE ZA DOKTORA (hardkodirano doktorId = 1)
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/rezervacije/doktor/1');
+        if (!response.ok) throw new Error('Greška pri učitavanju rezervacija');
+        const data = await response.json();
+        setAppointments(data);
+      } catch (err) {
+        console.error('Greška pri učitavanju rezervacija:', err);
+        setAppointments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, []);
 
   // Redoslijed statusa
-  const statusFlow: Appointment["status"][] = [
-    "ČEKA",
-    "U TOKU",
-    "ZAVRŠENO",
-  ];
+  const statusFlow = ["ČEKA", "U TOKU", "ZAVRŠENO"];
 
   // Promjena statusa klikom
   const handleStatusChange = (id: number) => {
     setAppointments((prev) =>
       prev.map((app) => {
         if (app.id !== id) return app;
-
-        const currentIndex = statusFlow.indexOf(app.status);
+        const currentIndex = statusFlow.indexOf(app.status || "ČEKA");
         const nextIndex = (currentIndex + 1) % statusFlow.length;
-
         return { ...app, status: statusFlow[nextIndex] };
       })
     );
+  };
+
+  const getTimeFromMinutes = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
   return (
@@ -89,23 +113,29 @@ const DoctorPanel: React.FC = () => {
 
 
             <div className="list">
-              {appointments.map((a) => (
-                <div key={a.id} className="listItem">
-                  <span className="time">{a.time}</span>
+              {loading ? (
+                <p>Učitavanje rezervacija...</p>
+              ) : appointments.length > 0 ? (
+                appointments.map((a) => (
+                  <div key={a.id} className="listItem">
+                    <span className="time">{getTimeFromMinutes(a.termin.vrijeme)}</span>
 
-                  <span className="name">{a.patientName}</span>
+                    <span className="name">{a.pacijent.korisnik.ime} {a.pacijent.korisnik.prezime}</span>
 
-                  {/* STATUS - KLIK */}
-                  <span
-                    className={`badge ${a.status.toLowerCase()}`}
-                    onClick={() => handleStatusChange(a.id)}
-                    style={{ cursor: "pointer" }}
-                    title="Klikni za promjenu statusa"
-                  >
-                    {a.status}
-                  </span>
-                </div>
-              ))}
+                    {/* STATUS - KLIK */}
+                    <span
+                      className={`badge ${(a.status || "ČEKA").toLowerCase()}`}
+                      onClick={() => handleStatusChange(a.id)}
+                      style={{ cursor: "pointer" }}
+                      title="Klikni za promjenu statusa"
+                    >
+                      {a.status || "ČEKA"}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p>Nema rezervacija za danas.</p>
+              )}
             </div>
 
             {/* INFO */}

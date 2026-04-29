@@ -1,21 +1,87 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, UserPlus, FileText } from "lucide-react";
+import { Calendar, UserPlus, AlertTriangle, XCircle } from "lucide-react";
 
 interface Appointment {
   id: number;
-  patientName: string;
-  doctorName: string;
-  time: string;
-  status: "ZAKAZAN" | "OTKAZAN";
+  pacijent: {
+    korisnik: {
+      ime: string;
+      prezime: string;
+    };
+  };
+  doktor: {
+    korisnik: {
+      ime: string;
+      prezime: string;
+    };
+  };
+  termin: {
+    vrijeme: number;
+    datum: string;
+  };
+  hitnost: boolean;
+  status?: string;
 }
 
 const StaffPanel: React.FC = () => {
-  const [appointments] = useState<Appointment[]>([
-    { id: 1, patientName: "Adnan Cerić", doctorName: "Dr. Amar", time: "08:00", status: "ZAKAZAN" },
-    { id: 2, patientName: "Emina Begić", doctorName: "Dr. Sara", time: "08:30", status: "ZAKAZAN" },
-    { id: 3, patientName: "Haris Mujić", doctorName: "Dr. Amar", time: "09:00", status: "ZAKAZAN" },
-  ]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/rezervacije/doktor/1");
+        if (!response.ok) throw new Error("Greška pri učitavanju");
+
+        const data = await response.json();
+        setAppointments(data);
+      } catch (err) {
+        console.error("Greška:", err);
+        setAppointments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const getTimeFromMinutes = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  };
+
+  const toggleUrgent = (id: number) => {
+    setAppointments(prev =>
+      prev.map(a =>
+        a.id === id ? { ...a, hitnost: !a.hitnost } : a
+      )
+    );
+  };
+
+  const cancelAppointment = async (id: number) => {
+    if (!window.confirm("Da li ste sigurni da želite otkazati termin?")) return;
+
+    try {
+      const response = await fetch(
+        `/api/rezervacije/${id}/otkazi/osoblje`,
+        { method: "PATCH" }
+      );
+
+      if (response.ok) {
+        setAppointments(prev =>
+          prev.map(a =>
+            a.id === id ? { ...a, status: "OTKAZAN" } : a
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Greška pri otkazivanju:", err);
+    }
+  };
 
   return (
     <div className="staff-layout">
@@ -56,31 +122,83 @@ const StaffPanel: React.FC = () => {
                 <th>Pacijent</th>
                 <th>Doktor</th>
                 <th>Status</th>
+                <th>Akcije</th>
               </tr>
             </thead>
 
             <tbody>
-              {appointments.map(a => (
-                <tr key={a.id} className="table-row">
-
-                  <td className="time">{a.time}</td>
-
-                  <td>{a.patientName}</td>
-
-                  <td>{a.doctorName}</td>
-
-                  <td>
-                    <span
-                      className={`status-badge ${
-                        a.status === "OTKAZAN" ? "canceled" : "scheduled"
-                      }`}
-                    >
-                      {a.status}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "20px" }}>
+                    Učitavanje rezervacija...
                   </td>
-
                 </tr>
-              ))}
+              ) : appointments.length > 0 ? (
+                appointments.map(a => (
+                  <tr
+                    key={a.id}
+                    className={`table-row ${
+                      a.hitnost && a.status !== "OTKAZAN" ? "urgent-row" : ""
+                    }`}
+                  >
+                    <td className="time">
+                      {getTimeFromMinutes(a.termin.vrijeme)}
+                    </td>
+
+                    <td>
+                      <div className="patient-cell">
+                        {a.pacijent.korisnik.ime} {a.pacijent.korisnik.prezime}
+
+                        {a.hitnost && a.status !== "OTKAZAN" && (
+                          <span className="urgent-badge">HITNO</span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td>
+                      {a.doktor.korisnik.ime} {a.doktor.korisnik.prezime}
+                    </td>
+
+                    <td>
+                      <span
+                        className={`status-badge ${
+                          a.status === "OTKAZAN" ? "canceled" : "scheduled"
+                        }`}
+                      >
+                        {a.status || "ZAKAZAN"}
+                      </span>
+                    </td>
+
+                    <td className="actions-cell">
+                      {a.status !== "OTKAZAN" && (
+                        <>
+                          <button
+                            onClick={() => toggleUrgent(a.id)}
+                            className={`icon-button ${
+                              a.hitnost ? "disabled" : "danger"
+                            }`}
+                          >
+                            <AlertTriangle size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => cancelAppointment(a.id)}
+                            className="icon-button"
+                          >
+                            <XCircle size={18} />
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center", padding: "20px" }}>
+                    Nema rezervacija
+                  </td>
+                </tr>
+              )}
             </tbody>
 
           </table>

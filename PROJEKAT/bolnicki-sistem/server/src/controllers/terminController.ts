@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
+import { getCurrentKorisnikId } from "../lib/currentPatient.js";
 
 const BUFFER_TTL_SECONDS = 120; // NFR-22: 2 minute lock
 
@@ -81,7 +82,13 @@ export const zaključajTermin = async (
 ) => {
   try {
     const terminId = Number(req.params.id);
-    const korisnikId = (req as any).korisnik.id;
+    const korisnikId = await getCurrentKorisnikId();
+
+    if (!korisnikId) {
+      res.status(404).json({ poruka: "Profil pacijenta nije pronađen." });
+      return;
+    }
+
     const lockKey = `termin:lock:${terminId}`;
 
     // Provjeri da li je već zaključan od nekog drugog

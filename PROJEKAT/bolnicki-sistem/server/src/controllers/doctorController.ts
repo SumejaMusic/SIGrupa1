@@ -28,7 +28,19 @@ export const getSviDoktori = async (
       },
     });
 
-    res.json(doktori);
+    // Mapiranje podataka za frontend
+    const doktoriMapirani = doktori.map((d) => ({
+      id: d.id,
+      ime: d.korisnik.ime,
+      prezime: d.korisnik.prezime,
+      specijalizacija: d.specijalizacija,
+      odjelId: d.idOdjela,
+      email: d.korisnik.email,
+      brojTelefona: d.korisnik.brojTelefona,
+      trajanjePregleda: d.trajanjePregleda,
+    }));
+
+    res.json(doktoriMapirani);
   } catch (err) {
     next(err);
   }
