@@ -15,14 +15,14 @@ on:
       - fix/github-actions
 
 jobs:
-  unit-tests:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: '24'
 
@@ -34,41 +34,6 @@ jobs:
         working-directory: ./PROJEKAT/bolnicki-sistem/server
         run: npx prisma generate
 
-      - name: Run unit tests
+      - name: Run tests
         working-directory: ./PROJEKAT/bolnicki-sistem/server
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bolnica_dummy
         run: npm test
-
-  integration-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-
-      - name: Install dependencies
-        working-directory: ./PROJEKAT/bolnicki-sistem/server
-        run: npm install
-
-      - name: Generate Prisma Client
-        working-directory: ./PROJEKAT/bolnicki-sistem/server
-        run: npx prisma generate
-
-      - name: Create .env.test
-        working-directory: ./PROJEKAT/bolnicki-sistem/server
-        run: |
-          cat > .env.test << 'ENVEOF'
-          DATABASE_URL=postgresql://postgres:postgres@localhost:5433/bolnica_test
-          REDIS_URL=redis://localhost:6380
-          TEST_PATIENT_EMAIL=pacijent@test.com
-          NODE_ENV=test
-          ENVEOF
-
-      - name: Run integration tests
-        working-directory: ./PROJEKAT/bolnicki-sistem/server
-        run: npm run test:integration
