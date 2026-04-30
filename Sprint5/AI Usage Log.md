@@ -93,3 +93,19 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | Lokalno je aplikacija radila zbog proxy konfiguracije, dok je na deploymentu frontend slao zahtjeve na pogrešan server; bez pravilno postavljenog VITE_API_URL i novog deploya funkcionalnosti za doktore i rezervacije nisu radile |
 | **Ko je koristio alat** | Hamza Husović i Kenan Hatibović |
 
+## Unos 005 — Backend infrastruktura: rute i controlleri
+ 
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 25.04.2026. |
+| **Sprint broj** | Sprint 5 |
+| **Alat koji je korišten** | Claude (Anthropic) |
+| **Svrha korištenja** | Pomoć pri postavljanju backend infrastrukture za rezervacijski sistem: ispravke domenskog modela, generisanje ruta, controllera i seed fajla i unit testov |
+| **Kratak opis zadatka ili upita** | AI je analizirao domenski model i uočio nedostatke, te generisao kompletnu backend strukturu za Sprint 5: rute za termine, rezervacije i doktore; controllere sa poslovnom logikom; seed fajl sa testnim podacima; unit testove; te pomogao pri rješavanju niza konfiguracionih problema vezanih za Node.js, Prismu, TypeScript i Redis |
+| **Šta je AI predložio ili generisao** | Analizu domenskog modela i identifikaciju grešaka (`Termin` bez `idDoktor`, redundantni `IDTermin` na `Pacijent`, nepotpuni `StatusListeCekanja`); rute za `terminRoutes.ts`, `reservationRoutes.ts`, `doctorRoutes.ts` i centralni `router.ts`; controllere sa logikom za buffer zonu (Redis lock 2 min), zaštitu od duplih rezervacija, pravilo otkazivanja 24h; `prisma/seed.ts` sa testnim odjel, soba, doktor, pacijent i termini zapisima; mock auth middleware za testiranje bez sesija; unit testove za sve tri grupe ruta koristeći Jest i Supertest; ispravke `src/index.ts` i `tsconfig.json` |
+| **Šta je tim prihvatio** | Identifikovane greške u domenskom modelu i predložene ispravke; strukturu ruta i controllera; tip `Int` za polje `vrijeme` u `Termin` entitetu (minute od ponoći); seed fajl za lokalno testiranje;  ispravke `src/index.ts` (redoslijed middlewarea, uklonjena redundantna Prisma instanca, ispravljena putanja routera); ažuriranje `tsconfig.json` sa `prisma/**/*` u `include` i `types: ["node"]`; preimenovanje `index.ts` u `router.ts` radi jasnoće |
+| **Šta je tim izmijenio** | Nazivi fajlova prilagođeni konvenciji projekta (camelCase engleski stil: `terminRoutes.ts`, `doctorRoutes.ts`, `reservationRoutes.ts`); URL prefiksi zadržani na bosanskom jeziku (`/termini`, `/doktori`, `/rezervacije`); `ioredis` instaliran u `server/` folder umjesto glavnog foldera projekta; `new PrismaClient()` zadržan direktno u `seed.ts` umjesto importa singleton instance zbog izoliranosti skripte |
+| **Šta je tim odbacio** | Ažuriranje Prisme na verziju 7.x — zadržana verzija 5.x radi stabilnosti; `@types/ioredis` paket — nepotreban jer `ioredis` 5.x ima ugrađene TypeScript tipove; mock auth middleware kao dugoročno rješenje, predlozene unit testove |
+| **Rizici, problemi ili greške** | AI je inicijalno predložio `String` tip za polje `vrijeme` što je kasnije ispravno kao `Int`; inicijalni importi u rutama koristili su putanje bez `.js` ekstenzije što je uzrokovalo greške u ESM okruženju; `ioredis` je instaliran u pogrešnom (glavnom) folderu što je uzrokovalo grešku `Cannot find module`; VS Code Prisma ekstenzija prikazivala je lažne greške vezane za Prismu 7 iako je lokalno instalirana verzija 5.15.0; `rootDir` u `tsconfig.json` bio je u konfliktu sa `include` patternom za `prisma/` folder |
+| **Ko je koristio alat** | Hana Mahmutović|
+ 
