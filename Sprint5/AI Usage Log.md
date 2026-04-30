@@ -91,5 +91,5 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim izmijenio** | Ažurirani su frontend fetch pozivi u komponentama za doktore, moje rezervacije, rezervaciju pacijenta, panel doktora, panel osoblja i rezervaciju specijaliste; dodatno je definisana potreba za VITE_API_URL varijablom na deploymentu |
 | **Šta je tim odbacio** | Nisu prihvaćena rješenja koja bi zadržala oslanjanje isključivo na lokalni Vite proxy, jer to nije odgovaralo produkcijskom okruženju |
 | **Rizici, problemi ili greške** | Lokalno je aplikacija radila zbog proxy konfiguracije, dok je na deploymentu frontend slao zahtjeve na pogrešan server; bez pravilno postavljenog VITE_API_URL i novog deploya funkcionalnosti za doktore i rezervacije nisu radile |
-| **Ko je koristio alat** | Hamza Husović |
+| **Ko je koristio alat** | Hamza Husović i Kenan Hatibović |
 
