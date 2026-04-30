@@ -38,11 +38,8 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Pojedini edge case testovi koji su testirali funkcionalnosti još uvijek u razvoju (npr. autentifikacija, WebSocket eventi) |
 | **Rizici, problemi ili greške** | AI je u nekim slučajevima generisao testove bazirane na pretpostavljenoj strukturi odgovora koja se razlikovala od stvarne implementacije — zahtijevalo je ručnu korekciju; mock objekti nisu uvijek bili usklađeni s trenutnom Prisma shemom |
 | **Ko je koristio alat** | Amina Alispahić |
-
 ---
-
-## Unos 002 — Izrada UI forme za rezervaciju
-
+## Unos 002 — Izrada UI forme za rezervaciju 
 | Stavka | Opis |
 |:--- |:--- |
 | **Datum** | 28.4.2026. |
@@ -57,9 +54,30 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Uočeni rizici/problemi** | Neki prijedlozi nisu bili u skladu sa specifičnim zahtjevima sprinta, pa je bila potrebna ručna prilagodba i pojednostavljenje. |
 | **Korisnik alata** | Merjem Milišić |
 
+
+
 ---
 
-## Unos 003 — Povezivanje frontenda sa backend API-jem i deployment
+## Unos 003 — Razvoj Frontenda i Deployment na Render.com (Sveobuhvatna konfiguracija)
+
+| Polje | Sadržaj |
+|---|---|
+| **Datum** | 30.04.2026. |
+| **Sprint broj** | Sprint 5  |
+| **Alat koji je korišten** | Gemini (Google) / Claude (Anthropic) |
+| **Svrha korištenja** | Razvoj interaktivnog frontenda za "Moje rezervacije" i rješavanje kritičnih deployment problema na Render.com platformi. |
+| **Kratak opis zadatka ili upita** | Implementacija frontenda za pregled i otkazivanje termina (pravilo 24h). Nakon implementacije, sistem nije radio u produkciji: dropdown meniji su bili prazni, javljale su se CORS greške i 404 status kodovi. Trebalo je konfigurisati komunikaciju između Vite frontenda i Express backenda na Renderu, uključujući Redis URL. |
+| **Šta je AI predložio ili generisao** | **Frontend:** React komponentu `MojeRezervacije` sa logikom za provjeru vremena (`mozeSeOtkazati`) i API pozivima. **Deployment:** Dijagnostiku za ECONNREFUSED; CORS middleware konfiguraciju za Express sa produkcijskim URL-om; kreiranje `VITE_API_URL` env varijable i `config.ts` fajla; uputstvo za postavljanje Redis URL-a (Internal Redis URL format); kreiranje `_redirects` fajla za React Router SPA na Renderu; ispravku `tsconfig.json` i build skripti (`npm install --include=dev && npm run build`). |
+| **Šta je tim prihvatio** | Kompletnu logiku frontenda za otkazivanje termina; CORS fix sa specifičnim origin-om; `VITE_API_URL` na Render dashboardu; `_redirects` fajl za Static Site; ispravku `tsconfig.app.json` (`noUnusedLocals: false`); Internal Redis URL format za Key Value servis. |
+| **Šta je tim izmijenio** | Prilagođeni su svi `fetch` pozivi u `RezervacijaPacijent.tsx` i `MojeRezervacije.jsx` da koriste centralizovani `API_URL` prefiks umjesto hardkodiranih ili relativnih putanja. |
+| **Šta je tim odbacio** | **Nginx proxy** konfiguraciju (nepotrebno za Render); **prebacivanje @types paketa** u `dependencies` (zadržani u `devDependencies` radi SE dobrih praksi, problem riješen preko `--include=dev` zastavice u build komandi). |
+| **Rizici, problemi ili greške** | AI je inicijalno predložio prebacivanje `@types` u `dependencies`, što je tim prepoznao kao lošu praksu za veličinu produkcijskog builda. Render je preimenovao Redis u "Key Value" servis što je izazvalo inicijalnu zabunu oko URL formata. Također, Root Directory na Renderu je inicijalno bio pogrešno postavljen na server folder umjesto klijentskog. |
+| **Ko je koristio alat** | Mušić Sumeja |
+
+---
+
+
+## Unos 004 — Povezivanje frontenda sa backend API-jem i deployment
 
 | Stavka | Opis |
 | :--- | :--- |
@@ -74,3 +92,4 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Nisu prihvaćena rješenja koja bi zadržala oslanjanje isključivo na lokalni Vite proxy, jer to nije odgovaralo produkcijskom okruženju |
 | **Rizici, problemi ili greške** | Lokalno je aplikacija radila zbog proxy konfiguracije, dok je na deploymentu frontend slao zahtjeve na pogrešan server; bez pravilno postavljenog VITE_API_URL i novog deploya funkcionalnosti za doktore i rezervacije nisu radile |
 | **Ko je koristio alat** | Hamza Husović |
+
