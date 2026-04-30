@@ -39,6 +39,9 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | AI je u nekim slučajevima generisao testove bazirane na pretpostavljenoj strukturi odgovora koja se razlikovala od stvarne implementacije — zahtijevalo je ručnu korekciju; mock objekti nisu uvijek bili usklađeni s trenutnom Prisma shemom |
 | **Ko je koristio alat** | Amina Alispahić |
 
+---
+
+## Unos 002 — Izrada UI forme za rezervaciju
 
 | Stavka | Opis |
 |:--- |:--- |
@@ -53,3 +56,21 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Dodatna polja poput hitnosti i komentara jer nisu bila prioritet u ovom sprintu. |
 | **Uočeni rizici/problemi** | Neki prijedlozi nisu bili u skladu sa specifičnim zahtjevima sprinta, pa je bila potrebna ručna prilagodba i pojednostavljenje. |
 | **Korisnik alata** | Merjem Milišić |
+
+---
+
+## Unos 003 — Povezivanje frontenda sa backend API-jem i deployment
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 29.04.2026. – 30.04.2026. |
+| **Sprint broj** | Sprint 5 |
+| **Alat koji je korišten** | ChatGPT / Codex |
+| **Svrha korištenja** | Pomoć pri povezivanju frontend aplikacije sa backend API-jem i otklanjanju problema na deploymentu |
+| **Kratak opis zadatka ili upita** | AI je dobio zadatak da analizira zašto frontend funkcionalnosti rade lokalno, ali ne rade na deploymentu, te da uskladi frontend API pozive sa backend rutama za doktore, termine i rezervacije |
+| **Šta je AI predložio ili generisao** | Analizu uzroka problema, identifikaciju da frontend koristi relativne /api/... pozive koji rade lokalno preko Vite proxyja, ali ne i na Render deploymentu; generisan je centralni helper za API URL i izmjene u frontend komponentama da koriste VITE_API_URL |
+| **Šta je tim prihvatio** | Prijedlog da se uvede centralizovan API pristup i da se svi relevantni frontend pozivi prema backendu preusmjere na konfigurabilni produkcijski backend URL |
+| **Šta je tim izmijenio** | Ažurirani su frontend fetch pozivi u komponentama za doktore, moje rezervacije, rezervaciju pacijenta, panel doktora, panel osoblja i rezervaciju specijaliste; dodatno je definisana potreba za VITE_API_URL varijablom na deploymentu |
+| **Šta je tim odbacio** | Nisu prihvaćena rješenja koja bi zadržala oslanjanje isključivo na lokalni Vite proxy, jer to nije odgovaralo produkcijskom okruženju |
+| **Rizici, problemi ili greške** | Lokalno je aplikacija radila zbog proxy konfiguracije, dok je na deploymentu frontend slao zahtjeve na pogrešan server; bez pravilno postavljenog VITE_API_URL i novog deploya funkcionalnosti za doktore i rezervacije nisu radile |
+| **Ko je koristio alat** | Hamza Husović |
