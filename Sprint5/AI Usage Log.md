@@ -57,7 +57,6 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 
 
 ---
-# AI Usage Log - Release 1 Development & Deployment
 
 ## Unos 003 — Razvoj Frontenda i Deployment na Render.com (Sveobuhvatna konfiguracija)
 
