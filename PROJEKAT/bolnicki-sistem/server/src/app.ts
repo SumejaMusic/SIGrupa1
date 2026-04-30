@@ -26,7 +26,10 @@ import routes from "./routes/router.js";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+//app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173'
+}));
 app.use(express.json());
 
 // Test-only middleware — aktivan SAMO u test okruženju

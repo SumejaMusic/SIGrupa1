@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
 // src/index.ts
 
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server trči na http://localhost:${PORT}`);
+const PORT = Number(process.env.PORT) || 5000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server trči na portu ${PORT}`);
 });
