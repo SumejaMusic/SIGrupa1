@@ -38,8 +38,8 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Pojedini edge case testovi koji su testirali funkcionalnosti još uvijek u razvoju (npr. autentifikacija, WebSocket eventi) |
 | **Rizici, problemi ili greške** | AI je u nekim slučajevima generisao testove bazirane na pretpostavljenoj strukturi odgovora koja se razlikovala od stvarne implementacije — zahtijevalo je ručnu korekciju; mock objekti nisu uvijek bili usklađeni s trenutnom Prisma shemom |
 | **Ko je koristio alat** | Amina Alispahić |
-
-
+---
+## Unos 002 — Izrada UI forme za rezervaciju 
 | Stavka | Opis |
 |:--- |:--- |
 | **Datum** | 28.4.2026. |
