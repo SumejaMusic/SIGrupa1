@@ -27,12 +27,12 @@ interface Appointment {
 const StaffPanel: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/rezervacije/doktor/1");
+        const response = await fetch(`${apiUrl}/api/rezervacije/doktor/1`);
         if (!response.ok) throw new Error("Greška pri učitavanju");
 
         const data = await response.json();
@@ -66,8 +66,7 @@ const StaffPanel: React.FC = () => {
     if (!window.confirm("Da li ste sigurni da želite otkazati termin?")) return;
 
     try {
-      const response = await fetch(
-        `/api/rezervacije/${id}/otkazi/osoblje`,
+      const response = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/osoblje`,
         { method: "PATCH" }
       );
 

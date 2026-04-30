@@ -47,13 +47,13 @@ const MojeRezervacije = () => {
   const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
   const [loading, setLoading] = useState(true);
   const [poruka, setPoruka] = useState<Poruka | null>(null);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   // DOHVATANJE PODATAKA SA BACKENDA (US-05/US-10)
   useEffect(() => {
     const fetchRezervacije = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/rezervacije/moje');
+        const response = await fetch(`${apiUrl}/api/rezervacije/moje`);
         if (!response.ok) throw new Error('Greška na serveru');
         const data = await response.json();
         setRezervacije(data);
@@ -81,7 +81,7 @@ const MojeRezervacije = () => {
     if (!window.confirm("Jeste li sigurni da želite otkazati ovaj termin?")) return;
 
     try {
-      const response = await fetch(`/api/rezervacije/${id}/otkazi/pacijent`, {
+      const response = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/pacijent`, {
         method: 'PATCH',
       });
 
