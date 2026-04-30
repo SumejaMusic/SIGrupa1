@@ -20,13 +20,13 @@ interface Appointment {
 const DoctorPanel: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   // DOHVATI REZERVACIJE ZA DOKTORA (hardkodirano doktorId = 1)
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/rezervacije/doktor/1');
+        const response = await fetch(`${apiUrl}/api/rezervacije/doktor/1`);
         if (!response.ok) throw new Error('Greška pri učitavanju rezervacija');
         const data = await response.json();
         setAppointments(data);

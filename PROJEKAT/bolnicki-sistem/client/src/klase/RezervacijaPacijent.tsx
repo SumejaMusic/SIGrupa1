@@ -46,7 +46,7 @@ function RezervacijaPacijent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uspjeh, setUspjeh] = useState(false);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   const [form, setForm] = useState<RezervacijaFormData>({
     odjelId: 0,
     idDoktor: 0,
@@ -73,7 +73,7 @@ function RezervacijaPacijent() {
     }
     const fetchDoktori = async () => {
       try {
-        const res = await fetch(`/api/doktori?odjelId=${form.odjelId}`);
+        const res = await fetch(`${apiUrl}/api/doktori?odjelId=${form.odjelId}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setDoktori(data);
@@ -92,7 +92,7 @@ function RezervacijaPacijent() {
     }
     const fetchTermini = async () => {
       try {
-        const res = await fetch(`/api/termini?doktorId=${form.idDoktor}`);
+        const res = await fetch(`${apiUrl}/api/termini?doktorId=${form.idDoktor}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setTermini(data);
@@ -132,7 +132,7 @@ function RezervacijaPacijent() {
       setUspjeh(false);
 
       // 1. Zaključaj termin (NFR-22)
-      const lockRes = await fetch(`/api/termini/${form.idTermina}/zakljucaj`, {
+      const lockRes = await fetch(`${apiUrl}/api/termini/${form.idTermina}/zakljucaj`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
