@@ -5,11 +5,11 @@ Uspostavljanje stabilnog i funkcionalnog temelja za Release 1 – Rezervacijski 
 
 | ID | Naziv zadatka ili storyja | Odgovorna osoba | Status | Napomena |
 |:---|:---|:---|:---|:---|
-| 1 | Kreiranje frontend-a za rezervaciju | Sumeja Mušić, Merjem Milišić | Done | |
-| 2 | Razvoj backend API endpointa za CRUD operacije termina | Hana Mahmutović | Done | |
+| 1 | Kreiranje frontend-a za rezervaciju (US-5,US-6, US-7,US-9,US-10) | Sumeja Mušić, Merjem Milišić | Done | |
+| 2 | Razvoj backend API endpointa za CRUD operacije termina (US-5,US-6, US-7,US-9,US-10) | Hana Mahmutović | Done | |
 | 3 | Povezivanje frontenda i backenda  | Hamza Husović, Kenan Hatibović | Done | |
 | 4 | Implementacija Unit testova i Integracionih testova   | Amina Alispahić | Done | |
-| 5 | Konfiguracija baze podataka | Hana Mahmutović | Done | |
+| 5 | Konfiguracija baze podataka (US-35,US-37) | Hana Mahmutović | Done | |
 | 6 | Inicijalni Deployment aplikacije |Sumeja Mušić  | Done| |
 | 7 | Pisanje Decision Log-a | Amina Alispahić | Done | |
 
