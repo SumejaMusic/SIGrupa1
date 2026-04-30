@@ -24,11 +24,13 @@ const patients: Patient[] = [
   { id: 3, fullName: "Kenan Delić", jmbg: "1112223334445" },
 ];
 
+
+
 const RezervacijaSpecijalista: React.FC = () => {
   const [step, setStep] = useState<1 | 2>(1);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const apiUrl = import.meta.env.VITE_API_URL;
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<Department>("Svi");
@@ -41,7 +43,7 @@ const RezervacijaSpecijalista: React.FC = () => {
     const fetchDoctors = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/doktori');
+        const response = await fetch(`${apiUrl}/api/doktori`);
         if (!response.ok) throw new Error('Greška pri učitavanju doktora');
         const data = await response.json();
         setDoctors(data);
