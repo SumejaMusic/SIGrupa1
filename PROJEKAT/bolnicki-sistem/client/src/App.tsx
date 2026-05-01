@@ -1,33 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import './App.css';
-import { Calendar, FileText } from 'lucide-react';
-
-
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './Pages/HomePage';
 import RezervacijaPacijent from './klase/RezervacijaPacijent';
-
 import MojeRezervacije from './klase/MojeRezervacije';
-
-const HomePage = () => {
-  return (
-    <div className="homepage">
-      <h1 className="homepage-title">Bolnički sistem</h1>
-      <p className="homepage-subtitle">Odaberite uslugu</p>
-      <div className="homepage-grid">
-
-        <Link to="/rezervacija-pacijent" className="hp-card">
-          <Calendar size={40} />
-          <span>Zakaži termin</span>
-        </Link>
-
-        <Link to="/moje-rezervacije" className="hp-card">
-          <FileText size={40} />
-          <span>Moje rezervacije</span>
-        </Link>
-
-      </div>
-    </div>
-  );
-};
+import './App.css';
 
 function App() {
   return (
