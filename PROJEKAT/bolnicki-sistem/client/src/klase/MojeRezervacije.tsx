@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, User, ArrowLeft, AlertCircle, Calendar, MapPin, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
@@ -81,7 +81,7 @@ const MojeRezervacije = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>("2026-05-14");
   const [detaljiRez, setDetaljiRez] = useState<Rezervacija | null>(null);
 
-  const [rezervacije, setRezervacije] = useState<Rezervacija[]>([
+  /*const [rezervacije, setRezervacije] = useState<Rezervacija[]>([
     { id: 1, datum: "2026-05-05", vrijeme: 830, doktor: "Dr. Amira Hadžić", tip: "kontrolni", komentar: "Kardiologija - Kontrolni pregled", soba: "Ambulanta K-1" },
     { id: 2, datum: "2026-05-07", vrijeme: 1415, doktor: "Dr. Miloš Đurić", tip: "hitni", komentar: "Kardiologija - EKG", soba: "Ambulanta K-3" },
     { id: 3, datum: "2026-05-12", vrijeme: 900, doktor: "Dr. Marko Vujović", tip: "preventivni", komentar: "Opšta medicina - Preventivni pregled", soba: "Ordinacija O-2" },
@@ -94,7 +94,32 @@ const MojeRezervacije = () => {
     { id: 10, datum: "2026-05-21", vrijeme: 900, doktor: "Dr. Jelena Marković", tip: "preventivni", komentar: "Oftalmologija - Pregled", soba: "Ordinacija O-3" },
     { id: 11, datum: "2026-05-28", vrijeme: 1000, doktor: "Dr. Jelena Marković", tip: "preventivni", komentar: "Oftalmologija - Preventivni pregled", soba: "Ordinacija O-3" },
     { id: 12, datum: "2026-05-28", vrijeme: 1130, doktor: "Dr. Nikola Jovanović", tip: "kontrolni", komentar: "Pedijatrija - Kontrola", soba: "Ambulanta P-2" },
-  ]);
+  ]);*/
+  const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
+const [loading, setLoading] = useState(false);
+const apiUrl = import.meta.env.VITE_API_URL;
+
+useEffect(() => {
+  setLoading(true);
+  fetch(`${apiUrl}/api/rezervacije/moje`)
+    .then(res => res.json())
+    .then(data => {
+      const mapirano = data.map((r: any) => ({
+        id: r.id,
+        datum: new Date(r.termin.datum).toISOString().split("T")[0],
+        vrijeme: r.termin.vrijeme,
+        doktor: `Dr. ${r.doktor.korisnik.ime} ${r.doktor.korisnik.prezime}`,
+        tip: r.tipPregleda?.naziv?.toLowerCase().includes("hitni") ? "hitni"
+           : r.tipPregleda?.naziv?.toLowerCase().includes("preventivni") ? "preventivni"
+           : "kontrolni",
+        komentar: r.komentar || "",
+        soba: r.termin?.soba || "—",
+      }));
+      setRezervacije(mapirano);
+    })
+    .catch(() => setRezervacije([]))
+    .finally(() => setLoading(false));
+}, []);
 
   const tipStyle = {
     hitni: { dot: "bg-red-500", text: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "Hitni", badge: "bg-red-100 text-red-700" },
@@ -115,11 +140,16 @@ const MojeRezervacije = () => {
 
   const selectedRez = selectedDate ? rezervacije.filter(r => r.datum === selectedDate) : [];
 
-  const formatV = (v: number) => {
+  /*const formatV = (v: number) => {
     const h = Math.floor(v / 100).toString().padStart(2, "0");
     const m = (v % 100).toString().padStart(2, "0");
     return `${h}:${m}`;
-  };
+  };*/
+  const formatV = (v: number) => {
+  const h = Math.floor(v / 60).toString().padStart(2, "0");
+  const m = (v % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+};
 
   const formatDateLabel = (ds: string) =>
     new Date(ds + "T00:00:00").toLocaleDateString("bs-BA", { day: "numeric", month: "long" });
@@ -138,12 +168,33 @@ const MojeRezervacije = () => {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const handleCancel = (id: number) => {
+  /*const handleCancel = (id: number) => {
     if (window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) {
       setRezervacije(prev => prev.filter(r => r.id !== id));
       setDetaljiRez(null);
     }
-  };
+  };*/
+  const handleCancel = async (id: number) => {
+  if (!window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) return;
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+  try {
+    const res = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/pacijent`, {
+      method: "PATCH",
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.poruka || "Nije moguće otkazati rezervaciju.");
+      return;
+    }
+
+    setRezervacije(prev => prev.filter(r => r.id !== id));
+    setDetaljiRez(null);
+  } catch {
+    alert("Greška pri otkazivanju.");
+  }
+};
 
   return (
     <div className="flex min-h-screen bg-[#f0f7ff]"> {/* Mekša plava pozadina iz dizajna */}
@@ -247,7 +298,11 @@ const MojeRezervacije = () => {
                       {selectedRez.map(res => {
                         const s = tipStyle[res.tip];
                         return (
-                          <div key={res.id} className="group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all border-l-8" style={{ borderColor: `var(--tw-color-${res.tip === 'hitni' ? 'red' : res.tip === 'kontrolni' ? 'blue' : 'green'}-500)` }}>
+                         <div key={res.id} className={`group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all border-l-8 ${
+  res.tip === 'hitni' ? 'border-l-red-500' :
+  res.tip === 'preventivni' ? 'border-l-green-500' :
+  'border-l-blue-500'
+}`}>
                             <div className="flex justify-between items-center mb-4">
                               <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-50 rounded-xl text-blue-600">

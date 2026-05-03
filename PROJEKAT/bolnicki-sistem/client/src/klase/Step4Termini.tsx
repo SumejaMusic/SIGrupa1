@@ -1,7 +1,7 @@
-import { useState } from "react";
+
 import { ChevronLeft, ChevronRight, User, Mail, FileText, Upload } from "lucide-react";
 import Layout from "../components/Layout";
-
+import { useState, useEffect } from "react";
 type Termin = {
   id: number;
   datum: string;
@@ -17,9 +17,29 @@ type PatientForm = {
   pdfFile: File | null;
 };
 
-type FormErrors = Partial<PatientForm>;
+//type FormErrors = Partial<PatientForm>;
+type FormErrors = {
+  ime?: string;
+  prezime?: string;
+  email?: string;
+  komentar?: string;
+  pdfFile?: string;
+};
 
 function Step4Termini() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  /*useEffect(() => {
+  const doktorId = localStorage.getItem("selectedDoktor");
+  if (!doktorId) { window.location.href = "/step3-tip-pregleda"; return; }
+
+  
+  fetch(`${apiUrl}/api/termini?doktorId=${doktorId}`)
+    .then(res => res.json())
+    .then(setTermini)
+    .catch(() => setTermini([]));
+}, []);
+  
+  const [termini, setTermini] = useState<Termin[]>([]); //dodano
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
 
   // Čita pacijenta iz localStorage ako je rezervacija pokrenuta od doktora
@@ -38,11 +58,43 @@ function Step4Termini() {
 
   const isDoctorMode = localStorage.getItem("doctorMode") === "true";
 
+
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
+  const [charCount, setCharCount] = useState(0);*/
+  const [termini, setTermini] = useState<Termin[]>([]);
+  const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
+  const [form, setForm] = useState<PatientForm>(() => {
+    const saved = localStorage.getItem("doctorPatient");
+    if (saved) {
+      try {
+        const p = JSON.parse(saved);
+        return { ime: p.ime || "", prezime: p.prezime || "", email: p.email || "", komentar: "", pdfFile: null };
+      } catch {
+        return { ime: "", prezime: "", email: "", komentar: "", pdfFile: null };
+      }
+    }
+    return { ime: "", prezime: "", email: "", komentar: "", pdfFile: null };
+  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
   const [charCount, setCharCount] = useState(0);
 
-  const termini: Termin[] = [
+  // ZATIM useEffect:
+  useEffect(() => {
+    const doktorId = localStorage.getItem("selectedDoktor");
+    if (!doktorId) { window.location.href = "/step3-tip-pregleda"; return; }
+
+    fetch(`${apiUrl}/api/termini?doktorId=${doktorId}`)
+      .then(res => res.json())
+      .then(setTermini)
+      .catch(() => setTermini([]));
+  }, []);
+
+  const isDoctorMode = localStorage.getItem("doctorMode") === "true";
+
+
+  /*const termini: Termin[] = [
     { id: 1, datum: "2026-05-05", vrijeme: 900, status: "SLOBODAN" },
     { id: 2, datum: "2026-05-05", vrijeme: 1000, status: "SLOBODAN" },
     { id: 3, datum: "2026-05-05", vrijeme: 1100, status: "SLOBODAN" },
@@ -57,7 +109,8 @@ function Step4Termini() {
     { id: 12, datum: "2026-05-19", vrijeme: 1000, status: "SLOBODAN" },
     { id: 13, datum: "2026-05-21", vrijeme: 1100, status: "SLOBODAN" },
     { id: 14, datum: "2026-05-26", vrijeme: 900, status: "SLOBODAN" },
-  ];
+  ];*/
+
 
   const formatVrijeme = (minute: number): string => {
     const sati = Math.floor(minute / 60).toString().padStart(2, "0");
@@ -65,7 +118,30 @@ function Step4Termini() {
     return `${sati}:${min}`;
   };
 
-  const handleSelectTermin = (termin: Termin) => setSelectedTermin(termin);
+  //const handleSelectTermin = (termin: Termin) => setSelectedTermin(termin); staro
+  // NOVO:
+const handleSelectTermin = async (termin: Termin) => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  try {
+    const res = await fetch(`${apiUrl}/api/termini/${termin.id}/zakljucaj`, {
+      method: "POST",
+    });
+    if (!res.ok) {
+      alert("Termin je upravo zauzet, odaberite drugi.");
+      // Osvježi termine
+      const doktorId = localStorage.getItem("selectedDoktor");
+      fetch(`${apiUrl}/api/termini?doktorId=${doktorId}`)
+        .then(r => r.json())
+        .then(data => {
+        console.log("Termini iz baze:", data);
+        setTermini(data) });
+      return;
+    }
+    setSelectedTermin(termin);
+  } catch {
+    setSelectedTermin(termin);
+  }
+};
   const handleBack = () => window.history.back();
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -98,7 +174,7 @@ function Step4Termini() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /*const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -127,7 +203,53 @@ function Step4Termini() {
     } else {
       window.location.href = "/step5-potvrda";
     }
-  };
+  };*/
+  // NOVO:
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validate()) return;
+  if (!selectedTermin) return;
+
+  const idDoktor = Number(localStorage.getItem("selectedDoktor"));
+  const idTipPregleda = Number(localStorage.getItem("selectedTip")) || undefined;
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  try {
+    const res = await fetch(`${apiUrl}/api/rezervacije`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idTermina: selectedTermin.id,
+        idDoktor,
+        idTipPregleda,
+        komentar: form.komentar,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+       console.log("Greška rezervacije:", err);
+      alert(err.poruka || "Greška pri kreiranju rezervacije.");
+      return;
+    }
+
+    const dataToSave = {
+      ime: form.ime,
+      prezime: form.prezime,
+      email: form.email,
+    };
+
+    localStorage.setItem("selectedTermin", selectedTermin.id.toString());
+    localStorage.setItem("selectedTerminData", JSON.stringify(selectedTermin)); //dodano
+    localStorage.setItem("patientData", JSON.stringify(dataToSave));
+    localStorage.removeItem("doctorPatient");
+    localStorage.removeItem("doctorMode");
+
+    window.location.href = "/step5-potvrda";
+  } catch {
+    alert("Greška pri kreiranju rezervacije.");
+  }
+};
 
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
@@ -148,10 +270,21 @@ function Step4Termini() {
   for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) calendarDays.push(null);
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
-  const getTerminiForDay = (day: number): Termin[] => {
+  /*const getTerminiForDay = (day: number): Termin[] => {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     return termini.filter(t => t.datum === dateStr && t.status === "SLOBODAN").sort((a, b) => a.vrijeme - b.vrijeme);
-  };
+  };*/
+  const getTerminiForDay = (day: number): Termin[] => {
+  return termini.filter(t => {
+    const datumTermina = new Date(t.datum);
+    return (
+      datumTermina.getUTCFullYear() === year &&
+      datumTermina.getUTCMonth() === month &&
+      datumTermina.getUTCDate() + 1 === day && // +1 zbog UTC offset
+      t.status === "SLOBODAN"
+    );
+  }).sort((a, b) => a.vrijeme - b.vrijeme);
+};
 
   const monthNames = ["Januar", "Februar", "Mart", "April", "Maj", "Juni", "Juli", "August", "Septembar", "Oktobar", "Novembar", "Decembar"];
   const dayNames = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
@@ -320,8 +453,15 @@ function Step4Termini() {
                     Potvrdi
                   </button>
                 </form>
+            
 
-                <button onClick={() => setSelectedTermin(null)} className="w-full py-2 text-gray-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors mt-2">
+                <button onClick={async () => {
+  if (selectedTermin) {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    await fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, { method: "POST" });
+  }
+  setSelectedTermin(null);
+}} className="w-full py-2 text-gray-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors mt-2">
                   Odustani
                 </button>
               </div>

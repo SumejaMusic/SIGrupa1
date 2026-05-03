@@ -9,13 +9,14 @@ type TipPregleda = {
   opis: string;
   icona: string;
 };
-
+const apiUrl = import.meta.env.VITE_API_URL;
 function Step3TipPregleda() {
+  const [tipoviPregleda, setTipoviPregleda] = useState<TipPregleda[]>([]);
   const navigate = useNavigate();
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
   const [selectedDoktor, setSelectedDoktor] = useState<number | null>(null);
 
-  const tipoviPregleda: TipPregleda[] = [
+  /*const tipoviPregleda: TipPregleda[] = [
     {
       id: 1,
       naziv: "Preventivni pregled",
@@ -34,7 +35,7 @@ function Step3TipPregleda() {
       opis: "Urgentna medicinska pomoć",
       icona: "🚨",
     },
-  ];
+  ];*/
 
   useEffect(() => {
     const stored = localStorage.getItem("selectedDoktor");
@@ -45,6 +46,13 @@ function Step3TipPregleda() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  fetch(`${apiUrl}/api/tippregleda`)
+    .then(res => res.json())
+    .then(setTipoviPregleda)
+    .catch(() => setTipoviPregleda([]));
+   }, []);
   const handleSelectTip = (tipId: number) => {
     setSelectedTip(tipId);
     localStorage.setItem("selectedTip", tipId.toString());

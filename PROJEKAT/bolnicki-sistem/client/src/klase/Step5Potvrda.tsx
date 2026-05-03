@@ -19,7 +19,7 @@ function Step5Confirmation() {
   const [patientData, setPatientData] = useState<PatientForm | null>(null);
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
 
-  const termini: Termin[] = [
+  /*const termini: Termin[] = [
     { id: 1, datum: "2026-05-05", vrijeme: 900, status: "SLOBODAN" },
     { id: 2, datum: "2026-05-05", vrijeme: 1000, status: "SLOBODAN" },
     { id: 3, datum: "2026-05-05", vrijeme: 1100, status: "SLOBODAN" },
@@ -34,9 +34,21 @@ function Step5Confirmation() {
     { id: 12, datum: "2026-05-19", vrijeme: 1000, status: "SLOBODAN" },
     { id: 13, datum: "2026-05-21", vrijeme: 1100, status: "SLOBODAN" },
     { id: 14, datum: "2026-05-26", vrijeme: 900, status: "SLOBODAN" },
-  ];
-
+  ];*/
   useEffect(() => {
+  const patient = localStorage.getItem("patientData");
+  const terminStr = localStorage.getItem("selectedTerminData");
+
+  if (patient) {
+    setPatientData(JSON.parse(patient));
+  }
+
+  if (terminStr) {
+    setSelectedTermin(JSON.parse(terminStr));
+  }
+}, []);
+
+  /*useEffect(() => {
     const patient = localStorage.getItem("patientData");
     const terminId = localStorage.getItem("selectedTermin");
 
@@ -50,7 +62,7 @@ function Step5Confirmation() {
         setSelectedTermin(termin);
       }
     }
-  }, []);
+  }, []);*/
 
   const formatVrijeme = (minute: number): string => {
     const sati = Math.floor(minute / 60).toString().padStart(2, "0");
@@ -58,14 +70,19 @@ function Step5Confirmation() {
     return `${sati}:${min}`;
   };
 
-  const formatDate = (datum: string) => {
+  /*const formatDate = (datum: string) => {
     return new Date(datum + "T00:00:00").toLocaleDateString("hr-HR", {
       weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-  };
+  };*/
+  const formatDate = (datum: string) => {
+  return new Date(datum).toLocaleDateString("hr-HR", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+};
 
   const goToHome = () => {
     localStorage.removeItem("patientData");

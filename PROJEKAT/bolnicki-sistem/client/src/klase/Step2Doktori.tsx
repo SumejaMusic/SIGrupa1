@@ -14,7 +14,7 @@ type Doktor = {
   slika: string;
   slobodniTermini: string;
 };
-
+/*
 const doktoriByOdjel: { [key: number]: Doktor[] } = {
   1: [
     { id: 1, ime: "Amira", prezime: "Hadžić", specijalizacija: "Kardiologija", iskustvo: 15, opis: "Specijalizovana za preventivnu i interventnu kardiologiju", uziInteres: "Interventna kardiologija", slika: "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop", slobodniTermini: "Danas" },
@@ -39,16 +39,21 @@ const doktoriByOdjel: { [key: number]: Doktor[] } = {
 const odjeliNazivi: { [key: number]: string } = {
   1: "Kardiologija", 2: "Neurologija", 3: "Pedijatrija", 4: "Ortopedija",
 };
-
+*/
+const apiUrl = import.meta.env.VITE_API_URL;
 function Step2Doktori() {
+  
   const navigate = useNavigate();
-  const [selectedOdjel, setSelectedOdjel] = useState<number | null>(null);
-  const [selectedDoktor, setSelectedDoktor] = useState<number | null>(null);
-  const [odjelnaziv, setOdjelNaziv] = useState("");
+  /*const [selectedOdjel, setSelectedOdjel] = useState<number | null>(null);
+  const [selectedDoktor, setSelectedDoktor] = useState<number | null>(null); ovo mozda obrisati iz zadnjeg dijela
+  const [odjelnaziv, setOdjelNaziv] = useState("");*/
   const [hoveredDoktor, setHoveredDoktor] = useState<number | null>(null);
   const [pretraga, setPretraga] = useState("");
-
-  useEffect(() => {
+  const [selectedOdjel, setSelectedOdjel] = useState<number | null>(null);
+  const [doktori, setDoktori] = useState<Doktor[]>([]);
+  const [odjelnaziv, setOdjelNaziv] = useState("");
+  const [selectedDoktor, setSelectedDoktor] = useState<number | null>(null);
+  /*useEffect(() => {
     const stored = localStorage.getItem("selectedOdjel");
     if (stored) {
       setSelectedOdjel(parseInt(stored));
@@ -56,9 +61,25 @@ function Step2Doktori() {
     } else {
       navigate("/step1-odjeli");
     }
-  }, [navigate]);
+  }, [navigate]);*/
+  useEffect(() => {
+  const stored = localStorage.getItem("selectedOdjel");
+  if (!stored) { navigate("/step1-odjeli"); return; }
 
-  const doktori = selectedOdjel ? doktoriByOdjel[selectedOdjel] || [] : [];
+  const odjelId = parseInt(stored);
+  setSelectedOdjel(odjelId);
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+  fetch(`${apiUrl}/api/doktori?odjelId=${odjelId}`)
+    .then(res => res.json())
+    .then(data => {
+      setDoktori(data);
+      setOdjelNaziv(data[0]?.specijalizacija || "");
+    })
+    .catch(() => setDoktori([]));
+}, [navigate]);
+
+ // const doktori = selectedOdjel ? doktoriByOdjel[selectedOdjel] || [] : [];
 
   const filtrirani = doktori.filter(d =>
     `${d.ime} ${d.prezime}`.toLowerCase().includes(pretraga.toLowerCase()) ||
