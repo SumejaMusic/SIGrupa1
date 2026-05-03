@@ -1,6 +1,9 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
 * {
   scroll-behavior: smooth;
 }
@@ -10,6 +13,7 @@ body {
 }
 
 @keyframes fadeInUp {
+
   from {
     opacity: 0;
     transform: translateY(32px);
@@ -18,6 +22,7 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+
 }
 
 @keyframes fadeIn {
@@ -26,6 +31,7 @@ body {
 }
 
 @keyframes slideInLeft {
+
   from {
     opacity: 0;
     transform: translateX(-40px);
@@ -45,6 +51,8 @@ body {
     opacity: 1;
     transform: translateX(0);
   }
+
+
 }
 
 @keyframes float {
@@ -52,15 +60,18 @@ body {
   50% { transform: translateY(-10px); }
 }
 
+
 @keyframes counterUp {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+
 @keyframes scalePulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
 }
+
 
 .animate-fade-in-up {
   animation: fadeInUp 0.7s ease both;
@@ -85,6 +96,7 @@ body {
 .scale-pulse-animation {
   animation: scalePulse 2s ease-in-out infinite;
 }
+
 
 .delay-100 { animation-delay: 0.1s; }
 .delay-200 { animation-delay: 0.2s; }
@@ -151,9 +163,11 @@ body {
   transition: left 0.5s ease;
 }
 
+
 .cta-button:hover::before {
   left: 100%;
 }
+
 
 .cta-button:hover {
   transform: translateY(-2px);
@@ -172,3 +186,4 @@ body {
 .hero-overlay {
   background: linear-gradient(120deg, rgba(8, 47, 90, 0.88) 0%, rgba(15, 90, 160, 0.72) 60%, rgba(20, 140, 180, 0.45) 100%);
 }
+

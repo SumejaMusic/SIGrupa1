@@ -35,7 +35,10 @@ export default function HeroSection() {
       {/* Background image */}
       <div className="absolute inset-0">
         <img
+
           src="/slikaRezervacije.png"
+
+  
           alt="Doktor sa pacijentom"
           className="w-full h-full object-cover"
         />
@@ -66,7 +69,9 @@ export default function HeroSection() {
             </p>
 
             <div className="animate-fade-in delay-300 flex flex-wrap gap-4">
+
               <Link to="/step1-odjeli" className="cta-button flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg no-underline">
+
                 <CalendarCheck className="w-5 h-5" />
                 Zakažite pregled
                 <ArrowRight className="w-4 h-4" />

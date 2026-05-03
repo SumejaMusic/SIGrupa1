@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import HomePage from './pages/HomePage';
 import RezervacijaPacijent from './klase/RezervacijaPacijent';
 import MojeRezervacije from './klase/MojeRezervacije';
@@ -9,6 +10,7 @@ import Step4Termini from './klase/Step4Termini';
 import Step5Potvrda from './klase/Step5Potvrda';
 import './App.css';
 import DoktorRezervacije from './pages/DoktorRezervacije';
+
 
 function App() {
   return (
