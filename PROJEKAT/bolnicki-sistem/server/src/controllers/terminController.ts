@@ -28,7 +28,10 @@ export const getSlobodniTermini = async (
           include: { korisnik: true },
         },
       },
-      orderBy: { datum: "asc" },
+      orderBy: [
+    { datum: 'asc' },   // Prvo sortiraj po danu
+    { vrijeme: 'asc' }  // Zatim unutar tog dana po satnici
+  ]
     });
 
     // Filtriraj termine koji su trenutno zaključani u Redisu (buffer zona)

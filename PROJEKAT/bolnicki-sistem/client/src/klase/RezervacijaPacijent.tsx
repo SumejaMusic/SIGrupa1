@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../config";
+
 
 type KorisnikInfo = {
   ime: string;
@@ -46,7 +48,7 @@ function RezervacijaPacijent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uspjeh, setUspjeh] = useState(false);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  //const apiUrl = import.meta.env.VITE_API_URL;
   const [form, setForm] = useState<RezervacijaFormData>({
     odjelId: 0,
     idDoktor: 0,
@@ -73,7 +75,7 @@ function RezervacijaPacijent() {
     }
     const fetchDoktori = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/doktori?odjelId=${form.odjelId}`);
+        const res = await fetch(`${API_URL}/api/doktori?odjelId=${form.odjelId}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         setDoktori(data);
@@ -92,10 +94,23 @@ function RezervacijaPacijent() {
     }
     const fetchTermini = async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/termini?doktorId=${form.idDoktor}`);
+        const res = await fetch(`${API_URL}/api/termini?doktorId=${form.idDoktor}`);
         if (!res.ok) throw new Error();
-        const data = await res.json();
-        setTermini(data);
+       const data: Termin[] = await res.json(); 
+
+        // Sortiranje koristeći tvoj tip "Termin"
+        const sortiraniTermini = [...data].sort((a, b) => {
+          // 1. Sortiranje po datumu (datum je string npr. "2026-05-02")
+          const datumCompare = a.datum.localeCompare(b.datum);
+          if (datumCompare !== 0) return datumCompare;
+          
+          // 2. Sortiranje po vremenu (vrijeme je number, npr. 900 ili 1430)
+          // Za brojeve koristimo jednostavno oduzimanje
+          return a.vrijeme - b.vrijeme;
+        });
+
+        setTermini(sortiraniTermini);
+        //setTermini(data);
       } catch {
         setError("Nije moguće učitati termine.");
       }
@@ -132,14 +147,14 @@ function RezervacijaPacijent() {
       setUspjeh(false);
 
       // 1. Zaključaj termin (NFR-22)
-      const lockRes = await fetch(`${apiUrl}/api/termini/${form.idTermina}/zakljucaj`, {
+      const lockRes = await fetch(`${API_URL}/api/termini/${form.idTermina}/zakljucaj`, { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
       if (!lockRes.ok) throw new Error("Termin je nedostupan. Pokušajte drugi termin.");
 
       // 2. Kreiraj rezervaciju
-      const rezervRes = await fetch("${apiUrl}/api/rezervacije", {
+      const rezervRes = await fetch(`${API_URL}/api/rezervacije`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
