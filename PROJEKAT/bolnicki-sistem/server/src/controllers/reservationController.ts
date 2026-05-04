@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
+import { posaljiPotvrdurezerv } from "../services/emailService.js";
 
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
