@@ -154,12 +154,8 @@ function RezervacijaPacijent() {
       if (!lockRes.ok) throw new Error("Termin je nedostupan. Pokušajte drugi termin.");
 
       // 2. Kreiraj rezervaciju
-<<<<<<< HEAD
+
       const rezervRes = await fetch(`${API_URL}/api/rezervacije`, {
-=======
-    
-const rezervRes = await fetch(`${apiUrl}/api/rezervacije`, {
->>>>>>> 5096eb19b2e18405208c75844bf4da170f8dda55
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -171,6 +167,7 @@ const rezervRes = await fetch(`${apiUrl}/api/rezervacije`, {
 
       if (!rezervRes.ok) {
         const data = await rezervRes.json();
+        console.error("❌ 409 poruka:", data.poruka); 
         throw new Error(data.poruka || "Greška pri rezervaciji.");
       }
 
