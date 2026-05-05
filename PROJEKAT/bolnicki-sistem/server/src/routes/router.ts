@@ -4,6 +4,7 @@ import doctorRoutes from "./doctorRoutes.js";
 import tipPregledaRoutes from "./tipPregledaRoutes.js";
 //import patientRoutes from "./patientRoutes.js"; za kasnije
 import reservationRoutes from "./reservationRoutes.js";
+import odjelRoutes from "./odjelRoutes.js";
 
 const router = Router();
 
@@ -13,5 +14,6 @@ router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 //router.use("/pacijenti", patientRoutes); za kasnije
 router.use("/rezervacije", reservationRoutes);
+router.use("/odjeli", odjelRoutes);
 
 export default router;
