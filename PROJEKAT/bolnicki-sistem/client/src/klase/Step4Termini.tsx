@@ -139,7 +139,8 @@ const handleSelectTermin = async (termin: Termin) => {
     }
     setSelectedTermin(termin);
   } catch {
-    setSelectedTermin(termin);
+    //setSelectedTermin(termin);
+    alert("Greška pri zaključavanju termina. Pokušajte ponovo.");
   }
 };
   const handleBack = () => window.history.back();

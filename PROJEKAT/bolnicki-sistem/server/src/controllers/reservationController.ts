@@ -71,7 +71,9 @@ export const kreirajRezervaciju = async (
   where: {
     idPacijent: pacijent.id,
     idTermina: idTermina,
-    datumOtkazivanja: null, // ← ignoriši otkazane
+
+    datumOtkazivanja: null,  // ← samo aktivne rezervacije
+
   },
 });
     if (duplikat) {

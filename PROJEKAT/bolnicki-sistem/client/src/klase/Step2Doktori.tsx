@@ -69,7 +69,7 @@ function Step2Doktori() {
   const odjelId = parseInt(stored);
   setSelectedOdjel(odjelId);
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  //const apiUrl = import.meta.env.VITE_API_URL;
   fetch(`${apiUrl}/api/doktori?odjelId=${odjelId}`)
     .then(res => res.json())
     .then(data => {
