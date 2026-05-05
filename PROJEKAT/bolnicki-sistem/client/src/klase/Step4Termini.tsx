@@ -207,28 +207,44 @@ const handleSelectTermin = async (termin: Termin) => {
   // NOVO:
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+
   if (!validate()) return;
   if (!selectedTermin) return;
 
   const idDoktor = Number(localStorage.getItem("selectedDoktor"));
-  const idTipPregleda = Number(localStorage.getItem("selectedTip")) || undefined;
+  const idTipPregleda =
+    Number(localStorage.getItem("selectedTip")) || undefined;
+
   const apiUrl = import.meta.env.VITE_API_URL;
 
   try {
+    const formData = new FormData();
+
+    formData.append("idTermina", selectedTermin.id.toString());
+    formData.append("idDoktor", idDoktor.toString());
+
+    if (idTipPregleda) {
+      formData.append(
+        "idTipPregleda",
+        idTipPregleda.toString()
+      );
+    }
+
+    formData.append("komentar", form.komentar);
+
+    if (form.pdfFile) {
+      formData.append("dokumentPDF", form.pdfFile);
+    }
+
     const res = await fetch(`${apiUrl}/api/rezervacije`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        idTermina: selectedTermin.id,
-        idDoktor,
-        idTipPregleda,
-        komentar: form.komentar,
-      }),
+      body: formData,
     });
 
     if (!res.ok) {
       const err = await res.json();
-       console.log("Greška rezervacije:", err);
+      console.log("Greška rezervacije:", err);
+
       alert(err.poruka || "Greška pri kreiranju rezervacije.");
       return;
     }
@@ -239,9 +255,21 @@ const handleSubmit = async (e: React.FormEvent) => {
       email: form.email,
     };
 
-    localStorage.setItem("selectedTermin", selectedTermin.id.toString());
-    localStorage.setItem("selectedTerminData", JSON.stringify(selectedTermin)); //dodano
-    localStorage.setItem("patientData", JSON.stringify(dataToSave));
+    localStorage.setItem(
+      "selectedTermin",
+      selectedTermin.id.toString()
+    );
+
+    localStorage.setItem(
+      "selectedTerminData",
+      JSON.stringify(selectedTermin)
+    );
+
+    localStorage.setItem(
+      "patientData",
+      JSON.stringify(dataToSave)
+    );
+
     localStorage.removeItem("doctorPatient");
     localStorage.removeItem("doctorMode");
 
