@@ -53,8 +53,12 @@ export const kreirajRezervaciju = async (
     }
 
     const duplikat = await prisma.rezervacije.findFirst({
-      where: { idPacijent: pacijent.id, idTermina: idTermina },
-    });
+  where: {
+    idPacijent: pacijent.id,
+    idTermina: idTermina,
+    datumOtkazivanja: null,  // ← samo aktivne rezervacije
+  },
+});
     if (duplikat) {
       res.status(409).json({ poruka: "Rezervacija za ovaj termin već postoji." });
       return;
