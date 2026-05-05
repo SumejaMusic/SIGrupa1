@@ -1,33 +1,16 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import './App.css';
-import { Calendar, FileText } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-
+import HomePage from './pages/HomePage';
 import RezervacijaPacijent from './klase/RezervacijaPacijent';
-
 import MojeRezervacije from './klase/MojeRezervacije';
+import Step1Odjeli from './klase/Step1Odjeli';
+import Step2Doktori from './klase/Step2Doktori';
+import Step3TipPregleda from './klase/Step3TipPregleda';
+import Step4Termini from './klase/Step4Termini';
+import Step5Potvrda from './klase/Step5Potvrda';
+import './App.css';
+import DoktorRezervacije from './pages/DoktorRezervacije';
 
-const HomePage = () => {
-  return (
-    <div className="homepage">
-      <h1 className="homepage-title">Bolnički sistem</h1>
-      <p className="homepage-subtitle">Odaberite uslugu</p>
-      <div className="homepage-grid">
-
-        <Link to="/rezervacija-pacijent" className="hp-card">
-          <Calendar size={40} />
-          <span>Zakaži termin</span>
-        </Link>
-
-        <Link to="/moje-rezervacije" className="hp-card">
-          <FileText size={40} />
-          <span>Moje rezervacije</span>
-        </Link>
-
-      </div>
-    </div>
-  );
-};
 
 function App() {
   return (
@@ -37,6 +20,12 @@ function App() {
         <Route path="/rezervacija-pacijent" element={<RezervacijaPacijent />} />
         <Route path="/RezervacijaPacijent" element={<RezervacijaPacijent />} />
         <Route path="/moje-rezervacije" element={<MojeRezervacije />} />
+        <Route path="/step1-odjeli" element={<Step1Odjeli />} />
+        <Route path="/step2-doktori" element={<Step2Doktori />} />
+        <Route path="/step3-tip-pregleda" element={<Step3TipPregleda />} />
+        <Route path="/step4-termini" element={<Step4Termini />} />
+        <Route path="/step5-potvrda" element={<Step5Potvrda />} />
+        <Route path="/doctor-view" element={<DoktorRezervacije />}/>
       </Routes>
     </Router>
   );
