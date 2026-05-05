@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
-import RezervacijaPacijent from './klase/RezervacijaPacijent';
+//import RezervacijaPacijent from './klase/RezervacijaPacijent';
 import MojeRezervacije from './klase/MojeRezervacije';
 import Step1Odjeli from './klase/Step1Odjeli';
 import Step2Doktori from './klase/Step2Doktori';
@@ -17,8 +17,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/rezervacija-pacijent" element={<RezervacijaPacijent />} />
-        <Route path="/RezervacijaPacijent" element={<RezervacijaPacijent />} />
         <Route path="/moje-rezervacije" element={<MojeRezervacije />} />
         <Route path="/step1-odjeli" element={<Step1Odjeli />} />
         <Route path="/step2-doktori" element={<Step2Doktori />} />
