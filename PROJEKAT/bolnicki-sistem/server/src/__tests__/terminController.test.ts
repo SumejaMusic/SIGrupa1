@@ -33,28 +33,30 @@ describe("getSlobodniTermini", () => {
   // ─── HAPPY PATH ───────────────────────────────
 
   it("vraća sve slobodne termine kada nema filtera i nema Redis lockova", async () => {
-    const lažniTermini = [
-      { id: 1, idDoktor: 1, datum: new Date("2025-06-01"), status: "SLOBODAN" },
-      { id: 2, idDoktor: 2, datum: new Date("2025-06-02"), status: "SLOBODAN" },
-    ];
-    vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
-    vi.mocked(redisMock.get).mockResolvedValue(null);
+  const lažniTermini = [
+    { id: 1, idDoktor: 1, datum: new Date("2025-06-01"), status: "SLOBODAN" },
+    { id: 2, idDoktor: 2, datum: new Date("2025-06-02"), status: "SLOBODAN" },
+  ];
+  vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
+  vi.mocked(redisMock.get).mockResolvedValue(null);
 
-    const { req, res, next } = mockReqRes({}, {});
-    await getSlobodniTermini(req, res, next);
+  const { req, res, next } = mockReqRes({}, {});
+  await getSlobodniTermini(req, res, next);
 
-    expect(prismaMock.termin.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          idDoktor: undefined,
-          datum: undefined,
-          status: "SLOBODAN",
-        }),
-      })
-    );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
-    expect(next).not.toHaveBeenCalled();
-  });
+  expect(prismaMock.termin.findMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({
+        idDoktor: undefined,
+        datum: expect.objectContaining({ gte: expect.any(Date) }), // ← ovo je promjena
+        status: "SLOBODAN",
+      }),
+      orderBy: [{ datum: "asc" }, { vrijeme: "asc" }],
+      include: { doktor: { include: { korisnik: true } } },
+    })
+  );
+  expect(res.json).toHaveBeenCalledWith(lažniTermini);
+  expect(next).not.toHaveBeenCalled();
+});
 
   it("filtrira termine po doktorId i vraća samo njegove termine — US-05 AC1", async () => {
     const lažniTermini = [
