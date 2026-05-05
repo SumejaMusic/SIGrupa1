@@ -21,15 +21,15 @@ function formatVrijeme(vrijeme: number): string {
   return `${str.slice(0, 2)}:${str.slice(2)}`;
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
   const {
     pacijentEmail, pacijentIme, pacijentPrezime,
     doktorIme, doktorPrezime, doktorSpecijalizacija,
