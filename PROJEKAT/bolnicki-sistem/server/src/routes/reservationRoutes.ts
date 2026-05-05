@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  upload,
   kreirajRezervaciju,
   getRezervacijeZaPacijenta,
   getRezervacijeZaDoktora,
@@ -14,7 +15,7 @@ const router = Router();
 // POST /api/rezervacije
 // US-06, US-07 — Kreiranje rezervacije
 // Body: { terminId, doktorId, pacijentId, komentar?, hitnost?, tipPregledaId }
-router.post("/", kreirajRezervaciju);
+router.post("/", upload.single("dokumentPDF"), kreirajRezervaciju);
 
 // GET /api/rezervacije/pacijent/:pacijentId
 // US-05 — Sve rezervacije konkretnog pacijenta
