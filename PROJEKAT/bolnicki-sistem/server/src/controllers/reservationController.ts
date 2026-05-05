@@ -2,15 +2,18 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
+import { posaljiPotvrdurezerv } from "../emailService.js";
 
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
+console.log("reservationController učitan");
 export const kreirajRezervaciju = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    console.log("📥 Kreiranje rezervacije");
     const idTermina = Number(req.body.idTermina ?? req.body.terminId);
     const idDoktor = Number(req.body.idDoktor ?? req.body.doktorId);
     const idTipPregledaRaw = req.body.idTipPregleda ?? req.body.tipPregledaId;
@@ -56,7 +59,9 @@ export const kreirajRezervaciju = async (
   where: {
     idPacijent: pacijent.id,
     idTermina: idTermina,
+
     datumOtkazivanja: null,  // ← samo aktivne rezervacije
+
   },
 });
     if (duplikat) {
@@ -98,8 +103,31 @@ export const kreirajRezervaciju = async (
     });
 
     await redis.del(`termin:lock:${idTermina}`);
+    const doktorKorisnik = rezervacija.doktor.korisnik;
+    const pacijentKorisnik = rezervacija.pacijent.korisnik;
 
+    try {
+      await posaljiPotvrdurezerv({
+        pacijentEmail: 'smusic1@etf.unsa.ba',
+        pacijentIme: pacijentKorisnik.ime,
+        pacijentPrezime: pacijentKorisnik.prezime,
+        doktorIme: doktorKorisnik.ime,
+        doktorPrezime: doktorKorisnik.prezime,
+        doktorSpecijalizacija: rezervacija.doktor.specijalizacija,
+        datum: rezervacija.termin.datum,
+        vrijeme: rezervacija.termin.vrijeme,
+        rezervacijaId: rezervacija.id,
+        hitnost: rezervacija.hitnost ?? false,
+        komentar: rezervacija.komentar ?? undefined,
+      });
+      console.log(`✅ Email poslan na: ${pacijentKorisnik.email}`);
+    } catch (emailErr) {
+      console.error("❌ Email NIJE poslan:", emailErr);
+    }
+
+    // Samo JEDAN res.status ovdje!
     res.status(201).json(rezervacija);
+
   } catch (err) {
     next(err);
   }

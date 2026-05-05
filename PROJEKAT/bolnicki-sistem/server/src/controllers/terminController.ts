@@ -9,6 +9,7 @@ const BUFFER_TTL_SECONDS = 120; // NFR-22: 2 minute lock
 // GET /api/termini?doktorId=&datum=
 // US-05 — Slobodni termini filtrirани po doktoru i datumu
 // ─────────────────────────────────────────────
+console.log("terminController učitan");
 export const getSlobodniTermini = async (
   req: Request,
   res: Response,
@@ -17,11 +18,14 @@ export const getSlobodniTermini = async (
   try {
     const { doktorId, datum } = req.query;
 
+    const danas = new Date();
+    danas.setHours(0, 0, 0, 0);
+
     const termini = await prisma.termin.findMany({
       where: {
         idDoktor: doktorId ? Number(doktorId) : undefined,
-        datum: datum ? new Date(datum as string) : undefined,
-        status: "SLOBODAN", // samo slobodni termini
+        datum: datum ? new Date(datum as string) : { gte: danas },
+        status: "SLOBODAN",
       },
       include: {
         doktor: {
