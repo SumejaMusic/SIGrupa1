@@ -9,7 +9,7 @@ vi.mocked(nodemailer.createTransport).mockReturnValue({
   sendMail: sendMailMock,
 } as any);
 
-const { posaljiPotvrdurezerv } = await import("../lib/emailService.js");
+const { posaljiPotvrdurezerv, posaljiPodsjetnik } = await import("../emailService.js");
 
 beforeEach(() => {
   sendMailMock.mockClear();
@@ -150,5 +150,78 @@ describe("posaljiPotvrdurezerv", () => {
     await posaljiPotvrdurezerv(lažniPodaci);
 
     expect(sendMailMock).toHaveBeenCalledTimes(2);
+  });
+});
+// ─────────────────────────────────────────────
+// posaljiPodsjetnik — US-31
+// ─────────────────────────────────────────────
+describe("posaljiPodsjetnik", () => {
+  const lažniPodaci = {
+    pacijentEmail: "pacijent@test.com",
+    pacijentIme: "Emir",
+    pacijentPrezime: "Hadžić",
+    doktorIme: "Ana",
+    doktorPrezime: "Marić",
+    doktorSpecijalizacija: "Kardiologija",
+    datum: new Date("2025-06-15"),
+    vrijeme: 930,
+    rezervacijaId: 42,
+    hitnost: false,
+    komentar: undefined,
+  };
+
+  it("uspješno šalje podsjetnik email — US-31 happy path", async () => {
+    await posaljiPodsjetnik(lažniPodaci);
+
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "pacijent@test.com",
+        subject: "⏰ Podsjetnik: Vaš termin je sutra #42",
+      })
+    );
+  });
+
+  it("podsjetnik sadrži ime i prezime pacijenta", async () => {
+    await posaljiPodsjetnik(lažniPodaci);
+
+    const poziv = sendMailMock.mock.calls[0][0];
+    expect(poziv.html).toContain("Emir");
+    expect(poziv.html).toContain("Hadžić");
+  });
+
+  it("podsjetnik sadrži ime doktora i specijalizaciju", async () => {
+    await posaljiPodsjetnik(lažniPodaci);
+
+    const poziv = sendMailMock.mock.calls[0][0];
+    expect(poziv.html).toContain("Ana");
+    expect(poziv.html).toContain("Marić");
+    expect(poziv.html).toContain("Kardiologija");
+  });
+
+  it("podsjetnik ispravno formatira vrijeme 930 u 09:30", async () => {
+    await posaljiPodsjetnik({ ...lažniPodaci, vrijeme: 930 });
+
+    const poziv = sendMailMock.mock.calls[0][0];
+    expect(poziv.html).toContain("09:30");
+  });
+
+  it("podsjetnik sadrži broj rezervacije u subjectu", async () => {
+    await posaljiPodsjetnik({ ...lažniPodaci, rezervacijaId: 77 });
+
+    const poziv = sendMailMock.mock.calls[0][0];
+    expect(poziv.subject).toContain("77");
+  });
+
+  it("baca grešku kada sendMail ne uspije — US-31", async () => {
+    sendMailMock.mockRejectedValueOnce(new Error("SMTP greška"));
+
+    await expect(posaljiPodsjetnik(lažniPodaci)).rejects.toThrow("SMTP greška");
+  });
+
+  it("sendMail se poziva tačno jednom po pozivu — US-31", async () => {
+    await posaljiPodsjetnik(lažniPodaci);
+
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
   });
 });
