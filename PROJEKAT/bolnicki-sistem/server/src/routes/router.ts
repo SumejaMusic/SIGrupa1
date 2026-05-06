@@ -6,6 +6,7 @@ import reservationRoutes from "./reservationRoutes.js";
 import odjelRoutes from "./odjelRoutes.js";
 import { getNalaziZaPacijenta, getNalazPDF, getNalaziZaRezervaciju } from "../controllers/nalazController.js";
 import { getKomentari } from "../controllers/reservationController.js"; // ← dodaj
+import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientController.js"; // ← dodaj
 const router = Router();
 
 router.use("/termini", terminRoutes);
@@ -19,4 +20,7 @@ router.get("/nalazi/rezervacija/:rezervacijaId", getNalaziZaRezervaciju);
 router.get("/nalazi/pacijent/:pacijentId", getNalaziZaPacijenta);
 router.get("/nalazi/:id/pdf", getNalazPDF);
 
+// Pacijent rute
+router.get("/pacijenti", getSviPacijenti);
+router.get("/historija/pacijent/:pacijentId", getHistorijaPacijenta); // ← za historiju dolazaka
 export default router;

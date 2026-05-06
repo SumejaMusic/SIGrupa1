@@ -27,7 +27,11 @@ interface Termin {
   komentari: Komentar[]; nalazi: Nalaz[];
 }
 
-const formatV = (v: number) => `${String(Math.floor(v / 100)).padStart(2, "0")}:${String(v % 100).padStart(2, "0")}`;
+const formatV = (v: number) => {
+  const h = Math.floor(v / 60);
+  const m = v % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
 
 const tipConfig = {
   hitni: { label: "Hitni", bg: "bg-red-50", border: "border-red-400", text: "text-red-700", badge: "bg-red-100 text-red-700", dot: "bg-red-500", row: "bg-red-50 border-l-4 border-l-red-500", trajanje: 15 },
@@ -46,10 +50,10 @@ const getAge = (godiste: number) => new Date().getFullYear() - godiste;
 function mapiriRezervaciju(r: any): Termin {
   const vrijemeOd = r.termin.vrijeme;
   const trajanje = r.tipPregleda?.trajanjeMinuta ?? r.doktor?.trajanjePregleda ?? 30;
-  const sati = Math.floor(vrijemeOd / 100);
-  const minute = vrijemeOd % 100;
+  const sati = Math.floor(vrijemeOd / 60);
+  const minute = vrijemeOd % 60;
   const ukupnoMinuta = sati * 60 + minute + trajanje;
-  const vrijemeDo = Math.floor(ukupnoMinuta / 60) * 100 + (ukupnoMinuta % 60);
+  const vrijemeDo = ukupnoMinuta;
 
   let tip: TipPregleda = "kontrolni";
   if (r.hitnost) {
@@ -111,18 +115,7 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     fetch(`${apiUrl}/api/pacijenti`)
       .then(res => res.json())
-      .then(data => {
-        const mapirani = data.map((p: any) => ({
-          id: p.id,
-          ime: p.korisnik.ime,
-          prezime: p.korisnik.prezime,
-          godisteRodjenja: new Date(p.korisnik.datumRodjenja).getFullYear(),
-          pol: p.korisnik.jmbg?.[6] < "5" ? "M" : "F",
-          email: p.korisnik.email,
-          telefon: p.korisnik.brojTelefona ?? "/",
-        }));
-        setPacijenti(mapirani);
-      })
+      .then(data => setPacijenti(Array.isArray(data) ? data : []))
       .catch(() => setPacijenti([]))
       .finally(() => setLoading(false));
   }, []);
@@ -421,6 +414,8 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
   const [noviKomentar, setNoviKomentar] = useState("");
   const [nalazi, setNalazi] = useState<Nalaz[]>([]);
   const [loadingNalazi, setLoadingNalazi] = useState(false);
+  const [historija, setHistorija] = useState<any[]>([]);
+  const [loadingHistorija, setLoadingHistorija] = useState(false);
   const tc = tipConfig[termin.tip];
   const sc = statusConfig[termin.status];
 
@@ -444,6 +439,16 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
       })
       .catch(() => setNalazi([]))
       .finally(() => setLoadingNalazi(false));
+  }, [tab, termin.pacijent.id]);
+
+  useEffect(() => {
+    if (tab !== "historija") return;
+    setLoadingHistorija(true);
+    fetch(`${apiUrl}/api/historija/pacijent/${termin.pacijent.id}`)
+      .then(res => res.json())
+      .then(data => setHistorija(Array.isArray(data) ? data : []))
+      .catch(() => setHistorija([]))
+      .finally(() => setLoadingHistorija(false));
   }, [tab, termin.pacijent.id]);
 
   const handleSend = () => {
@@ -596,10 +601,30 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
         {tab === "historija" && (
           <div className="space-y-2">
             <p className="text-xs text-gray-500 mb-3">Historija dolazaka — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            <div className="text-center py-10">
-              <History size={28} className="text-gray-200 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">Nema prethodnih posjeta</p>
-            </div>
+            {loadingHistorija ? (
+              <div className="text-center py-10 text-sm text-gray-400">Učitavanje historije...</div>
+            ) : historija.length === 0 ? (
+              <div className="text-center py-10">
+                <History size={28} className="text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">Nema prethodnih posjeta</p>
+              </div>
+            ) : (
+              historija.map(h => (
+                <div key={h.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-gray-700">
+                      {new Date(h.datumPregleda).toLocaleDateString("bs-BA")}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {formatV(h.rezervacija?.termin?.vrijeme)}
+                    </span>
+                  </div>
+                  <div className="text-sm font-medium text-gray-800 mb-1">{h.dijagnoza}</div>
+                  <div className="text-xs text-gray-500">Terapija: {h.terapija}</div>
+                  {h.biljeske && <div className="text-xs text-gray-400 mt-1">Bilješke: {h.biljeske}</div>}
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
