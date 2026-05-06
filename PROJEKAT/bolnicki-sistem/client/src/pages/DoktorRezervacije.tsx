@@ -43,32 +43,30 @@ const statusConfig = {
 
 const getAge = (godiste: number) => new Date().getFullYear() - godiste;
 
-// ─── Mapiranje backend rezervacije na frontend Termin ──────────────────────
 function mapiriRezervaciju(r: any): Termin {
   const vrijemeOd = r.termin.vrijeme;
-
   const trajanje = r.tipPregleda?.trajanjeMinuta ?? r.doktor?.trajanjePregleda ?? 30;
   const sati = Math.floor(vrijemeOd / 100);
   const minute = vrijemeOd % 100;
   const ukupnoMinuta = sati * 60 + minute + trajanje;
   const vrijemeDo = Math.floor(ukupnoMinuta / 60) * 100 + (ukupnoMinuta % 60);
 
- let tip: TipPregleda = "kontrolni";
-if (r.hitnost) {
-  tip = "hitni";
-} else {
-  switch (r.idTipPregleda) {
-    case 1: tip = "preventivni"; break;
-    case 2: tip = "kontrolni"; break;
-    case 3: tip = "hitni"; break;
-    default: {
-      const naziv = r.tipPregleda?.naziv?.toLowerCase().trim() ?? "";
-      if (naziv.includes("preventiv")) tip = "preventivni";
-      else if (naziv.includes("hitn")) tip = "hitni";
-      break;
+  let tip: TipPregleda = "kontrolni";
+  if (r.hitnost) {
+    tip = "hitni";
+  } else {
+    switch (r.idTipPregleda) {
+      case 1: tip = "preventivni"; break;
+      case 2: tip = "kontrolni"; break;
+      case 3: tip = "hitni"; break;
+      default: {
+        const naziv = r.tipPregleda?.naziv?.toLowerCase().trim() ?? "";
+        if (naziv.includes("preventiv")) tip = "preventivni";
+        else if (naziv.includes("hitn")) tip = "hitni";
+        break;
+      }
     }
   }
-}
 
   let status: StatusTermina = "zakazan";
   if (r.datumOtkazivanja) status = "otkazan";
@@ -135,11 +133,7 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   );
 
   const handleOdaberiPacijenta = (p: Pacijent) => {
-    localStorage.setItem("doctorPatient", JSON.stringify({
-      ime: p.ime,
-      prezime: p.prezime,
-      email: p.email,
-    }));
+    localStorage.setItem("doctorPatient", JSON.stringify({ ime: p.ime, prezime: p.prezime, email: p.email }));
     localStorage.setItem("doctorMode", "true");
     onClose();
     navigate("/step1-odjeli");
@@ -162,7 +156,6 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
             <X size={16} className="text-white" />
           </button>
         </div>
-
         <div className="p-5">
           <div className="relative mb-3">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -212,7 +205,6 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
   const [zeljenaDuzina, setZeljenaDuzina] = useState(trenutnaDuzina);
   const [razlog, setRazlog] = useState("");
   const [poslano, setPoslano] = useState(false);
-
   const opcijeDuzina = [10, 15, 20, 30, 45, 60];
 
   const handleSubmit = () => {
@@ -239,7 +231,6 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
             <X size={16} className="text-white" />
           </button>
         </div>
-
         <div className="p-5">
           {poslano ? (
             <div className="flex flex-col items-center justify-center text-center py-8">
@@ -260,7 +251,6 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                   <span className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">{trenutnaDuzina} min</span>
                 </div>
               </div>
-
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-2 block">Željena dužina termina (min)</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -270,11 +260,9 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                       onClick={() => setZeljenaDuzina(d)}
                       disabled={d === trenutnaDuzina}
                       className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                        d === zeljenaDuzina
-                          ? "bg-orange-500 text-white border-orange-500"
-                          : d === trenutnaDuzina
-                          ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
+                        d === zeljenaDuzina ? "bg-orange-500 text-white border-orange-500"
+                        : d === trenutnaDuzina ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
                       }`}
                     >
                       {d} min
@@ -283,7 +271,6 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                   ))}
                 </div>
               </div>
-
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-2 block">Razlog promjene <span className="text-red-500">*</span></label>
                 <textarea
@@ -298,7 +285,6 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                   <span className={`text-xs ${razlog.length > 200 ? "text-red-500" : "text-gray-400"}`}>{razlog.length}/255</span>
                 </div>
               </div>
-
               <button
                 onClick={handleSubmit}
                 disabled={!razlog.trim() || zeljenaDuzina === trenutnaDuzina}
@@ -320,9 +306,7 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
 
 // ─── Modal: Potvrda otkazivanja ────────────────────────────────────────────
 function ModalOtkaziTermin({ termin, onClose, onConfirm }: {
-  termin: Termin;
-  onClose: () => void;
-  onConfirm: () => void;
+  termin: Termin; onClose: () => void; onConfirm: () => void;
 }) {
   const tc = tipConfig[termin.tip];
   return (
@@ -334,15 +318,12 @@ function ModalOtkaziTermin({ termin, onClose, onConfirm }: {
           </div>
           <h2 className="text-base font-bold text-gray-900 mb-1">Otkazivanje termina</h2>
           <p className="text-sm text-gray-500 mb-4">Da li ste sigurni da želite otkazati ovaj termin?</p>
-
           <div className={`w-full rounded-xl p-3 mb-5 border ${tc.border} ${tc.bg}`}>
             <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
             <div className="text-xs text-gray-500 mt-0.5">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1.5 inline-block ${tc.badge}`}>{tc.label}</span>
           </div>
-
           <p className="text-xs text-gray-400 mb-5">Pacijent će biti automatski obaviješten putem emaila.</p>
-
           <div className="flex gap-3 w-full">
             <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
               Odustani
@@ -438,8 +419,32 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
 }) {
   const [tab, setTab] = useState<"info" | "komentari" | "nalazi" | "historija">("info");
   const [noviKomentar, setNoviKomentar] = useState("");
+  const [nalazi, setNalazi] = useState<Nalaz[]>([]);
+  const [loadingNalazi, setLoadingNalazi] = useState(false);
   const tc = tipConfig[termin.tip];
   const sc = statusConfig[termin.status];
+
+  useEffect(() => {
+    if (tab !== "nalazi") return;
+    setLoadingNalazi(true);
+    setNalazi([]);
+    fetch(`${apiUrl}/api/nalazi/pacijent/${termin.pacijent.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setNalazi(data.map((n: any) => ({
+            id: n.id,
+            naziv: n.naziv,
+            datum: new Date(n.vrijemeNalaza).toISOString().split("T")[0],
+            url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
+          })));
+        } else {
+          setNalazi([]);
+        }
+      })
+      .catch(() => setNalazi([]))
+      .finally(() => setLoadingNalazi(false));
+  }, [tab, termin.pacijent.id]);
 
   const handleSend = () => {
     if (!noviKomentar.trim()) return;
@@ -556,14 +561,24 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
         {tab === "nalazi" && (
           <div className="space-y-2">
             <p className="text-xs text-gray-500 mb-3">Svi nalazi — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            {termin.nalazi.length === 0 ? (
+            {loadingNalazi ? (
+              <div className="text-center py-10">
+                <div className="text-sm text-gray-400">Učitavanje nalaza...</div>
+              </div>
+            ) : nalazi.length === 0 ? (
               <div className="text-center py-10">
                 <FileText size={28} className="text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">Nema uploadovanih nalaza</p>
               </div>
             ) : (
-              termin.nalazi.map(n => (
-                <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group">
+              nalazi.map(n => (
+                <a
+                  key={n.id}
+                  href={n.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+                >
                   <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
                     <FileText size={15} className="text-red-600" />
                   </div>
@@ -581,17 +596,10 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
         {tab === "historija" && (
           <div className="space-y-2">
             <p className="text-xs text-gray-500 mb-3">Historija dolazaka — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            {termin.komentari.length === 0 ? (
-              <div className="text-center py-10">
-                <History size={28} className="text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Nema prethodnih posjeta</p>
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <History size={28} className="text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Historija će biti dostupna kada se implementira HistorijaPregleda endpoint</p>
-              </div>
-            )}
+            <div className="text-center py-10">
+              <History size={28} className="text-gray-200 mx-auto mb-2" />
+              <p className="text-sm text-gray-400">Nema prethodnih posjeta</p>
+            </div>
           </div>
         )}
       </div>
@@ -611,11 +619,10 @@ export default function DoktorRezervacije() {
   const [terminZaDuzinu, setTerminZaDuzinu] = useState<Termin | null>(null);
   const [terminZaOtkazivanje, setTerminZaOtkazivanje] = useState<Termin | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  // ─── NOVO: filter za prikaz otkazanih termina ──────────────────────────
   const [prikaziOtkazane, setPrikaziOtkazane] = useState(false);
 
-  //const doktorId = localStorage.getItem("doktorId") ?? "2";
-const doktorId = "2"; // tvoj stvarni ID iz baze
+  const doktorId = "2";
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
@@ -630,14 +637,11 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
       .finally(() => setLoading(false));
   }, [doktorId]);
 
-  // ─── NOVO: helper koji filtrira termine po aktivnom modu ───────────────
   const filterTermini = (termini: Termin[]) =>
     termini.filter(t => prikaziOtkazane ? t.status === "otkazan" : t.status !== "otkazan");
 
   const dnevniTermini = filterTermini(
-    listaTermina
-      .filter(t => t.datum === selectedDatum)
-      .sort((a, b) => a.vrijemeOd - b.vrijemeOd)
+    listaTermina.filter(t => t.datum === selectedDatum).sort((a, b) => a.vrijemeOd - b.vrijemeOd)
   );
 
   const getWeekDays = (dateStr: string) => {
@@ -679,8 +683,7 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
       newDate = new Date(y, m - 1, d + delta);
     }
     const pad = (n: number) => String(n).padStart(2, "0");
-    const newStr = `${newDate.getFullYear()}-${pad(newDate.getMonth() + 1)}-${pad(newDate.getDate())}`;
-    setSelectedDatum(newStr);
+    setSelectedDatum(`${newDate.getFullYear()}-${pad(newDate.getMonth() + 1)}-${pad(newDate.getDate())}`);
     setSelectedTermin(null);
   };
 
@@ -694,20 +697,12 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ komentar: tekst }),
       });
-
       const noviK: Komentar = {
-        id: Date.now(),
-        tekst,
-        autor: "Dr.",
-        datum: new Date().toISOString().split("T")[0],
-        jeDoktor: true,
+        id: Date.now(), tekst, autor: "Dr.",
+        datum: new Date().toISOString().split("T")[0], jeDoktor: true,
       };
-      setListaTermina(prev =>
-        prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] })
-      );
-      setSelectedTermin(prev =>
-        prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev
-      );
+      setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
+      setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
     } catch {
       showToast("❌ Greška pri slanju komentara.");
     }
@@ -719,18 +714,10 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
 
   const handleOtkaziTermin = async (termin: Termin) => {
     try {
-      const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, {
-        method: "PATCH",
-      });
-
+      const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, { method: "PATCH" });
       if (!res.ok) throw new Error();
-
-      setListaTermina(prev =>
-        prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina })
-      );
-      setSelectedTermin(prev =>
-        prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev
-      );
+      setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
+      setSelectedTermin(prev => prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev);
       setTerminZaOtkazivanje(null);
       showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
     } catch {
@@ -757,15 +744,9 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
         </div>
       )}
 
-      {showNovaRezervacija && (
-        <ModalNovaRezervacija onClose={() => setShowNovaRezervacija(false)} />
-      )}
+      {showNovaRezervacija && <ModalNovaRezervacija onClose={() => setShowNovaRezervacija(false)} />}
       {terminZaDuzinu && (
-        <ModalPromjenaDuzine
-          termin={terminZaDuzinu}
-          onClose={() => setTerminZaDuzinu(null)}
-          onSubmit={handlePromjenaDuzine}
-        />
+        <ModalPromjenaDuzine termin={terminZaDuzinu} onClose={() => setTerminZaDuzinu(null)} onSubmit={handlePromjenaDuzine} />
       )}
       {terminZaOtkazivanje && (
         <ModalOtkaziTermin
@@ -795,20 +776,15 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
             >
               <Plus size={15} /> Nova rezervacija
             </button>
-
-            {/* ─── NOVO: Toggle zakazani / otkazani ─────────────────────── */}
             <button
               onClick={() => { setPrikaziOtkazane(p => !p); setSelectedTermin(null); }}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                prikaziOtkazane
-                  ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                  : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                prikaziOtkazane ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
               }`}
             >
               <XCircle size={15} />
               {prikaziOtkazane ? "Otkazani termini" : "Zakazani termini"}
             </button>
-
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               {(["dnevni", "sedmicni", "mjesecni"] as const).map(p => (
                 <button
@@ -898,28 +874,23 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="grid grid-cols-7 border-b border-gray-100">
                     {weekDays.map((ds, i) => {
-                      const count = filterTermini(listaTermina.filter(t => t.datum === ds)).length;
                       const isToday = ds === new Date().toISOString().split("T")[0];
                       return (
                         <button key={ds} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }} className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}>
                           <div className="text-xs text-gray-400 mb-1">{dayNames[i]}</div>
                           <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T00:00:00").getDate()}</div>
-                          {count > 0 && (
-                            <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
-                              {filterTermini(listaTermina.filter(t => t.datum === ds)).map(t => (
-                                <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
-                              ))}
-                            </div>
-                          )}
+                          <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
+                            {filterTermini(listaTermina.filter(t => t.datum === ds)).map(t => (
+                              <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
+                            ))}
+                          </div>
                         </button>
                       );
                     })}
                   </div>
                   <div className="grid grid-cols-7 divide-x divide-gray-100 min-h-64">
                     {weekDays.map(ds => {
-                      const dayTermini = filterTermini(
-                        listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd)
-                      );
+                      const dayTermini = filterTermini(listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd));
                       return (
                         <div key={ds} className="p-2 space-y-1.5">
                           {dayTermini.map(t => {
@@ -956,9 +927,7 @@ const doktorId = "2"; // tvoj stvarni ID iz baze
                   </div>
                   <div className="grid grid-cols-7 divide-x divide-y divide-gray-100">
                     {getMonthDays(selectedDatum).map((ds, idx) => {
-                      const dayTermini = ds
-                        ? filterTermini(listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd))
-                        : [];
+                      const dayTermini = ds ? filterTermini(listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd)) : [];
                       const isToday = ds === new Date().toISOString().split("T")[0];
                       const isSelected = ds === selectedDatum;
                       return (
