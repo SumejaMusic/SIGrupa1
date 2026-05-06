@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Building2, UserCheck, Stethoscope, Calendar, CheckCircle2, Upload, MessageSquare, Clock, Check, FileText } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+
 
 const steps = [
   {
@@ -71,7 +73,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(0);
-
+const navigate = useNavigate();
   const CurrentIcon = steps[activeStep].icon;
   const currentDetails = steps[activeStep].details;
 
@@ -190,10 +192,13 @@ export default function HowItWorksSection() {
 
         {/* CTA */}
         <div className="mt-14 text-center">
-          <button className="cta-button inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-8 py-3.5 rounded-xl shadow-md">
-            <Calendar className="w-5 h-5" />
-            Počni sa rezervacijom
-          </button>
+          <button 
+  onClick={() => navigate("/step1-odjeli")}
+  className="cta-button inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-8 py-3.5 rounded-xl shadow-md"
+>
+  <Calendar className="w-5 h-5" />
+  Počni sa rezervacijom
+</button>
         </div>
       </div>
     </section>

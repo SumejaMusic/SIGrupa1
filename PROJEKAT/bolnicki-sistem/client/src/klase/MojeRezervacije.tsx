@@ -1,7 +1,22 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Clock, User, ArrowLeft, AlertCircle, Calendar, MapPin, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, User, AlertCircle, Calendar, MapPin, X, FileText, MessageSquare, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
+
+interface Komentar {
+  id: number;
+  tekst: string;
+  autor: string;
+  datum: string;
+  jeDoktor: boolean;
+}
+
+interface Nalaz {
+  id: number;
+  naziv: string;
+  datum: string;
+  url: string;
+}
 
 interface Rezervacija {
   id: number;
@@ -11,6 +26,8 @@ interface Rezervacija {
   tip: "hitni" | "preventivni" | "kontrolni";
   komentar?: string;
   soba: string;
+  komentari: Komentar[];
+  nalazi: Nalaz[];
 }
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────
@@ -22,13 +39,9 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
     { icon: Stethoscope, label: "Odjeli", href: "/step1-odjeli" },
     { icon: User, label: "Profil", href: "#" },
   ];
-  
+
   return (
-    <div
-      className={`bg-white border-r border-gray-200 flex flex-col fixed h-screen z-50 transition-all duration-300 ${
-        open ? "w-64" : "w-0 overflow-hidden border-r-0"
-      }`}
-    >
+    <div className={`bg-white border-r border-gray-200 flex flex-col fixed h-screen z-50 transition-all duration-300 ${open ? "w-64" : "w-0 overflow-hidden border-r-0"}`}>
       <div className="p-6 flex flex-col h-full">
         <Link to="/" className="flex items-center gap-2 mb-8 whitespace-nowrap">
           <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
@@ -45,9 +58,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors whitespace-nowrap ${
-                  isActive ? "bg-blue-50 text-blue-600 font-semibold" : "text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors whitespace-nowrap ${isActive ? "bg-blue-50 text-blue-600 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
               >
                 <Icon size={20} className="flex-shrink-0" />
                 <span>{item.label}</span>
@@ -61,12 +72,260 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
             <LogOut size={18} className="flex-shrink-0" />
             Odjava
           </button>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
+            <ChevronLeft size={18} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal Detalji ─────────────────────────────────────────────────────────
+function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
+  rez: Rezervacija;
+  onClose: () => void;
+  onCancel: (id: number) => void;
+  apiUrl: string;
+}) {
+  const [tab, setTab] = useState<"info" | "komentari" | "nalazi">("info");
+  const [nalazi, setNalazi] = useState<Nalaz[]>([]);
+  const [komentari, setKomentari] = useState<Komentar[]>(rez.komentari ?? []);
+  const [loadingNalazi, setLoadingNalazi] = useState(false);
+  const [noviKomentar, setNoviKomentar] = useState("");
+  const [saljemo, setSaljemo] = useState(false);
+
+  const tipStyle = {
+    hitni: { dot: "bg-red-500", text: "text-red-600", label: "Hitni" },
+    preventivni: { dot: "bg-green-500", text: "text-green-600", label: "Preventivni" },
+    kontrolni: { dot: "bg-blue-500", text: "text-blue-600", label: "Kontrolni" },
+  };
+
+  const formatV = (v: number) => {
+    const h = Math.floor(v / 100).toString().padStart(2, "0");
+    const m = (v % 100).toString().padStart(2, "0");
+    return `${h}:${m}`;
+  };
+
+  // Fetch nalazi kada se otvori tab
+  useEffect(() => {
+    if (tab !== "nalazi") return;
+    setLoadingNalazi(true);
+    fetch(`${apiUrl}/api/nalazi/rezervacija/${rez.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setNalazi(data.map((n: any) => ({
+            id: n.id,
+            naziv: n.naziv,
+            datum: new Date(n.vrijemeNalaza).toISOString().split("T")[0],
+            url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
+          })));
+        } else {
+          setNalazi([]);
+        }
+      })
+      .catch(() => setNalazi([]))
+      .finally(() => setLoadingNalazi(false));
+  }, [tab, rez.id]);
+
+  // Fetch komentara kada se otvori tab
+  useEffect(() => {
+    if (tab !== "komentari") return;
+    fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentari`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setKomentari(data);
+      })
+      .catch(() => {});
+  }, [tab, rez.id]);
+
+  const handleSendKomentar = async () => {
+    if (!noviKomentar.trim()) return;
+    setSaljemo(true);
+    try {
+      await fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentar`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ komentar: noviKomentar.trim() }),
+      });
+      setKomentari(prev => [...prev, {
+        id: Date.now(),
+        tekst: noviKomentar.trim(),
+        autor: "Vi",
+        datum: new Date().toISOString().split("T")[0],
+        jeDoktor: false,
+      }]);
+      setNoviKomentar("");
+    } catch {
+      alert("Greška pri slanju komentara.");
+    } finally {
+      setSaljemo(false);
+    }
+  };
+
+  const tabs = [
+    { id: "info" as const, label: "Informacije", icon: User },
+    { id: "komentari" as const, label: "Komentari", icon: MessageSquare },
+    { id: "nalazi" as const, label: "Nalazi", icon: FileText },
+  ];
+
+  const borderColor = rez.tip === "hitni" ? "border-red-500" : rez.tip === "preventivni" ? "border-green-500" : "border-blue-500";
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className={`bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border-t-4 ${borderColor}`} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-gray-900">Detalji rezervacije</h3>
+            <p className="text-xs text-gray-500">{rez.datum} · {formatV(rez.vrijeme)}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X size={18} className="text-gray-500" />
+          </button>
+        </div>
+
+        {/* Tabovi */}
+        <div className="flex border-b border-gray-100">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${tab === t.id ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <t.icon size={13} /> {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sadržaj */}
+        <div className="p-5 max-h-96 overflow-y-auto">
+
+          {/* INFO TAB */}
+          {tab === "info" && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Clock size={11} /> Vrijeme</div>
+                  <div className="text-sm font-bold text-gray-900">{formatV(rez.vrijeme)}</div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><CalendarIcon size={11} /> Datum</div>
+                  <div className="text-sm font-bold text-gray-900">{rez.datum}</div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><User size={11} /> Doktor</div>
+                  <div className="text-sm font-bold text-gray-900">{rez.doktor}</div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><MapPin size={11} /> Soba</div>
+                  <div className="text-sm font-bold text-gray-900">{rez.soba || "—"}</div>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${tipStyle[rez.tip].dot}`} /> Tip pregleda
+                </div>
+                <div className={`text-sm font-bold ${tipStyle[rez.tip].text}`}>{tipStyle[rez.tip].label}</div>
+              </div>
+              {rez.komentar && (
+                <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                  <div className="text-xs text-blue-500 mb-1 font-semibold">Vaš komentar pri rezervaciji</div>
+                  <p className="text-sm text-gray-700 leading-relaxed">{rez.komentar}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* KOMENTARI TAB */}
+          {tab === "komentari" && (
+            <div className="flex flex-col gap-3">
+              {komentari.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageSquare size={28} className="text-gray-200 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">Nema komentara za ovaj termin</p>
+                </div>
+              ) : (
+                komentari.map(k => (
+                  <div key={k.id} className={`rounded-xl p-3 ${k.jeDoktor ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-gray-100"}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-semibold ${k.jeDoktor ? "text-blue-700" : "text-gray-700"}`}>
+                        {k.jeDoktor ? "🩺 " : "👤 "}{k.autor}
+                      </span>
+                      <span className="text-xs text-gray-400">{k.datum}</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{k.tekst}</p>
+                  </div>
+                ))
+              )}
+              <div className="border-t border-gray-100 pt-3 mt-1">
+                <textarea
+                  value={noviKomentar}
+                  onChange={e => setNoviKomentar(e.target.value)}
+                  placeholder="Napišite poruku doktoru..."
+                  rows={3}
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-blue-400 bg-gray-50"
+                />
+                <button
+                  onClick={handleSendKomentar}
+                  disabled={!noviKomentar.trim() || saljemo}
+                  className={`mt-2 w-full py-2.5 rounded-xl text-sm font-bold transition-colors ${noviKomentar.trim() && !saljemo ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
+                >
+                  {saljemo ? "Slanje..." : "Pošalji"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* NALAZI TAB */}
+          {tab === "nalazi" && (
+            <div className="space-y-2">
+              {loadingNalazi ? (
+                <div className="text-center py-8 text-sm text-gray-400">Učitavanje nalaza...</div>
+              ) : nalazi.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText size={28} className="text-gray-200 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">Nema priloženih nalaza</p>
+                </div>
+              ) : (
+                nalazi.map(n => (
+                  <a
+                    key={n.id}
+                    href={n.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                      <FileText size={16} className="text-red-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-800 truncate">{n.naziv}</div>
+                      <div className="text-xs text-gray-400">{n.datum}</div>
+                    </div>
+                    <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
+                  </a>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-gray-100 flex gap-2">
+          <button
+            onClick={() => onCancel(rez.id)}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Otkaži termin
+          </button>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
-            title="Zatvori meni"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
           >
-            <ChevronLeft size={18} />
+            Zatvori
           </button>
         </div>
       </div>
@@ -80,46 +339,39 @@ const MojeRezervacije = () => {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
   const [selectedDate, setSelectedDate] = useState<string | null>("2026-05-14");
   const [detaljiRez, setDetaljiRez] = useState<Rezervacija | null>(null);
-
-  /*const [rezervacije, setRezervacije] = useState<Rezervacija[]>([
-    { id: 1, datum: "2026-05-05", vrijeme: 830, doktor: "Dr. Amira Hadžić", tip: "kontrolni", komentar: "Kardiologija - Kontrolni pregled", soba: "Ambulanta K-1" },
-    { id: 2, datum: "2026-05-07", vrijeme: 1415, doktor: "Dr. Miloš Đurić", tip: "hitni", komentar: "Kardiologija - EKG", soba: "Ambulanta K-3" },
-    { id: 3, datum: "2026-05-12", vrijeme: 900, doktor: "Dr. Marko Vujović", tip: "preventivni", komentar: "Opšta medicina - Preventivni pregled", soba: "Ordinacija O-2" },
-    { id: 4, datum: "2026-05-14", vrijeme: 830, doktor: "Dr. Amira Hadžić", tip: "kontrolni", komentar: "Kardiologija - Kontrolni pregled", soba: "Ambulanta K-1" },
-    { id: 5, datum: "2026-05-14", vrijeme: 1415, doktor: "Dr. Miloš Đurić", tip: "hitni", komentar: "Kardiologija - EKG", soba: "Ambulanta K-3" },
-    { id: 6, datum: "2026-05-14", vrijeme: 1100, doktor: "Dr. Ana Nikolić", tip: "preventivni", komentar: "Pneumologija - Kontrola", soba: "Ordinacija P-1" },
-    { id: 7, datum: "2026-05-15", vrijeme: 1000, doktor: "Dr. Selma Kovač", tip: "kontrolni", komentar: "Neurologija - Kontrola", soba: "Ambulanta N-2" },
-    { id: 8, datum: "2026-05-15", vrijeme: 1400, doktor: "Dr. Emir Bašić", tip: "preventivni", komentar: "Interna - Pregled", soba: "Ordinacija I-1" },
-    { id: 9, datum: "2026-05-21", vrijeme: 1400, doktor: "Dr. Petar Jovanović", tip: "hitni", komentar: "Neurologija - Hitna konsultacija", soba: "Ambulanta N-1" },
-    { id: 10, datum: "2026-05-21", vrijeme: 900, doktor: "Dr. Jelena Marković", tip: "preventivni", komentar: "Oftalmologija - Pregled", soba: "Ordinacija O-3" },
-    { id: 11, datum: "2026-05-28", vrijeme: 1000, doktor: "Dr. Jelena Marković", tip: "preventivni", komentar: "Oftalmologija - Preventivni pregled", soba: "Ordinacija O-3" },
-    { id: 12, datum: "2026-05-28", vrijeme: 1130, doktor: "Dr. Nikola Jovanović", tip: "kontrolni", komentar: "Pedijatrija - Kontrola", soba: "Ambulanta P-2" },
-  ]);*/
   const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
-const [loading, setLoading] = useState(false);
-const apiUrl = import.meta.env.VITE_API_URL;
+  const [loading, setLoading] = useState(false);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
-useEffect(() => {
-  setLoading(true);
-  fetch(`${apiUrl}/api/rezervacije/moje`)
-    .then(res => res.json())
-    .then(data => {
-      const mapirano = data.map((r: any) => ({
-        id: r.id,
-        datum: new Date(r.termin.datum).toISOString().split("T")[0],
-        vrijeme: r.termin.vrijeme,
-        doktor: `Dr. ${r.doktor.korisnik.ime} ${r.doktor.korisnik.prezime}`,
-        tip: r.tipPregleda?.naziv?.toLowerCase().includes("hitni") ? "hitni"
-           : r.tipPregleda?.naziv?.toLowerCase().includes("preventivni") ? "preventivni"
-           : "kontrolni",
-        komentar: r.komentar || "",
-        soba: r.termin?.soba || "—",
-      }));
-      setRezervacije(mapirano);
-    })
-    .catch(() => setRezervacije([]))
-    .finally(() => setLoading(false));
-}, []);
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${apiUrl}/api/rezervacije/moje`)
+      .then(res => res.json())
+      .then(data => {
+        const mapirano = data.map((r: any) => ({
+          id: r.id,
+          datum: new Date(r.termin.datum).toISOString().split("T")[0],
+          vrijeme: r.termin.vrijeme,
+          doktor: `Dr. ${r.doktor.korisnik.ime} ${r.doktor.korisnik.prezime}`,
+          tip: r.tipPregleda?.naziv?.toLowerCase().includes("hitni") ? "hitni"
+             : r.tipPregleda?.naziv?.toLowerCase().includes("preventivni") ? "preventivni"
+             : "kontrolni",
+          komentar: r.komentar || "",
+         soba: r.soba?.naziv || r.doktor?.soba?.naziv || "—",
+          komentari: r.komentar ? [{
+            id: r.id * 1000,
+            tekst: r.komentar,
+            autor: "Vi",
+            datum: new Date(r.datumKreiranja).toISOString().split("T")[0],
+            jeDoktor: false,
+          }] : [],
+          nalazi: [],
+        }));
+        setRezervacije(mapirano);
+      })
+      .catch(() => setRezervacije([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const tipStyle = {
     hitni: { dot: "bg-red-500", text: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "Hitni", badge: "bg-red-100 text-red-700" },
@@ -140,16 +392,11 @@ useEffect(() => {
 
   const selectedRez = selectedDate ? rezervacije.filter(r => r.datum === selectedDate) : [];
 
-  /*const formatV = (v: number) => {
+  const formatV = (v: number) => {
     const h = Math.floor(v / 100).toString().padStart(2, "0");
     const m = (v % 100).toString().padStart(2, "0");
     return `${h}:${m}`;
-  };*/
-  const formatV = (v: number) => {
-  const h = Math.floor(v / 60).toString().padStart(2, "0");
-  const m = (v % 60).toString().padStart(2, "0");
-  return `${h}:${m}`;
-};
+  };
 
   const formatDateLabel = (ds: string) =>
     new Date(ds + "T00:00:00").toLocaleDateString("bs-BA", { day: "numeric", month: "long" });
@@ -168,43 +415,30 @@ useEffect(() => {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
 
-  /*const handleCancel = (id: number) => {
-    if (window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) {
+  const handleCancel = async (id: number) => {
+    if (!window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/pacijent`, { method: "PATCH" });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.poruka || "Nije moguće otkazati rezervaciju.");
+        return;
+      }
       setRezervacije(prev => prev.filter(r => r.id !== id));
       setDetaljiRez(null);
+    } catch {
+      alert("Greška pri otkazivanju.");
     }
-  };*/
-  const handleCancel = async (id: number) => {
-  if (!window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) return;
-
-  const apiUrl = import.meta.env.VITE_API_URL;
-  try {
-    const res = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/pacijent`, {
-      method: "PATCH",
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.poruka || "Nije moguće otkazati rezervaciju.");
-      return;
-    }
-
-    setRezervacije(prev => prev.filter(r => r.id !== id));
-    setDetaljiRez(null);
-  } catch {
-    alert("Greška pri otkazivanju.");
-  }
-};
+  };
 
   return (
-    <div className="flex min-h-screen bg-[#f0f7ff]"> {/* Mekša plava pozadina iz dizajna */}
+    <div className="flex min-h-screen bg-[#f0f7ff]">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"}`}>
         <div className="flex-1 p-8">
           <div className="max-w-7xl mx-auto">
 
-            {/* Header sa slike */}
             <div className="mb-10 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {!sidebarOpen && (
@@ -216,9 +450,9 @@ useEffect(() => {
                   <h1 className="text-4xl font-extrabold text-slate-800 tracking-tight">Moje Rezervacije</h1>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex -space-x-2">
-                       <div className="w-5 h-5 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
-                       <div className="w-5 h-5 rounded-full bg-gray-300 border-2 border-white shadow-sm"></div>
-                       <div className="w-5 h-5 rounded-full bg-gray-200 border-2 border-white shadow-sm"></div>
+                      <div className="w-5 h-5 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
+                      <div className="w-5 h-5 rounded-full bg-gray-300 border-2 border-white shadow-sm"></div>
+                      <div className="w-5 h-5 rounded-full bg-gray-200 border-2 border-white shadow-sm"></div>
                     </div>
                     <p className="text-slate-500 text-sm font-medium ml-2">Moje Rezervacije - Pregled</p>
                   </div>
@@ -228,7 +462,7 @@ useEffect(() => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-              {/* Kalendar Panel (Lijevo) */}
+              {/* Kalendar */}
               <div className="lg:col-span-7 bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-blue-100/50 border border-white p-8">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold text-slate-800 capitalize">{monthName}</h2>
@@ -245,14 +479,12 @@ useEffect(() => {
                   </div>
                 </div>
 
-                {/* Dani zaglavlje */}
                 <div className="grid grid-cols-7 mb-4">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
                     <div key={d} className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest">{d}</div>
                   ))}
                 </div>
 
-                {/* Dani u gridu */}
                 <div className="grid grid-cols-7 gap-3">
                   {daysArr().map((day, idx) => {
                     const ds = day ? toDateStr(currentDate.getFullYear(), currentDate.getMonth(), day) : null;
@@ -272,9 +504,7 @@ useEffect(() => {
                           "border-gray-50 bg-white/50 hover:bg-white hover:border-blue-200 hover:shadow-md"
                         }`}
                       >
-                        <span className={`text-lg font-bold ${isSelected ? "text-blue-600" : "text-slate-700"}`}>
-                          {day}
-                        </span>
+                        <span className={`text-lg font-bold ${isSelected ? "text-blue-600" : "text-slate-700"}`}>{day}</span>
                         <div className="flex gap-1 justify-center mb-1">
                           {rez.slice(0, 3).map((r, i) => (
                             <div key={i} className={`w-2 h-2 rounded-full ${tipStyle[r.tip].dot} shadow-sm`} />
@@ -286,23 +516,25 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Detalji za dan (Desno) */}
+              {/* Detalji za dan */}
               <div className="lg:col-span-5 space-y-6">
                 <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-blue-100/50 border border-white p-8">
                   <h3 className="text-xl font-bold text-slate-800 mb-6">
                     Rezervacije za: <span className="text-blue-600 font-extrabold">{selectedDate ? formatDateLabel(selectedDate) : "Odaberite datum"}</span>
                   </h3>
 
-                  {selectedDate && selectedRez.length > 0 ? (
+                  {loading ? (
+                    <div className="text-center py-12 text-sm text-gray-400">Učitavanje...</div>
+                  ) : selectedDate && selectedRez.length > 0 ? (
                     <div className="space-y-4">
                       {selectedRez.map(res => {
                         const s = tipStyle[res.tip];
                         return (
-                         <div key={res.id} className={`group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all border-l-8 ${
-  res.tip === 'hitni' ? 'border-l-red-500' :
-  res.tip === 'preventivni' ? 'border-l-green-500' :
-  'border-l-blue-500'
-}`}>
+                          <div key={res.id} className={`bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all border-l-8 ${
+                            res.tip === "hitni" ? "border-l-red-500" :
+                            res.tip === "preventivni" ? "border-l-green-500" :
+                            "border-l-blue-500"
+                          }`}>
                             <div className="flex justify-between items-center mb-4">
                               <div className="flex items-center gap-3">
                                 <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
@@ -312,11 +544,16 @@ useEffect(() => {
                               </div>
                               <div className={`w-3 h-3 rounded-full ${s.dot} animate-pulse`} />
                             </div>
-                            
-                            <div className="space-y-1 mb-5">
+
+                            <div className="space-y-1 mb-3">
                               <h4 className="font-bold text-slate-800 text-lg">{res.doktor}</h4>
+                              {res.soba && res.soba !== "—" && (
+                                <p className="text-slate-500 text-sm flex items-center gap-1.5">
+                                  <MapPin size={13} /> {res.soba}
+                                </p>
+                              )}
                               <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
-                                <Stethoscope size={14} /> {res.komentar}
+                                <Stethoscope size={14} /> {res.komentar || tipStyle[res.tip].label}
                               </p>
                             </div>
 
@@ -340,67 +577,19 @@ useEffect(() => {
                   )}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </div>
 
-      {/* Detalji modal */}
+      {/* Modal */}
       {detaljiRez && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setDetaljiRez(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Detalji rezervacije</h3>
-              <button onClick={() => setDetaljiRez(null)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Clock size={15} className="text-gray-400" />
-                <span className="text-sm text-gray-600">Vrijeme:</span>
-                <span className="text-sm font-semibold text-gray-900">{formatV(detaljiRez.vrijeme)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <User size={15} className="text-gray-400" />
-                <span className="text-sm text-gray-600">Doktor:</span>
-                <span className="text-sm font-semibold text-gray-900">{detaljiRez.doktor}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin size={15} className="text-gray-400" />
-                <span className="text-sm text-gray-600">Soba:</span>
-                <span className="text-sm font-semibold text-gray-900">{detaljiRez.soba}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${tipStyle[detaljiRez.tip].dot}`} />
-                <span className="text-sm text-gray-600">Tip:</span>
-                <span className={`text-sm font-semibold ${tipStyle[detaljiRez.tip].text}`}>{tipStyle[detaljiRez.tip].label}</span>
-              </div>
-              {detaljiRez.komentar && (
-                <div className="pt-2 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 leading-relaxed">{detaljiRez.komentar}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 mt-5">
-              <button
-                onClick={() => handleCancel(detaljiRez.id)}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Otkaži termin
-              </button>
-              <button
-                onClick={() => setDetaljiRez(null)}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              >
-                Zatvori
-              </button>
-            </div>
-          </div>
-        </div>
+        <DetaljiModal
+          rez={detaljiRez}
+          onClose={() => setDetaljiRez(null)}
+          onCancel={handleCancel}
+          apiUrl={apiUrl}
+        />
       )}
     </div>
   );

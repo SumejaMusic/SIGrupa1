@@ -196,7 +196,18 @@ export const getRezervacijeZaPacijenta = async (
         datumOtkazivanja: null,
       },
       //include: { termin: true, doktor: { include: { korisnik: true } } }, zamjenjeno s ovim ispod da povuce iz baze tip ako sta ne bude radilo vratiti 
-      include: { termin: true, doktor: { include: { korisnik: true } }, tipPregleda: true },
+      //include: { termin: true, doktor: { include: { korisnik: true } }, tipPregleda: true },
+      include: { 
+  termin: true, 
+  doktor: { 
+    include: { 
+      korisnik: true,
+      soba: true  // ← dodaj
+    } 
+  }, 
+  tipPregleda: true,
+  soba: true
+},
       orderBy: { datumKreiranja: "desc" },
     });
 
@@ -359,6 +370,38 @@ export const promijeniTrajanje = async (
     // TODO: Emituj WebSocket event za real-time update (NFR-16)
 
     res.json({ poruka: "Trajanje termina ažurirano.", novaTrajanje });
+  } catch (err) {
+    next(err);
+  }
+};
+//NAKNADNO DODANO
+// GET /api/rezervacije/:id/komentari
+export const getKomentari = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const rezervacija = await prisma.rezervacije.findUnique({
+      where: { id: Number(req.params.id) },
+      select: { komentar: true, datumKreiranja: true },
+    });
+
+    if (!rezervacija) {
+      res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    // Vrati kao niz komentara kakav frontend očekuje
+    const komentari = rezervacija.komentar ? [{
+      id: Number(req.params.id) * 1000,
+      tekst: rezervacija.komentar,
+      autor: "Vi",
+      datum: new Date(rezervacija.datumKreiranja).toISOString().split("T")[0],
+      jeDoktor: false,
+    }] : [];
+
+    res.json(komentari);
   } catch (err) {
     next(err);
   }

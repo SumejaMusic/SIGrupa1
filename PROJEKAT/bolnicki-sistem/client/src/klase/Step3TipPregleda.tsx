@@ -101,7 +101,7 @@ function Step3TipPregleda() {
                     : "bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-600"
                 }`}
               >
-                {selectedTip === tip.id ? "✓ Odabrано" : "Izaberi / Select"}
+                {selectedTip === tip.id ? "✓ Odabrаno" : "Izaberi"}
               </button>
             </div>
           ))}
