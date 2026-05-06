@@ -102,10 +102,10 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
   };
 
   const formatV = (v: number) => {
-    const h = Math.floor(v / 100).toString().padStart(2, "0");
-    const m = (v % 100).toString().padStart(2, "0");
-    return `${h}:${m}`;
-  };
+  const h = Math.floor(v / 60);
+  const m = v % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+};
 
   // Fetch nalazi kada se otvori tab
   useEffect(() => {
