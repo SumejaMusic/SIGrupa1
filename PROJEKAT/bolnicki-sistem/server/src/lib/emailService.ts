@@ -14,7 +14,10 @@ interface RezervacijaEmailPodaci {
   komentar?: string;
   hitnost: boolean;
 }
-
+export const posaljiObavijestOtkazivanjaOsoblje = async (podaci: any) => {
+  console.log("Email obavijest o otkazivanju (osoblje):", podaci);
+  return true;
+};
 // Pretvara Int vrijeme (npr. 830) u string "08:30"
 function formatVrijeme(vrijeme: number): string {
   const str = vrijeme.toString().padStart(4, '0');
@@ -40,7 +43,7 @@ export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Prom
   const formatiraniDatum = datum.toLocaleDateString('bs-BA', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
-
+  
   await transporter.sendMail({
     from: `"Bolnički Sistem" <${process.env.EMAIL_USER}>`,
     to: pacijentEmail,

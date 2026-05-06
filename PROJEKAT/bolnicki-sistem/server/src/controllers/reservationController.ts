@@ -2,8 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
-import { posaljiPotvrdurezerv } from "../services/emailService.js";
-
+import { posaljiPotvrdurezerv, posaljiObavijestOtkazivanjaOsoblje } from "../lib/emailService.js";
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
 export const kreirajRezervaciju = async (
@@ -40,6 +39,10 @@ export const kreirajRezervaciju = async (
 
     if (!termin) {
       res.status(404).json({ poruka: "Termin nije pronađen." });
+      return;
+    }
+    if (new Date(termin.datum) < new Date()) {
+      res.status(400).json({ poruka: "Nije moguće rezervisati termin u prošlosti." });
       return;
     }
 
@@ -238,7 +241,15 @@ export const otkaziRezervacijuOsoblje = async (
         data: { status: "SLOBODAN" },
       });
     });
-
+    try {
+      await posaljiObavijestOtkazivanjaOsoblje({
+        pacijentEmail: rezervacija.pacijent.korisnik.email,
+        rezervacijaId: rezervacija.id,
+        datum: rezervacija.termin.datum,
+      });
+    } catch (emailErr) {
+      console.error("Greška pri slanju emaila za US-28:", emailErr);
+    }
     res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
   } catch (err) {
     next(err);

@@ -10,10 +10,15 @@ import {
   dodajKomentar,
 } from "../controllers/reservationController.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
-
+import { posaljiObavijestOtkazivanjaOsoblje } from "../lib/emailService.js";
 vi.mock("../lib/prisma.js");
 vi.mock("../lib/redis.js");
 vi.mock("../lib/currentPatient.js");
+vi.mock("../lib/emailService.js", () => ({
+  posaljiPotvrdurezerv: vi.fn().mockResolvedValue(true),
+  posaljiPotvrduOtkazivanja: vi.fn().mockResolvedValue(true),
+  posaljiObavijestOtkazivanjaOsoblje: vi.fn().mockResolvedValue(true),
+}));
 
 const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) => ({
   req: { params, query, body, korisnik } as any,
@@ -210,6 +215,54 @@ describe("kreirajRezervaciju", () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
+  describe("US-32 - Validacija termina u prošlosti", () => {
+  const lažniPacijent = { id: 10, idKorisnik: 1 };
+
+  it("vraća 400 ako pacijent pokuša rezervisati termin koji je već prošao — US-32 AC1", async () => {
+    const datumUProšlosti = new Date();
+    datumUProšlosti.setDate(datumUProšlosti.getDate() - 1); // Jučerašnji datum
+
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({
+      id: 5,
+      idDoktor: 2,
+      status: "SLOBODAN",
+      datum: datumUProšlosti // TERMIN JE PROŠAO
+    } as any);
+
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 });
+    await kreirajRezervaciju(req, res, next);
+
+    // Očekujemo grešku jer je termin u prošlosti
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      poruka: expect.stringContaining("prošlosti") 
+      // ili neka druga poruka koju definišeš u kontroleru
+    }));
+  });
+
+  it("dozvoljava rezervaciju za termine u budućnosti — US-32 AC2", async () => {
+    const datumUBudućnosti = new Date();
+    datumUBudućnosti.setDate(datumUBudućnosti.getDate() + 7); // Za 7 dana
+
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({
+      id: 5,
+      idDoktor: 2,
+      status: "SLOBODAN",
+      datum: datumUBudućnosti
+    } as any);
+    vi.mocked(redisMock.get).mockResolvedValue("1");
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(prismaMock.$transaction).mockResolvedValue({ id: 99 } as any);
+
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 });
+    await kreirajRezervaciju(req, res, next);
+
+    // Treba proći (201) jer je datum u budućnosti
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+});
 
   // ─── ERROR HANDLING ───────────────────────────
 
@@ -617,6 +670,35 @@ describe("otkaziRezervacijuOsoblje", () => {
   };
 
   // ─── HAPPY PATH ───────────────────────────────
+
+  describe("US-28 - Obavijest o otkazivanju", () => {
+  it("šalje e-mail obavijest pacijentu kada osoblje otkaže rezervaciju — US-28 AC1", async () => {
+    const lažnaRezervacija = {
+      id: 1,
+      idTermina: 5,
+      termin: { id: 5, datum: new Date("2025-06-01"), vrijeme: "10:00" },
+      pacijent: { korisnik: { email: "pacijent@test.com", ime: "Mujo", prezime: "Mojić" } },
+      doktor: { korisnik: { ime: "Dr. Marić" } }
+    };
+
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(lažnaRezervacija as any);
+    vi.mocked(prismaMock.$transaction).mockResolvedValue(undefined as any);
+    
+    // Uvozimo mockovanu funkciju
+    const { posaljiObavijestOtkazivanjaOsoblje } = await import("../lib/emailService.js") as any;
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await otkaziRezervacijuOsoblje(req, res, next);
+
+    // Provjera da li je funkcija za slanje maila pozvana sa ispravnim parametrima
+    expect(vi.mocked(posaljiObavijestOtkazivanjaOsoblje)).toHaveBeenCalledWith(
+  expect.objectContaining({
+    pacijentEmail: "pacijent@test.com",
+    rezervacijaId: 1
+  })
+);
+  });
+});
 
   it("uspješno otkazuje rezervaciju i vraća potvrdu — US-09 AC1", async () => {
     vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(lažnaRezervacija as any);
