@@ -62,3 +62,35 @@ export const getNalazPDF = async (
     next(err);
   }
 };
+// GET /api/nalazi/rezervacija/:rezervacijaId
+export const getNalaziZaRezervaciju = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const historija = await prisma.historijaPregleda.findUnique({
+      where: { idRezervacija: Number(req.params.rezervacijaId) },
+      include: {
+        nalaz: {
+          select: {
+            id: true,
+            naziv: true,
+            vrijemeNalaza: true,
+            opis: true,
+          },
+        },
+      },
+    });
+
+    // Ako nema historije pregleda ili nalaza, vrati prazan niz
+    if (!historija || !historija.nalaz) {
+      res.json([]);
+      return;
+    }
+
+    res.json([historija.nalaz]);
+  } catch (err) {
+    next(err);
+  }
+};
