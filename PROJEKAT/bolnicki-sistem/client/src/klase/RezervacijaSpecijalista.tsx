@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Calendar, ArrowLeft, CheckCircle } from "lucide-react";
+import {  ArrowLeft, CheckCircle } from "lucide-react";
 
 type Department = "Svi" | "Kardiologija" | "Dermatologija";
 
