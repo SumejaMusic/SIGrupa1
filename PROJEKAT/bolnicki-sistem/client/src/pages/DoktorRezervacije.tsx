@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Clock, User, FileText,
   MessageSquare, AlertTriangle, Calendar, Activity,
@@ -6,6 +6,8 @@ import {
   Plus, CheckCircle, XCircle, Timer, Search
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 type TipPregleda = "hitni" | "preventivni" | "kontrolni";
 type StatusTermina = "zakazan" | "zavrsen" | "otkazan";
@@ -25,28 +27,6 @@ interface Termin {
   komentari: Komentar[]; nalazi: Nalaz[];
 }
 
-const pacijenti: Pacijent[] = [
-  { id: 1, ime: "Amira", prezime: "Kovačević", godisteRodjenja: 1985, pol: "F", email: "amira.k@mail.com", telefon: "+387 61 111 222" },
-  { id: 2, ime: "Mirza", prezime: "Hadžić", godisteRodjenja: 1972, pol: "M", email: "mirza.h@mail.com", telefon: "+387 62 333 444" },
-  { id: 3, ime: "Selma", prezime: "Bašić", godisteRodjenja: 1990, pol: "F", email: "selma.b@mail.com", telefon: "+387 63 555 666" },
-  { id: 4, ime: "Edin", prezime: "Muratović", godisteRodjenja: 1965, pol: "M", email: "edin.m@mail.com", telefon: "+387 64 777 888" },
-  { id: 5, ime: "Lejla", prezime: "Šehić", godisteRodjenja: 1998, pol: "F", email: "lejla.s@mail.com", telefon: "+387 65 999 000" },
-  { id: 6, ime: "Tarik", prezime: "Begović", godisteRodjenja: 1980, pol: "M", email: "tarik.b@mail.com", telefon: "+387 66 123 456" },
-];
-
-const terminiInit: Termin[] = [
-  { id: 1, datum: "2026-05-03", vrijemeOd: 800, vrijemeDo: 830, pacijent: pacijenti[0], tip: "kontrolni", status: "zakazan", komentari: [{ id: 1, tekst: "Osjećam bolove u grudima pri naporu.", autor: "Amira Kovačević", datum: "2026-04-28", jeDoktor: false }, { id: 2, tekst: "Preporučujem EKG i holter monitoring.", autor: "Dr. Emina Hadžić", datum: "2026-04-29", jeDoktor: true }], nalazi: [{ id: 1, naziv: "EKG_nalaz_2026.pdf", datum: "2026-03-15", url: "#" }, { id: 2, naziv: "Holter_2025.pdf", datum: "2025-11-20", url: "#" }] },
-  { id: 2, datum: "2026-05-03", vrijemeOd: 830, vrijemeDo: 845, pacijent: pacijenti[1], tip: "hitni", status: "zakazan", komentari: [{ id: 3, tekst: "Jak bol u grudima, otežano disanje od jutros.", autor: "Mirza Hadžić", datum: "2026-05-03", jeDoktor: false }], nalazi: [] },
-  { id: 3, datum: "2026-05-03", vrijemeOd: 900, vrijemeDo: 930, pacijent: pacijenti[2], tip: "preventivni", status: "zakazan", komentari: [], nalazi: [{ id: 3, naziv: "Krvna_slika_2026.pdf", datum: "2026-01-10", url: "#" }] },
-  { id: 4, datum: "2026-05-03", vrijemeOd: 945, vrijemeDo: 1015, pacijent: pacijenti[3], tip: "kontrolni", status: "zakazan", komentari: [{ id: 4, tekst: "Redovna kontrola tlaka, terapija bez promjena.", autor: "Dr. Emina Hadžić", datum: "2026-04-15", jeDoktor: true }], nalazi: [{ id: 4, naziv: "Laboratorija_april2026.pdf", datum: "2026-04-01", url: "#" }] },
-  { id: 5, datum: "2026-05-04", vrijemeOd: 800, vrijemeDo: 830, pacijent: pacijenti[0], tip: "preventivni", status: "zavrsen", komentari: [], nalazi: [] },
-  { id: 6, datum: "2026-05-05", vrijemeOd: 1000, vrijemeDo: 1015, pacijent: pacijenti[1], tip: "hitni", status: "zavrsen", komentari: [], nalazi: [] },
-  { id: 7, datum: "2026-05-06", vrijemeOd: 900, vrijemeDo: 915, pacijent: pacijenti[2], tip: "kontrolni", status: "otkazan", komentari: [], nalazi: [] },
-  { id: 8, datum: "2026-05-07", vrijemeOd: 830, vrijemeDo: 900, pacijent: pacijenti[3], tip: "preventivni", status: "zavrsen", komentari: [], nalazi: [{ id: 5, naziv: "RTG_grudni_kos.pdf", datum: "2026-05-07", url: "#" }] },
-  { id: 9, datum: "2026-05-10", vrijemeOd: 900, vrijemeDo: 930, pacijent: pacijenti[0], tip: "kontrolni", status: "zakazan", komentari: [], nalazi: [] },
-  { id: 10, datum: "2026-05-12", vrijemeOd: 1100, vrijemeDo: 1115, pacijent: pacijenti[1], tip: "hitni", status: "zakazan", komentari: [], nalazi: [] },
-];
-
 const formatV = (v: number) => `${String(Math.floor(v / 100)).padStart(2, "0")}:${String(v % 100).padStart(2, "0")}`;
 
 const tipConfig = {
@@ -63,10 +43,91 @@ const statusConfig = {
 
 const getAge = (godiste: number) => new Date().getFullYear() - godiste;
 
+// ─── Mapiranje backend rezervacije na frontend Termin ──────────────────────
+function mapiriRezervaciju(r: any): Termin {
+  const vrijemeOd = r.termin.vrijeme;
+
+  const trajanje = r.tipPregleda?.trajanjeMinuta ?? r.doktor?.trajanjePregleda ?? 30;
+  const sati = Math.floor(vrijemeOd / 100);
+  const minute = vrijemeOd % 100;
+  const ukupnoMinuta = sati * 60 + minute + trajanje;
+  const vrijemeDo = Math.floor(ukupnoMinuta / 60) * 100 + (ukupnoMinuta % 60);
+
+ let tip: TipPregleda = "kontrolni";
+if (r.hitnost) {
+  tip = "hitni";
+} else {
+  switch (r.idTipPregleda) {
+    case 1: tip = "preventivni"; break;
+    case 2: tip = "kontrolni"; break;
+    case 3: tip = "hitni"; break;
+    default: {
+      const naziv = r.tipPregleda?.naziv?.toLowerCase().trim() ?? "";
+      if (naziv.includes("preventiv")) tip = "preventivni";
+      else if (naziv.includes("hitn")) tip = "hitni";
+      break;
+    }
+  }
+}
+
+  let status: StatusTermina = "zakazan";
+  if (r.datumOtkazivanja) status = "otkazan";
+  else if (r.zavrseno) status = "zavrsen";
+
+  const komentari: Komentar[] = r.komentar ? [{
+    id: r.id * 1000,
+    tekst: r.komentar,
+    autor: `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`,
+    datum: new Date(r.datumKreiranja).toISOString().split("T")[0],
+    jeDoktor: r.doktorRezervisao,
+  }] : [];
+
+  return {
+    id: r.id,
+    datum: new Date(r.termin.datum).toISOString().split("T")[0],
+    vrijemeOd,
+    vrijemeDo,
+    pacijent: {
+      id: r.pacijent.id,
+      ime: r.pacijent.korisnik.ime,
+      prezime: r.pacijent.korisnik.prezime,
+      godisteRodjenja: new Date(r.pacijent.korisnik.datumRodjenja).getFullYear(),
+      pol: r.pacijent.korisnik.jmbg?.[6] < "5" ? "M" : "F",
+      email: r.pacijent.korisnik.email,
+      telefon: r.pacijent.korisnik.brojTelefona ?? "/",
+    },
+    tip,
+    status,
+    komentari,
+    nalazi: [],
+  };
+}
+
 // ─── Modal: Nova rezervacija ───────────────────────────────────────────────
 function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const [pretraga, setPretraga] = useState("");
+  const [pacijenti, setPacijenti] = useState<Pacijent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${apiUrl}/api/pacijenti`)
+      .then(res => res.json())
+      .then(data => {
+        const mapirani = data.map((p: any) => ({
+          id: p.id,
+          ime: p.korisnik.ime,
+          prezime: p.korisnik.prezime,
+          godisteRodjenja: new Date(p.korisnik.datumRodjenja).getFullYear(),
+          pol: p.korisnik.jmbg?.[6] < "5" ? "M" : "F",
+          email: p.korisnik.email,
+          telefon: p.korisnik.brojTelefona ?? "/",
+        }));
+        setPacijenti(mapirani);
+      })
+      .catch(() => setPacijenti([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtrirani = pacijenti.filter(p =>
     `${p.ime} ${p.prezime}`.toLowerCase().includes(pretraga.toLowerCase()) ||
@@ -114,7 +175,9 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
             />
           </div>
           <div className="overflow-y-auto space-y-1.5 max-h-72">
-            {filtrirani.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-10 text-sm text-gray-400">Učitavanje pacijenata...</div>
+            ) : filtrirani.length === 0 ? (
               <div className="text-center py-10 text-sm text-gray-400">Nije pronađen nijedan pacijent</div>
             ) : filtrirani.map(p => (
               <button
@@ -378,9 +441,6 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
   const tc = tipConfig[termin.tip];
   const sc = statusConfig[termin.status];
 
-  const historija = terminiInit.filter(t => t.pacijent.id === termin.pacijent.id && t.id !== termin.id && (t.status === "zavrsen" || t.status === "otkazan")).sort((a, b) => b.datum.localeCompare(a.datum));
-  const sviNalazi = terminiInit.filter(t => t.pacijent.id === termin.pacijent.id).flatMap(t => t.nalazi).sort((a, b) => b.datum.localeCompare(a.datum));
-
   const handleSend = () => {
     if (!noviKomentar.trim()) return;
     onAddKomentar(termin.id, noviKomentar.trim());
@@ -496,13 +556,13 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
         {tab === "nalazi" && (
           <div className="space-y-2">
             <p className="text-xs text-gray-500 mb-3">Svi nalazi — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            {sviNalazi.length === 0 ? (
+            {termin.nalazi.length === 0 ? (
               <div className="text-center py-10">
                 <FileText size={28} className="text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">Nema uploadovanih nalaza</p>
               </div>
             ) : (
-              sviNalazi.map(n => (
+              termin.nalazi.map(n => (
                 <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group">
                   <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
                     <FileText size={15} className="text-red-600" />
@@ -521,37 +581,16 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
         {tab === "historija" && (
           <div className="space-y-2">
             <p className="text-xs text-gray-500 mb-3">Historija dolazaka — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            {historija.length === 0 ? (
+            {termin.komentari.length === 0 ? (
               <div className="text-center py-10">
                 <History size={28} className="text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">Nema prethodnih posjeta</p>
               </div>
             ) : (
-              historija.map(t => {
-                const htc = tipConfig[t.tip];
-                const hsc = statusConfig[t.status];
-                return (
-                  <div key={t.id} className={`rounded-lg p-3 border ${htc.bg} ${htc.border}`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-gray-700">{t.datum} · {formatV(t.vrijemeOd)}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${hsc.cls}`}>{hsc.label}</span>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${htc.badge}`}>{htc.label}</span>
-                    {t.komentari.filter(k => k.jeDoktor).length > 0 && (
-                      <p className="text-xs text-gray-600 mt-2 italic">"{t.komentari.filter(k => k.jeDoktor)[0].tekst}"</p>
-                    )}
-                    {t.nalazi.length > 0 && (
-                      <div className="mt-2 flex gap-1 flex-wrap">
-                        {t.nalazi.map(n => (
-                          <a key={n.id} href={n.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
-                            <FileText size={10} />{n.naziv}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
+              <div className="text-center py-10">
+                <History size={28} className="text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">Historija će biti dostupna kada se implementira HistorijaPregleda endpoint</p>
+              </div>
             )}
           </div>
         )}
@@ -564,20 +603,42 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
 export default function DoktorRezervacije() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [prikaz, setPrikaz] = useState<"dnevni" | "sedmicni" | "mjesecni">("dnevni");
-  const [selectedDatum, setSelectedDatum] = useState("2026-05-03");
+  const [selectedDatum, setSelectedDatum] = useState(new Date().toISOString().split("T")[0]);
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
-  const [listaTermina, setListaTermina] = useState<Termin[]>(terminiInit);
+  const [listaTermina, setListaTermina] = useState<Termin[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showNovaRezervacija, setShowNovaRezervacija] = useState(false);
   const [terminZaDuzinu, setTerminZaDuzinu] = useState<Termin | null>(null);
   const [terminZaOtkazivanje, setTerminZaOtkazivanje] = useState<Termin | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  // ─── NOVO: filter za prikaz otkazanih termina ──────────────────────────
+  const [prikaziOtkazane, setPrikaziOtkazane] = useState(false);
 
+  //const doktorId = localStorage.getItem("doktorId") ?? "2";
+const doktorId = "2"; // tvoj stvarni ID iz baze
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const dnevniTermini = listaTermina.filter(t => t.datum === selectedDatum).sort((a, b) => a.vrijemeOd - b.vrijemeOd);
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`)
+      .then(res => res.json())
+      .then(data => setListaTermina(data.map(mapiriRezervaciju)))
+      .catch(() => setListaTermina([]))
+      .finally(() => setLoading(false));
+  }, [doktorId]);
+
+  // ─── NOVO: helper koji filtrira termine po aktivnom modu ───────────────
+  const filterTermini = (termini: Termin[]) =>
+    termini.filter(t => prikaziOtkazane ? t.status === "otkazan" : t.status !== "otkazan");
+
+  const dnevniTermini = filterTermini(
+    listaTermina
+      .filter(t => t.datum === selectedDatum)
+      .sort((a, b) => a.vrijemeOd - b.vrijemeOd)
+  );
 
   const getWeekDays = (dateStr: string) => {
     const d = new Date(dateStr + "T00:00:00");
@@ -610,35 +671,71 @@ export default function DoktorRezervacije() {
   const dayNames = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
 
   const goDay = (delta: number) => {
-    const d = new Date(selectedDatum + "T00:00:00");
-    if (prikaz === "mjesecni") d.setMonth(d.getMonth() + delta);
-    else d.setDate(d.getDate() + delta);
-    setSelectedDatum(d.toISOString().split("T")[0]);
+    const [y, m, d] = selectedDatum.split("-").map(Number);
+    let newDate: Date;
+    if (prikaz === "mjesecni") {
+      newDate = new Date(y, m - 1 + delta, 1);
+    } else {
+      newDate = new Date(y, m - 1, d + delta);
+    }
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const newStr = `${newDate.getFullYear()}-${pad(newDate.getMonth() + 1)}-${pad(newDate.getDate())}`;
+    setSelectedDatum(newStr);
     setSelectedTermin(null);
   };
 
   const formatDatum = (ds: string) =>
     new Date(ds + "T00:00:00").toLocaleDateString("bs-BA", { weekday: "long", day: "numeric", month: "long" });
 
-  const handleAddKomentar = (terminId: number, tekst: string) => {
-    const noviK = { id: Date.now(), tekst, autor: "Dr. Emina Hadžić", datum: new Date().toISOString().split("T")[0], jeDoktor: true };
-    setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
-    setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
+  const handleAddKomentar = async (terminId: number, tekst: string) => {
+    try {
+      await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ komentar: tekst }),
+      });
+
+      const noviK: Komentar = {
+        id: Date.now(),
+        tekst,
+        autor: "Dr.",
+        datum: new Date().toISOString().split("T")[0],
+        jeDoktor: true,
+      };
+      setListaTermina(prev =>
+        prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] })
+      );
+      setSelectedTermin(prev =>
+        prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev
+      );
+    } catch {
+      showToast("❌ Greška pri slanju komentara.");
+    }
   };
 
   const handlePromjenaDuzine = (_terminId: number, _zeljenaDuzina: number, _razlog: string) => {
     showToast("✓ Vaš upit je uspješno poslan administratoru.");
   };
 
-  const handleOtkaziTermin = (termin: Termin) => {
-    setListaTermina(prev =>
-      prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina })
-    );
-    setSelectedTermin(prev =>
-      prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev
-    );
-    setTerminZaOtkazivanje(null);
-    showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan. Pacijent je obaviješten emailom.`);
+  const handleOtkaziTermin = async (termin: Termin) => {
+    try {
+      const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, {
+        method: "PATCH",
+      });
+
+      if (!res.ok) throw new Error();
+
+      setListaTermina(prev =>
+        prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina })
+      );
+      setSelectedTermin(prev =>
+        prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev
+      );
+      setTerminZaOtkazivanje(null);
+      showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
+    } catch {
+      showToast("❌ Greška pri otkazivanju termina.");
+    }
   };
 
   const navLabel = () => {
@@ -688,7 +785,7 @@ export default function DoktorRezervacije() {
             )}
             <div>
               <h1 className="text-lg font-bold text-gray-900">Moje rezervacije</h1>
-              <p className="text-xs text-gray-500">Dr. Emina Hadžić · Kardiologija</p>
+              <p className="text-xs text-gray-500">Dr. Kardiologija</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -698,6 +795,20 @@ export default function DoktorRezervacije() {
             >
               <Plus size={15} /> Nova rezervacija
             </button>
+
+            {/* ─── NOVO: Toggle zakazani / otkazani ─────────────────────── */}
+            <button
+              onClick={() => { setPrikaziOtkazane(p => !p); setSelectedTermin(null); }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                prikaziOtkazane
+                  ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                  : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              <XCircle size={15} />
+              {prikaziOtkazane ? "Otkazani termini" : "Zakazani termini"}
+            </button>
+
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               {(["dnevni", "sedmicni", "mjesecni"] as const).map(p => (
                 <button
@@ -713,165 +824,181 @@ export default function DoktorRezervacije() {
         </header>
 
         <div className="flex-1 p-5">
-          <div className="flex items-center gap-3 mb-5">
-            <button onClick={() => goDay(-navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
-              <ChevronLeft size={16} className="text-gray-600" />
-            </button>
-            <span className="text-sm font-semibold text-gray-700 capitalize">{navLabel()}</span>
-            <button onClick={() => goDay(navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
-              <ChevronRight size={16} className="text-gray-600" />
-            </button>
-            <div className="ml-auto flex items-center gap-3">
-              {Object.entries(tipConfig).map(([tip, cfg]) => (
-                <div key={tip} className="flex items-center gap-1.5">
-                  <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-                  <span className="text-xs text-gray-500">{cfg.label}</span>
-                </div>
-              ))}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-sm text-gray-400">Učitavanje termina...</div>
             </div>
-          </div>
-
-          {prikaz === "dnevni" && (
-            <div className={`grid gap-5 ${selectedTermin ? "grid-cols-5" : "grid-cols-1 max-w-2xl"}`}>
-              <div className={selectedTermin ? "col-span-2" : "col-span-1"}>
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-700">{dnevniTermini.length} termin{dnevniTermini.length !== 1 ? "a" : ""} danas</span>
-                    <div className="flex gap-1.5">
-                      {Object.entries(tipConfig).map(([tip, cfg]) => {
-                        const count = dnevniTermini.filter(t => t.tip === tip as TipPregleda).length;
-                        if (!count) return null;
-                        return <span key={tip} className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>{count} {cfg.label.toLowerCase()}</span>;
-                      })}
+          ) : (
+            <>
+              <div className="flex items-center gap-3 mb-5">
+                <button onClick={() => goDay(-navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
+                  <ChevronLeft size={16} className="text-gray-600" />
+                </button>
+                <span className="text-sm font-semibold text-gray-700 capitalize">{navLabel()}</span>
+                <button onClick={() => goDay(navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
+                  <ChevronRight size={16} className="text-gray-600" />
+                </button>
+                <div className="ml-auto flex items-center gap-3">
+                  {Object.entries(tipConfig).map(([tip, cfg]) => (
+                    <div key={tip} className="flex items-center gap-1.5">
+                      <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                      <span className="text-xs text-gray-500">{cfg.label}</span>
                     </div>
-                  </div>
-                  <div className="p-3 space-y-2">
-                    {dnevniTermini.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Calendar size={32} className="text-gray-200 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">Nema termina za ovaj dan</p>
-                      </div>
-                    ) : (
-                      dnevniTermini.map(t => (
-                        <TerminRed key={t.id} termin={t} onClick={() => setSelectedTermin(prev => prev?.id === t.id ? null : t)} selected={selectedTermin?.id === t.id} />
-                      ))
-                    )}
-                  </div>
+                  ))}
                 </div>
               </div>
-              {selectedTermin && (
-                <div className="col-span-3">
-                  <TerminDetalji
-                    termin={selectedTermin}
-                    onClose={() => setSelectedTermin(null)}
-                    onAddKomentar={handleAddKomentar}
-                    onPromjenaDuzine={(t) => setTerminZaDuzinu(t)}
-                    onOtkaziTermin={(t) => setTerminZaOtkazivanje(t)}
-                  />
+
+              {prikaz === "dnevni" && (
+                <div className={`grid gap-5 ${selectedTermin ? "grid-cols-5" : "grid-cols-1 max-w-2xl"}`}>
+                  <div className={selectedTermin ? "col-span-2" : "col-span-1"}>
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                      <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-700">
+                          {dnevniTermini.length} {prikaziOtkazane ? "otkazan" : "zakazan"}{dnevniTermini.length !== 1 ? "ih" : ""} termin{dnevniTermini.length !== 1 ? "a" : ""}
+                        </span>
+                        <div className="flex gap-1.5">
+                          {Object.entries(tipConfig).map(([tip, cfg]) => {
+                            const count = dnevniTermini.filter(t => t.tip === tip as TipPregleda).length;
+                            if (!count) return null;
+                            return <span key={tip} className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>{count} {cfg.label.toLowerCase()}</span>;
+                          })}
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-2">
+                        {dnevniTermini.length === 0 ? (
+                          <div className="text-center py-12">
+                            <Calendar size={32} className="text-gray-200 mx-auto mb-2" />
+                            <p className="text-sm text-gray-400">
+                              {prikaziOtkazane ? "Nema otkazanih termina za ovaj dan" : "Nema termina za ovaj dan"}
+                            </p>
+                          </div>
+                        ) : (
+                          dnevniTermini.map(t => (
+                            <TerminRed key={t.id} termin={t} onClick={() => setSelectedTermin(prev => prev?.id === t.id ? null : t)} selected={selectedTermin?.id === t.id} />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {selectedTermin && (
+                    <div className="col-span-3">
+                      <TerminDetalji
+                        termin={selectedTermin}
+                        onClose={() => setSelectedTermin(null)}
+                        onAddKomentar={handleAddKomentar}
+                        onPromjenaDuzine={(t) => setTerminZaDuzinu(t)}
+                        onOtkaziTermin={(t) => setTerminZaOtkazivanje(t)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {prikaz === "sedmicni" && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="grid grid-cols-7 border-b border-gray-100">
-                {weekDays.map((ds, i) => {
-                  const count = listaTermina.filter(t => t.datum === ds).length;
-                  const isToday = ds === new Date().toISOString().split("T")[0];
-                  return (
-                    <button key={ds} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }} className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}>
-                      <div className="text-xs text-gray-400 mb-1">{dayNames[i]}</div>
-                      <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T00:00:00").getDate()}</div>
-                      {count > 0 && (
-                        <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
-                          {listaTermina.filter(t => t.datum === ds).map(t => (
-                            <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
-                          ))}
+              {prikaz === "sedmicni" && (
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="grid grid-cols-7 border-b border-gray-100">
+                    {weekDays.map((ds, i) => {
+                      const count = filterTermini(listaTermina.filter(t => t.datum === ds)).length;
+                      const isToday = ds === new Date().toISOString().split("T")[0];
+                      return (
+                        <button key={ds} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }} className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}>
+                          <div className="text-xs text-gray-400 mb-1">{dayNames[i]}</div>
+                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T00:00:00").getDate()}</div>
+                          {count > 0 && (
+                            <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
+                              {filterTermini(listaTermina.filter(t => t.datum === ds)).map(t => (
+                                <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
+                              ))}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="grid grid-cols-7 divide-x divide-gray-100 min-h-64">
+                    {weekDays.map(ds => {
+                      const dayTermini = filterTermini(
+                        listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd)
+                      );
+                      return (
+                        <div key={ds} className="p-2 space-y-1.5">
+                          {dayTermini.map(t => {
+                            const tc = tipConfig[t.tip];
+                            return (
+                              <div key={t.id} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }} className={`rounded p-1.5 cursor-pointer hover:shadow-sm transition-all ${tc.bg} border ${tc.border}`}>
+                                <div className="text-xs font-bold text-gray-800">{formatV(t.vrijemeOd)}</div>
+                                <div className="text-xs text-gray-600 truncate">{t.pacijent.ime} {t.pacijent.prezime[0]}.</div>
+                                {t.tip === "hitni" && <div className="text-xs font-bold text-red-600">⚡ HITNO</div>}
+                              </div>
+                            );
+                          })}
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="grid grid-cols-7 divide-x divide-gray-100 min-h-64">
-                {weekDays.map(ds => {
-                  const dayTermini = listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd);
-                  return (
-                    <div key={ds} className="p-2 space-y-1.5">
-                      {dayTermini.map(t => {
-                        const tc = tipConfig[t.tip];
-                        return (
-                          <div key={t.id} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }} className={`rounded p-1.5 cursor-pointer hover:shadow-sm transition-all ${tc.bg} border ${tc.border}`}>
-                            <div className="text-xs font-bold text-gray-800">{formatV(t.vrijemeOd)}</div>
-                            <div className="text-xs text-gray-600 truncate">{t.pacijent.ime} {t.pacijent.prezime[0]}.</div>
-                            {t.tip === "hitni" && <div className="text-xs font-bold text-red-600">⚡ HITNO</div>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
-          {prikaz === "mjesecni" && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-700 capitalize">
-                  {new Date(selectedDatum + "T00:00:00").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7))).length} termina u ovom mjesecu
-                </span>
-              </div>
-              <div className="grid grid-cols-7 border-b border-gray-100">
-                {["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"].map(d => (
-                  <div key={d} className="py-2 text-center text-xs font-semibold text-gray-400">{d}</div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 divide-x divide-y divide-gray-100">
-                {getMonthDays(selectedDatum).map((ds, idx) => {
-                  const dayTermini = ds ? listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd) : [];
-                  const isToday = ds === new Date().toISOString().split("T")[0];
-                  const isSelected = ds === selectedDatum;
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => { if (ds) { setSelectedDatum(ds); setPrikaz("dnevni"); } }}
-                      className={`min-h-[90px] p-2 transition-colors ${ds ? "cursor-pointer hover:bg-blue-50" : "bg-gray-50 cursor-default"} ${isSelected ? "bg-blue-50" : ""}`}
-                    >
-                      {ds && (
-                        <>
-                          <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-700"}`}>
-                            {new Date(ds + "T00:00:00").getDate()}
-                          </div>
-                          <div className="space-y-0.5">
-                            {dayTermini.slice(0, 3).map(t => {
-                              const tc = tipConfig[t.tip];
-                              return (
-                                <div
-                                  key={t.id}
-                                  onClick={e => { e.stopPropagation(); setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }}
-                                  className={`text-xs rounded px-1 py-0.5 truncate font-medium ${tc.badge} flex items-center gap-1 cursor-pointer`}
-                                >
-                                  {t.tip === "hitni" && <span>⚡</span>}
-                                  {formatV(t.vrijemeOd)} {t.pacijent.ime[0]}. {t.pacijent.prezime}
-                                </div>
-                              );
-                            })}
-                            {dayTermini.length > 3 && (
-                              <div className="text-xs text-gray-400 pl-1">+{dayTermini.length - 3} više</div>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              {prikaz === "mjesecni" && (
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-700 capitalize">
+                      {new Date(selectedDatum + "T00:00:00").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {prikaziOtkazane ? "otkazanih" : "zakazanih"} termina u ovom mjesecu
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-7 border-b border-gray-100">
+                    {["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"].map(d => (
+                      <div key={d} className="py-2 text-center text-xs font-semibold text-gray-400">{d}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 divide-x divide-y divide-gray-100">
+                    {getMonthDays(selectedDatum).map((ds, idx) => {
+                      const dayTermini = ds
+                        ? filterTermini(listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd))
+                        : [];
+                      const isToday = ds === new Date().toISOString().split("T")[0];
+                      const isSelected = ds === selectedDatum;
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => { if (ds) { setSelectedDatum(ds); setPrikaz("dnevni"); } }}
+                          className={`min-h-[90px] p-2 transition-colors ${ds ? "cursor-pointer hover:bg-blue-50" : "bg-gray-50 cursor-default"} ${isSelected ? "bg-blue-50" : ""}`}
+                        >
+                          {ds && (
+                            <>
+                              <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-700"}`}>
+                                {new Date(ds + "T00:00:00").getDate()}
+                              </div>
+                              <div className="space-y-0.5">
+                                {dayTermini.slice(0, 3).map(t => {
+                                  const tc = tipConfig[t.tip];
+                                  return (
+                                    <div
+                                      key={t.id}
+                                      onClick={e => { e.stopPropagation(); setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }}
+                                      className={`text-xs rounded px-1 py-0.5 truncate font-medium ${tc.badge} flex items-center gap-1 cursor-pointer`}
+                                    >
+                                      {t.tip === "hitni" && <span>⚡</span>}
+                                      {formatV(t.vrijemeOd)} {t.pacijent.ime[0]}. {t.pacijent.prezime}
+                                    </div>
+                                  );
+                                })}
+                                {dayTermini.length > 3 && (
+                                  <div className="text-xs text-gray-400 pl-1">+{dayTermini.length - 3} više</div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

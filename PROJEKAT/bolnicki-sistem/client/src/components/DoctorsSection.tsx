@@ -1,45 +1,50 @@
-import { Star, ArrowRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const doctors = [
-  {
-    name: 'Dr. Amira Hadžić',
-    specialty: 'Kardiologija',
-    experience: '14 godina iskustva',
-    rating: 4.9,
-    reviews: 312,
-    image: 'https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
-    available: true,
-  },
-  {
-    name: 'Dr. Mirko Stojanović',
-    specialty: 'Neurologija',
-    experience: '20 godina iskustva',
-    rating: 4.8,
-    reviews: 278,
-    image: 'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
-    available: true,
-  },
-  {
-    name: 'Dr. Selma Kovač',
-    specialty: 'Pedijatrija',
-    experience: '11 godina iskustva',
-    rating: 4.9,
-    reviews: 429,
-    image: 'https://images.pexels.com/photos/5452274/pexels-photo-5452274.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
-    available: false,
-  },
-  {
-    name: 'Dr. Emir Bašić',
-    specialty: 'Ortopedija',
-    experience: '17 godina iskustva',
-    rating: 4.7,
-    reviews: 195,
-    image: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
-    available: true,
-  },
-];
+const apiUrl = import.meta.env.VITE_API_URL;
+
+interface Doktor {
+  id: number;
+  ime: string;
+  prezime: string;
+  specijalizacija: string;
+  trajanjePregleda: number;
+  email: string;
+  brojTelefona: string | null;
+  odjelId: number;
+}
 
 export default function DoctorsSection() {
+  const navigate = useNavigate();
+  const [doctors, setDoctors] = useState<Doktor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetch(`${apiUrl}/api/doktori`)
+      .then(res => res.json())
+      .then(data => setDoctors(data))
+      .catch(() => setDoctors([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const cardWidth = scrollRef.current.offsetWidth;
+    scrollRef.current.scrollBy({
+      left: direction === "right" ? cardWidth : -cardWidth,
+      behavior: "smooth",
+    });
+  };
+
+  const handleZakaziTermin = (doc: Doktor) => {
+    // Pamti i doktora i odjel u localStorage — step2 i step3 ih čitaju odatle
+    localStorage.setItem("selectedDoktor", doc.id.toString());
+    localStorage.setItem("selectedOdjel", doc.odjelId.toString());
+    navigate("/step3-tip-pregleda");
+  };
+
   return (
     <section className="py-24 bg-gradient-to-b from-slate-50 to-white" id="doktori">
       <div className="max-w-7xl mx-auto px-6">
@@ -55,58 +60,76 @@ export default function DoctorsSection() {
               Iskusni specijalisti sa višegodišnjom praksom, posvećeni Vašem zdravlju.
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 text-blue-700 font-semibold hover:gap-3 transition-all duration-200 group whitespace-nowrap">
-            Svi doktori
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-          </button>
+
+          {/* Strelice za scroll */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => scroll("left")}
+              className="p-2 rounded-full border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              className="p-2 rounded-full border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {doctors.map((doc, idx) => (
-            <div key={idx} className="doctor-card bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-              {/* Photo */}
-              <div className="relative h-56 overflow-hidden">
-                <img
-                  src={doc.image}
-                  alt={doc.name}
-                  className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
-                />
-                {/* Availability badge */}
-                <div className={`absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  doc.available
-                    ? 'bg-green-500/90 text-white'
-                    : 'bg-gray-400/80 text-white'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${doc.available ? 'bg-white animate-pulse' : 'bg-white/60'}`} />
-                  {doc.available ? 'Dostupan' : 'Zauzet'}
+        {/* Scroll kontejner — 4 kartice vidljive, ostale dostupne scrollom */}
+        <div
+          ref={scrollRef}
+          className="grid grid-flow-col auto-cols-[calc(25%-12px)] gap-4 overflow-x-auto scroll-smooth pb-4"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {loading ? (
+            Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+                <div className="h-56 bg-gray-200" />
+                <div className="p-5 space-y-3">
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/3" />
+                  <div className="h-8 bg-gray-200 rounded" />
                 </div>
               </div>
-
-              {/* Info */}
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">{doc.specialty}</span>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                    <span className="text-xs font-semibold text-gray-700">{doc.rating}</span>
-                    <span className="text-xs text-gray-400">({doc.reviews})</span>
+            ))
+          ) : doctors.length === 0 ? (
+            <div className="text-center py-16 text-gray-400 text-sm">
+              Nema dostupnih doktora.
+            </div>
+          ) : (
+            doctors.map((doc) => (
+              <div
+                key={doc.id}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+              >
+                {/* Avatar iz inicijala */}
+                <div className="relative h-56 overflow-hidden bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full bg-blue-700 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                    {doc.ime[0]}{doc.prezime[0]}
                   </div>
                 </div>
-                <h3 className="font-semibold text-gray-900 text-base mb-1">{doc.name}</h3>
-                <p className="text-xs text-gray-400 mb-4">{doc.experience}</p>
-                <button
-                  className={`w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                    doc.available
-                      ? 'bg-blue-700 text-white hover:bg-blue-800 shadow-sm hover:shadow-md'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
-                  disabled={!doc.available}
-                >
-                  {doc.available ? 'Zakaži termin' : 'Nije dostupan'}
-                </button>
+
+                <div className="p-5">
+                  <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                    {doc.specijalizacija}
+                  </span>
+                  <h3 className="font-semibold text-gray-900 text-base mt-1 mb-4">
+                    Dr. {doc.ime} {doc.prezime}
+                  </h3>
+                  <button
+                    onClick={() => handleZakaziTermin(doc)}
+                    className="w-full py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-700 text-white hover:bg-blue-800 shadow-sm hover:shadow-md"
+                  >
+                    Zakaži termin
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </section>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Clock, Stethoscope, Search } from "lucide-react";
-import Layout from "../components/Layout";
 
+import Layout from "../components/Layout";
+import { ChevronLeft, ChevronRight, Stethoscope, Search } from "lucide-react";
 type Doktor = {
   id: number;
   ime: string;
@@ -82,10 +82,10 @@ function Step2Doktori() {
  // const doktori = selectedOdjel ? doktoriByOdjel[selectedOdjel] || [] : [];
 
   const filtrirani = doktori.filter(d =>
-    `${d.ime} ${d.prezime}`.toLowerCase().includes(pretraga.toLowerCase()) ||
-    d.specijalizacija.toLowerCase().includes(pretraga.toLowerCase()) ||
-    d.uziInteres.toLowerCase().includes(pretraga.toLowerCase())
-  );
+  `${d.ime} ${d.prezime}`.toLowerCase().includes(pretraga.toLowerCase()) ||
+  (d.specijalizacija ?? "").toLowerCase().includes(pretraga.toLowerCase()) ||
+  (d.uziInteres ?? "").toLowerCase().includes(pretraga.toLowerCase())
+);
 
   const handleSelectDoktor = (doktorId: number) => {
     setSelectedDoktor(doktorId);
@@ -114,54 +114,55 @@ function Step2Doktori() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {filtrirani.map((doktor) => {
-            const isSelected = selectedDoktor === doktor.id;
-            const isHovered = hoveredDoktor === doktor.id;
-            return (
-              <div
-                key={doktor.id}
-                onMouseEnter={() => setHoveredDoktor(doktor.id)}
-                onMouseLeave={() => setHoveredDoktor(null)}
-                onClick={() => handleSelectDoktor(doktor.id)}
-                className={`bg-white rounded-2xl border-2 overflow-hidden cursor-pointer transition-all duration-300 ${
-                  isSelected ? "border-blue-500 shadow-lg shadow-blue-100" : isHovered ? "border-blue-300 shadow-md -translate-y-1" : "border-gray-200 shadow-sm"
-                }`}
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={doktor.slika}
-                    alt={`Dr. ${doktor.ime} ${doktor.prezime}`}
-                    className={`w-full h-full object-cover object-top transition-transform duration-500 ${isHovered ? "scale-105" : "scale-100"}`}
-                  />
-                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 shadow-sm">
-                    <div className="text-gray-400 text-xs leading-none mb-0.5">Iskustvo</div>
-                    <div className="text-gray-800 font-bold text-xs">{doktor.iskustvo} god.</div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-bold text-gray-900 mb-0.5">Dr. {doktor.ime} {doktor.prezime}</h3>
-                  <p className="text-xs font-semibold text-blue-600 mb-2">{doktor.specijalizacija}</p>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Stethoscope size={12} className="text-gray-400" />
-                    <span className="text-xs text-gray-500 font-medium">{doktor.uziInteres}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 mb-4">
-                    <Clock size={12} className="text-green-500" />
-                    <span className="text-xs text-green-600 font-semibold">Slobodni termini: {doktor.slobodniTermini}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
-                      isSelected || isHovered ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {isSelected ? "✓ Odabrano" : "Odaberi / Select"}
-                    {!isSelected && <ChevronRight size={15} />}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+         {filtrirani.map((doktor) => {
+  const isSelected = selectedDoktor === doktor.id;
+  const isHovered = hoveredDoktor === doktor.id;
+  return (
+    <div
+      key={doktor.id}
+      onMouseEnter={() => setHoveredDoktor(doktor.id)}
+      onMouseLeave={() => setHoveredDoktor(null)}
+      onClick={() => handleSelectDoktor(doktor.id)}
+      className={`bg-white rounded-2xl border-2 overflow-hidden cursor-pointer transition-all duration-300 ${
+        isSelected ? "border-blue-500 shadow-lg shadow-blue-100" : isHovered ? "border-blue-300 shadow-md -translate-y-1" : "border-gray-200 shadow-sm"
+      }`}
+    >
+      {/* Avatar umjesto slike */}
+      <div className={`h-40 flex flex-col items-center justify-center gap-3 transition-colors duration-300 ${
+        isSelected ? "bg-blue-600" : isHovered ? "bg-blue-500" : "bg-blue-50"
+      }`}>
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-md transition-colors duration-300 ${
+          isSelected || isHovered ? "bg-white text-blue-600" : "bg-blue-600 text-white"
+        }`}>
+          {doktor.ime[0]}{doktor.prezime[0]}
+        </div>
+        <div className={`text-xs font-semibold px-3 py-1 rounded-full transition-colors duration-300 ${
+          isSelected || isHovered ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
+        }`}>
+          {doktor.iskustvo} god. iskustva
+        </div>
+      </div>
+
+      <div className="p-4">
+        <h3 className="text-base font-bold text-gray-900 mb-0.5">Dr. {doktor.ime} {doktor.prezime}</h3>
+        <p className="text-xs font-semibold text-blue-600 mb-2">{doktor.specijalizacija}</p>
+        <div className="flex items-center gap-1.5 mb-4">
+          <Stethoscope size={12} className="text-gray-400" />
+          <span className="text-xs text-gray-500 font-medium">{doktor.uziInteres}</span>
+        </div>
+        <button
+          type="button"
+          className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
+            isSelected || isHovered ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+          }`}
+        >
+          {isSelected ? "✓ Odabrano" : "Odaberi / Select"}
+          {!isSelected && <ChevronRight size={15} />}
+        </button>
+      </div>
+    </div>
+  );
+})}
         </div>
 
         {filtrirani.length === 0 && (
