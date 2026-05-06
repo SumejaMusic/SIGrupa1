@@ -87,6 +87,7 @@ function Step2Doktori() {
   (d.uziInteres ?? "").toLowerCase().includes(pretraga.toLowerCase())
 );
 
+
   const handleSelectDoktor = (doktorId: number) => {
     setSelectedDoktor(doktorId);
     localStorage.setItem("selectedDoktor", doktorId.toString());
