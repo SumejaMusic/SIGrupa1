@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
 import { posaljiPotvrdurezerv } from "../emailService.js";
+import { io } from "../app.js";
 
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
@@ -100,6 +101,11 @@ export const kreirajRezervaciju = async (
       });
 
       return nova;
+    });
+
+    io.emit("termin-azuriran", {
+      doktorId: idDoktor,
+      terminId: idTermina,
     });
 
     await redis.del(`termin:lock:${idTermina}`);
@@ -233,6 +239,11 @@ export const otkaziRezervacijuPacijent = async (
         where: { id: rezervacija.idTermina },
         data: { status: "SLOBODAN" },
       });
+    });
+
+    io.emit("termin-azuriran", {
+      doktorId: rezervacija.idDoktor,
+      terminId: rezervacija.idTermina,
     });
 
     res.json({ poruka: "Rezervacija uspješno otkazana." });
