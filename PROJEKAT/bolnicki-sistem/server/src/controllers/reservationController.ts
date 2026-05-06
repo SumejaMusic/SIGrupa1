@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
 import { posaljiPotvrdurezerv } from "../emailService.js";
+import { io } from "../app.js";
 import multer from "multer";
 
 export const upload = multer({
@@ -138,6 +139,11 @@ export const kreirajRezervaciju = async (
       return nova;
     });
 
+    io.emit("termin-azuriran", {
+      doktorId: idDoktor,
+      terminId: idTermina,
+    });
+
     await redis.del(`termin:lock:${idTermina}`);
     const doktorKorisnik = rezervacija.doktor.korisnik;
     const pacijentKorisnik = rezervacija.pacijent.korisnik;
@@ -269,6 +275,11 @@ export const otkaziRezervacijuPacijent = async (
         where: { id: rezervacija.idTermina },
         data: { status: "SLOBODAN" },
       });
+    });
+
+    io.emit("termin-azuriran", {
+      doktorId: rezervacija.idDoktor,
+      terminId: rezervacija.idTermina,
     });
 
     res.json({ poruka: "Rezervacija uspješno otkazana." });

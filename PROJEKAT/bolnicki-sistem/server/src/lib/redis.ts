@@ -74,4 +74,19 @@ export const redis = {
 
     memoryLocks.delete(key);
   },
+  async ttl(key: string): Promise<number> {
+    if (redisClient) {
+      try {
+        return await redisClient.ttl(key);
+      } catch {
+        const record = memoryLocks.get(key);
+        if (!record || record.expiresAt <= Date.now()) return -2;
+        return Math.ceil((record.expiresAt - Date.now()) / 1000);
+      }
+    }
+
+    const record = memoryLocks.get(key);
+    if (!record || record.expiresAt <= Date.now()) return -2;
+    return Math.ceil((record.expiresAt - Date.now()) / 1000);
+  },
 };

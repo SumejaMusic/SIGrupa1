@@ -23,6 +23,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import routes from "./routes/router.js";
 
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 dotenv.config();
 
 const app = express();
@@ -60,4 +63,17 @@ app.get("/", (req, res) => {
   res.send("Bolnički sistem API radi!");
 });
 
+// Socket.io setup za NFR-09
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      process.env.CORS_ORIGIN || "https://bolnicki-sistem-rezervacija.onrender.com",
+      "http://localhost:5173",
+    ],
+    credentials: true,
+  },
+});
+
+export { io, httpServer };
 export default app;
