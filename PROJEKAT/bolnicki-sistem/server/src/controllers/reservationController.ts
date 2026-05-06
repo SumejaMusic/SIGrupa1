@@ -195,8 +195,8 @@ export const getRezervacijeZaPacijenta = async (
         idPacijent: pacijent.id,
         datumOtkazivanja: null,
       },
-      //include: { termin: true, doktor: { include: { korisnik: true } } }, zamjenjeno s ovim ispod da povuce iz baze tip ako sta ne bude radilo vratiti 
-      //include: { termin: true, doktor: { include: { korisnik: true } }, tipPregleda: true },
+      //include: { termin: true, doktor: { include: { korisnik: true } } }, zamjenjeno s ovim ispod da povuce iz baze tip ako sta ne bude radilo vratiti --->pocetna verzija
+      //include: { termin: true, doktor: { include: { korisnik: true } }, tipPregleda: true }, izmjena ispod zbog prikaza sobe u rezervacijama ako bude pronlem vraiti na pocetak 1
       include: { 
   termin: true, 
   doktor: { 
