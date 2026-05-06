@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentKorisnikId } from "../lib/currentPatient.js";
+import { io } from "../app.js";
 
 const BUFFER_TTL_SECONDS = 120; // NFR-22: 2 minute lock
 
@@ -39,14 +40,19 @@ export const getSlobodniTermini = async (
     });
 
     // Filtriraj termine koji su trenutno zaključani u Redisu (buffer zona)
-    const slobodni = await Promise.all(
-      termini.map(async (t) => {
-        const lock = await redis.get(`termin:lock:${t.id}`);
-        return lock ? null : t;
-      })
-    );
-
-    res.json(slobodni.filter(Boolean));
+    const terminSaStatusom = await Promise.all(
+  termini.map(async (t) => {
+    const lock = await redis.get(`termin:lock:${t.id}`);
+    const ttl = lock ? await redis.ttl(`termin:lock:${t.id}`) : null;
+    return {
+      ...t,
+      zakljucan: !!lock,
+      zakljucaoKorisnikId: lock ? Number(lock) : null,
+      preostaloSekundi: ttl,
+    };
+  })
+);
+res.json(terminSaStatusom);
   } catch (err) {
     next(err);
   }
@@ -107,6 +113,8 @@ export const zaključajTermin = async (
 
     // Postavi lock sa TTL od 120 sekundi
     await redis.setex(lockKey, BUFFER_TTL_SECONDS, String(korisnikId));
+    const termin = await prisma.termin.findUnique({ where: { id: terminId } });
+    io.emit("termin-azuriran", { doktorId: termin?.idDoktor });
 
     res.json({ poruka: "Termin uspješno zaključan.", ttl: BUFFER_TTL_SECONDS });
   } catch (err) {
@@ -128,6 +136,10 @@ export const oslobodiTermin = async (
     const lockKey = `termin:lock:${terminId}`;
 
     await redis.del(lockKey);
+
+    // NFR-22: obavijesti da je termin oslobođen
+    const termin = await prisma.termin.findUnique({ where: { id: terminId } });
+    io.emit("termin-azuriran", { doktorId: termin?.idDoktor });
 
     res.json({ poruka: "Termin oslobođen." });
   } catch (err) {

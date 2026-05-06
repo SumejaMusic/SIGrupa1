@@ -1,12 +1,13 @@
 //glavni entry point cijele aplikacije
+
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 //import { PrismaClient } from '@prisma/client';
 
-import routes from "./routes/router.js";
-import app from "./app.js";
+import app, { httpServer } from "./app.js";
 /*
 dotenv.config();
 
@@ -30,6 +31,6 @@ app.get('/', (req, res) => {
 
 
 const PORT = Number(process.env.PORT) || 5000;
-app.listen(PORT, "0.0.0.0", () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`http://localhost:${PORT}`);
 });
