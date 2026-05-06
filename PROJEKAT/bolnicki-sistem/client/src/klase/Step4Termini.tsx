@@ -2,11 +2,15 @@
 import { ChevronLeft, ChevronRight, User, Mail, FileText, Upload } from "lucide-react";
 import Layout from "../components/Layout";
 import { useState, useEffect } from "react";
+import { io as socketIO } from "socket.io-client";
 type Termin = {
   id: number;
   datum: string;
   vrijeme: number;
   status: string;
+  zakljucan: boolean;
+  zakljucaoKorisnikId: number | null;
+  preostaloSekundi: number | null;
 };
 
 type PatientForm = {
@@ -63,6 +67,11 @@ function Step4Termini() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
   const [charCount, setCharCount] = useState(0);*/
   const [termini, setTermini] = useState<Termin[]>([]);
+
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+
+
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
   const [form, setForm] = useState<PatientForm>(() => {
     const saved = localStorage.getItem("doctorPatient");
@@ -85,11 +94,49 @@ function Step4Termini() {
     const doktorId = localStorage.getItem("selectedDoktor");
     if (!doktorId) { window.location.href = "/step3-tip-pregleda"; return; }
 
+    // Inicijalni fetch
+  const fetchTermini = () => {
     fetch(`${apiUrl}/api/termini?doktorId=${doktorId}`)
       .then(res => res.json())
-      .then(setTermini)
-      .catch(() => setTermini([]));
+      .then(data => setTermini(data))
+      .catch(() => {});
+  };
+
+  fetchTermini();
+
+  // NFR-09: WebSocket — osvježi samo kad se nešto promijeni
+  const socket = socketIO(apiUrl);
+
+  socket.on("termin-azuriran", (data) => {
+    if (String(data.doktorId) === doktorId) {
+      fetchTermini(); // osvježi termine samo za tog doktora
+    }
+  });
+
+  return () => { socket.disconnect(); };
   }, []);
+
+  useEffect(() => {
+  if (!selectedTermin) { setCountdown(null); return; }
+
+  setCountdown(120); // 2 minute
+
+  const timer = setInterval(() => {
+    setCountdown(prev => {
+      if (prev === null || prev <= 1) {
+        clearInterval(timer);
+        // Vrijeme isteklo — oslobodi termin i resetuj
+        fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, { method: "POST" });
+        setSelectedTermin(null);
+        alert("Vrijeme za unos podataka je isteklo. Odaberite termin ponovo.");
+        return null;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [selectedTermin]);
 
   const isDoctorMode = localStorage.getItem("doctorMode") === "true";
 
@@ -365,19 +412,41 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <div key={i} className={`min-h-24 p-2 rounded-lg ${hasTermini ? "bg-blue-50 border-2 border-blue-300" : "bg-white border border-gray-200"}`}>
                       <div className="text-sm font-bold text-gray-900 mb-2">{day}</div>
                       <div className="space-y-1 text-xs">
-                        {dayTermini.map(termin => (
-                          <button
-                            key={termin.id}
-                            onClick={() => handleSelectTermin(termin)}
-                            className={`block w-full text-left px-2 py-1 rounded transition-all text-center font-semibold ${
-                              selectedTermin?.id === termin.id
-                                ? "bg-blue-600 text-white shadow-md"
-                                : "bg-blue-500 text-white hover:bg-blue-600"
-                            }`}
-                          >
-                            {formatVrijeme(termin.vrijeme)}
-                          </button>
-                        ))}
+                        {dayTermini.map(termin => {
+  // Provjeri da li je OVAJ korisnik zaključao termin
+  const mojaZakljucana = selectedTermin?.id === termin.id;
+
+  if (termin.zakljucan && !mojaZakljucana) {
+    // Drugi korisnik drži lock — prikaži disabled sa porukom
+    return (
+      <div
+        key={termin.id}
+        className="relative group block w-full text-center px-2 py-1 rounded bg-gray-300 text-gray-500 cursor-not-allowed font-semibold"
+      >
+        {formatVrijeme(termin.vrijeme)}
+        {/* Tooltip poruka na hover */}
+        <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-gray-800 text-white text-xs rounded-lg p-3 z-50 shadow-lg">
+          Drugi korisnik razmatra ovaj termin. Pokušajte za par minuta ili odaberite novi termin.
+        </div>
+      </div>
+    );
+  }
+
+  // Slobodan termin — normalan prikaz
+  return (
+    <button
+      key={termin.id}
+      onClick={() => handleSelectTermin(termin)}
+      className={`block w-full text-left px-2 py-1 rounded transition-all text-center font-semibold ${
+        selectedTermin?.id === termin.id
+          ? "bg-blue-600 text-white shadow-md"
+          : "bg-blue-500 text-white hover:bg-blue-600"
+      }`}
+    >
+      {formatVrijeme(termin.vrijeme)}
+    </button>
+  );
+})}
                       </div>
                     </div>
                   );
@@ -397,7 +466,16 @@ const handleSubmit = async (e: React.FormEvent) => {
                     {new Date(selectedTermin.datum).toLocaleDateString("hr-HR", { weekday: "long", day: "numeric", month: "long" })}
                   </p>
                 </div>
-
+                {countdown !== null && (
+                <div className={`flex items-center justify-between px-4 py-3 rounded-lg mb-4 ${
+                    countdown <= 30 ? "bg-red-50 border border-red-200" : "bg-amber-50 border border-amber-200"
+                    }`}>
+                    <p className={`text-sm font-semibold ${countdown <= 30 ? "text-red-700" : "text-amber-700"}`}>
+                    Imate {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, "0")} za unos podataka
+                  </p>
+                  <div className={`w-3 h-3 rounded-full animate-pulse ${countdown <= 30 ? "bg-red-500" : "bg-amber-500"}`} />
+                  </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <h3 className="font-bold text-gray-900 mb-4">Podaci pacijenta</h3>
 
