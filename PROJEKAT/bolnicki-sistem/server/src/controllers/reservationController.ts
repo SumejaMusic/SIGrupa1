@@ -4,6 +4,18 @@ import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
 import { posaljiPotvrdurezerv } from "../emailService.js";
 import { io } from "../app.js";
+import multer from "multer";
+
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Dozvoljeni su samo PDF fajlovi."));
+    }
+    cb(null, true);
+  },
+});
 
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
@@ -94,6 +106,30 @@ export const kreirajRezervaciju = async (
           doktor: { include: { korisnik: true } },
         },
       });
+
+      const file = (req as any).file;
+
+      if (file) {
+        const nalaz = await tx.nalaz.create({
+          data: {
+            naziv: file.originalname,
+            opis: komentar ?? null,
+            dokumentPDF: file.buffer,
+          },
+        });
+
+        await tx.historijaPregleda.create({
+          data: {
+            idPacijent: pacijent.id,
+            idDoktor: idDoktor,
+            idRezervacija: nova.id,
+            idNalaz: nalaz.id,
+            dijagnoza: "Nije unesena",
+            terapija: "Nije unesena",
+            biljeske: komentar ?? null,
+          },
+        });
+      }
 
       await tx.termin.update({
         where: { id: idTermina },
