@@ -352,11 +352,11 @@ const handleSubmit = async (e: React.FormEvent) => {
   };*/
   const getTerminiForDay = (day: number): Termin[] => {
   return termini.filter(t => {
-    const datumTermina = new Date(t.datum);
+    const d = new Date(t.datum);
     return (
-      datumTermina.getUTCFullYear() === year &&
-      datumTermina.getUTCMonth() === month &&
-      datumTermina.getUTCDate() + 1 === day && // +1 zbog UTC offset
+      d.getFullYear() === year &&
+      d.getMonth() === month &&
+      d.getDate() === day &&
       t.status === "SLOBODAN"
     );
   }).sort((a, b) => a.vrijeme - b.vrijeme);

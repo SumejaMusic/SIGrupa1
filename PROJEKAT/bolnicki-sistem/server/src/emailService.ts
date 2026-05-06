@@ -16,9 +16,10 @@ interface RezervacijaEmailPodaci {
 }
 
 // Pretvara Int vrijeme (npr. 830) u string "08:30"
-function formatVrijeme(vrijeme: number): string {
-  const str = vrijeme.toString().padStart(4, '0');
-  return `${str.slice(0, 2)}:${str.slice(2)}`;
+function formatVrijeme(v: number): string {
+  const h = Math.floor(v / 60);
+  const m = v % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {

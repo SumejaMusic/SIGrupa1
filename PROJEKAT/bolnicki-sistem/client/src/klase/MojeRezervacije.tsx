@@ -118,7 +118,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
           setNalazi(data.map((n: any) => ({
             id: n.id,
             naziv: n.naziv,
-            datum: new Date(n.vrijemeNalaza).toISOString().split("T")[0],
+            datum:  n.vrijemeNalaza.split("T")[0],
             url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
           })));
         } else {
@@ -350,7 +350,7 @@ const MojeRezervacije = () => {
       .then(data => {
         const mapirano = data.map((r: any) => ({
           id: r.id,
-          datum: new Date(r.termin.datum).toISOString().split("T")[0],
+          datum: (() => { const d = new Date(r.termin.datum); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
           vrijeme: r.termin.vrijeme,
           doktor: `Dr. ${r.doktor.korisnik.ime} ${r.doktor.korisnik.prezime}`,
           tip: r.tipPregleda?.naziv?.toLowerCase().includes("hitni") ? "hitni"
@@ -362,7 +362,7 @@ const MojeRezervacije = () => {
             id: r.id * 1000,
             tekst: r.komentar,
             autor: "Vi",
-            datum: new Date(r.datumKreiranja).toISOString().split("T")[0],
+            datum: r.datumKreiranja.split("T")[0],
             jeDoktor: false,
           }] : [],
           nalazi: [],
@@ -393,9 +393,11 @@ const MojeRezervacije = () => {
   const selectedRez = selectedDate ? rezervacije.filter(r => r.datum === selectedDate) : [];
 
   const formatV = (v: number) => {
-    const h = Math.floor(v / 100).toString().padStart(2, "0");
-    const m = (v % 100).toString().padStart(2, "0");
-    return `${h}:${m}`;
+   const h = Math.floor(v / 60);
+    const m = v % 60;
+  return `${h.toString().padStart(2, "0")}:${m
+    .toString()
+    .padStart(2, "0")}`;
   };
 
   const formatDateLabel = (ds: string) =>

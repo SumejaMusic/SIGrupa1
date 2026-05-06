@@ -150,7 +150,7 @@ export const kreirajRezervaciju = async (
 
     try {
       await posaljiPotvrdurezerv({
-        pacijentEmail: 'smusic1@etf.unsa.ba',
+        pacijentEmail: pacijentKorisnik.email,
         pacijentIme: pacijentKorisnik.ime,
         pacijentPrezime: pacijentKorisnik.prezime,
         doktorIme: doktorKorisnik.ime,
