@@ -10,7 +10,8 @@ import {
   dodajKomentar,
 } from "../controllers/reservationController.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
-
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/' }); // Ili tvoja konfiguracija
 vi.mock("../lib/prisma.js");
 vi.mock("../lib/redis.js");
 vi.mock("../lib/currentPatient.js");
