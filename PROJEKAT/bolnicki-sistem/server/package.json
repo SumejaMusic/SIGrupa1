@@ -8,7 +8,7 @@
         "dev": "nodemon --exec \"node --loader ts-node/esm\" src/index.ts",
         "build": "tsc",
         "start": "node dist/src/index.js",
-        "test": "vitest run",
+        "test": "dotenv -e .env.test -- vitest run",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest --coverage",
         "test:integration": "dotenv -e .env.test -- vitest run --config vitest.integration.config.ts",

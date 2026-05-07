@@ -16,12 +16,24 @@ interface RezervacijaEmailPodaci {
 }
 
 function formatVrijeme(v: number): string {
-  const h = Math.floor(v / 60);
-  const m = v % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  const h = Math.floor(v / 100);
+  const m = v % 100;
+  if (m > 59) {
+    // Treat as total minutes
+    const hours = Math.floor(v / 60);
+    const mins = v % 60;
+    return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+  } else {
+    // Treat as HHMM
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  }
 }
 
-const resend = new Resend("RE_123");
+console.log("UAAAA",process.env.RESEND_API_KEY);
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
+
+
 
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
   const {
@@ -37,7 +49,7 @@ export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Prom
 
   await resend.emails.send({
     from: 'onboarding@resend.dev',
-    to: 'musicsumeja98@gmail.com',
+    to: pacijentEmail,
     subject: `✅ Potvrda rezervacije #${rezervacijaId}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">

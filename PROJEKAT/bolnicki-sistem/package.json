@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "vitest run"
+    "test": "dotenv -e .env.test -- vitest run"
   },
   "dependencies": {
     "ioredis": "^5.10.1"
