@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
-import { posaljiPotvrdurezerv } from "../emailService.js";
+import { posaljiPotvrdurezerv } from "../lib/emailService.js";
 import { io } from "../app.js";
 import multer from "multer";
 
@@ -16,6 +16,7 @@ export const upload = multer({
     cb(null, true);
   },
 });
+
 
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
