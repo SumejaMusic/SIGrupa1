@@ -1,380 +1,758 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
-import request from "supertest";
-import app from "../app.js";
-import { redis } from "../lib/redis.js";
-import { PrismaClient } from "@prisma/client";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import { prismaMock } from "../lib/__mocks__/prisma.js";
+import { redisMock } from "../lib/__mocks__/redis.js";
+import {
+  kreirajRezervaciju,
+  getRezervacijeZaPacijenta,
+  getRezervacijeZaDoktora,
+  otkaziRezervacijuPacijent,
+  otkaziRezervacijuOsoblje,
+  dodajKomentar,
+} from "../controllers/reservationController.js";
+import { getCurrentPacijent } from "../lib/currentPatient.js";
 
-const prisma = new PrismaClient();
+vi.mock("../lib/prisma.js");
+vi.mock("../lib/redis.js");
+vi.mock("../lib/currentPatient.js");
 
-const DOKTOR_ID = 1;
-const TERMIN_ID = 1;
-const TIP_PREGLEDA_ID = 1;
-
-let STVARNI_KORISNIK_ID: number;
-let STVARNI_PACIJENT_ID: number;
-
-beforeAll(async () => {
-  STVARNI_KORISNIK_ID = Number(process.env.TEST_KORISNIK_ID ?? "2");
-  STVARNI_PACIJENT_ID = 1;
+const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) => ({
+  req: { params, query, body, korisnik } as any,
+  res: {
+    json: vi.fn(),
+    status: vi.fn().mockReturnThis(),
+  } as any,
+  next: vi.fn(),
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
+beforeEach(() => {
+  vi.mocked(getCurrentPacijent).mockReset();
 });
 
-async function resetujTermin(terminId = TERMIN_ID) {
-  await prisma.historijaPregleda.deleteMany({
-    where: { rezervacija: { idTermina: terminId } },
-  });
-  await prisma.rezervacije.deleteMany({ where: { idTermina: terminId } });
-  await prisma.termin.update({
-    where: { id: terminId },
-    data: { status: "SLOBODAN" },
-  });
-  await redis.del(`termin:lock:${terminId}`);
-}
+// ─────────────────────────────────────────────
+// kreirajRezervaciju — US-06, US-07, US-13
+// ─────────────────────────────────────────────
+// mozda ce se morati nadograditi testovi kada se impelentira login
+// TODO: testovi za email potvrdu i podsjetnik za hronicne bolesnike
+describe("kreirajRezervaciju", () => {
+  const lažniPacijent = { id: 10, idKorisnik: 1 };
+  const lažnaRezervacija = {
+    id: 99,
+    idTermina: 5,
+    idPacijent: 10,
+    termin: { id: 5, datum: new Date("2025-06-01") },
+    pacijent: { korisnik: { email: "test@test.com" } },
+    doktor: { korisnik: { ime: "Dr. Marić" } },
+  };
 
-async function kreirajRezervacijuHelper(terminId = TERMIN_ID) {
-  await resetujTermin(terminId);
-  await redis.setex(`termin:lock:${terminId}`, 120, String(STVARNI_KORISNIK_ID));
-  const res = await request(app)
-    .post("/api/rezervacije")
-    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-    .send({
-      terminId,
-      doktorId: DOKTOR_ID,
-      tipPregledaId: TIP_PREGLEDA_ID,
-      hitnost: false,
+  // ─── HAPPY PATH ───────────────────────────────
+
+  it("uspješno kreira rezervaciju i vraća je sa statusom 201 — US-06 AC1", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockResolvedValue("1");
+    vi.mocked(prismaMock.$transaction).mockResolvedValue(lažnaRezervacija as any);
+    vi.mocked(redisMock.del).mockResolvedValue(1);
+
+    const { req, res, next } = mockReqRes(
+      {},
+      {},
+      { terminId: 5, doktorId: 2, tipPregledaId: 1 },
+      { id: 1 }
+    );
+    await kreirajRezervaciju(req, res, next);
+
+    // Provjera ulaza — da li controller traži pacijenta
+    expect(getCurrentPacijent).toHaveBeenCalled();
+    // Provjera izlaza — vraća 201 sa rezervacijom
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(lažnaRezervacija);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("briše Redis lock nakon uspješne rezervacije — NFR-22", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockResolvedValue("1");
+    vi.mocked(prismaMock.$transaction).mockResolvedValue(lažnaRezervacija as any);
+    vi.mocked(redisMock.del).mockResolvedValue(1);
+
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+    await kreirajRezervaciju(req, res, next);
+
+    // Provjera ulaza — lock se briše s ispravnim ključem
+    expect(redisMock.del).toHaveBeenCalledWith("termin:lock:5");
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("kreira rezervaciju sa komentarom — US-22", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockResolvedValue("1");
+    vi.mocked(prismaMock.$transaction).mockResolvedValue({
+      ...lažnaRezervacija,
+      komentar: "Imam bolove u srcu",
+    } as any);
+    vi.mocked(redisMock.del).mockResolvedValue(1);
+
+    const { req, res, next } = mockReqRes(
+      {},
+      {},
+      { terminId: 5, doktorId: 2, tipPregledaId: 1, komentar: "Imam bolove u srcu" },
+      { id: 1 }
+    );
+    await kreirajRezervaciju(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ komentar: "Imam bolove u srcu" })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("kreira rezervaciju bez komentara — US-22 AC1", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockResolvedValue("1");
+    vi.mocked(prismaMock.$transaction).mockResolvedValue({
+      ...lažnaRezervacija,
+      komentar: null,
+    } as any);
+    vi.mocked(redisMock.del).mockResolvedValue(1);
+
+    const { req, res, next } = mockReqRes(
+      {},
+      {},
+      { terminId: 5, doktorId: 2, tipPregledaId: 1 }, // bez komentara
+      { id: 1 }
+    );
+    await kreirajRezervaciju(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ komentar: null })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ─── 404 SLUČAJEVI ────────────────────────────
+
+  it("vraća 404 kada profil pacijenta nije pronađen — US-06", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(null);
+
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+    await kreirajRezervaciju(req, res, next);
+
+    expect(getCurrentPacijent).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Profil pacijenta nije pronađen.",
     });
-  return res;
-}
-
-async function obrisiCustomTermin(id: number) {
-  await prisma.historijaPregleda.deleteMany({
-    where: { rezervacija: { idTermina: id } },
-  });
-  await prisma.rezervacije.deleteMany({ where: { idTermina: id } });
-  await prisma.termin.deleteMany({ where: { id } });
-  await redis.del(`termin:lock:${id}`);
-}
-
-describe("POST /api/rezervacije", () => {
-  beforeEach(async () => {
-    await resetujTermin(TERMIN_ID);
+    expect(prismaMock.rezervacije.findFirst).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("uspješno kreira rezervaciju kada postoji Redis lock", async () => {
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
+  // ─── 409 SLUČAJEVI — US-13 ────────────────────
 
-    const res = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({
-        terminId: TERMIN_ID,
-        doktorId: DOKTOR_ID,
-        tipPregledaId: TIP_PREGLEDA_ID,
-        hitnost: false,
-      });
+  it("vraća 409 za duplu rezervaciju — US-13 AC1", async () => {
+  vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+  vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+  vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue({ id: 1 } as any);
 
-    expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty("id");
-    expect(res.body).toHaveProperty("termin");
-    expect(res.body).toHaveProperty("doktor");
+  const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+  await kreirajRezervaciju(req, res, next);
 
-    const lock = await redis.get(`termin:lock:${TERMIN_ID}`);
-    expect(lock).toBeNull();
-
-    const termin = await prisma.termin.findUnique({ where: { id: TERMIN_ID } });
-    expect(termin?.status).toBe("ZAKAZAN");
+  expect(prismaMock.rezervacije.findFirst).toHaveBeenCalledWith({
+    where: { 
+      idPacijent: lažniPacijent.id, 
+      idTermina: 5,
+      datumOtkazivanja: null,  // ← dodaj ovo
+    },
   });
-
-  it("vraća 409 bez Redis locka", async () => {
-    const res = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({
-        terminId: TERMIN_ID,
-        doktorId: DOKTOR_ID,
-        tipPregledaId: TIP_PREGLEDA_ID,
-      });
-
-    expect(res.status).toBe(409);
-    expect(res.body.poruka).toContain("zaključan");
+  expect(res.status).toHaveBeenCalledWith(409);
+  expect(res.json).toHaveBeenCalledWith({
+    poruka: "Rezervacija za ovaj termin već postoji.",
   });
+  expect(redisMock.get).not.toHaveBeenCalled();
+  expect(next).not.toHaveBeenCalled();
+});
 
-  it("vraća 409 za duplikat rezervacije", async () => {
-    const prvaRes = await kreirajRezervacijuHelper();
-    expect(prvaRes.status).toBe(201);
+  it("vraća 409 kada termin nije zaključan u Redisu — US-12, US-13 AC1", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockResolvedValue(null); // nema locka
 
-    await prisma.termin.update({
-      where: { id: TERMIN_ID },
-      data: { status: "SLOBODAN" },
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+    await kreirajRezervaciju(req, res, next);
+
+    expect(redisMock.get).toHaveBeenCalledWith("termin:lock:5");
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Termin nije zaključan. Pokrenite proces ponovo.",
     });
-
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
-    const res = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
-
-    expect(res.status).toBe(409);
-    expect(res.body.poruka).toContain("već postoji");
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća 409 ako je termin zauzet (status != SLOBODAN)", async () => {
-    await prisma.termin.update({
-      where: { id: TERMIN_ID },
-      data: { status: "ZAKAZAN" },
+  it("vraća 409 kada termin zaključao drugi korisnik — US-13 AC2", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockResolvedValue("999"); // drugi korisnik ima lock
+
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+    await kreirajRezervaciju(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Termin nije zaključan. Pokrenite proces ponovo.",
     });
-
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
-    const res = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
-
-    expect(res.status).toBe(409);
-    expect(res.body.poruka).toContain("slobodan");
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća 400 za nedostajuće podatke", async () => {
-    const res = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ doktorId: DOKTOR_ID });
+  // ─── ERROR HANDLING ───────────────────────────
 
-    expect(res.status).toBe(400);
-    expect(res.body).toHaveProperty("poruka");
+  it("poziva next pri Prisma grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(getCurrentPacijent).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+    await kreirajRezervaciju(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 
-  it("vraća 400 ako termin ne pripada doktoru", async () => {
-    await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
+  it("poziva next pri Redis grešci i ne vraća odgovor", async () => {
+    const greška = new Error("Redis greška");
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+    vi.mocked(redisMock.get).mockRejectedValue(greška);
 
-    const res = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({
-        terminId: TERMIN_ID,
-        doktorId: 999,
-        tipPregledaId: TIP_PREGLEDA_ID,
-      });
+    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+    await kreirajRezervaciju(req, res, next);
 
-    expect(res.status).toBe(400);
-    expect(res.body.poruka).toContain("ne pripada");
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  // Nedostaje — hitnost je false po defaultu ako nije poslana (mozda ce se trebati prosiriti kasnije kada se detaljnije impelentira)
+it("kreira rezervaciju sa hitnost: false kada hitnost nije poslana", async () => {
+  vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+  vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+  vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+  vi.mocked(redisMock.get).mockResolvedValue("1");
+  vi.mocked(prismaMock.$transaction).mockResolvedValue({
+    ...lažnaRezervacija,
+    hitnost: false,
+  } as any);
+  vi.mocked(redisMock.del).mockResolvedValue(1);
+
+  const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2, tipPregledaId: 1 }, { id: 1 });
+  await kreirajRezervaciju(req, res, next);
+
+  expect(res.json).toHaveBeenCalledWith(
+    expect.objectContaining({ hitnost: false })
+  );
+});
+
+// Nedostaje — Redis lock se ne briše ako transakcija ne uspije (mozda ce se trebati prosiriti kada implementiramo detaljnije)
+it("ne briše Redis lock kada transakcija ne uspije", async () => {
+  const greška = new Error("Transakcija pala");
+  vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+  vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+  vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
+  vi.mocked(redisMock.get).mockResolvedValue("1");
+  vi.mocked(prismaMock.$transaction).mockRejectedValue(greška);
+
+  const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+  await kreirajRezervaciju(req, res, next);
+
+  expect(redisMock.del).not.toHaveBeenCalled();
+  expect(next).toHaveBeenCalledWith(greška);
+});
+});
+
+// ─────────────────────────────────────────────
+// getRezervacijeZaPacijenta — US-05
+// ─────────────────────────────────────────────
+describe("getRezervacijeZaPacijenta", () => {
+  const lažniPacijent = { id: 10, idKorisnik: 1 };
+
+  // ─── HAPPY PATH ───────────────────────────────
+
+  it("vraća rezervacije za pacijenta poredane po datumu — US-01 AC1", async () => {
+    const lažneRezervacije = [
+      { id: 2, datumKreiranja: new Date("2025-06-02") },
+      { id: 1, datumKreiranja: new Date("2025-06-01") },
+      { id: 3, datumKreiranja: new Date("2025-06-04") }
+    ];
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.rezervacije.findMany).mockResolvedValue(lažneRezervacije as any);
+
+    const { req, res, next } = mockReqRes({}, {}, {}, { id: 1 });
+    await getRezervacijeZaPacijenta(req, res, next);
+
+    expect(prismaMock.rezervacije.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ idPacijent: lažniPacijent.id }),
+        orderBy: { datumKreiranja: "desc" },
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(lažneRezervacije);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća prazan niz kada pacijent nema rezervacija", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+    vi.mocked(prismaMock.rezervacije.findMany).mockResolvedValue([]);
+
+    const { req, res, next } = mockReqRes({}, {}, {}, { id: 1 });
+    await getRezervacijeZaPacijenta(req, res, next);
+
+    expect(prismaMock.rezervacije.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ idPacijent: lažniPacijent.id }) })
+    );
+    expect(res.json).toHaveBeenCalledWith([]);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ─── 404 SLUČAJEVI ────────────────────────────
+  //mozda treba detaljnije implementirati kad ubacimo login
+  it("vraća 404 kada profil pacijenta nije pronađen", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue(null);
+
+    const { req, res, next } = mockReqRes({}, {}, {}, { id: 1 });
+    await getRezervacijeZaPacijenta(req, res, next);
+
+    expect(getCurrentPacijent).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Profil pacijenta nije pronađen.",
+    });
+    expect(prismaMock.rezervacije.findMany).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ─── ERROR HANDLING ───────────────────────────
+
+  it("poziva next pri grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(getCurrentPacijent).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes({}, {}, {}, { id: 1 });
+    await getRezervacijeZaPacijenta(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
-describe("GET /api/rezervacije/moje", () => {
-  beforeEach(async () => {
-    await resetujTermin(TERMIN_ID);
+// ─────────────────────────────────────────────
+// getRezervacijeZaDoktora
+// ─────────────────────────────────────────────
+describe("getRezervacijeZaDoktora", () => {
+
+  // ─── HAPPY PATH ───────────────────────────────
+
+  it("vraća rezervacije za doktora poredane po datumu — US-11 AC1", async () => {
+    const lažneRezervacije = [
+      { id: 2, idDoktor: 3, datumKreiranja: new Date("2025-06-02") },
+      { id: 1, idDoktor: 3, datumKreiranja: new Date("2025-06-01") },
+    ];
+    vi.mocked(prismaMock.rezervacije.findMany).mockResolvedValue(lažneRezervacije as any);
+
+    const { req, res, next } = mockReqRes({ doktorId: "3" });
+    await getRezervacijeZaDoktora(req, res, next);
+
+    expect(prismaMock.rezervacije.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { idDoktor: 3 },
+        orderBy: { datumKreiranja: "desc" },
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(lažneRezervacije);
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća rezervacije ulogovanog pacijenta", async () => {
-    const kreacija = await kreirajRezervacijuHelper();
-    expect(kreacija.status).toBe(201);
+  it("vraća prazan niz kada doktor nema rezervacija", async () => {
+    vi.mocked(prismaMock.rezervacije.findMany).mockResolvedValue([]);
 
-    const res = await request(app)
-      .get("/api/rezervacije/moje")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+    const { req, res, next } = mockReqRes({ doktorId: "999" });
+    await getRezervacijeZaDoktora(req, res, next);
 
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
-    expect(res.body[0]).toHaveProperty("termin");
-    expect(res.body[0]).toHaveProperty("doktor");
+    expect(prismaMock.rezervacije.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { idDoktor: 999 } })
+    );
+    expect(res.json).toHaveBeenCalledWith([]);
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća praznu listu za pacijenta bez aktivnih rezervacija", async () => {
-    const res = await request(app)
-      .get("/api/rezervacije/moje")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+  // ─── EDGE CASES ───────────────────────────────
+  it("šalje ispravan doktorId u where klauzuli — ne vraća tuđe rezervacije", async () => {
+  const rezervacijeDoktora3 = [
+    { id: 1, idDoktor: 3 },
+    { id: 2, idDoktor: 3 },
+  ];
+  vi.mocked(prismaMock.rezervacije.findMany).mockResolvedValue(
+    rezervacijeDoktora3 as any
+  );
 
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual([]);
+  const { req, res, next } = mockReqRes({ doktorId: "3" });
+  await getRezervacijeZaDoktora(req, res, next);
+
+  // Provjera da controller traži SAMO rezervacije doktora 3
+  expect(prismaMock.rezervacije.findMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { idDoktor: 3 }, // ne idDoktor: 5 ili bilo koji drugi
+    })
+  );
+  // Provjera da se ne vraćaju rezervacije drugog doktora
+  expect(prismaMock.rezervacije.findMany).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { idDoktor: 5 },
+    })
+  );
+  expect(res.json).toHaveBeenCalledWith(rezervacijeDoktora3);
+  expect(next).not.toHaveBeenCalled();
+});
+
+  it("konvertuje string doktorId u broj prije slanja Prismi", async () => {
+    vi.mocked(prismaMock.rezervacije.findMany).mockResolvedValue([]);
+
+    const { req, res, next } = mockReqRes({ doktorId: "42" });
+    await getRezervacijeZaDoktora(req, res, next);
+
+    expect(prismaMock.rezervacije.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { idDoktor: 42 } }) // broj, ne string
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ─── ERROR HANDLING ───────────────────────────
+
+  it("poziva next pri grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(prismaMock.rezervacije.findMany).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes({ doktorId: "3" });
+    await getRezervacijeZaDoktora(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
-describe("GET /api/rezervacije/doktor/:doktorId", () => {
-  beforeEach(async () => {
-    await resetujTermin(TERMIN_ID);
+// ─────────────────────────────────────────────
+// otkaziRezervacijuPacijent — US-10
+// ─────────────────────────────────────────────
+//TODO: testovi za email podsjetnike kada se impelentira
+describe("otkaziRezervacijuPacijent", () => {
+  // Termin je 48 sati u budućnosti — dozvoljeno otkazivanje
+  const lažnaRezervacija = {
+    id: 1,
+    idPacijent: 10,
+    idTermina: 5,
+    termin: {
+      id: 5,
+      datum: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    },
+    pacijent: { korisnik: { email: "test@test.com" } },
+  };
+
+  // Termin je za 12 sati — zabranjeno otkazivanje
+  const lažnaRezervacijaBlizu = {
+    id: 2,
+    idPacijent: 10,
+    idTermina: 6,
+    termin: {
+      id: 6,
+      datum: new Date(Date.now() + 12 * 60 * 60 * 1000),
+    },
+    pacijent: { korisnik: { email: "test@test.com" } },
+  };
+
+  // ─── HAPPY PATH ───────────────────────────────
+
+  it("uspješno otkazuje rezervaciju više od 24h prije termina — US-10 AC1", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue({ id: 10 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(lažnaRezervacija as any);
+    vi.mocked(prismaMock.$transaction).mockResolvedValue(undefined as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await otkaziRezervacijuPacijent(req, res, next);
+
+    expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 1 } })
+    );
+    expect(prismaMock.$transaction).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Rezervacija uspješno otkazana.",
+    });
+    //obratiti paznju ako se doda status za odgovor onda treba izbrisati "not"
+    expect(res.status).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća sve rezervacije za doktora", async () => {
-    const kreacija = await kreirajRezervacijuHelper();
-    expect(kreacija.status).toBe(201);
+  // ─── 404 SLUČAJEVI ────────────────────────────
 
-    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`);
+  it("vraća 404 kada rezervacija nije pronađena — US-10", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue({ id: 10 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(null);
 
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
-    expect(res.body[0]).toHaveProperty("pacijent");
-    expect(res.body[0]).toHaveProperty("termin");
+    const { req, res, next } = mockReqRes({ id: "999" });
+    await otkaziRezervacijuPacijent(req, res, next);
+
+    expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 999 } })
+    );
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Rezervacija nije pronađena.",
+    });
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća praznu listu za doktora bez rezervacija", async () => {
-    const res = await request(app).get("/api/rezervacije/doktor/99999");
+  // ─── EDGE CASES — US-10 AC2 ───────────────────
 
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual([]);
+  it("zabranjuje otkazivanje manje od 24h prije termina — US-10 AC2", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue({ id: 10 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(
+      lažnaRezervacijaBlizu as any
+    );
+
+    const { req, res, next } = mockReqRes({ id: "2" });
+    await otkaziRezervacijuPacijent(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Nije moguće otkazati termin manje od 24 sata unaprijed.",
+    });
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
-});
 
-describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
-  beforeEach(async () => {
-    await obrisiCustomTermin(100);
-    await obrisiCustomTermin(101);
-    await obrisiCustomTermin(102);
-  });
-
-  it("uspješno otkazuje rezervaciju > 24h unaprijed", async () => {
-    const buduciTermin = await prisma.termin.create({
-      data: {
-        id: 100,
-        idDoktor: DOKTOR_ID,
-        datum: new Date("2027-01-15"),
-        vrijeme: 600,
-        status: "SLOBODAN",
+  it("zabranjuje otkazivanje tačno 24h ili manje prije termina — US-10 AC2", async () => {
+    vi.mocked(getCurrentPacijent).mockResolvedValue({ id: 10 } as any);
+    const rezervacijaTacno24h = {
+      ...lažnaRezervacijaBlizu,
+      termin: {
+        id: 7,
+        datum: new Date(Date.now() + 24 * 60 * 60 * 1000 - 1000), // 1 sekunda manje od 24h
       },
-    });
+    };
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(
+      rezervacijaTacno24h as any
+    );
 
-    await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
-    const kreirajRes = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
+    const { req, res, next } = mockReqRes({ id: "3" });
+    await otkaziRezervacijuPacijent(req, res, next);
 
-    expect(kreirajRes.status).toBe(201);
-    const rezervacijaId = kreirajRes.body.id;
-
-    const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
-
-    expect(res.status).toBe(200);
-    expect(res.body.poruka).toContain("uspješno otkazana");
-
-    const termin = await prisma.termin.findUnique({ where: { id: buduciTermin.id } });
-    expect(termin?.status).toBe("SLOBODAN");
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća 400 za otkazivanje < 24h prije termina", async () => {
-    const skorasnji = await prisma.termin.create({
-      data: {
-        id: 101,
-        idDoktor: DOKTOR_ID,
-        datum: new Date(Date.now() + 2 * 60 * 60 * 1000),
-        vrijeme: 600,
-        status: "SLOBODAN",
-      },
+  // ─── ERROR HANDLING ───────────────────────────
+
+  it("poziva next pri grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(getCurrentPacijent).mockResolvedValue({ id: 10 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await otkaziRezervacijuPacijent(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+  });
+  // Nedostaje — termin je prošao (u prošlosti)
+it("zabranjuje otkazivanje termina koji je već prošao — US-10 AC2", async () => {
+  vi.mocked(getCurrentPacijent).mockResolvedValue({ id: 10 } as any);
+  const rezervacijaUProšlosti = {
+    id: 3,
+    idPacijent: 10,
+    idTermina: 7,
+    termin: {
+      id: 7,
+      datum: new Date(Date.now() - 24 * 60 * 60 * 1000), // juče
+    },
+    pacijent: { korisnik: { email: "test@test.com" } },
+  };
+  vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(
+    rezervacijaUProšlosti as any
+  );
+
+  const { req, res, next } = mockReqRes({ id: "3" });
+  await otkaziRezervacijuPacijent(req, res, next);
+
+  expect(res.status).toHaveBeenCalledWith(400);
+  expect(res.json).toHaveBeenCalledWith({
+    poruka: "Nije moguće otkazati termin manje od 24 sata unaprijed.",
+  });
+  expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  expect(next).not.toHaveBeenCalled();
+});
+});
+
+// ─────────────────────────────────────────────
+// otkaziRezervacijuOsoblje — US-09
+// ─────────────────────────────────────────────
+
+//TODO: testovi za email podsjetnike kada se impelentira
+describe("otkaziRezervacijuOsoblje", () => {
+  const lažnaRezervacija = {
+    id: 1,
+    idTermina: 5,
+    termin: { id: 5, datum: new Date("2025-06-01") },
+    pacijent: { korisnik: { email: "test@test.com" } },
+  };
+
+  // ─── HAPPY PATH ───────────────────────────────
+
+  it("uspješno otkazuje rezervaciju i vraća potvrdu — US-09 AC1", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(lažnaRezervacija as any);
+    vi.mocked(prismaMock.$transaction).mockResolvedValue(undefined as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await otkaziRezervacijuOsoblje(req, res, next);
+
+    expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 1 } })
+    );
+    expect(prismaMock.$transaction).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Rezervacija otkazana od strane osoblja.",
     });
-
-    await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
-    const kreirajRes = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
-
-    expect(kreirajRes.status).toBe(201);
-    const rezervacijaId = kreirajRes.body.id;
-
-    const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
-
-    expect(res.status).toBe(400);
-    expect(res.body.poruka).toContain("24 sata");
+    expect(res.status).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća 403 ako pacijent pokušava otkazati tuđu rezervaciju", async () => {
-    const buduciTermin = await prisma.termin.create({
-      data: {
-        id: 102,
-        idDoktor: DOKTOR_ID,
-        datum: new Date("2027-06-01"),
-        vrijeme: 600,
-        status: "SLOBODAN",
-      },
+  // ─── 404 SLUČAJEVI ────────────────────────────
+
+  it("vraća 404 kada rezervacija nije pronađena — US-09", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(null);
+
+    const { req, res, next } = mockReqRes({ id: "999" });
+    await otkaziRezervacijuOsoblje(req, res, next);
+
+    expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 999 } })
+    );
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      poruka: "Rezervacija nije pronađena.",
     });
-
-    await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
-    const kreirajRes = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
-
-    expect(kreirajRes.status).toBe(201);
-    const rezervacijaId = kreirajRes.body.id;
-
-    const drugiPacijent = await prisma.pacijent.findFirst({
-      where: { id: { not: STVARNI_PACIJENT_ID } },
-    });
-
-    if (drugiPacijent) {
-      await prisma.rezervacije.update({
-        where: { id: rezervacijaId },
-        data: { idPacijent: drugiPacijent.id },
-      });
-
-      const res = await request(app)
-        .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-        .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
-
-      expect(res.status).toBe(403);
-      expect(res.body.poruka).toContain("dozvolu");
-    } else {
-      console.warn("Preskačem 403 test: nema drugog pacijenta u bazi.");
-    }
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća 404 za nepostojeću rezervaciju", async () => {
-    const res = await request(app)
-      .patch("/api/rezervacije/99999/otkazi/pacijent")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+  // ─── ERROR HANDLING ───────────────────────────
 
-    expect(res.status).toBe(404);
+  it("poziva next pri grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(prismaMock.rezervacije.findUnique).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await otkaziRezervacijuOsoblje(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
-describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
-  beforeEach(async () => {
-    await obrisiCustomTermin(103);
-  });
+// ─────────────────────────────────────────────
+// dodajKomentar — US-22
+// ─────────────────────────────────────────────
+describe("dodajKomentar", () => {
+  // ─── HAPPY PATH ───────────────────────────────
 
-  it("osoblje može otkazati bilo koju rezervaciju bez vremenskog ograničenja", async () => {
-    const skorasnji = await prisma.termin.create({
-      data: {
-        id: 103,
-        idDoktor: DOKTOR_ID,
-        datum: new Date(Date.now() + 2 * 60 * 60 * 1000),
-        vrijeme: 600,
-        status: "SLOBODAN",
-      },
+  it("uspješno dodaje komentar i vraća ažuriranu rezervaciju — US-22 AC1", async () => {
+    const lažnaRezervacija = { id: 1, komentar: "Imam alergiju na penicilin" };
+    vi.mocked(prismaMock.rezervacije.update).mockResolvedValue(lažnaRezervacija as any);
+
+    const { req, res, next } = mockReqRes(
+      { id: "1" },
+      {},
+      { komentar: "Imam alergiju na penicilin" }
+    );
+    await dodajKomentar(req, res, next);
+
+    // Provjera ulaza — da li controller šalje ispravan komentar Prismi
+    expect(prismaMock.rezervacije.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { komentar: "Imam alergiju na penicilin" },
     });
-
-    await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
-    const kreirajRes = await request(app)
-      .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
-      .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
-
-    expect(kreirajRes.status).toBe(201);
-    const rezervacijaId = kreirajRes.body.id;
-
-    const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/osoblje`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.poruka).toContain("osoblja");
-
-    const termin = await prisma.termin.findUnique({ where: { id: skorasnji.id } });
-    expect(termin?.status).toBe("SLOBODAN");
+    // Provjera izlaza — vraća ažuriranu rezervaciju
+    expect(res.json).toHaveBeenCalledWith(lažnaRezervacija);
+    expect(res.status).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća 404 za nepostojeću rezervaciju", async () => {
-    const res = await request(app)
-      .patch("/api/rezervacije/99999/otkazi/osoblje");
+  it("uspješno briše komentar kada je prazan string — US-22 AC2", async () => {
+    const lažnaRezervacija = { id: 1, komentar: "" };
+    vi.mocked(prismaMock.rezervacije.update).mockResolvedValue(lažnaRezervacija as any);
 
-    expect(res.status).toBe(404);
+    const { req, res, next } = mockReqRes({ id: "1" }, {}, { komentar: "" });
+    await dodajKomentar(req, res, next);
+
+    expect(prismaMock.rezervacije.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { komentar: "" },
+    });
+    expect(res.json).toHaveBeenCalledWith(lažnaRezervacija);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ─── EDGE CASES ───────────────────────────────
+
+  it("konvertuje string ID u broj prije slanja Prismi", async () => {
+    vi.mocked(prismaMock.rezervacije.update).mockResolvedValue({ id: 42 } as any);
+
+    const { req, res, next } = mockReqRes(
+      { id: "42" },
+      {},
+      { komentar: "Test komentar" }
+    );
+    await dodajKomentar(req, res, next);
+
+    expect(prismaMock.rezervacije.update).toHaveBeenCalledWith({
+      where: { id: 42 }, // broj, ne string
+      data: { komentar: "Test komentar" },
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  // ─── ERROR HANDLING ───────────────────────────
+
+  it("poziva next pri grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(prismaMock.rezervacije.update).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes(
+      { id: "1" },
+      {},
+      { komentar: "Test" }
+    );
+    await dodajKomentar(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
+
+//TODO: napisati testove za funkciju promijeniTrajanje kada se impelentiraju funkcionalnosti

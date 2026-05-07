@@ -79,4 +79,6 @@ jobs:
           REDIS_URL: "redis://localhost:6380"
           TEST_KORISNIK_ID: "2"
           TEST_PATIENT_EMAIL: "pacijent@test.com"
+          # DODAJ OVO ISPOD:
+          RESEND_API_KEY: "re_dummy_key_za_ci_pipeline" 
         run: npx vitest run --config vitest.ci.config.ts
