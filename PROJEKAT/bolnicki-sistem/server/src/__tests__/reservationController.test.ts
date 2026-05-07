@@ -163,23 +163,27 @@ describe("kreirajRezervaciju", () => {
   // ─── 409 SLUČAJEVI — US-13 ────────────────────
 
   it("vraća 409 za duplu rezervaciju — US-13 AC1", async () => {
-    vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
-    vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue({ id: 1 } as any);
+  vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);
+  vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+  vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue({ id: 1 } as any);
 
-    const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
-    await kreirajRezervaciju(req, res, next);
+  const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1 });
+  await kreirajRezervaciju(req, res, next);
 
-    expect(prismaMock.rezervacije.findFirst).toHaveBeenCalledWith({
-      where: { idPacijent: lažniPacijent.id, idTermina: 5 },
-    });
-    expect(res.status).toHaveBeenCalledWith(409);
-    expect(res.json).toHaveBeenCalledWith({
-      poruka: "Rezervacija za ovaj termin već postoji.",
-    });
-    expect(redisMock.get).not.toHaveBeenCalled();
-    expect(next).not.toHaveBeenCalled();
+  expect(prismaMock.rezervacije.findFirst).toHaveBeenCalledWith({
+    where: { 
+      idPacijent: lažniPacijent.id, 
+      idTermina: 5,
+      datumOtkazivanja: null,  // ← dodaj ovo
+    },
   });
+  expect(res.status).toHaveBeenCalledWith(409);
+  expect(res.json).toHaveBeenCalledWith({
+    poruka: "Rezervacija za ovaj termin već postoji.",
+  });
+  expect(redisMock.get).not.toHaveBeenCalled();
+  expect(next).not.toHaveBeenCalled();
+});
 
   it("vraća 409 kada termin nije zaključan u Redisu — US-12, US-13 AC1", async () => {
     vi.mocked(getCurrentPacijent).mockResolvedValue(lažniPacijent as any);

@@ -9,7 +9,7 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | Stavka | Opis |
 | :--- | :--- |
 | **ID odluke** | DEC-001 |
-| **Datum** | 2025 |
+| **Datum** | 2026 |
 | **Kratak naziv odluke** | Odabir platforme za deployment |
 | **Opis problema ili pitanja** | Tim je trebao odlučiti na kojoj platformi hostovati backend i frontend aplikacije kako bi osigurao dostupnost i jednostavnost deployanja. |
 | **Razmatrane opcije** | Render, Heroku, Railway, AWS, Vercel (samo frontend) |
@@ -25,7 +25,7 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | Stavka | Opis |
 | :--- | :--- |
 | **ID odluke** | DEC-002 |
-| **Datum** | 2025 |
+| **Datum** | 2026 |
 | **Kratak naziv odluke** | Odabir baze podataka — Neon (PostgreSQL) |
 | **Opis problema ili pitanja** | Potrebna je pouzdana, cloud-hostovana baza podataka kompatibilna s Prisma ORM-om i dostupna bez troškova u razvojnoj fazi projekta. |
 | **Razmatrane opcije** | Neon (PostgreSQL), Supabase, lokalni PostgreSQL, Render PostgreSQL |
@@ -41,7 +41,7 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | Stavka | Opis |
 | :--- | :--- |
 | **ID odluke** | DEC-003 |
-| **Datum** | 2025 |
+| **Datum** | 2026 |
 | **Kratak naziv odluke** | Hardkodirani korisnik umjesto autentifikacije |
 | **Opis problema ili pitanja** | Sistem zahtijeva identifikaciju trenutnog pacijenta za operacije poput kreiranja i pregleda rezervacija, ali login i registracija nisu implementirani u ovoj fazi razvoja. |
 | **Razmatrane opcije** | Implementirati punu autentifikaciju (JWT/session), koristiti hardkodiranog test korisnika putem environment varijabli, privremeno preskočiti autorizaciju |

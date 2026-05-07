@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  upload,
   kreirajRezervaciju,
   getRezervacijeZaPacijenta,
   getRezervacijeZaDoktora,
@@ -7,6 +8,7 @@ import {
   otkaziRezervacijuOsoblje,
   dodajKomentar,
   promijeniTrajanje,
+  getKomentari, // ← dodaj
 } from "../controllers/reservationController.js";
 
 const router = Router();
@@ -14,12 +16,12 @@ const router = Router();
 // POST /api/rezervacije
 // US-06, US-07 — Kreiranje rezervacije
 // Body: { terminId, doktorId, pacijentId, komentar?, hitnost?, tipPregledaId }
-router.post("/", kreirajRezervaciju);
+router.post("/", upload.single("dokumentPDF"), kreirajRezervaciju);
 
 // GET /api/rezervacije/pacijent/:pacijentId
 // US-05 — Sve rezervacije konkretnog pacijenta
 router.get("/moje", getRezervacijeZaPacijenta);
-
+router.get("/:id/komentari", getKomentari);
 // GET /api/rezervacije/doktor/:doktorId
 // US-05 — Sve rezervacije konkretnog doktora
 router.get("/doktor/:doktorId", getRezervacijeZaDoktora);
@@ -41,5 +43,6 @@ router.patch("/:id/komentar", dodajKomentar);
 // US-15 — Promjena trajanja termina
 // Body: { novaTrajanje: number }
 router.patch("/:id/trajanje", promijeniTrajanje);
+// i dodaj rutu prije /:id ruta
 
 export default router;

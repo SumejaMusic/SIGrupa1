@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Upload, FileCheck, ArrowLeft } from "lucide-react";
+import {Upload, FileCheck, ArrowLeft } from "lucide-react";
 
 const Laboratorija: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

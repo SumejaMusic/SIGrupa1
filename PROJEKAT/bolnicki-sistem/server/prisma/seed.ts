@@ -45,6 +45,27 @@ async function main() {
     },
   });
 
+  const odjel4 = await prisma.odjel.upsert({
+  where: { id: 4 },
+  update: { naziv: "Neurologija", opis: "Specijalnost za bolesti nervnog sistema" },
+  create: {
+    id: 4,
+    naziv: "Neurologija",
+    opis: "Specijalnost za bolesti nervnog sistema",
+  },
+});
+
+const odjel5 = await prisma.odjel.upsert({
+  where: { id: 5 },
+  update: { naziv: "Ortopedija", opis: "Specijalnost za bolesti kostiju i zglobova" },
+  create: {
+    id: 5,
+    naziv: "Ortopedija",
+    opis: "Specijalnost za bolesti kostiju i zglobova",
+  },
+});
+
+  console.log("Novi odjeli:", odjel4.naziv, ",", odjel5.naziv);
   console.log("Odjeli kreirani:", odjel.naziv, ",", odjel2.naziv, ",", odjel3.naziv);
 
   // ─────────────────────────────────────────────
@@ -91,6 +112,39 @@ async function main() {
       statusSobe: "AKTIVNA",
     },
   });
+
+  // ─────────────────────────────────────────────
+// Sobe za nove odjele
+// ─────────────────────────────────────────────
+const soba4 = await prisma.soba.upsert({
+  where: { id: 4 },
+  update: {},
+  create: {
+    id: 4,
+    naziv: "Ordinacija 4",
+    tip: "ORDINACIJA",
+    sprat: 2,
+    kapacitet: 2,
+    opis: "Neurološka ordinacija",
+    statusSobe: "AKTIVNA",
+  },
+});
+
+const soba5 = await prisma.soba.upsert({
+  where: { id: 5 },
+  update: {},
+  create: {
+    id: 5,
+    naziv: "Ordinacija 5",
+    tip: "ORDINACIJA",
+    sprat: 3,
+    kapacitet: 2,
+    opis: "Ortopedska ordinacija",
+    statusSobe: "AKTIVNA",
+  },
+});
+
+console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
 
   console.log("Sobe kreirane:", soba.naziv, ",", soba2.naziv, ",", soba3.naziv);
 
@@ -210,6 +264,163 @@ async function main() {
   sutra.setHours(0, 0, 0, 0);
 
   // ─────────────────────────────────────────────
+// Doktor 7 — Neurologija
+// ─────────────────────────────────────────────
+const korisnikDoktor7 = await prisma.korisnik.upsert({
+  where: { email: "doktor7@test.com" },
+  update: {},
+  create: {
+    jmbg: "1234567890129",
+    ime: "Emir",
+    prezime: "Dizdarević",
+    datumRodjenja: new Date("1983-04-22"),
+    email: "doktor7@test.com",
+    pristupnaSifra: "hash_placeholder",
+    brojTelefona: "61111117",
+    datumRegistracije: new Date(),
+    brojNeuspjelihPrijava: 0,
+    uloga: "DOKTOR",
+  },
+});
+
+const doktor7 = await prisma.doktor.upsert({
+  where: { id: 7 },
+  update: {},
+  create: {
+    id: 7,
+    idKorisnik: korisnikDoktor7.id,
+    idOdjela: odjel4.id,  // Neurologija
+    idSobe: soba4.id,
+    brojPregleda: 0,
+    brojLicence: 123462,
+    specijalizacija: "Neurologija",
+    trajanjePregleda: 40,
+  },
+});
+console.log("Doktor 7 kreiran: Dr.", korisnikDoktor7.prezime);
+
+// ─────────────────────────────────────────────
+// Doktor 8 — Ortopedija
+// ─────────────────────────────────────────────
+const korisnikDoktor8 = await prisma.korisnik.upsert({
+  where: { email: "doktor8@test.com" },
+  update: {},
+  create: {
+    jmbg: "1234567890130",
+    ime: "Amina",
+    prezime: "Čaušević",
+    datumRodjenja: new Date("1986-08-14"),
+    email: "doktor8@test.com",
+    pristupnaSifra: "hash_placeholder",
+    brojTelefona: "61111118",
+    datumRegistracije: new Date(),
+    brojNeuspjelihPrijava: 0,
+    uloga: "DOKTOR",
+  },
+});
+
+const doktor8 = await prisma.doktor.upsert({
+  where: { id: 8 },
+  update: {},
+  create: {
+    id: 8,
+    idKorisnik: korisnikDoktor8.id,
+    idOdjela: odjel5.id,  // Ortopedija
+    idSobe: soba5.id,
+    brojPregleda: 0,
+    brojLicence: 123463,
+    specijalizacija: "Ortopedija",
+    trajanjePregleda: 30,
+  },
+});
+console.log("Doktor 8 kreiran: Dr.", korisnikDoktor8.prezime);
+
+// ─────────────────────────────────────────────
+// Doktor 9 — Ortopedija
+// ─────────────────────────────────────────────
+const korisnikDoktor9 = await prisma.korisnik.upsert({
+  where: { email: "doktor9@test.com" },
+  update: {},
+  create: {
+    jmbg: "1234567890131",
+    ime: "Tarik",
+    prezime: "Mehmedović",
+    datumRodjenja: new Date("1981-11-03"),
+    email: "doktor9@test.com",
+    pristupnaSifra: "hash_placeholder",
+    brojTelefona: "61111119",
+    datumRegistracije: new Date(),
+    brojNeuspjelihPrijava: 0,
+    uloga: "DOKTOR",
+  },
+});
+
+const doktor9 = await prisma.doktor.upsert({
+  where: { id: 9 },
+  update: {},
+  create: {
+    id: 9,
+    idKorisnik: korisnikDoktor9.id,
+    idOdjela: odjel5.id,  // Ortopedija
+    idSobe: soba5.id,
+    brojPregleda: 0,
+    brojLicence: 123464,
+    specijalizacija: "Ortopedska hirurgija",
+    trajanjePregleda: 30,
+  },
+});
+console.log("Doktor 9 kreiran: Dr.", korisnikDoktor9.prezime);
+
+// ─────────────────────────────────────────────
+// Rasporedi za nove doktore
+// ─────────────────────────────────────────────
+await prisma.rasporedDoktora.upsert({
+  where: { id: 7 },
+  update: {},
+  create: {
+    id: 7,
+    idDoktor: doktor7.id,
+    danUSedmici: "PONEDJELJAK",
+    vrijemeOd: new Date("2026-04-14T08:00:00"),
+    vrijemeDo: new Date("2026-04-14T16:00:00"),
+    datumOd: sutra,
+    datumDo: null,
+    aktivan: true,
+  },
+});
+
+await prisma.rasporedDoktora.upsert({
+  where: { id: 8 },
+  update: {},
+  create: {
+    id: 8,
+    idDoktor: doktor8.id,
+    danUSedmici: "UTORAK",
+    vrijemeOd: new Date("2026-04-14T08:00:00"),
+    vrijemeDo: new Date("2026-04-14T15:00:00"),
+    datumOd: sutra,
+    datumDo: null,
+    aktivan: true,
+  },
+});
+
+await prisma.rasporedDoktora.upsert({
+  where: { id: 9 },
+  update: {},
+  create: {
+    id: 9,
+    idDoktor: doktor9.id,
+    danUSedmici: "SRIJEDA",
+    vrijemeOd: new Date("2026-04-14T09:00:00"),
+    vrijemeDo: new Date("2026-04-14T16:00:00"),
+    datumOd: sutra,
+    datumDo: null,
+    aktivan: true,
+  },
+});
+
+console.log("Rasporedi novih doktora kreirani");
+  // ─────────────────────────────────────────────
   // Raspored doktora
   // ─────────────────────────────────────────────
   await prisma.rasporedDoktora.upsert({
@@ -262,7 +473,7 @@ async function main() {
   // Korisnik — Pacijent
   // ─────────────────────────────────────────────
   const korisnikPacijent = await prisma.korisnik.upsert({
-    where: { email: "pacijent@test.com" },
+    where: { email: "musicsumeja98@gmail.com" },
     update: {
       ime: "Marko",
       prezime: "Markovic",
@@ -274,7 +485,7 @@ async function main() {
       ime: "Marko",
       prezime: "Markovic",
       datumRodjenja: new Date("1995-05-15"),
-      email: "pacijent@test.com",
+      email: "musicsumeja98@gmail.com",
       pristupnaSifra: "hash_placeholder",
       brojTelefona: "62222222",
       datumRegistracije: new Date(),
@@ -433,6 +644,53 @@ async function main() {
       },
     });
   }
+  // Termini za Doktor 7 (Neurologija) - sutra
+for (let i = 13; i < 17; i++) {
+  await prisma.termin.upsert({
+    where: { id: i },
+    update: { status: "SLOBODAN" },
+    create: {
+      id: i,
+      idDoktor: doktor7.id,
+      datum: sutra,
+      vrijeme: 480 + (i - 13) * 40,
+      opis: `Termin doktora 7`,
+      status: "SLOBODAN",
+    },
+  });
+}
+
+// Termini za Doktor 8 (Ortopedija) - sutra
+for (let i = 17; i < 21; i++) {
+  await prisma.termin.upsert({
+    where: { id: i },
+    update: { status: "SLOBODAN" },
+    create: {
+      id: i,
+      idDoktor: doktor8.id,
+      datum: sutra,
+      vrijeme: 480 + (i - 17) * 30,
+      opis: `Termin doktora 8`,
+      status: "SLOBODAN",
+    },
+  });
+}
+
+// Termini za Doktor 9 (Ortopedija) - sutra
+for (let i = 21; i < 25; i++) {
+  await prisma.termin.upsert({
+    where: { id: i },
+    update: { status: "SLOBODAN" },
+    create: {
+      id: i,
+      idDoktor: doktor9.id,
+      datum: sutra,
+      vrijeme: 540 + (i - 21) * 30,
+      opis: `Termin doktora 9`,
+      status: "SLOBODAN",
+    },
+  });
+}
 
   const korisnikDoktor4 = await prisma.korisnik.upsert({
     where: { email: "doktor4@test.com" },
@@ -582,9 +840,13 @@ async function main() {
     { doctorId: doktor4.id, naziv: "Lejla Kovacevic", trajanje: 20 },
     { doctorId: doktor5.id, naziv: "Adnan Hasanovic", trajanje: 30 },
     { doctorId: doktor6.id, naziv: "Selma Imamovic", trajanje: 45 },
+    // Novi doktori:
+  { doctorId: doktor7.id, naziv: "Emir Dizdarevic", trajanje: 40 },
+  { doctorId: doktor8.id, naziv: "Amina Causevic", trajanje: 30 },
+  { doctorId: doktor9.id, naziv: "Tarik Mehmedovic", trajanje: 30 },
   ];
 
-  let terminId = 13;
+  let terminId = 25;
   for (let daysAhead = 2; daysAhead <= 6; daysAhead++) {
     const targetDate = createFutureDate(daysAhead);
 
