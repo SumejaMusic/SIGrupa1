@@ -29,21 +29,10 @@ function formatVrijeme(v: number): string {
   }
 }
 
-console.log("UAAAA",process.env.RESEND_API_KEY);
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-
-
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
   const {
     pacijentEmail, pacijentIme, pacijentPrezime,
     doktorIme, doktorPrezime, doktorSpecijalizacija,
