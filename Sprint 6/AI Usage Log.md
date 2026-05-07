@@ -125,3 +125,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | getNalaziZaRezervaciju vraća prazan niz ako nema historije, ali frontend mora biti spreman na oba slučaja ([] i [nalaz]) — nekonzistentan response shape može izazvati greške u prikazu |
 | **Ko je koristio alat** | Amina Alispahić |
  
+# AI Usage Log
+
+Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja uloge AI alata tokom rada na projektu.
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 07.05.2026. |
+| **Sprint broj** | Sprint 6 |
+| **Alat koji je korišten** | Claude |
+| **Svrha korištenja** | Podrška pri integraciji slanja emailova i rješavanje problema s deployom na Render platformi |
+| **Kratak opis zadatka ili upita** | 1. Konfiguracija Nodemailer + Gmail SMTP za slanje email potvrda rezervacija. 2. Dijagnosticiranje problema slanja maila nakon deploya na Render (free plan). 3. Migracija sa Nodemailer na Resend API. 4. Dobivanje i konfiguracija Resend API ključa. 5. Razumijevanje ograničenja Render free plana (SMTP blokada, domain restriction). |
+| **Šta je AI predložio ili generisao** | 1. Dijagnoza: Render free plan blokira SMTP portove 465 i 587. 2. Alternativno rješenje: zamjena Nodemailer-a sa Resend bibliotekom (HTTPS API). 3. Kompletan refaktorisani TypeScript kod za funkciju `posaljiPotvrdurezerv`. 4. Upute za kreiranje Resend računa i generisanje API ključa. 5. Konfiguracija environment varijable `RESEND_API_KEY` umjesto `EMAIL_USER`/`EMAIL_PASS`. 6. Objašnjenje ograničenja testnog domena `onboarding@resend.dev`. 7. Rješenje za 502 grešku pri otvaranju PDF-a (`Buffer.from` + `res.end()`). |
+| **Šta je tim prihvatio** | Migracija na Resend biblioteku, nova environment varijabla `RESEND_API_KEY` dodana na Render dashboardu, refaktorisani TypeScript kod za email notifikacije, dijagnoza uzroka 502 greške kod PDF endpointa. |
+| **Šta je tim izmijenio** | Nije bilo značajnih izmjena — predloženi kod je prihvaćen u cijelosti. |
+| **Šta je tim odbacio** | Stara Nodemailer konfiguracija (Gmail SMTP) i `EMAIL_USER`/`EMAIL_PASS` environment varijable — uklonjene s Rendera. |
+| **Rizici, problemi ili greške** | 1. Resend free plan: slanje moguće samo na verificirani email bez vlastite domene. 2. API ključ je bio privremeno izložen u chat poruci — preporučeno premještanje u `.env`. 3. `onboarding@resend.dev` ograničen na testne svrhe — za produkciju potrebna vlastita domena. 4. 502 greška na PDF endpointu još u dijagnostičkoj fazi. |
+| **Ko je koristio alat** |Mušić  Sumeja |
