@@ -24,6 +24,14 @@ function formatVrijeme(v: number): string {
 const resend = new Resend("RE_123");
 
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
   const {
     pacijentEmail, pacijentIme, pacijentPrezime,
     doktorIme, doktorPrezime, doktorSpecijalizacija,
