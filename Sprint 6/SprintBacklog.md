@@ -11,15 +11,14 @@
 |----|-----------|-----------------|--------|----------|
 | US-08 | **Email potvrda o rezervaciji** — Kao pacijent, želim da primim email potvrdu nakon rezervacije termina, kako bih imao dokaz i podsjetnik o zakazanom pregledu. | Sumeja Mušić, Almedin Šehić| To Do | Resend integracija; prebačeno iz Sprint 5; |
 | US-12 | **Automatsko oslobađanje zaključanih termina — buffer zona** — Kao sistem, želim automatski osloboditi zaključane termine ako pacijent ne završi rezervaciju u roku od 2 minute, kako bih spriječio blokiranje dostupnih termina. | Hana Mahmutović | To Do | NFR-22; prebačeno iz Sprint 5 |
-| US-13 | **Validacija i sprječavanje duplih rezervacija** — Kao sistem, želim da spriječim duple rezervacije (race condition), kako bi svaki termin bio dodijeljen isključivo jednom pacijentu. | Hamza Husović, Kenan Hatibović, Amina Alispahić | To Do | Database locks + ACID (NFR-12); prebačeno iz Sprint 5 |
-| US-22 | **Dodavanje komentara prilikom zakazivanja termina** — Kao pacijent, želim da mogu dodati komentar ili napomenu pri zakazivanju termina, kako bih unaprijed informisao doktora o razlogu posjete. | Sumeja Mušić, Merjem Milišić, Hana Mahmutović | To Do | Frontend forma + backend; prebačeno iz Sprint 5 |
-| US-15 | **Upravljanje radnim vremenom doktora — upit za promjenu dužine termina** — Kao doktor, želim da mogu uputiti upit za promjenu dužine termina, kako bi raspored bio prilagođen potrebama pregleda. | Merjem Milišić, Kenan Hatibović | To Do | Backend logika + frontend forma |
-| US-31 | **Automatski podsjetnik za pacijente sa hroničnim bolestima** — Kao pacijent sa hroničnim oboljenjem, želim da primim automatski email podsjetnik o nadolazećem terminu, kako bih blagovremeno obavio kontrolni pregled. | Sumeja Mušić, Amina Alispahić | To Do | Nodemailer + planirani scheduler |
-| US-32 | **Pregled rezervacija za doktora** — Kao doktor, želim da mogu pregledati sve rezervisane termine koji su zakazani kod mene, kako bih imao uvid u vlastiti raspored rada. | Merjem Milišić, Hana Mahmutović, Hamza Husović | To Do | Frontend pregled + backend API; prebačeno iz Sprint 5 |
+| US-13 | **Validacija i sprječavanje duplih rezervacija** — Kao sistem, želim da spriječim duple rezervacije (race condition), kako bi svaki termin bio dodijeljen isključivo jednom pacijentu. | Amina Alispahić,  Hana Mahmutović | To Do | Database locks + ACID (NFR-12); prebačeno iz Sprint 5 |
+| US-22 | **Dodavanje komentara prilikom zakazivanja termina** — Kao pacijent, želim da mogu dodati komentar ili napomenu pri zakazivanju termina, kako bih unaprijed informisao doktora o razlogu posjete. | Amina Alispahić | To Do | Frontend forma + backend; prebačeno iz Sprint 5 |
+| US-31 | **Automatski podsjetnik za pacijente sa hroničnim bolestima** — Kao pacijent sa hroničnim oboljenjem, želim da primim automatski email podsjetnik o nadolazećem terminu, kako bih blagovremeno obavio kontrolni pregled. | Sumeja Mušić | To Do | Nodemailer + planirani scheduler, implementacija se nastavja nakon yavrsetka log in|
+| US-32 | **Pregled rezervacija za doktora** — Kao doktor, želim da mogu pregledati sve rezervisane termine koji su zakazani kod mene, kako bih imao uvid u vlastiti raspored rada. | Amina Alispahić, Lamija Halilović| To Do | Frontend pregled + backend API; prebačeno iz Sprint 5 |
 | US-33 | **Upload i pregled PDF nalaza** — Kao pacijent, želim da mogu uploadati i pregledati PDF nalaze vezane za moj termin, kako bi doktor imao pristup relevantnoj medicinskoj dokumentaciji. | Merijem Milišić | To Do | File upload + storage + PDF pregled; prebačeno iz Sprint 5 |
-| — | **Implementacija WebSocket-a — real-time vidljivost rasporeda** — Tehnički zadatak: Implementacija WebSocket veze kako bi promjene rasporeda bile vidljive svim korisnicima u realnom vremenu (≤2s). | Hamza Husović, Kenan Hatibović | To Do | NFR-16; Nije US iz backlog-a |
+| — | **Implementacija WebSocket-a — real-time vidljivost rasporeda** — Tehnički zadatak: Implementacija WebSocket veze kako bi promjene rasporeda bile vidljive svim korisnicima u realnom vremenu (≤2s). | Hana Mahmutović | To Do | NFR-16; Nije US iz backlog-a |
 | — | **Završno testiranje end-to-end toka rezervacije** — Tehnički zadatak: Integraciono i E2E testiranje kompletnog toka rezervacije, otkazivanja i notifikacija kako bi sistem bio spreman za Release 1. | Kenan Htibović, Hamza Husović, Almedin Šehić | To Do | QA + integracioni testovi |
-| — | **Pisanje Decision Log-a** — Tehnički zadatak: Dokumentovanje ključnih odluka donesenih tokom Sprint 6. | Amina Alispahić | To Do | Nije US iz backlog-a |
+| — | **Pisanje Decision Log-a** — Tehnički zadatak: Dokumentovanje ključnih odluka donesenih tokom Sprint 6. | Sumeja Mušić | To Do | Nije US iz backlog-a |
 
 ---
 
@@ -55,14 +54,13 @@
 - Funkcionalan tok rezervacije termina sa zaštitom od duplih rezervacija
 - Mehanizam privremenog zaključavanja termina (buffer zona — 2 minute)
 - Automatsko oslobađanje nepotvrđenih termina
-- Funkcionalnost otkazivanja termina od strane pacijenta i medicinskog osoblja
+- Funkcionalnost otkazivanja termina od strane pacijenta 
 - Mogućnost dodavanja komentara prilikom zakazivanja termina
 - Email potvrda o rezervaciji putem Nodemailer-a
 - Email notifikacija o otkazivanju termina
 - Automatski podsjetnik za pacijente sa hroničnim oboljenjima
 - Pregled rezervacija za doktora i medicinsko osoblje
 - Upload i pregled PDF nalaza
-- Implementirana autentifikacija (login i registracija)
 - Real-time vidljivost promjena rasporeda (WebSocket)
 - Zadovoljeni svi preostali NFR zahtjevi (NFR-09, NFR-10, NFR-11, NFR-12, NFR-16, NFR-22, NFR-25)
 
