@@ -49,18 +49,3 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | **Razlog izbora** | Omogućava razvoj i testiranje ostalih funkcionalnosti (rezervacije, termini, otkazivanje) bez blokiranja na neimplementiranom login sistemu. Pristup je kontrolisan — korisnik se dohvaća iz baze, nije fiksan u kodu. |
 | **Posljedice odluke** | Svi API pozivi koji zahtijevaju pacijenta koriste ovog test korisnika. Ova odluka mora biti zamijenjena pravom autentifikacijom (JWT) u kasnijoj fazi. |
 | **Status odluke** | Privremena — planirana zamjena implementacijom JWT autentifikacije |
-
-## DEC-004 — Resend umjesto Nodemailer-a za slanje email notifikacija
- 
-| Stavka | Opis |
-| :--- | :--- |
-| **ID odluke** | DEC-004 |
-| **Datum** | 2026 |
-| **Kratak naziv odluke** | Resend umjesto Nodemailer-a za slanje email notifikacija |
-| **Opis problema ili pitanja** | Sistem zahtijeva slanje email notifikacija pacijentima (potvrda rezervacije, obavijest o otkazivanju), ali Nodemailer nije bilo moguće besplatno deployati u produkcijskom okruženju zbog ograničenja SMTP konfiguracije na hosting platformi. |
-| **Razmatrane opcije** | Koristiti Nodemailer sa eksternim SMTP providerom (Gmail, Mailtrap), koristiti Resend kao alternativni email servis, koristiti SendGrid ili Mailgun |
-| **Odabrana opcija** | Resend |
-| **Razlog izbora** | Resend nudi besplatan tier koji je kompatibilan sa produkcijskim deploymentom, jednostavnu integraciju putem REST API-ja bez potrebe za SMTP konfiguracijom, te službeni Node.js SDK koji se lako uklapa u postojeću backend arhitekturu. Za razliku od Nodemailer-a, ne zahtijeva posebne dozvole ni konfiguraciju na nivou hosting platforme. |
-| **Posljedice odluke** | Sve email notifikacije (potvrda rezervacije, obavijest o otkazivanju) šalju se putem Resend servisa. Aplikacija je zavisna od dostupnosti Resend API-ja — kašnjenja ili ispadi eksternog servisa mogu uticati na isporuku emailova (RR-15). API ključ mora biti pohranjen kao environment varijabla i ne smije biti izložen u kodu. |
-| **Status odluke** | Aktivna — Resend ostaje primarni email servis za sve notifikacije u sistemu |
- 
