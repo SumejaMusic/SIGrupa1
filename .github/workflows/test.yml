@@ -79,4 +79,5 @@ jobs:
           REDIS_URL: "redis://localhost:6380"
           TEST_KORISNIK_ID: "2"
           TEST_PATIENT_EMAIL: "pacijent@test.com"
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx vitest run --config vitest.ci.config.ts
