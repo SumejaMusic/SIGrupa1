@@ -36,8 +36,8 @@ export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Prom
   });
 
   await resend.emails.send({
-    from: 'onboarding@resend.dev', // zamijeni sa svojom domenom kad verificiraš
-    to: pacijentEmail,
+    from: 'onboarding@resend.dev',
+    to: 'musicsumeja98@gmail.com',
     subject: `✅ Potvrda rezervacije #${rezervacijaId}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
