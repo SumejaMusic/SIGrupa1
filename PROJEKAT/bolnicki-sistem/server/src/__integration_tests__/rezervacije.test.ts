@@ -39,7 +39,6 @@ async function kreirajRezervacijuHelper(terminId = TERMIN_ID) {
   await redis.setex(`termin:lock:${terminId}`, 120, String(STVARNI_KORISNIK_ID));
   const res = await request(app)
     .post("/api/rezervacije")
-    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
     .send({
       terminId,
       doktorId: DOKTOR_ID,
@@ -68,7 +67,6 @@ describe("POST /api/rezervacije", () => {
 
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
         terminId: TERMIN_ID,
         doktorId: DOKTOR_ID,
@@ -91,7 +89,6 @@ describe("POST /api/rezervacije", () => {
   it("vraća 409 bez Redis locka", async () => {
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
         terminId: TERMIN_ID,
         doktorId: DOKTOR_ID,
@@ -114,7 +111,6 @@ describe("POST /api/rezervacije", () => {
     await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(res.status).toBe(409);
@@ -130,7 +126,6 @@ describe("POST /api/rezervacije", () => {
     await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(res.status).toBe(409);
@@ -140,7 +135,6 @@ describe("POST /api/rezervacije", () => {
   it("vraća 400 za nedostajuće podatke", async () => {
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ doktorId: DOKTOR_ID });
 
     expect(res.status).toBe(400);
@@ -152,7 +146,6 @@ describe("POST /api/rezervacije", () => {
 
     const res = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
         terminId: TERMIN_ID,
         doktorId: 999,
@@ -173,9 +166,7 @@ describe("GET /api/rezervacije/moje", () => {
     const kreacija = await kreirajRezervacijuHelper();
     expect(kreacija.status).toBe(201);
 
-    const res = await request(app)
-      .get("/api/rezervacije/moje")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+    const res = await request(app).get("/api/rezervacije/moje");
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -185,9 +176,7 @@ describe("GET /api/rezervacije/moje", () => {
   });
 
   it("vraća praznu listu za pacijenta bez aktivnih rezervacija", async () => {
-    const res = await request(app)
-      .get("/api/rezervacije/moje")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+    const res = await request(app).get("/api/rezervacije/moje");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -241,15 +230,13 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(kreirajRes.status).toBe(201);
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`);
 
     expect(res.status).toBe(200);
     expect(res.body.poruka).toContain("uspješno otkazana");
@@ -272,15 +259,13 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(kreirajRes.status).toBe(201);
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`);
 
     expect(res.status).toBe(400);
     expect(res.body.poruka).toContain("24 sata");
@@ -300,7 +285,6 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(kreirajRes.status).toBe(201);
@@ -317,8 +301,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
       });
 
       const res = await request(app)
-        .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
-        .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+        .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`);
 
       expect(res.status).toBe(403);
       expect(res.body.poruka).toContain("dozvolu");
@@ -329,8 +312,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
 
   it("vraća 404 za nepostojeću rezervaciju", async () => {
     const res = await request(app)
-      .patch("/api/rezervacije/99999/otkazi/pacijent")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+      .patch("/api/rezervacije/99999/otkazi/pacijent");
 
     expect(res.status).toBe(404);
   });
@@ -355,7 +337,6 @@ describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
     await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
       .post("/api/rezervacije")
-      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
 
     expect(kreirajRes.status).toBe(201);

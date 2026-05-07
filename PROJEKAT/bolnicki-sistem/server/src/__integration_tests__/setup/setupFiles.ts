@@ -1,6 +1,10 @@
-import { beforeEach, afterAll } from "vitest";
+import { beforeEach, afterAll, vi } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import { Redis } from "ioredis";
+
+vi.mock('../emailService', () => ({
+  posaljiPotvrdurezerv: vi.fn().mockResolvedValue(undefined),
+}));
 
 const prisma = new PrismaClient({
   datasources: {
@@ -95,7 +99,7 @@ beforeEach(async () => {
   });
 
   // ── Seed: Korisnik pacijenta ─────────────────────────────────
-  // ID=2 je fiksirani — PACIJENT_KORISNIK_ID u testovima ovisi o ovome
+  // ID=2 je fiksirani — TEST_KORISNIK_ID=2 u .env.test ovisi o ovome
   const korisnikPacijent = await prisma.korisnik.upsert({
     where: { email: "musicsumeja98@gmail.com" },
     update: {},
@@ -112,9 +116,11 @@ beforeEach(async () => {
   });
 
   // ── Seed: Pacijent ───────────────────────────────────────────
+  // FIX: update sada eksplicitno postavlja idKorisnik kako bi se
+  // poništio eventualni pogrešan idKorisnik koji je ostao iz globalSetup seeda
   await prisma.pacijent.upsert({
     where: { id: 1 },
-    update: {},
+    update: { idKorisnik: korisnikPacijent.id }, // ← FIX: bio update: {}
     create: {
       id: 1,
       idKorisnik: korisnikPacijent.id,
