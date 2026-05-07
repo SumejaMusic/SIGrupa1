@@ -2,15 +2,31 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { getCurrentPacijent } from "../lib/currentPatient.js";
-import { posaljiPotvrdurezerv, posaljiObavijestOtkazivanjaOsoblje } from "../lib/emailService.js";
+import { posaljiPotvrdurezerv } from "../emailService.js";
+import { io } from "../app.js";
+import multer from "multer";
+
+export const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Dozvoljeni su samo PDF fajlovi."));
+    }
+    cb(null, true);
+  },
+});
+
 // POST /api/rezervacije
 // US-06, US-07, US-13, US-08, US-31
+console.log("reservationController učitan");
 export const kreirajRezervaciju = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    console.log("📥 Kreiranje rezervacije");
     const idTermina = Number(req.body.idTermina ?? req.body.terminId);
     const idDoktor = Number(req.body.idDoktor ?? req.body.doktorId);
     const idTipPregledaRaw = req.body.idTipPregleda ?? req.body.tipPregledaId;
@@ -41,10 +57,6 @@ export const kreirajRezervaciju = async (
       res.status(404).json({ poruka: "Termin nije pronađen." });
       return;
     }
-    if (new Date(termin.datum) < new Date()) {
-      res.status(400).json({ poruka: "Nije moguće rezervisati termin u prošlosti." });
-      return;
-    }
 
     if (termin.idDoktor !== idDoktor) {
       res.status(400).json({ poruka: "Odabrani termin ne pripada izabranom doktoru." });
@@ -57,8 +69,14 @@ export const kreirajRezervaciju = async (
     }
 
     const duplikat = await prisma.rezervacije.findFirst({
-      where: { idPacijent: pacijent.id, idTermina: idTermina },
-    });
+  where: {
+    idPacijent: pacijent.id,
+    idTermina: idTermina,
+
+    datumOtkazivanja: null,  // ← samo aktivne rezervacije
+
+  },
+});
     if (duplikat) {
       res.status(409).json({ poruka: "Rezervacija za ovaj termin već postoji." });
       return;
@@ -89,6 +107,30 @@ export const kreirajRezervaciju = async (
         },
       });
 
+      const file = (req as any).file;
+
+      if (file) {
+        const nalaz = await tx.nalaz.create({
+          data: {
+            naziv: file.originalname,
+            opis: komentar ?? null,
+            dokumentPDF: file.buffer,
+          },
+        });
+
+        await tx.historijaPregleda.create({
+          data: {
+            idPacijent: pacijent.id,
+            idDoktor: idDoktor,
+            idRezervacija: nova.id,
+            idNalaz: nalaz.id,
+            dijagnoza: "Nije unesena",
+            terapija: "Nije unesena",
+            biljeske: komentar ?? null,
+          },
+        });
+      }
+
       await tx.termin.update({
         where: { id: idTermina },
         data: { status: "ZAKAZAN" },
@@ -97,9 +139,37 @@ export const kreirajRezervaciju = async (
       return nova;
     });
 
-    await redis.del(`termin:lock:${idTermina}`);
+    io.emit("termin-azuriran", {
+      doktorId: idDoktor,
+      terminId: idTermina,
+    });
 
+    await redis.del(`termin:lock:${idTermina}`);
+    const doktorKorisnik = rezervacija.doktor.korisnik;
+    const pacijentKorisnik = rezervacija.pacijent.korisnik;
+
+    try {
+      await posaljiPotvrdurezerv({
+        pacijentEmail: pacijentKorisnik.email,
+        pacijentIme: pacijentKorisnik.ime,
+        pacijentPrezime: pacijentKorisnik.prezime,
+        doktorIme: doktorKorisnik.ime,
+        doktorPrezime: doktorKorisnik.prezime,
+        doktorSpecijalizacija: rezervacija.doktor.specijalizacija,
+        datum: rezervacija.termin.datum,
+        vrijeme: rezervacija.termin.vrijeme,
+        rezervacijaId: rezervacija.id,
+        hitnost: rezervacija.hitnost ?? false,
+        komentar: rezervacija.komentar ?? undefined,
+      });
+      console.log(`✅ Email poslan na: ${pacijentKorisnik.email}`);
+    } catch (emailErr) {
+      console.error("❌ Email NIJE poslan:", emailErr);
+    }
+
+    // Samo JEDAN res.status ovdje!
     res.status(201).json(rezervacija);
+
   } catch (err) {
     next(err);
   }
@@ -125,7 +195,19 @@ export const getRezervacijeZaPacijenta = async (
         idPacijent: pacijent.id,
         datumOtkazivanja: null,
       },
-      include: { termin: true, doktor: { include: { korisnik: true } } },
+      //include: { termin: true, doktor: { include: { korisnik: true } } }, zamjenjeno s ovim ispod da povuce iz baze tip ako sta ne bude radilo vratiti 
+      //include: { termin: true, doktor: { include: { korisnik: true } }, tipPregleda: true },
+      include: { 
+  termin: true, 
+  doktor: { 
+    include: { 
+      korisnik: true,
+      soba: true  // ← dodaj
+    } 
+  }, 
+  tipPregleda: true,
+  soba: true
+},
       orderBy: { datumKreiranja: "desc" },
     });
 
@@ -206,6 +288,11 @@ export const otkaziRezervacijuPacijent = async (
       });
     });
 
+    io.emit("termin-azuriran", {
+      doktorId: rezervacija.idDoktor,
+      terminId: rezervacija.idTermina,
+    });
+
     res.json({ poruka: "Rezervacija uspješno otkazana." });
   } catch (err) {
     next(err);
@@ -241,15 +328,7 @@ export const otkaziRezervacijuOsoblje = async (
         data: { status: "SLOBODAN" },
       });
     });
-    try {
-      await posaljiObavijestOtkazivanjaOsoblje({
-        pacijentEmail: rezervacija.pacijent.korisnik.email,
-        rezervacijaId: rezervacija.id,
-        datum: rezervacija.termin.datum,
-      });
-    } catch (emailErr) {
-      console.error("Greška pri slanju emaila za US-28:", emailErr);
-    }
+
     res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
   } catch (err) {
     next(err);
@@ -291,6 +370,38 @@ export const promijeniTrajanje = async (
     // TODO: Emituj WebSocket event za real-time update (NFR-16)
 
     res.json({ poruka: "Trajanje termina ažurirano.", novaTrajanje });
+  } catch (err) {
+    next(err);
+  }
+};
+//NAKNADNO DODANO
+// GET /api/rezervacije/:id/komentari
+export const getKomentari = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const rezervacija = await prisma.rezervacije.findUnique({
+      where: { id: Number(req.params.id) },
+      select: { komentar: true, datumKreiranja: true },
+    });
+
+    if (!rezervacija) {
+      res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    // Vrati kao niz komentara kakav frontend očekuje
+    const komentari = rezervacija.komentar ? [{
+      id: Number(req.params.id) * 1000,
+      tekst: rezervacija.komentar,
+      autor: "Vi",
+      datum: new Date(rezervacija.datumKreiranja).toISOString().split("T")[0],
+      jeDoktor: false,
+    }] : [];
+
+    res.json(komentari);
   } catch (err) {
     next(err);
   }
