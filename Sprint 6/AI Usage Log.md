@@ -108,4 +108,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Ažuriranje Prisme na verziju 7.x — zadržana verzija 5.x radi stabilnosti; `@types/ioredis` paket — nepotreban jer `ioredis` 5.x ima ugrađene TypeScript tipove; mock auth middleware kao dugoročno rješenje, predlozene unit testove |
 | **Rizici, problemi ili greške** | AI je inicijalno predložio `String` tip za polje `vrijeme` što je kasnije ispravno kao `Int`; inicijalni importi u rutama koristili su putanje bez `.js` ekstenzije što je uzrokovalo greške u ESM okruženju; `ioredis` je instaliran u pogrešnom (glavnom) folderu što je uzrokovalo grešku `Cannot find module`; VS Code Prisma ekstenzija prikazivala je lažne greške vezane za Prismu 7 iako je lokalno instalirana verzija 5.15.0; `rootDir` u `tsconfig.json` bio je u konfliktu sa `include` patternom za `prisma/` folder |
 | **Ko je koristio alat** | Hana Mahmutović|
+
+## Unos 006 — Backend za pacijenta i preuzimanje nalaza iz baze, generisanje frontenda
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 02.05.2026. |
+| **Sprint broj** | Sprint 6 |
+| **Alat koji je korišten** | Claude (Anthropic)  |
+| **Svrha korištenja** | Razvoj frontend komponenti i backend controllera u okviru projekta bolničkog sistema — modul za pacijente, nalaze |
+| **Kratak opis zadatka ili upita** | Razvoj i ispravljanje `DoktorRezervacije.tsx`, `DoctorsSection.tsx`, integracija s backendom, navigacija kroz korake rezervacije (step1–step5). Generisanje backend controllera i frontend komponenti za: dohvatanje liste pacijenata (`getSviPacijenti`) kako doktor može odabrati pacijenta pri kreiranju rezervacije; dohvatanje historije pregleda po pacijentu (`getHistorijaPacijenta`), dohvatanje nalaza po pacijentu (`getNalaziZaPacijenta`) i po rezervaciji (`getNalaziZaRezervaciju`); preuzimanje/prikaz PDF nalaza (`getNalazPDF`) za doktora i pacijenta |
+| **Šta je AI predložio ili generisao** | Backend (nalazController.ts / pacijentController.ts): `getNalaziZaPacijenta` — dohvata sve nalaze za pacijenta (bez `dokumentPDF` polja), sortirano po datumu; `getNalazPDF` — dohvata binarni PDF iz baze i šalje ga s ispravnim `Content-Type: application/pdf` i `Content-Disposition: inline` headerima; `getNalaziZaRezervaciju` — dohvata nalaz vezan za konkretnu rezervaciju kroz `historijaPregleda`; `getSviPacijenti` — dohvata sve pacijente s `korisnik` relacijom,; `getHistorijaPacijenta` — dohvata historiju pregleda s uključenim rezervacijama, terminima, doktorom i nalazima. Frontend: komponenta za prikaz liste pacijenata s odabirom pri doktorovoj rezervaciji, prikaz historije pregleda po pacijentu; prikaz i otvaranje PDF nalaza inline za doktora i pacijenta |
+| **Šta je tim prihvatio** | Kompletan `nalazController.ts` s tri endpointa; `getSviPacijenti` s mapiranjem podataka, `getHistorijaPacijenta` s include lancima; frontend integracija za odabir pacijenta u doktorovom toku rezervacije; PDF prikaz |
+| **Šta je tim izmijenio** | format za datum u `getHistorijaPacijenta` i `getNalaziZaPacijenta` jer se vrijeme nije ispravno formatiralo pri prikazu na frontendu |
+| **Šta je tim odbacio** | Inicijalni prijedlog s `navDelta` varijablom za fix navigacije (iz prethodnog zadatka, zamijenjen direktnim pristupom u `goDay`) |
+| **Rizici, problemi ili greške** | getNalaziZaRezervaciju vraća prazan niz ako nema historije, ali frontend mora biti spreman na oba slučaja ([] i [nalaz]) — nekonzistentan response shape može izazvati greške u prikazu |
+| **Ko je koristio alat** | Amina Alispahić |
  
