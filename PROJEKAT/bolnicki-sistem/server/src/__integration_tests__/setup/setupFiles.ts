@@ -97,7 +97,7 @@ beforeEach(async () => {
   // ── Seed: Korisnik pacijenta ─────────────────────────────────
   // ID=2 je fiksirani — PACIJENT_KORISNIK_ID u testovima ovisi o ovome
   const korisnikPacijent = await prisma.korisnik.upsert({
-    where: { email: "pacijent@test.com" },
+    where: { email: "musicsumeja98@gmail.com" },
     update: {},
     create: {
       id: 2,
@@ -105,7 +105,7 @@ beforeEach(async () => {
       ime: "Amra",
       prezime: "Testić",
       datumRodjenja: new Date("1995-05-15"),
-      email: "pacijent@test.com",
+      email: "musicsumeja98@gmail.com",
       pristupnaSifra: "hash_placeholder",
       uloga: "PACIJENT",
     },
