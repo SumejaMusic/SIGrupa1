@@ -1,18 +1,19 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import nodemailer from "nodemailer";
 
-vi.mock("nodemailer");
+const sendMock = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({ data: { id: "test-id" }, error: null })
+);
 
-const sendMailMock = vi.fn().mockResolvedValue({ messageId: "test-id" });
-
-vi.mocked(nodemailer.createTransport).mockReturnValue({
-  sendMail: sendMailMock,
-} as any);
+vi.mock("resend", () => ({
+  Resend: class {
+    emails = { send: sendMock };
+  },
+}));
 
 const { posaljiPotvrdurezerv } = await import("../lib/emailService.js");
 
 beforeEach(() => {
-  sendMailMock.mockClear();
+  sendMock.mockClear();
 });
 
 // ─────────────────────────────────────────────
@@ -27,7 +28,7 @@ describe("posaljiPotvrdurezerv", () => {
     doktorPrezime: "Marić",
     doktorSpecijalizacija: "Kardiologija",
     datum: new Date("2025-06-15"),
-    vrijeme: 930, // 09:30
+    vrijeme: 480, // 08:00
     rezervacijaId: 42,
     hitnost: false,
     komentar: undefined,
@@ -38,10 +39,10 @@ describe("posaljiPotvrdurezerv", () => {
   it("uspješno šalje email sa ispravnim podacima — happy path", async () => {
     await posaljiPotvrdurezerv(lažniPodaci);
 
-    expect(sendMailMock).toHaveBeenCalledTimes(1);
-    expect(sendMailMock).toHaveBeenCalledWith(
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sendMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "pacijent@test.com",
+        to: "musicsumeja98@gmail.com",
         subject: "✅ Potvrda rezervacije #42",
       })
     );
@@ -50,7 +51,7 @@ describe("posaljiPotvrdurezerv", () => {
   it("email sadrži ime i prezime pacijenta u tijelu", async () => {
     await posaljiPotvrdurezerv(lažniPodaci);
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("Emir");
     expect(poziv.html).toContain("Hadžić");
   });
@@ -58,30 +59,30 @@ describe("posaljiPotvrdurezerv", () => {
   it("email sadrži ime doktora i specijalizaciju", async () => {
     await posaljiPotvrdurezerv(lažniPodaci);
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("Ana");
     expect(poziv.html).toContain("Marić");
     expect(poziv.html).toContain("Kardiologija");
   });
 
-  it("ispravno formatira vrijeme 930 u 09:30", async () => {
-    await posaljiPotvrdurezerv({ ...lažniPodaci, vrijeme: 930 });
+  it("ispravno formatira vrijeme 480 u 08:00", async () => {
+    await posaljiPotvrdurezerv({ ...lažniPodaci, vrijeme: 480 });
 
-    const poziv = sendMailMock.mock.calls[0][0];
-    expect(poziv.html).toContain("09:30");
+    const poziv = sendMock.mock.calls[0][0];
+    expect(poziv.html).toContain("08:00");
   });
 
-  it("ispravno formatira vrijeme 1400 u 14:00", async () => {
-    await posaljiPotvrdurezerv({ ...lažniPodaci, vrijeme: 1400 });
+  it("ispravno formatira vrijeme 840 u 14:00", async () => {
+    await posaljiPotvrdurezerv({ ...lažniPodaci, vrijeme: 840 });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("14:00");
   });
 
   it("email sadrži broj rezervacije u subjectu i tijelu", async () => {
     await posaljiPotvrdurezerv({ ...lažniPodaci, rezervacijaId: 99 });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("99");
     expect(poziv.subject).toContain("99");
   });
@@ -91,14 +92,14 @@ describe("posaljiPotvrdurezerv", () => {
   it("email sadrži oznaku hitnosti kada je hitnost: true", async () => {
     await posaljiPotvrdurezerv({ ...lažniPodaci, hitnost: true });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("Hitna rezervacija");
   });
 
   it("email ne sadrži oznaku hitnosti kada je hitnost: false", async () => {
     await posaljiPotvrdurezerv({ ...lažniPodaci, hitnost: false });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).not.toContain("Hitna rezervacija");
   });
 
@@ -110,14 +111,14 @@ describe("posaljiPotvrdurezerv", () => {
       komentar: "Imam alergiju na penicilin",
     });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("Imam alergiju na penicilin");
   });
 
   it("email ne sadrži red komentara u tabeli kada komentar nije poslan", async () => {
     await posaljiPotvrdurezerv({ ...lažniPodaci, komentar: undefined });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).not.toContain(">Napomena<");
   });
 
@@ -126,29 +127,29 @@ describe("posaljiPotvrdurezerv", () => {
   it("email sadrži tip pregleda kada je poslan", async () => {
     await posaljiPotvrdurezerv({ ...lažniPodaci, tipPregleda: "Internistički pregled" });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).toContain("Internistički pregled");
   });
 
   it("email ne sadrži red tipa pregleda kada nije poslan", async () => {
     await posaljiPotvrdurezerv({ ...lažniPodaci, tipPregleda: undefined });
 
-    const poziv = sendMailMock.mock.calls[0][0];
+    const poziv = sendMock.mock.calls[0][0];
     expect(poziv.html).not.toContain("Tip pregleda");
   });
 
   // ─── ERROR HANDLING ───────────────────────────
 
-  it("baca grešku kada sendMail ne uspije — SMTP greška", async () => {
-    sendMailMock.mockRejectedValueOnce(new Error("SMTP greška"));
+  it("baca grešku kada send ne uspije — API greška", async () => {
+    sendMock.mockRejectedValueOnce(new Error("API greška"));
 
-    await expect(posaljiPotvrdurezerv(lažniPodaci)).rejects.toThrow("SMTP greška");
+    await expect(posaljiPotvrdurezerv(lažniPodaci)).rejects.toThrow("API greška");
   });
 
-  it("sendMail se poziva tačno jednom po pozivu funkcije", async () => {
+  it("send se poziva tačno jednom po pozivu funkcije", async () => {
     await posaljiPotvrdurezerv(lažniPodaci);
     await posaljiPotvrdurezerv(lažniPodaci);
 
-    expect(sendMailMock).toHaveBeenCalledTimes(2);
+    expect(sendMock).toHaveBeenCalledTimes(2);
   });
 });

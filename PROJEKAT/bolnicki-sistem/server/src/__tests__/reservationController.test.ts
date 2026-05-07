@@ -14,6 +14,10 @@ import { getCurrentPacijent } from "../lib/currentPatient.js";
 vi.mock("../lib/prisma.js");
 vi.mock("../lib/redis.js");
 vi.mock("../lib/currentPatient.js");
+vi.mock("../lib/emailService.js", () => ({
+  posaljiPotvrdurezerv: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("../app.js", () => ({ io: { emit: vi.fn() } }));
 
 const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) => ({
   req: { params, query, body, korisnik } as any,

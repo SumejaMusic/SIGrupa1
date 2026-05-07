@@ -12,6 +12,7 @@ import { getCurrentKorisnikId } from "../lib/currentPatient.js";
 vi.mock("../lib/prisma.js");
 vi.mock("../lib/redis.js");
 vi.mock("../lib/currentPatient.js");
+vi.mock("../app.js", () => ({ io: { emit: vi.fn() } }));
 
 const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) => ({
   req: { params, query, body, korisnik } as any,
@@ -54,7 +55,9 @@ describe("getSlobodniTermini", () => {
       include: { doktor: { include: { korisnik: true } } },
     })
   );
-  expect(res.json).toHaveBeenCalledWith(lažniTermini);
+  expect(res.json).toHaveBeenCalledWith(
+    lažniTermini.map(t => ({ ...t, zakljucan: false, zakljucaoKorisnikId: null, preostaloSekundi: null }))
+  );
   expect(next).not.toHaveBeenCalled();
 });
 
@@ -76,7 +79,9 @@ describe("getSlobodniTermini", () => {
         }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map(t => ({ ...t, zakljucan: false, zakljucaoKorisnikId: null, preostaloSekundi: null }))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -98,7 +103,9 @@ describe("getSlobodniTermini", () => {
         }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map(t => ({ ...t, zakljucan: false, zakljucaoKorisnikId: null, preostaloSekundi: null }))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -121,13 +128,15 @@ describe("getSlobodniTermini", () => {
         }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map(t => ({ ...t, zakljucan: false, zakljucaoKorisnikId: null, preostaloSekundi: null }))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
   // ─── REDIS LOCK — US-05 AC4, US-12 ───────────
 
-  it("skriva zaključan termin i vraća samo slobodne — US-05 AC4", async () => {
+  it("označava zaključan termin i vraća ga sa zakljucan: true — US-05 AC4", async () => {
     const lažniTermini = [
       { id: 1, status: "SLOBODAN" },
       { id: 2, status: "SLOBODAN" },
@@ -140,11 +149,13 @@ describe("getSlobodniTermini", () => {
     const { req, res, next } = mockReqRes({}, {});
     await getSlobodniTermini(req, res, next);
 
-    expect(res.json).toHaveBeenCalledWith([lažniTermini[1]]);
+    const poziv = (res.json as any).mock.calls[0][0];
+    expect(poziv[0]).toMatchObject({ id: 1, zakljucan: true, zakljucaoKorisnikId: 999 });
+    expect(poziv[1]).toMatchObject({ id: 2, zakljucan: false, zakljucaoKorisnikId: null, preostaloSekundi: null });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća prazan niz kada su svi termini zaključani — US-05 AC4", async () => {
+  it("vraća sve termine sa zakljucan: true kada su svi zaključani — US-05 AC4", async () => {
     const lažniTermini = [
       { id: 1, status: "SLOBODAN" },
       { id: 2, status: "SLOBODAN" },
@@ -160,20 +171,24 @@ describe("getSlobodniTermini", () => {
         where: expect.objectContaining({ status: "SLOBODAN" }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith([]);
+    const poziv = (res.json as any).mock.calls[0][0];
+    expect(poziv).toHaveLength(2);
+    expect(poziv[0]).toMatchObject({ id: 1, zakljucan: true, zakljucaoKorisnikId: 999 });
+    expect(poziv[1]).toMatchObject({ id: 2, zakljucan: true, zakljucaoKorisnikId: 999 });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("prikazuje termin zaključan od istog korisnika — US-12", async () => {
+  it("vraća termin zaključan od istog korisnika sa zakljucan: true — US-12", async () => {
     const lažniTermini = [{ id: 1, status: "SLOBODAN" }];
     vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
-    // isti korisnik ima lock — termin se prikazuje kao zauzet svima
     vi.mocked(redisMock.get).mockResolvedValue("1");
 
     const { req, res, next } = mockReqRes({}, {});
     await getSlobodniTermini(req, res, next);
 
-    expect(res.json).toHaveBeenCalledWith([]);
+    const poziv = (res.json as any).mock.calls[0][0];
+    expect(poziv).toHaveLength(1);
+    expect(poziv[0]).toMatchObject({ id: 1, zakljucan: true, zakljucaoKorisnikId: 1 });
     expect(next).not.toHaveBeenCalled();
   });
 
