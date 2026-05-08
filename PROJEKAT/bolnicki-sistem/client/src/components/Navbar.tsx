@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Activity, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -56,6 +58,7 @@ export default function Navbar() {
         {/* Auth buttons */}
         <div className="hidden md:flex items-center gap-3">
           <button
+            onClick={() => navigate('/prijava')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               scrolled
                 ? 'text-blue-700 border border-blue-200 hover:bg-blue-50'
@@ -64,7 +67,10 @@ export default function Navbar() {
           >
             Prijava
           </button>
-          <button className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800 transition-all duration-200 shadow-sm hover:shadow-md">
+          <button
+            onClick={() => navigate('/registracija')}
+            className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
             Registracija
           </button>
         </div>

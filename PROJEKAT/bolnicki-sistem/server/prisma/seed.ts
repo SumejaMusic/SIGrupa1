@@ -1,5 +1,11 @@
 
 import { PrismaClient } from "@prisma/client";
+import crypto from "crypto";
+import { enkriptuj } from "../src/lib/encryption.js";
+
+const hashJmbg = (jmbg: string) => crypto.createHash("sha256").update(jmbg).digest("hex");
+const hashBrojKnjizice = (broj: string) =>
+  crypto.createHash("sha256").update(broj).digest("hex");
 const prisma = new PrismaClient();
 
 async function main() {
@@ -155,7 +161,8 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
     where: { email: "doktor@test.com" },
     update: {},
     create: {
-      jmbg: "1234567890123",
+      jmbg: enkriptuj("1234567890123"),
+      jmbgHash: hashJmbg("1234567890123"),
       ime: "Mirza",
       prezime: "Hodžić",
       datumRodjenja: new Date("1980-01-01"),
@@ -194,7 +201,8 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
     where: { email: "doktor2@test.com" },
     update: {},
     create: {
-      jmbg: "1234567890124",
+      jmbg: enkriptuj("1234567890124"),
+      jmbgHash: hashJmbg("1234567890124"),
       ime: "Fatima",
       prezime: "Softić",
       datumRodjenja: new Date("1985-03-10"),
@@ -230,7 +238,8 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
     where: { email: "doktor3@test.com" },
     update: {},
     create: {
-      jmbg: "1234567890125",
+      jmbg: enkriptuj("1234567890125"),
+      jmbgHash: hashJmbg("1234567890125"),
       ime: "Nedim",
       prezime: "Beganović",
       datumRodjenja: new Date("1978-07-20"),
@@ -270,7 +279,8 @@ const korisnikDoktor7 = await prisma.korisnik.upsert({
   where: { email: "doktor7@test.com" },
   update: {},
   create: {
-    jmbg: "1234567890129",
+    jmbg: enkriptuj("1234567890129"),
+    jmbgHash: hashJmbg("1234567890129"),
     ime: "Emir",
     prezime: "Dizdarević",
     datumRodjenja: new Date("1983-04-22"),
@@ -306,7 +316,8 @@ const korisnikDoktor8 = await prisma.korisnik.upsert({
   where: { email: "doktor8@test.com" },
   update: {},
   create: {
-    jmbg: "1234567890130",
+    jmbg: enkriptuj("1234567890130"),
+    jmbgHash: hashJmbg("1234567890130"),
     ime: "Amina",
     prezime: "Čaušević",
     datumRodjenja: new Date("1986-08-14"),
@@ -342,7 +353,8 @@ const korisnikDoktor9 = await prisma.korisnik.upsert({
   where: { email: "doktor9@test.com" },
   update: {},
   create: {
-    jmbg: "1234567890131",
+    jmbg: enkriptuj("1234567890131"),
+    jmbgHash: hashJmbg("1234567890131"),
     ime: "Tarik",
     prezime: "Mehmedović",
     datumRodjenja: new Date("1981-11-03"),
@@ -481,7 +493,8 @@ console.log("Rasporedi novih doktora kreirani");
       uloga: "PACIJENT",
     },
     create: {
-      jmbg: "876543210987",
+      jmbg: enkriptuj("876543210987"),
+      jmbgHash: hashJmbg("876543210987"),
       ime: "Marko",
       prezime: "Markovic",
       datumRodjenja: new Date("1995-05-15"),
@@ -500,12 +513,14 @@ console.log("Rasporedi novih doktora kreirani");
   const pacijent = await prisma.pacijent.upsert({
     where: { idKorisnik: korisnikPacijent.id },
     update: {
-      brojKnjizice: 111222333,
+      brojKnjizice: enkriptuj("111222333"),
+      brojKnjiziceHash: hashBrojKnjizice("111222333"),
       hronicniBolesnik: false,
     },
     create: {
       idKorisnik: korisnikPacijent.id,
-      brojKnjizice: 111222333,
+      brojKnjizice: enkriptuj("111222333"),
+      brojKnjiziceHash: hashBrojKnjizice("111222333"),
       hronicniBolesnik: false,
     },
   });
@@ -696,7 +711,8 @@ for (let i = 21; i < 25; i++) {
     where: { email: "doktor4@test.com" },
     update: {},
     create: {
-      jmbg: "1234567890126",
+      jmbg: enkriptuj("1234567890126"),
+      jmbgHash: hashJmbg("1234567890126"),
       ime: "Lejla",
       prezime: "Kovacevic",
       datumRodjenja: new Date("1987-06-11"),
@@ -728,7 +744,8 @@ for (let i = 21; i < 25; i++) {
     where: { email: "doktor5@test.com" },
     update: {},
     create: {
-      jmbg: "1234567890127",
+      jmbg: enkriptuj("1234567890127"),
+      jmbgHash: hashJmbg("1234567890127"),
       ime: "Adnan",
       prezime: "Hasanovic",
       datumRodjenja: new Date("1982-09-05"),
@@ -760,7 +777,8 @@ for (let i = 21; i < 25; i++) {
     where: { email: "doktor6@test.com" },
     update: {},
     create: {
-      jmbg: "1234567890128",
+      jmbg: enkriptuj("1234567890128"),
+      jmbgHash: hashJmbg("1234567890128"),
       ime: "Selma",
       prezime: "Imamovic",
       datumRodjenja: new Date("1979-12-15"),
