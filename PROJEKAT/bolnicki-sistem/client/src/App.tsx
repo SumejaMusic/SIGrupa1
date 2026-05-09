@@ -11,6 +11,7 @@ import Step5Potvrda from './klase/Step5Potvrda';
 import './App.css';
 import DoktorRezervacije from './Pages/DoktorRezervacije';
 import RegistracijaPage from './Pages/RegistracijaPage'
+import PrijavaPage from './Pages/PrijavaPage';
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/step5-potvrda" element={<Step5Potvrda />} />
         <Route path="/doctor-view" element={<DoktorRezervacije />}/>
         <Route path="/registracija" element={<RegistracijaPage />} />
+        <Route path="/prijava" element={<PrijavaPage />} /> 
       </Routes>
     </Router>
   );

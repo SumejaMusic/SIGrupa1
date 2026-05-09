@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { registrujSe } from "../controllers/authController.js";
+import { registrujSe, prijavi } from "../controllers/authController.js";
 
 const router = Router();
 
 router.post("/registracija", registrujSe);
+router.post("/prijava", prijavi);
 
 export default router;
