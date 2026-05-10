@@ -10,7 +10,8 @@ import Step4Termini from './klase/Step4Termini';
 import Step5Potvrda from './klase/Step5Potvrda';
 import './App.css';
 import DoktorRezervacije from './Pages/DoktorRezervacije';
-
+import ForgotPasswordPage from './Pages/ForgotPasswordPage';
+import ResetPasswordPage from './Pages/ResetPasswordPage';
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
         <Route path="/step4-termini" element={<Step4Termini />} />
         <Route path="/step5-potvrda" element={<Step5Potvrda />} />
         <Route path="/doctor-view" element={<DoktorRezervacije />}/>
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </Router>
   );
