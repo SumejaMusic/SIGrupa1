@@ -2,7 +2,7 @@ import { prisma } from "./lib/prisma.js";
 import bcrypt from "bcrypt";
 import { enkriptuj } from "./lib/encryption.js";
 import crypto from "crypto";
-
+import jwt from "jsonwebtoken";
 const validacijaJMBG = (jmbg: string, datumRodjenja: Date): boolean => {
     if (!/^\d{13}$/.test(jmbg)) return false;
 
@@ -100,7 +100,7 @@ export const registracijaService = async (podaci: {
 
     // provjera duplikata knjizice
     const brojKnjiziceHash = crypto.createHash("sha256").update(brojKnjizice).digest("hex");
-    const postojiKnjizica = await prisma.pacijent.findUnique({ where: { brojKnjiziceHash } });
+    const postojiKnjizica = await prisma.pacijent.findUnique({ where: { brojKnjiziceHash: brojKnjiziceHash } });
     if (postojiKnjizica) {
         throw { status: 409, poruka: "Broj zdravstvene knjižice je već registrovan." };
     }
@@ -110,31 +110,30 @@ export const registracijaService = async (podaci: {
     const enkriptovanJmbg = enkriptuj(jmbg);
     const enkriptovanBrojKnjizice = enkriptuj(brojKnjizice);
 
-    // kreiranje korisnika i pacijenta u transakciji
     const noviKorisnik = await prisma.$transaction(async (tx) => {
-        const korisnik = await tx.korisnik.create({
-            data: {
-                jmbg: enkriptovanJmbg,
-                jmbgHash,
-                ime,
-                prezime,
-                datumRodjenja: datum,
-                email,
-                pristupnaSifra: hashovanaSifra,
-                brojTelefona
-            }
-        });
-
-        await tx.pacijent.create({
-            data: {
-                idKorisnik: korisnik.id,
-                brojKnjizice: enkriptovanBrojKnjizice,
-                brojKnjiziceHash,
-            }
-        });
-
-        return korisnik;
+    const korisnik = await tx.korisnik.create({
+        data: {
+            jmbg: enkriptovanJmbg,
+            jmbgHash,
+            ime,
+            prezime,
+            datumRodjenja: datum,
+            email,
+            pristupnaSifra: hashovanaSifra,
+            brojTelefona
+        }
     });
+
+    await tx.pacijent.create({
+        data: {
+            idKorisnik: korisnik.id,   // ✅ korisnik.id, ne noviKorisnik.id!
+            brojKnjizice: enkriptovanBrojKnjizice,   // ✅ koristi već enkriptovanu varijablu
+            brojKnjiziceHash: brojKnjiziceHash,
+        }
+    });
+
+    return korisnik;
+});
 
     return {
         id: noviKorisnik.id,
@@ -142,5 +141,43 @@ export const registracijaService = async (podaci: {
         prezime: noviKorisnik.prezime,
         email: noviKorisnik.email,
         uloga: noviKorisnik.uloga
+    };
+};
+export const prijavaService = async (podaci: {
+    email: string;
+    pristupnaSifra: string;
+}) => {
+    const { email, pristupnaSifra } = podaci;
+
+    if (!email || !pristupnaSifra) {
+        throw { status: 400, poruka: "Email i lozinka su obavezni." };
+    }
+
+    // tražimo korisnika po emailu
+    const korisnik = await prisma.korisnik.findUnique({ where: { email } });
+    if (!korisnik) {
+        throw { status: 401, poruka: "Pogrešan email ili lozinka." };
+    }
+
+    // provjera lozinke
+    const sifraIspravna = await bcrypt.compare(pristupnaSifra, korisnik.pristupnaSifra);
+    if (!sifraIspravna) {
+        throw { status: 401, poruka: "Pogrešan email ili lozinka." };
+    }
+
+    // generisanje JWT tokena
+    const token = jwt.sign(
+        { id: korisnik.id, uloga: korisnik.uloga },
+        process.env.JWT_SECRET!,
+        { expiresIn: "8h" }
+    );
+
+    return {
+        id: korisnik.id,
+        ime: korisnik.ime,
+        prezime: korisnik.prezime,
+        email: korisnik.email,
+        uloga: korisnik.uloga,
+        token
     };
 };

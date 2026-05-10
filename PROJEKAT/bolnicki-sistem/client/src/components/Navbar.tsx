@@ -1,17 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Activity, Menu, X } from 'lucide-react';
+import { Activity, Menu, X, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [korisnik, setKorisnik] = useState<{ ime: string; prezime: string; uloga: string } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const podaci = localStorage.getItem('korisnik');
+    if (podaci) setKorisnik(JSON.parse(podaci));
+  }, []);
+
+  const odjava = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('korisnik');
+    setKorisnik(null);
+    navigate('/');
+  };
 
   const navLinks = [
     { label: 'Početna', href: '#hero' },
@@ -35,7 +48,7 @@ export default function Navbar() {
         {/* Logo */}
         <div className="flex items-center gap-2.5">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${scrolled ? 'bg-blue-700' : 'bg-white/20 backdrop-blur-sm'}`}>
-            <Activity className={`w-5 h-5 ${scrolled ? 'text-white' : 'text-white'}`} />
+            <Activity className={`w-5 h-5 text-white`} />
           </div>
           <span className={`text-xl font-bold tracking-tight ${scrolled ? 'text-blue-900' : 'text-white'}`}>
             SwiftMed
@@ -57,29 +70,48 @@ export default function Navbar() {
 
         {/* Auth buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <button
-            onClick={() => navigate('/prijava')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              scrolled
-                ? 'text-blue-700 border border-blue-200 hover:bg-blue-50'
-                : 'text-white border border-white/30 hover:bg-white/10'
-            }`}
-          >
-            Prijava
-          </button>
-          <button
-            onClick={() => navigate('/registracija')}
-            className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            Registracija
-          </button>
+          {korisnik ? (
+            <>
+              <div className={`flex items-center gap-2 text-sm font-medium ${scrolled ? 'text-gray-700' : 'text-white'}`}>
+                <User className="w-4 h-4" />
+                {korisnik.ime} {korisnik.prezime}
+              </div>
+              <button
+                onClick={odjava}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  scrolled
+                    ? 'text-red-600 border border-red-200 hover:bg-red-50'
+                    : 'text-white border border-white/30 hover:bg-white/10'
+                }`}
+              >
+                <LogOut className="w-4 h-4" />
+                Odjava
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/prijava')}
+                className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  scrolled
+                    ? 'text-blue-700 border border-blue-200 hover:bg-blue-50'
+                    : 'text-white border border-white/30 hover:bg-white/10'
+                }`}
+              >
+                Prijava
+              </button>
+              <button
+                onClick={() => navigate('/registracija')}
+                className="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                Registracija
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
-        <button
-          className="md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
+        <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen
             ? <X className={`w-6 h-6 ${scrolled ? 'text-gray-700' : 'text-white'}`} />
             : <Menu className={`w-6 h-6 ${scrolled ? 'text-gray-700' : 'text-white'}`} />
@@ -94,8 +126,16 @@ export default function Navbar() {
             <button key={item.label} onClick={() => handleNavClick(item.href)} className="text-gray-700 font-medium hover:text-blue-700">{item.label}</button>
           ))}
           <div className="flex gap-3 pt-2 border-t border-gray-100">
-            <button className="flex-1 py-2 rounded-lg text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-50">Prijava</button>
-            <button className="flex-1 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800">Registracija</button>
+            {korisnik ? (
+              <button onClick={odjava} className="flex-1 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50">
+                Odjava
+              </button>
+            ) : (
+              <>
+                <button onClick={() => navigate('/prijava')} className="flex-1 py-2 rounded-lg text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-50">Prijava</button>
+                <button onClick={() => navigate('/registracija')} className="flex-1 py-2 rounded-lg text-sm font-semibold bg-blue-700 text-white hover:bg-blue-800">Registracija</button>
+              </>
+            )}
           </div>
         </div>
       )}
