@@ -16,7 +16,7 @@ const router = Router();
 // POST /api/rezervacije
 // US-06, US-07 — Kreiranje rezervacije
 // Body: { terminId, doktorId, pacijentId, komentar?, hitnost?, tipPregledaId }
-router.post("/", upload.single("dokumentPDF"), kreirajRezervaciju);
+router.post("/", kreirajRezervaciju);
 
 // GET /api/rezervacije/pacijent/:pacijentId
 // US-05 — Sve rezervacije konkretnog pacijenta
