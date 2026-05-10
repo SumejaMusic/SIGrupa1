@@ -16,6 +16,7 @@ router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
 router.use("/odjeli", odjelRoutes);
+router.use("/auth", authRoutes);
 
 // Nalazi rute — redoslijed je bitan!
 router.get("/nalazi/rezervacija/:rezervacijaId", getNalaziZaRezervaciju);
@@ -25,5 +26,5 @@ router.get("/nalazi/:id/pdf", getNalazPDF);
 // Pacijent rute
 router.get("/pacijenti", getSviPacijenti);
 router.get("/historija/pacijent/:pacijentId", getHistorijaPacijenta); // ← za historiju dolazaka
+
 export default router;
-router.use("/auth", authRoutes);
