@@ -9,7 +9,8 @@ datasource db {
 
 model Korisnik {
   id                    Int               @id @default(autoincrement())
-  jmbg                  String            @unique
+  jmbg                  String           
+  jmbgHash              String            @unique
   ime                   String
   prezime               String
   datumRodjenja         DateTime
@@ -28,7 +29,8 @@ model Korisnik {
 model Pacijent {
   id               Int                 @id @default(autoincrement())
   idKorisnik       Int                 @unique
-  brojKnjizice     Int                 @unique
+  brojKnjizice     String              
+  brojKnjiziceHash String              @unique
   hronicniBolesnik Boolean             @default(false)
   historija        HistorijaPregleda[]
   listaCekanja     ListaCekanja[]
