@@ -5,8 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Mail, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { apiUrl } from '../lib/api';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Unesite validnu email adresu.'),
@@ -31,15 +30,15 @@ export default function ForgotPasswordPage() {
     setMessage('');
     
     try {
-      const response = await axios.post(`${API_URL}/auth/forgot-password`, {
+      const response = await axios.post(apiUrl('/api/auth/forgot-password'), {
         email: data.email,
       });
       setStatus('success');
-      setMessage(response.data.message);
+      setMessage(response.data.poruka);
     } catch (error: any) {
       setStatus('error');
       setMessage(
-        error.response?.data?.message || 
+        error.response?.data?.poruka || 
         error.response?.data?.errors?.[0]?.msg || 
         'Došlo je do greške. Pokušajte ponovo kasnije.'
       );

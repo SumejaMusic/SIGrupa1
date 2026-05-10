@@ -27,6 +27,19 @@ model Korisnik {
   doktorProfile          Doktor?
   osobljeProfile         MediciskoOsoblje?
   pacijentProfile        Pacijent?
+  passwordResetTokens    PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id           Int       @id @default(autoincrement())
+  tokenHash    String    @unique
+  idKorisnika  Int
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+  korisnik     Korisnik  @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
+
+  @@index([idKorisnika])
 }
 
 model Pacijent {

@@ -84,6 +84,20 @@ import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
 import { posaljiResetPasswordEmail } from "../emailService.js";
 
+const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
+
+const hashResetToken = (token: string) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
+const validirajLozinku = (lozinka?: string) => {
+  if (!lozinka || lozinka.length < 8) return "Lozinka mora imati najmanje 8 karaktera.";
+  if (!/[A-Z]/.test(lozinka)) return "Lozinka mora sadržavati veliko slovo.";
+  if (!/[a-z]/.test(lozinka)) return "Lozinka mora sadržavati malo slovo.";
+  if (!/[0-9]/.test(lozinka)) return "Lozinka mora sadržavati broj.";
+  if (!/[^A-Za-z0-9]/.test(lozinka)) return "Lozinka mora sadržavati specijalni karakter.";
+  return null;
+};
+
 // Basic rate limiter using Redis
 async function checkRateLimit(ip: string): Promise<boolean> {
   const key = `rate-limit:forgot-password:${ip}`;
@@ -129,10 +143,27 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     // Generate secure random token
     const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hashResetToken(token);
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
 
-    // Store token in Redis with TTL of 15 minutes (900 seconds)
-    const redisKey = `reset-password:${token}`;
-    await redis.setex(redisKey, 900, user.id.toString());
+    await prisma.$transaction(async (tx) => {
+      await tx.passwordResetToken.updateMany({
+        where: {
+          idKorisnika: user.id,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        data: { usedAt: new Date() },
+      });
+
+      await tx.passwordResetToken.create({
+        data: {
+          tokenHash,
+          idKorisnika: user.id,
+          expiresAt,
+        },
+      });
+    });
 
     // Send reset email using Nodemailer
     await posaljiResetPasswordEmail(user.email, user.ime, token);
@@ -153,15 +184,21 @@ export const resetPassword = async (req: Request, res: Response) => {
       return;
     }
 
-    const redisKey = `reset-password:${token}`;
-    const userIdStr = await redis.get(redisKey);
-
-    if (!userIdStr) {
-      res.status(400).json({ poruka: "Nevažeći ili istekao token." });
+    const greskaLozinke = validirajLozinku(newPassword);
+    if (greskaLozinke) {
+      res.status(400).json({ poruka: greskaLozinke });
       return;
     }
 
-    const userId = parseInt(userIdStr, 10);
+    const tokenHash = hashResetToken(token);
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt <= new Date()) {
+      res.status(400).json({ poruka: "Nevažeći ili istekao token." });
+      return;
+    }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -169,7 +206,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     // Reset lozinke je i siguran put za povrat pristupa nakon blokade naloga.
     await prisma.$transaction(async (tx) => {
       await tx.korisnik.update({
-        where: { id: userId },
+        where: { id: resetToken.idKorisnika },
         data: {
           pristupnaSifra: hashedPassword,
           brojNeuspjelihPrijava: 0,
@@ -181,7 +218,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
       await tx.auditLog.create({
         data: {
-          idKorisnika: userId,
+          idKorisnika: resetToken.idKorisnika,
           tipAkcije: "RESET_LOZINKE",
           izmenjenaTabela: "Korisnik",
           stariPodaci: JSON.stringify({ akcija: "reset_lozinke" }),
@@ -192,10 +229,12 @@ export const resetPassword = async (req: Request, res: Response) => {
           ipAdresa: req.ip || req.socket.remoteAddress,
         },
       });
-    });
 
-    // Delete reset token from Redis immediately after successful reset
-    await redis.del(redisKey);
+      await tx.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      });
+    });
 
     res.status(200).json({ poruka: "Lozinka je uspješno resetovana." });
   } catch (error) {

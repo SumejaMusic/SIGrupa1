@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity } from 'lucide-react';
+import { apiUrl } from '../lib/api';
 
 interface Greske {
   ime?: string;
@@ -103,7 +104,7 @@ export default function RegistracijaPage() {
 
     setUcitavanje(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/registracija', {
+      const res = await fetch(apiUrl('/api/auth/registracija'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(podaci)
