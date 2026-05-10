@@ -1,3 +1,7 @@
+process.on('uncaughtException', (err: any) => {
+    console.error('GREŠKA:', err?.message || err);
+    console.error('STACK:', err?.stack);
+});
 //glavni entry point cijele aplikacije
 
 

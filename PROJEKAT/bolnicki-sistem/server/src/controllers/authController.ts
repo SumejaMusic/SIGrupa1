@@ -10,12 +10,7 @@ export const registrujSe = async (req: Request, res: Response, next: NextFunctio
             korisnik: noviKorisnik
         });
     } catch (error) {
-        console.error("🔴 GREŠKA:", error); // ← DODAJ OVO OVDJE
-        if (typeof error === "object" && error !== null && "status" in error) {
-            const err = error as { status?: number; poruka?: string };
-            return res.status(err.status || 500).json({ poruka: err.poruka });
-        }
-        return res.status(500).json({ poruka: "Interna greška servera." });
+        next(error);
     }
 };
 
@@ -49,7 +44,11 @@ export const prijaviSe = async (
 export const prijavi = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, pristupnaSifra } = req.body;
+
         const rezultat = await prijavaService({ email, pristupnaSifra });
+
+        // NE: const { korisnik, token } = await prijavaService(...)
+        // rezultat već sadrži sve direktno
 
         return res.status(200).json({
             poruka: "Uspješna prijava.",
@@ -63,11 +62,6 @@ export const prijavi = async (req: Request, res: Response, next: NextFunction) =
             token: rezultat.token
         });
     } catch (error) {
-        console.error("🔴 GREŠKA PRIJAVA:", error);
-        if (typeof error === "object" && error !== null && "status" in error) {
-            const err = error as { status?: number; poruka?: string };
-            return res.status(err.status || 500).json({ poruka: err.poruka });
-        }
-        return res.status(500).json({ poruka: "Interna greška servera." });
+        next(error);
     }
 };

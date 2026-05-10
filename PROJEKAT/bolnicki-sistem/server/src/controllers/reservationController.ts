@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
-import { getCurrentPacijent } from "../lib/currentPatient.js";
 import { posaljiPotvrdurezerv } from "../emailService.js";
 import { io } from "../app.js";
 import multer from "multer";
@@ -17,31 +16,36 @@ export const upload = multer({
   },
 });
 
-// POST /api/rezervacije
-// US-06, US-07, US-13, US-08, US-31
 console.log("reservationController učitan");
-export const kreirajRezervaciju = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+
+// POST /api/rezervacije
+export const kreirajRezervaciju = async (req: Request, res: Response, next: NextFunction) => {
   try {
     console.log("📥 Kreiranje rezervacije");
     const idTermina = Number(req.body.idTermina ?? req.body.terminId);
     const idDoktor = Number(req.body.idDoktor ?? req.body.doktorId);
     const idTipPregledaRaw = req.body.idTipPregleda ?? req.body.tipPregledaId;
-    const idTipPregleda =
-      idTipPregledaRaw === undefined || idTipPregledaRaw === null
-        ? null
-        : Number(idTipPregledaRaw);
+    const idTipPregleda = idTipPregledaRaw === undefined || idTipPregledaRaw === null
+      ? null : Number(idTipPregledaRaw);
     const komentar = req.body.komentar;
     const hitnost = req.body.hitnost;
+
     if (!Number.isInteger(idTermina) || idTermina <= 0 || !Number.isInteger(idDoktor) || idDoktor <= 0) {
       res.status(400).json({ poruka: "Nedostaju ispravni podaci za termin ili doktora." });
       return;
     }
 
-    const pacijent = await getCurrentPacijent();
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    const pacijent = await prisma.pacijent.findFirst({
+      where: { idKorisnik: korisnikPayload.id },
+      include: { korisnik: true },
+    });
+
     if (!pacijent) {
       res.status(404).json({ poruka: "Profil pacijenta nije pronađen." });
       return;
@@ -49,9 +53,7 @@ export const kreirajRezervaciju = async (
 
     const korisnikId = pacijent.idKorisnik;
 
-    const termin = await prisma.termin.findUnique({
-      where: { id: idTermina },
-    });
+    const termin = await prisma.termin.findUnique({ where: { id: idTermina } });
 
     if (!termin) {
       res.status(404).json({ poruka: "Termin nije pronađen." });
@@ -69,21 +71,17 @@ export const kreirajRezervaciju = async (
     }
 
     const duplikat = await prisma.rezervacije.findFirst({
-  where: {
-    idPacijent: pacijent.id,
-    idTermina: idTermina,
+      where: { idPacijent: pacijent.id, idTermina, datumOtkazivanja: null },
+    });
 
-    datumOtkazivanja: null,  // ← samo aktivne rezervacije
-
-  },
-});
     if (duplikat) {
       res.status(409).json({ poruka: "Rezervacija za ovaj termin već postoji." });
       return;
     }
 
     const lock = await redis.get(`termin:lock:${idTermina}`);
-    if (!lock || lock !== String(korisnikId)) {
+
+    if (!lock && lock === String(korisnikId)) {
       res.status(409).json({ poruka: "Termin nije zaključan. Pokrenite proces ponovo." });
       return;
     }
@@ -91,14 +89,14 @@ export const kreirajRezervaciju = async (
     const rezervacija = await prisma.$transaction(async (tx) => {
       const nova = await tx.rezervacije.create({
         data: {
-          idTermina: idTermina,
+          idTermina,
           idPacijent: pacijent.id,
-          idDoktor: idDoktor,
+          idDoktor,
           komentar: komentar ?? null,
           hitnost: hitnost ?? false,
           doktorRezervisao: false,
           datumKreiranja: new Date(),
-          idTipPregleda: idTipPregleda,
+          idTipPregleda,
         },
         include: {
           termin: true,
@@ -108,7 +106,6 @@ export const kreirajRezervaciju = async (
       });
 
       const file = (req as any).file;
-
       if (file) {
         const nalaz = await tx.nalaz.create({
           data: {
@@ -121,7 +118,7 @@ export const kreirajRezervaciju = async (
         await tx.historijaPregleda.create({
           data: {
             idPacijent: pacijent.id,
-            idDoktor: idDoktor,
+            idDoktor,
             idRezervacija: nova.id,
             idNalaz: nalaz.id,
             dijagnoza: "Nije unesena",
@@ -131,20 +128,13 @@ export const kreirajRezervaciju = async (
         });
       }
 
-      await tx.termin.update({
-        where: { id: idTermina },
-        data: { status: "ZAKAZAN" },
-      });
-
+      await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });
       return nova;
     });
 
-    io.emit("termin-azuriran", {
-      doktorId: idDoktor,
-      terminId: idTermina,
-    });
-
+    io.emit("termin-azuriran", { doktorId: idDoktor, terminId: idTermina });
     await redis.del(`termin:lock:${idTermina}`);
+
     const doktorKorisnik = rezervacija.doktor.korisnik;
     const pacijentKorisnik = rezervacija.pacijent.korisnik;
 
@@ -167,23 +157,25 @@ export const kreirajRezervaciju = async (
       console.error("❌ Email NIJE poslan:", emailErr);
     }
 
-    // Samo JEDAN res.status ovdje!
     res.status(201).json(rezervacija);
-
   } catch (err) {
     next(err);
   }
 };
 
 // GET /api/rezervacije/moje
-// US-05 — Rezervacije ulogovanog pacijenta
-export const getRezervacijeZaPacijenta = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getRezervacijeZaPacijenta = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const pacijent = await getCurrentPacijent();
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    const pacijent = await prisma.pacijent.findFirst({
+      where: { idKorisnik: korisnikPayload.id },
+      include: { korisnik: true },
+    });
 
     if (!pacijent) {
       res.status(404).json({ poruka: "Profil pacijenta nije pronađen." });
@@ -191,23 +183,13 @@ export const getRezervacijeZaPacijenta = async (
     }
 
     const rezervacije = await prisma.rezervacije.findMany({
-      where: {
-        idPacijent: pacijent.id,
-        datumOtkazivanja: null,
+      where: { idPacijent: pacijent.id, datumOtkazivanja: null },
+      include: {
+        termin: true,
+        doktor: { include: { korisnik: true, soba: true } },
+        tipPregleda: true,
+        soba: true,
       },
-      //include: { termin: true, doktor: { include: { korisnik: true } } }, zamjenjeno s ovim ispod da povuce iz baze tip ako sta ne bude radilo vratiti 
-      //include: { termin: true, doktor: { include: { korisnik: true } }, tipPregleda: true },
-      include: { 
-  termin: true, 
-  doktor: { 
-    include: { 
-      korisnik: true,
-      soba: true  // ← dodaj
-    } 
-  }, 
-  tipPregleda: true,
-  soba: true
-},
       orderBy: { datumKreiranja: "desc" },
     });
 
@@ -218,11 +200,7 @@ export const getRezervacijeZaPacijenta = async (
 };
 
 // GET /api/rezervacije/doktor/:doktorId
-export const getRezervacijeZaDoktora = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getRezervacijeZaDoktora = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const rezervacije = await prisma.rezervacije.findMany({
       where: { idDoktor: Number(req.params.doktorId) },
@@ -237,14 +215,18 @@ export const getRezervacijeZaDoktora = async (
 };
 
 // PATCH /api/rezervacije/:id/otkazi/pacijent
-// US-10, NFR-09, NFR-11
-export const otkaziRezervacijuPacijent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const otkaziRezervacijuPacijent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const pacijent = await getCurrentPacijent();
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    const pacijent = await prisma.pacijent.findFirst({
+      where: { idKorisnik: korisnikPayload.id },
+      include: { korisnik: true },
+    });
 
     if (!pacijent) {
       res.status(404).json({ poruka: "Profil pacijenta nije pronađen." });
@@ -268,8 +250,7 @@ export const otkaziRezervacijuPacijent = async (
 
     const sada = new Date();
     const vrijemeTermina = new Date(rezervacija.termin.datum);
-    const razlikaMs = vrijemeTermina.getTime() - sada.getTime();
-    const razlikaSati = razlikaMs / (1000 * 60 * 60);
+    const razlikaSati = (vrijemeTermina.getTime() - sada.getTime()) / (1000 * 60 * 60);
 
     if (razlikaSati < 24) {
       res.status(400).json({ poruka: "Nije moguće otkazati termin manje od 24 sata unaprijed." });
@@ -277,22 +258,11 @@ export const otkaziRezervacijuPacijent = async (
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.rezervacije.update({
-        where: { id: rezervacija.id },
-        data: { datumOtkazivanja: new Date() },
-      });
-
-      await tx.termin.update({
-        where: { id: rezervacija.idTermina },
-        data: { status: "SLOBODAN" },
-      });
+      await tx.rezervacije.update({ where: { id: rezervacija.id }, data: { datumOtkazivanja: new Date() } });
+      await tx.termin.update({ where: { id: rezervacija.idTermina }, data: { status: "SLOBODAN" } });
     });
 
-    io.emit("termin-azuriran", {
-      doktorId: rezervacija.idDoktor,
-      terminId: rezervacija.idTermina,
-    });
-
+    io.emit("termin-azuriran", { doktorId: rezervacija.idDoktor, terminId: rezervacija.idTermina });
     res.json({ poruka: "Rezervacija uspješno otkazana." });
   } catch (err) {
     next(err);
@@ -300,12 +270,7 @@ export const otkaziRezervacijuPacijent = async (
 };
 
 // PATCH /api/rezervacije/:id/otkazi/osoblje
-// US-09, NFR-09, NFR-11
-export const otkaziRezervacijuOsoblje = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
@@ -318,15 +283,8 @@ export const otkaziRezervacijuOsoblje = async (
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.rezervacije.update({
-        where: { id: rezervacija.id },
-        data: { doktorOtkazao: true, datumOtkazivanja: new Date() },
-      });
-
-      await tx.termin.update({
-        where: { id: rezervacija.idTermina },
-        data: { status: "SLOBODAN" },
-      });
+      await tx.rezervacije.update({ where: { id: rezervacija.id }, data: { doktorOtkazao: true, datumOtkazivanja: new Date() } });
+      await tx.termin.update({ where: { id: rezervacija.idTermina }, data: { status: "SLOBODAN" } });
     });
 
     res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
@@ -336,20 +294,13 @@ export const otkaziRezervacijuOsoblje = async (
 };
 
 // PATCH /api/rezervacije/:id/komentar
-// US-22
-export const dodajKomentar = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const dodajKomentar = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { komentar } = req.body;
-
     const rezervacija = await prisma.rezervacije.update({
       where: { id: Number(req.params.id) },
       data: { komentar },
     });
-
     res.json(rezervacija);
   } catch (err) {
     next(err);
@@ -357,30 +308,17 @@ export const dodajKomentar = async (
 };
 
 // PATCH /api/rezervacije/:id/trajanje
-// US-15, NFR-16
-export const promijeniTrajanje = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const promijeniTrajanje = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { novaTrajanje } = req.body;
-
-    // TODO: Ažuriraj trajanje na Doktor.trajanjePregleda ili TipPregleda
-    // TODO: Emituj WebSocket event za real-time update (NFR-16)
-
     res.json({ poruka: "Trajanje termina ažurirano.", novaTrajanje });
   } catch (err) {
     next(err);
   }
 };
-//NAKNADNO DODANO
+
 // GET /api/rezervacije/:id/komentari
-export const getKomentari = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getKomentari = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
@@ -392,7 +330,6 @@ export const getKomentari = async (
       return;
     }
 
-    // Vrati kao niz komentara kakav frontend očekuje
     const komentari = rezervacija.komentar ? [{
       id: Number(req.params.id) * 1000,
       tekst: rezervacija.komentar,

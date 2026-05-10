@@ -266,27 +266,24 @@ const handleSubmit = async (e: React.FormEvent) => {
   const apiUrl = import.meta.env.VITE_API_URL;
 
   try {
-    const formData = new FormData();
-
-    formData.append("idTermina", selectedTermin.id.toString());
-    formData.append("idDoktor", idDoktor.toString());
+    const requestBody: Record<string, unknown> = {
+      idTermina: selectedTermin.id,
+      idDoktor: idDoktor,
+      komentar: form.komentar,
+    };
 
     if (idTipPregleda) {
-      formData.append(
-        "idTipPregleda",
-        idTipPregleda.toString()
-      );
+      requestBody.idTipPregleda = idTipPregleda;
     }
 
-    formData.append("komentar", form.komentar);
-
-    if (form.pdfFile) {
-      formData.append("dokumentPDF", form.pdfFile);
-    }
-
+    const token = localStorage.getItem("token");
     const res = await fetch(`${apiUrl}/api/rezervacije`, {
       method: "POST",
-      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
     });
 
     if (!res.ok) {
