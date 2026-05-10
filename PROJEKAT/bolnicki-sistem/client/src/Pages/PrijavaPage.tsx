@@ -14,6 +14,40 @@ export default function PrijavaPage() {
   const [greske, setGreske] = useState<Greske>({});
   const [podaci, setPodaci] = useState({ email: '', pristupnaSifra: '' });
 
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStatus, setResetStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      setResetStatus({ type: 'error', message: 'Unesite email adresu.' });
+      return;
+    }
+
+    setResetLoading(true);
+    setResetStatus(null);
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setResetStatus({ type: 'error', message: data.poruka || 'Došlo je do greške.' });
+      } else {
+        setResetStatus({ type: 'success', message: data.poruka || 'Ukoliko račun postoji, poslan je email za reset lozinke.' });
+      }
+    } catch {
+      setResetStatus({ type: 'error', message: 'Greška servera. Pokušajte ponovo.' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPodaci(prev => ({ ...prev, [name]: value }));
@@ -55,8 +89,7 @@ export default function PrijavaPage() {
   };
 
   const inputKlasa = (name: keyof Greske) =>
-    `w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
-      greske[name] ? 'border-red-400' : 'border-gray-200'
+    `w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${greske[name] ? 'border-red-400' : 'border-gray-200'
     }`;
 
   return (
@@ -105,6 +138,16 @@ export default function PrijavaPage() {
             {greske.pristupnaSifra && <p className="text-xs text-red-500 mt-1">{greske.pristupnaSifra}</p>}
           </div>
 
+          <div className="flex justify-center mb-4">
+            <button
+              type="button"
+              onClick={() => setIsForgotModalOpen(true)}
+              className="text-sm text-blue-700 hover:underline font-medium"
+            >
+              Zaboravili ste lozinku?
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={ucitavanje}
@@ -121,6 +164,57 @@ export default function PrijavaPage() {
           </Link>
         </p>
       </div>
+
+      {/* Modal za reset lozinke */}
+      {isForgotModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Resetovanje lozinke</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Unesite svoju email adresu i poslat ćemo vam link za resetovanje lozinke.
+            </p>
+
+            {resetStatus && (
+              <div className={`text-sm rounded-lg px-4 py-3 mb-4 ${resetStatus.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                {resetStatus.message}
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword}>
+              <div className="mb-4">
+                <label className="block text-xs text-gray-500 mb-1">Email adresa</label>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="email@primjer.ba"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsForgotModalOpen(false);
+                    setResetStatus(null);
+                    setResetEmail('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  Odustani
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  {resetLoading ? 'Slanje...' : 'Pošalji link'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

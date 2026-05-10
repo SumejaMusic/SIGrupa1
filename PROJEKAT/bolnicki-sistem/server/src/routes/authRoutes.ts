@@ -7,7 +7,7 @@ const router = Router();
 const validate = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(400).json({ errors: errors.array() });
+    res.status(400).json({ poruka: errors.array()[0].msg });
     return;
   }
   next();

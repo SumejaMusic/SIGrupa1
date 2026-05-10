@@ -102,7 +102,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const allowed = await checkRateLimit(ip);
 
     if (!allowed) {
-      res.status(429).json({ message: "Previše zahtjeva. Pokušajte ponovo kasnije." });
+      res.status(429).json({ poruka: "Previše zahtjeva. Pokušajte ponovo kasnije." });
       return;
     }
 
@@ -116,7 +116,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const genericMessage = "Ukoliko račun postoji, poslan je email za reset lozinke.";
 
     if (!user) {
-      res.status(200).json({ message: genericMessage });
+      res.status(200).json({ poruka: genericMessage });
       return;
     }
 
@@ -130,10 +130,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
     // Send reset email using Nodemailer
     await posaljiResetPasswordEmail(user.email, user.ime, token);
 
-    res.status(200).json({ message: genericMessage });
+    res.status(200).json({ poruka: genericMessage });
   } catch (error) {
     console.error("Forgot password error:", error);
-    res.status(500).json({ message: "Greška na serveru." });
+    res.status(500).json({ poruka: "Greška na serveru." });
   }
 };
 
@@ -142,7 +142,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const { token, newPassword } = req.body;
 
     if (!token) {
-      res.status(400).json({ message: "Nedostaje token." });
+      res.status(400).json({ poruka: "Nedostaje token." });
       return;
     }
 
@@ -150,7 +150,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     const userIdStr = await redis.get(redisKey);
 
     if (!userIdStr) {
-      res.status(400).json({ message: "Nevažeći ili istekao token." });
+      res.status(400).json({ poruka: "Nevažeći ili istekao token." });
       return;
     }
 
@@ -168,9 +168,9 @@ export const resetPassword = async (req: Request, res: Response) => {
     // Delete reset token from Redis immediately after successful reset
     await redis.del(redisKey);
 
-    res.status(200).json({ message: "Lozinka je uspješno resetovana." });
+    res.status(200).json({ poruka: "Lozinka je uspješno resetovana." });
   } catch (error) {
     console.error("Reset password error:", error);
-    res.status(500).json({ message: "Greška na serveru prilikom resetovanja lozinke." });
+    res.status(500).json({ poruka: "Greška na serveru prilikom resetovanja lozinke." });
   }
 };

@@ -6,7 +6,7 @@ import { Loader2, Lock, CheckCircle2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const resetPasswordSchema = z.object({
   newPassword: z.string().min(8, 'Lozinka mora imati najmanje 8 karaktera.'),
@@ -44,18 +44,17 @@ export default function ResetPasswordPage() {
     setMessage('');
     
     try {
-      const response = await axios.post(`${API_URL}/auth/reset-password`, {
+      const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
         token,
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
       });
       setStatus('success');
-      setMessage(response.data.message || 'Lozinka je uspješno resetovana.');
+      setMessage(response.data.poruka || 'Lozinka je uspješno resetovana.');
     } catch (error: any) {
       setStatus('error');
       setMessage(
-        error.response?.data?.message || 
-        error.response?.data?.errors?.[0]?.msg || 
+        error.response?.data?.poruka || 
         'Došlo je do greške. Pokušajte ponovo kasnije.'
       );
     }
@@ -99,7 +98,7 @@ export default function ResetPasswordPage() {
               <h3 className="text-lg font-medium text-slate-900 mb-2">Uspješno!</h3>
               <p className="text-sm text-slate-600 mb-6">{message}</p>
               <Link
-                to="/"
+                to="/prijava"
                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 Prijavite se
