@@ -105,6 +105,15 @@ export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Prom
 }
 
 export async function posaljiResetPasswordEmail(email: string, ime: string, token: string): Promise<void> {
+  const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+  const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn("EMAIL_USER/EMAIL_PASS nisu podeseni. Reset link za lokalno testiranje:");
+    console.warn(resetLink);
+    return;
+  }
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -112,9 +121,6 @@ export async function posaljiResetPasswordEmail(email: string, ime: string, toke
       pass: process.env.EMAIL_PASS,
     },
   });
-
-  const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
-  const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: `"Bolnički Sistem" <${process.env.EMAIL_USER}>`,
