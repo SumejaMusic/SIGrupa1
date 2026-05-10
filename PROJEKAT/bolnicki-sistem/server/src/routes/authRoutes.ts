@@ -1,8 +1,6 @@
-import { Router } from "express";
-import { body } from "express-validator";
-import { forgotPassword, resetPassword } from "../controllers/authController.js";
-import { Request, Response, NextFunction } from "express";
-import { validationResult } from "express-validator";
+import { Router, Request, Response, NextFunction } from "express";
+import { body, validationResult } from "express-validator";
+import { registrujSe, prijavi, forgotPassword, resetPassword } from "../controllers/authController.js";
 
 const router = Router();
 
@@ -14,6 +12,9 @@ const validate = (req: Request, res: Response, next: NextFunction) => {
   }
   next();
 };
+
+router.post("/registracija", registrujSe);
+router.post("/prijava", prijavi);
 
 router.post(
   "/forgot-password",

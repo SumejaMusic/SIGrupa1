@@ -75,5 +75,11 @@ const io = new Server(httpServer, {
   },
 });
 
+// Error middleware — mora biti zadnji
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const status = err.status || 500;
+    const poruka = err.poruka || 'Interna greška servera.';
+    res.status(status).json({ poruka });
+});
 export { io, httpServer };
 export default app;
