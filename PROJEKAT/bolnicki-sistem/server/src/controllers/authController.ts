@@ -70,7 +70,7 @@ export const prijavi = async (req: Request, res: Response, next: NextFunction) =
     next(error);
   }
 };
-import { Request, Response } from "express";
+
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma.js";
