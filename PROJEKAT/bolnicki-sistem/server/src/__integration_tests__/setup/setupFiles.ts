@@ -58,6 +58,7 @@ beforeEach(async () => {
     create: {
       id: 1,
       jmbg: "1234567890123",
+      jmbgHash: "jmbg-hash-doktor-test",
       ime: "Mirza",
       prezime: "Hodžić",
       datumRodjenja: new Date("1980-01-01"),
@@ -102,6 +103,7 @@ beforeEach(async () => {
     create: {
       id: 2,
       jmbg: "876543210987",
+      jmbgHash: "jmbg-hash-pacijent-test",
       ime: "Amra",
       prezime: "Testić",
       datumRodjenja: new Date("1995-05-15"),
@@ -118,7 +120,8 @@ beforeEach(async () => {
     create: {
       id: 1,
       idKorisnik: korisnikPacijent.id,
-      brojKnjizice: 111222333,
+      brojKnjizice: "111222333",
+      brojKnjiziceHash: "broj-knjizice-hash-test",
       hronicniBolesnik: false,
     },
   });

@@ -33,7 +33,11 @@ export const prijaviSe = async (
       return;
     }
 
-    const { token, ...korisnik } = await prijavaService({ email, pristupnaSifra });
+    const { token, ...korisnik } = await prijavaService({
+      email,
+      pristupnaSifra,
+      ipAdresa: req.ip || req.socket.remoteAddress,
+    });
 
     res.status(200).json({
       poruka: "Uspješna prijava.",
@@ -50,7 +54,11 @@ export const prijavi = async (req: Request, res: Response, next: NextFunction) =
   try {
     const { email, pristupnaSifra } = req.body;
 
-    const rezultat = await prijavaService({ email, pristupnaSifra });
+    const rezultat = await prijavaService({
+      email,
+      pristupnaSifra,
+      ipAdresa: req.ip || req.socket.remoteAddress,
+    });
 
     // NE: const { korisnik, token } = await prijavaService(...)
     // rezultat već sadrži sve direktno
@@ -70,7 +78,6 @@ export const prijavi = async (req: Request, res: Response, next: NextFunction) =
     next(error);
   }
 };
-import { Request, Response } from "express";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma.js";
@@ -159,10 +166,32 @@ export const resetPassword = async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update password in Prisma
-    await prisma.korisnik.update({
-      where: { id: userId },
-      data: { pristupnaSifra: hashedPassword },
+    // Reset lozinke je i siguran put za povrat pristupa nakon blokade naloga.
+    await prisma.$transaction(async (tx) => {
+      await tx.korisnik.update({
+        where: { id: userId },
+        data: {
+          pristupnaSifra: hashedPassword,
+          brojNeuspjelihPrijava: 0,
+          nalogZakljucan: false,
+          vrijemeZakljucavanja: null,
+          zadnjiNeuspjeliPokusaj: null,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          idKorisnika: userId,
+          tipAkcije: "RESET_LOZINKE",
+          izmenjenaTabela: "Korisnik",
+          stariPodaci: JSON.stringify({ akcija: "reset_lozinke" }),
+          noviPodaci: JSON.stringify({
+            brojNeuspjelihPrijava: 0,
+            nalogZakljucan: false,
+          }),
+          ipAdresa: req.ip || req.socket.remoteAddress,
+        },
+      });
     });
 
     // Delete reset token from Redis immediately after successful reset
