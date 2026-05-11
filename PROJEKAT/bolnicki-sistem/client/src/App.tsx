@@ -13,6 +13,8 @@ import DoktorRezervacije from './Pages/DoktorRezervacije';
 import RegistracijaPage from './Pages/RegistracijaPage'
 import PrijavaPage from './Pages/PrijavaPage';
 
+import ForgotPasswordPage from './Pages/ForgotPasswordPage';
+import ResetPasswordPage from './Pages/ResetPasswordPage';
 
 function App() {
   return (
@@ -25,9 +27,11 @@ function App() {
         <Route path="/step3-tip-pregleda" element={<Step3TipPregleda />} />
         <Route path="/step4-termini" element={<Step4Termini />} />
         <Route path="/step5-potvrda" element={<Step5Potvrda />} />
-        <Route path="/doctor-view" element={<DoktorRezervacije />}/>
+        <Route path="/doctor-view" element={<DoktorRezervacije />} />
         <Route path="/registracija" element={<RegistracijaPage />} />
-        <Route path="/prijava" element={<PrijavaPage />} /> 
+        <Route path="/prijava" element={<PrijavaPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </Router>
   );
