@@ -1,23 +1,27 @@
 import { Request, Response, NextFunction } from "express";
 import { registracijaService, prijavaService } from "../authService.js";
 
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import { prisma } from "../lib/prisma.js";
+import { redis } from "../lib/redis.js";
+import { posaljiResetPasswordEmail } from "../emailService.js";
 export const registrujSe = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const noviKorisnik = await registracijaService(req.body);
 
-    return res.status(201).json({
-      poruka: "Korisnik uspješno registrovan",
-      korisnik: noviKorisnik
-    });
-  } catch (error) {
-    console.error("🔴 GREŠKA:", error); // ← DODAJ OVO OVDJE
-    if (typeof error === "object" && error !== null && "status" in error) {
-      const err = error as { status?: number; poruka?: string };
-      return res.status(err.status || 500).json({ poruka: err.poruka });
+    try {
+        const noviKorisnik = await registracijaService(req.body);
+
+        return res.status(201).json({
+            poruka: "Korisnik uspješno registrovan",
+            korisnik: noviKorisnik
+        });
+    } catch (error) {
+        next(error);
+
     }
     return res.status(500).json({ poruka: "Interna greška servera." });
   }
-};
+
 
 // POST /api/auth/login
 export const prijaviSe = async (
@@ -78,12 +82,6 @@ export const prijavi = async (req: Request, res: Response, next: NextFunction) =
     next(error);
   }
 };
-import crypto from "crypto";
-import bcrypt from "bcrypt";
-import { prisma } from "../lib/prisma.js";
-import { redis } from "../lib/redis.js";
-import { posaljiResetPasswordEmail } from "../emailService.js";
-
 const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
 
 const hashResetToken = (token: string) =>
