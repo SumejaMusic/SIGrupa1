@@ -65,6 +65,21 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | **Razlog izbora** | Resend nudi besplatan tier koji je kompatibilan sa produkcijskim deploymentom, jednostavnu integraciju putem REST API-ja bez potrebe za SMTP konfiguracijom, te službeni Node.js SDK koji se lako uklapa u postojeću backend arhitekturu. Za razliku od Nodemailer-a, ne zahtijeva posebne dozvole ni konfiguraciju na nivou hosting platforme. |
 | **Posljedice odluke** | Sve email notifikacije (potvrda rezervacije, obavijest o otkazivanju) šalju se putem Resend servisa. Aplikacija je zavisna od dostupnosti Resend API-ja — kašnjenja ili ispadi eksternog servisa mogu uticati na isporuku emailova (RR-15). API ključ mora biti pohranjen kao environment varijabla i ne smije biti izložen u kodu. |
 | **Status odluke** | Aktivna — Resend ostaje primarni email servis za sve notifikacije u sistemu |
+
+---
+## DEC-005 — Promjena plana: Zamjena Sprinta 7 i Sprinta 10
+
+| Stavka | Opis |
+| :--- | :--- |
+| **ID odluke** | DEC-002 |
+| **Datum** | 15.5.2026 |
+| **Kratak naziv odluke** | Zamjena redoslijeda Sprinta 7 i 10 (Prioritizacija Autentifikacije) |
+| **Opis problema ili pitanja** | Utvrđeno je da dalji razvoj sistema bez implementirane autentifikacije otežava testiranje ključnih funkcionalnosti. Postojala je potreba da se Release 4 pomjeri ranije. |
+| **Razmatrane opcije** | 1. Nastavak po originalnom planu (Autentifikacija u Sprintu 10).<br>2. Zamjena Sprinta 7 i Sprinta 10 (Autentifikacija u Sprintu 7). |
+| **Odabrana opcija** | **Opcija 2:** Zamjena redoslijeda sprinteva |
+| **Razlog izbora** | Zavisnost cijelog sistema o autentifikaciji korisnika je kritična. Release 4 (Autentifikacija) prelazi na Sprint 7 kako bi se osiguralo da **RBAC (Role-Based Access Control)** i **enkripcija** budu validovani u kontekstu svih prethodno implementiranih modula, čime se smanjuje tehnički dug i rizik integracije. |
+| **Posljedice odluke** | Potrebno je ažurirati projektnu dokumentaciju i plan sprintova. Razvojni tim mora fokus prebaciti na sigurnosne protokole ranije nego što je planirano. Omogućava se ispravno testiranje autorizacijskih nivoa za sve buduće module. |
+| **Status odluke** | **Aktivna** |
  
 
 
