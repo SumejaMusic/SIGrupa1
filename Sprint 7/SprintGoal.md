@@ -1,4 +1,4 @@
-# Sprint 7 Goal — Autentifikacija i sigurnosni sloj (Release 4)
+# Sprint 7 Goal — Autentifikacija i sigurnosni sloj
 
 ## Sprint cilj
 
