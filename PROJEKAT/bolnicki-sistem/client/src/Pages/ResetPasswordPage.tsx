@@ -5,11 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Lock, CheckCircle2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { apiUrl } from '../lib/api';
 
 const resetPasswordSchema = z.object({
-  newPassword: z.string().min(8, 'Lozinka mora imati najmanje 8 karaktera.'),
+  newPassword: z.string()
+    .min(8, 'Lozinka mora imati najmanje 8 karaktera.')
+    .regex(/[A-Z]/, 'Lozinka mora sadržavati veliko slovo.')
+    .regex(/[a-z]/, 'Lozinka mora sadržavati malo slovo.')
+    .regex(/[0-9]/, 'Lozinka mora sadržavati broj.')
+    .regex(/[^A-Za-z0-9]/, 'Lozinka mora sadržavati specijalni karakter.'),
   confirmPassword: z.string()
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Lozinke se ne podudaraju.",
@@ -44,7 +48,7 @@ export default function ResetPasswordPage() {
     setMessage('');
     
     try {
-      const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
+      const response = await axios.post(apiUrl('/api/auth/reset-password'), {
         token,
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,

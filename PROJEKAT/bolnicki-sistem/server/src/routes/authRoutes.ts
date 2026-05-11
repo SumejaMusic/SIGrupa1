@@ -34,7 +34,15 @@ router.post(
     body("token").notEmpty().withMessage("Token je obavezan."),
     body("newPassword")
       .isLength({ min: 8 })
-      .withMessage("Lozinka mora imati najmanje 8 karaktera."),
+      .withMessage("Lozinka mora imati najmanje 8 karaktera.")
+      .matches(/[A-Z]/)
+      .withMessage("Lozinka mora sadržavati veliko slovo.")
+      .matches(/[a-z]/)
+      .withMessage("Lozinka mora sadržavati malo slovo.")
+      .matches(/[0-9]/)
+      .withMessage("Lozinka mora sadržavati broj.")
+      .matches(/[^A-Za-z0-9]/)
+      .withMessage("Lozinka mora sadržavati specijalni karakter."),
     body("confirmPassword")
       .custom((value, { req }) => {
         if (value !== req.body.newPassword) {

@@ -9,6 +9,7 @@
         "build": "tsc",
         "start": "node dist/src/index.js",
         "test": "vitest run",
+        "test:email": "tsx src/scripts/sendTestEmail.ts",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest --coverage",
         "test:integration": "dotenv -e .env.test -- vitest run --config vitest.integration.config.ts",

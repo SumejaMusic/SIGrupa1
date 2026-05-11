@@ -8,28 +8,44 @@ datasource db {
 }
 
 model Korisnik {
-  id                    Int               @id @default(autoincrement())
-  jmbg                  String           
-  jmbgHash              String            @unique
-  ime                   String
-  prezime               String
-  datumRodjenja         DateTime
-  email                 String            @unique
-  pristupnaSifra        String
-  brojTelefona          String?
-  datumRegistracije     DateTime          @default(now())
-  brojNeuspjelihPrijava Int               @default(0)
-  uloga                 Uloga             @default(PACIJENT)
-  auditLogs             AuditLog[]
-  doktorProfile         Doktor?
-  osobljeProfile        MediciskoOsoblje?
-  pacijentProfile       Pacijent?
+  id                     Int               @id @default(autoincrement())
+  jmbg                   String
+  jmbgHash               String            @unique
+  ime                    String
+  prezime                String
+  datumRodjenja          DateTime
+  email                  String            @unique
+  pristupnaSifra         String
+  brojTelefona           String?
+  datumRegistracije      DateTime          @default(now())
+  brojNeuspjelihPrijava  Int               @default(0)
+  nalogZakljucan         Boolean           @default(false)
+  vrijemeZakljucavanja   DateTime?
+  zadnjiNeuspjeliPokusaj DateTime?
+  uloga                  Uloga             @default(PACIJENT)
+  auditLogs              AuditLog[]
+  doktorProfile          Doktor?
+  osobljeProfile         MediciskoOsoblje?
+  pacijentProfile        Pacijent?
+  passwordResetTokens    PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id           Int       @id @default(autoincrement())
+  tokenHash    String    @unique
+  idKorisnika  Int
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+  korisnik     Korisnik  @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
+
+  @@index([idKorisnika])
 }
 
 model Pacijent {
   id               Int                 @id @default(autoincrement())
   idKorisnik       Int                 @unique
-  brojKnjizice     String              
+  brojKnjizice     String
   brojKnjiziceHash String              @unique
   hronicniBolesnik Boolean             @default(false)
   historija        HistorijaPregleda[]

@@ -3,6 +3,103 @@ import bcrypt from "bcrypt";
 import { enkriptuj } from "./lib/encryption.js";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+
+const MAX_NEUSPJELIH_PRIJAVA = 5;
+const GENERICKA_GRESKA_PRIJAVE = "Pogresan email ili lozinka.";
+const PORUKA_ZAKLJUCAN_NALOG =
+    "Nalog je zakljucan zbog vise neuspjesnih pokusaja prijave. Resetujte lozinku za povrat pristupa.";
+
+const greskaZakljucanogNaloga = () => ({
+    status: 423,
+    poruka: PORUKA_ZAKLJUCAN_NALOG,
+    kod: "ACCOUNT_LOCKED"
+});
+
+const evidentirajNeuspjeluPrijavu = async (
+    korisnik: {
+        id: number;
+        brojNeuspjelihPrijava: number;
+        nalogZakljucan: boolean;
+    },
+    ipAdresa?: string
+) => {
+    const sada = new Date();
+    const brojNeuspjelihPrijava = korisnik.brojNeuspjelihPrijava + 1;
+    const nalogZakljucan = brojNeuspjelihPrijava >= MAX_NEUSPJELIH_PRIJAVA;
+
+    await prisma.$transaction(async (tx) => {
+        await tx.korisnik.update({
+            where: { id: korisnik.id },
+            data: {
+                brojNeuspjelihPrijava,
+                nalogZakljucan,
+                vrijemeZakljucavanja: nalogZakljucan ? sada : null,
+                zadnjiNeuspjeliPokusaj: sada
+            }
+        });
+
+        await tx.auditLog.create({
+            data: {
+                idKorisnika: korisnik.id,
+                tipAkcije: nalogZakljucan ? "LOGIN_NALOG_ZAKLJUCAN" : "LOGIN_NEUSPJESAN",
+                izmenjenaTabela: "Korisnik",
+                stariPodaci: JSON.stringify({
+                    brojNeuspjelihPrijava: korisnik.brojNeuspjelihPrijava,
+                    nalogZakljucan: korisnik.nalogZakljucan
+                }),
+                noviPodaci: JSON.stringify({
+                    brojNeuspjelihPrijava,
+                    nalogZakljucan
+                }),
+                ipAdresa
+            }
+        });
+    });
+
+    return { brojNeuspjelihPrijava, nalogZakljucan };
+};
+
+const resetujNeuspjelePrijave = async (
+    korisnik: {
+        id: number;
+        brojNeuspjelihPrijava: number;
+        nalogZakljucan: boolean;
+    },
+    ipAdresa?: string
+) => {
+    if (korisnik.brojNeuspjelihPrijava === 0 && !korisnik.nalogZakljucan) {
+        return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+        await tx.korisnik.update({
+            where: { id: korisnik.id },
+            data: {
+                brojNeuspjelihPrijava: 0,
+                nalogZakljucan: false,
+                vrijemeZakljucavanja: null,
+                zadnjiNeuspjeliPokusaj: null
+            }
+        });
+
+        await tx.auditLog.create({
+            data: {
+                idKorisnika: korisnik.id,
+                tipAkcije: "LOGIN_USPJESAN_RESET_NEUSPJELIH_PRIJAVA",
+                izmenjenaTabela: "Korisnik",
+                stariPodaci: JSON.stringify({
+                    brojNeuspjelihPrijava: korisnik.brojNeuspjelihPrijava,
+                    nalogZakljucan: korisnik.nalogZakljucan
+                }),
+                noviPodaci: JSON.stringify({
+                    brojNeuspjelihPrijava: 0,
+                    nalogZakljucan: false
+                }),
+                ipAdresa
+            }
+        });
+    });
+};
 const validacijaJMBG = (jmbg: string, datumRodjenja: Date): boolean => {
     if (!/^\d{13}$/.test(jmbg)) return false;
 
@@ -146,8 +243,9 @@ export const registracijaService = async (podaci: {
 export const prijavaService = async (podaci: {
     email: string;
     pristupnaSifra: string;
+    ipAdresa?: string;
 }) => {
-    const { email, pristupnaSifra } = podaci;
+    const { email, pristupnaSifra, ipAdresa } = podaci;
 
     if (!email || !pristupnaSifra) {
         throw { status: 400, poruka: "Email i lozinka su obavezni." };
@@ -156,14 +254,34 @@ export const prijavaService = async (podaci: {
     // tražimo korisnika po emailu
     const korisnik = await prisma.korisnik.findUnique({ where: { email } });
     if (!korisnik) {
-        throw { status: 401, poruka: "Pogrešan email ili lozinka." };
+        throw { status: 401, poruka: GENERICKA_GRESKA_PRIJAVE };
+    }
+
+    if (korisnik.nalogZakljucan) {
+        throw greskaZakljucanogNaloga();
     }
 
     // provjera lozinke
     const sifraIspravna = await bcrypt.compare(pristupnaSifra, korisnik.pristupnaSifra);
     if (!sifraIspravna) {
-        throw { status: 401, poruka: "Pogrešan email ili lozinka." };
+        const rezultat = await evidentirajNeuspjeluPrijavu(korisnik, ipAdresa);
+
+        if (rezultat.nalogZakljucan) {
+            throw greskaZakljucanogNaloga();
+        }
+
+        if (rezultat.brojNeuspjelihPrijava === MAX_NEUSPJELIH_PRIJAVA - 1) {
+            throw {
+                status: 401,
+                poruka: `${GENERICKA_GRESKA_PRIJAVE} Preostao je jos 1 pokusaj prije blokade naloga.`,
+                kod: "LOGIN_ATTEMPT_WARNING"
+            };
+        }
+
+        throw { status: 401, poruka: GENERICKA_GRESKA_PRIJAVE };
     }
+
+    await resetujNeuspjelePrijave(korisnik, ipAdresa);
 
     // generisanje JWT tokena
     const token = jwt.sign(
