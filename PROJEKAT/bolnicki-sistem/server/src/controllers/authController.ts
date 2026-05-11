@@ -2,18 +2,17 @@ import { Request, Response, NextFunction } from "express";
 import { registracijaService, prijavaService } from "../authService.js";
 
 export const registrujSe = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const noviKorisnik = await registracijaService(req.body);
 
-    return res.status(201).json({
-      poruka: "Korisnik uspješno registrovan",
-      korisnik: noviKorisnik
-    });
-  } catch (error) {
-    console.error("🔴 GREŠKA:", error); // ← DODAJ OVO OVDJE
-    if (typeof error === "object" && error !== null && "status" in error) {
-      const err = error as { status?: number; poruka?: string };
-      return res.status(err.status || 500).json({ poruka: err.poruka });
+    try {
+        const noviKorisnik = await registracijaService(req.body);
+
+        return res.status(201).json({
+            poruka: "Korisnik uspješno registrovan",
+            korisnik: noviKorisnik
+        });
+    } catch (error) {
+        next(error);
+
     }
     return res.status(500).json({ poruka: "Interna greška servera." });
   }
