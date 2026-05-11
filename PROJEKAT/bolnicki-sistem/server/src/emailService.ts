@@ -24,6 +24,47 @@ function formatVrijeme(v: number): string {
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy123');
 
+async function posaljiPrekoBrevo(email: string, ime: string, subject: string, html: string): Promise<void> {
+  if (!process.env.BREVO_API_KEY) {
+    return;
+  }
+
+  const emailFrom = process.env.EMAIL_FROM || "Bolnicki Sistem <noreply@vas-domen.ba>";
+  const senderMatch = emailFrom.match(/^(.*)<(.+)>$/);
+  const senderName = senderMatch ? senderMatch[1].trim().replace(/^"|"$/g, "") : "Bolnicki Sistem";
+  const senderEmail = senderMatch ? senderMatch[2].trim() : emailFrom.trim();
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: {
+        name: senderName,
+        email: senderEmail,
+      },
+      to: [
+        {
+          email,
+          name: ime,
+        },
+      ],
+      subject,
+      htmlContent: html,
+    }),
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Brevo nije poslao email (${response.status}): ${details}`);
+  }
+
+  console.log(`Email poslan preko Brevo na: ${email}`);
+}
+
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
   const {
     pacijentEmail, pacijentIme, pacijentPrezime,
@@ -142,6 +183,11 @@ export async function posaljiResetPasswordEmail(email: string, ime: string, toke
     </div>
   `;
 
+  if (process.env.BREVO_API_KEY) {
+    await posaljiPrekoBrevo(email, ime, "Resetovanje lozinke", html);
+    return;
+  }
+
   if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.startsWith("re_dummy")) {
     const result = await resend.emails.send({
       from: emailFrom,
@@ -160,11 +206,13 @@ export async function posaljiResetPasswordEmail(email: string, ime: string, toke
 
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("Email provider nije podesen. Podesite RESEND_API_KEY ili EMAIL_USER/EMAIL_PASS.");
+      throw new Error("Email provider nije podesen. Podesite BREVO_API_KEY, RESEND_API_KEY ili EMAIL_USER/EMAIL_PASS.");
     }
 
-    console.warn("Email provider nije podesen. Reset link za lokalno testiranje:");
-    console.warn(resetLink);
+    if (process.env.LOG_LOCAL_RESET_LINK === "true") {
+      console.warn("Email provider nije podesen. Reset link za lokalno testiranje:");
+      console.warn(resetLink);
+    }
     return;
   }
 
