@@ -18,9 +18,8 @@ router.use("/rezervacije", reservationRoutes);
 router.use("/odjeli", odjelRoutes);
 router.use("/auth", authRoutes);
 
-// Nalazi rute — redoslijed je bitan!
-router.get("/nalazi/rezervacija/:rezervacijaId", getNalaziZaRezervaciju);
 router.get("/nalazi/pacijent/:pacijentId", getNalaziZaPacijenta);
+router.get("/nalazi/rezervacija/:rezervacijaId", getNalaziZaRezervaciju);
 router.get("/nalazi/:id/pdf", getNalazPDF);
 
 // Pacijent rute

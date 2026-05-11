@@ -14,7 +14,7 @@ import {
 
 const router = Router();
 
-router.post("/", autentifikuj, kreirajRezervaciju);
+router.post("/", autentifikuj, upload.single("pdf"), kreirajRezervaciju);
 router.get("/moje", autentifikuj, getRezervacijeZaPacijenta);
 router.get("/:id/komentari", autentifikuj, getKomentari);
 router.get("/doktor/:doktorId", autentifikuj, getRezervacijeZaDoktora);

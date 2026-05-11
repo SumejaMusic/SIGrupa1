@@ -8,7 +8,19 @@ interface LayoutProps {
   totalSteps: number;
   breadcrumbs: string[];
 }
+const korisnik = (() => {
+  try {
+    const saved = localStorage.getItem("korisnik");
+    if (!saved) return null;
+    return JSON.parse(saved);
+  } catch {
+    return null;
+  }
+})();
 
+const inicijali = korisnik
+  ? `${korisnik.ime?.[0] ?? ""}${korisnik.prezime?.[0] ?? ""}`.toUpperCase()
+  : "?";
 export default function Layout({ children, step, totalSteps, breadcrumbs }: LayoutProps) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -111,8 +123,8 @@ export default function Layout({ children, step, totalSteps, breadcrumbs }: Layo
               </button>
               <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  M
-                </div>
+  {inicijali}
+</div>
                 <ChevronDown size={16} className="text-gray-700" />
               </button>
             </div>
