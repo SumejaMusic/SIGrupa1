@@ -95,6 +95,8 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
   const [noviKomentar, setNoviKomentar] = useState("");
   const [saljemo, setSaljemo] = useState(false);
 
+  const getToken = () => localStorage.getItem("token");
+
   const tipStyle = {
     hitni: { dot: "bg-red-500", text: "text-red-600", label: "Hitni" },
     preventivni: { dot: "bg-green-500", text: "text-green-600", label: "Preventivni" },
@@ -102,23 +104,25 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
   };
 
   const formatV = (v: number) => {
-  const h = Math.floor(v / 60);
-  const m = v % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-};
+    const h = Math.floor(v / 60);
+    const m = v % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  };
 
-  // Fetch nalazi kada se otvori tab
+  // ✅ Fetch nalazi sa tokenom
   useEffect(() => {
     if (tab !== "nalazi") return;
     setLoadingNalazi(true);
-    fetch(`${apiUrl}/api/nalazi/rezervacija/${rez.id}`)
+    fetch(`${apiUrl}/api/nalazi/rezervacija/${rez.id}`, {
+      headers: { "Authorization": `Bearer ${getToken()}` }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
           setNalazi(data.map((n: any) => ({
             id: n.id,
             naziv: n.naziv,
-            datum:  n.vrijemeNalaza.split("T")[0],
+            datum: n.vrijemeNalaza.split("T")[0],
             url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
           })));
         } else {
@@ -129,10 +133,12 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
       .finally(() => setLoadingNalazi(false));
   }, [tab, rez.id]);
 
-  // Fetch komentara kada se otvori tab
+  // ✅ Fetch komentara sa tokenom
   useEffect(() => {
     if (tab !== "komentari") return;
-    fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentari`)
+    fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentari`, {
+      headers: { "Authorization": `Bearer ${getToken()}` }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setKomentari(data);
@@ -140,13 +146,17 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
       .catch(() => {});
   }, [tab, rez.id]);
 
+  // ✅ Slanje komentara sa tokenom
   const handleSendKomentar = async () => {
     if (!noviKomentar.trim()) return;
     setSaljemo(true);
     try {
       await fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentar`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${getToken()}`
+        },
         body: JSON.stringify({ komentar: noviKomentar.trim() }),
       });
       setKomentari(prev => [...prev, {
@@ -343,9 +353,17 @@ const MojeRezervacije = () => {
   const [loading, setLoading] = useState(false);
   const apiUrl = import.meta.env.VITE_API_URL;
 
+  // ✅ Fetch moje rezervacije sa tokenom
   useEffect(() => {
     setLoading(true);
-    fetch(`${apiUrl}/api/rezervacije/moje`)
+    const token = localStorage.getItem("token");
+
+    fetch(`${apiUrl}/api/rezervacije/moje`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    })
       .then(res => res.json())
       .then(data => {
         const mapirano = data.map((r: any) => ({
@@ -357,7 +375,7 @@ const MojeRezervacije = () => {
              : r.tipPregleda?.naziv?.toLowerCase().includes("preventivni") ? "preventivni"
              : "kontrolni",
           komentar: r.komentar || "",
-         soba: r.soba?.naziv || r.doktor?.soba?.naziv || "—",
+          soba: r.soba?.naziv || r.doktor?.soba?.naziv || "—",
           komentari: r.komentar ? [{
             id: r.id * 1000,
             tekst: r.komentar,
@@ -393,11 +411,9 @@ const MojeRezervacije = () => {
   const selectedRez = selectedDate ? rezervacije.filter(r => r.datum === selectedDate) : [];
 
   const formatV = (v: number) => {
-   const h = Math.floor(v / 60);
+    const h = Math.floor(v / 60);
     const m = v % 60;
-  return `${h.toString().padStart(2, "0")}:${m
-    .toString()
-    .padStart(2, "0")}`;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
   };
 
   const formatDateLabel = (ds: string) =>
@@ -417,10 +433,14 @@ const MojeRezervacije = () => {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
 
+  // ✅ Otkazivanje sa tokenom
   const handleCancel = async (id: number) => {
     if (!window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) return;
     try {
-      const res = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/pacijent`, { method: "PATCH" });
+      const res = await fetch(`${apiUrl}/api/rezervacije/${id}/otkazi/pacijent`, {
+        method: "PATCH",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
       if (!res.ok) {
         const err = await res.json();
         alert(err.poruka || "Nije moguće otkazati rezervaciju.");
