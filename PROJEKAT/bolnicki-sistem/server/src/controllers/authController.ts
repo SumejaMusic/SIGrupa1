@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { registracijaService, prijavaService } from "../authService.js";
 
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import { prisma } from "../lib/prisma.js";
+import { redis } from "../lib/redis.js";
+import { posaljiResetPasswordEmail } from "../emailService.js";
 export const registrujSe = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
@@ -16,7 +21,7 @@ export const registrujSe = async (req: Request, res: Response, next: NextFunctio
     }
     return res.status(500).json({ poruka: "Interna greška servera." });
   }
-};
+
 
 // POST /api/auth/login
 export const prijaviSe = async (
@@ -69,12 +74,7 @@ export const prijavi = async (req: Request, res: Response, next: NextFunction) =
     next(error);
   }
 };
-import { Request, Response } from "express";
-import crypto from "crypto";
-import bcrypt from "bcrypt";
-import { prisma } from "../lib/prisma.js";
-import { redis } from "../lib/redis.js";
-import { posaljiResetPasswordEmail } from "../emailService.js";
+
 
 // Basic rate limiter using Redis
 async function checkRateLimit(ip: string): Promise<boolean> {

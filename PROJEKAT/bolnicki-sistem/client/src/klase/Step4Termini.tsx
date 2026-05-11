@@ -253,6 +253,7 @@ const handleSelectTermin = async (termin: Termin) => {
     }
   };*/
   // NOVO:
+ /* Nije radilo za upload pdf dokumenta pa je ovaj dio izmjenjen ako bude problema vratiti 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
@@ -285,7 +286,35 @@ const handleSubmit = async (e: React.FormEvent) => {
       },
       body: JSON.stringify(requestBody),
     });
+*/
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
+  if (!validate()) return;
+  if (!selectedTermin) return;
+
+  const idDoktor = Number(localStorage.getItem("selectedDoktor"));
+  const idTipPregleda =
+    Number(localStorage.getItem("selectedTip")) || undefined;
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  try {
+    const formData = new FormData();
+    formData.append("idTermina", String(selectedTermin.id));
+    formData.append("idDoktor", String(idDoktor));
+    if (form.komentar) formData.append("komentar", form.komentar);
+    if (idTipPregleda) formData.append("idTipPregleda", String(idTipPregleda));
+    if (form.pdfFile) formData.append("pdf", form.pdfFile);
+
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${apiUrl}/api/rezervacije`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
     if (!res.ok) {
       const err = await res.json();
       console.log("Greška rezervacije:", err);
