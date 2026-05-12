@@ -19,50 +19,18 @@ function Step5Confirmation() {
   const [patientData, setPatientData] = useState<PatientForm | null>(null);
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
 
-  /*const termini: Termin[] = [
-    { id: 1, datum: "2026-05-05", vrijeme: 900, status: "SLOBODAN" },
-    { id: 2, datum: "2026-05-05", vrijeme: 1000, status: "SLOBODAN" },
-    { id: 3, datum: "2026-05-05", vrijeme: 1100, status: "SLOBODAN" },
-    { id: 4, datum: "2026-05-06", vrijeme: 900, status: "SLOBODAN" },
-    { id: 5, datum: "2026-05-06", vrijeme: 1400, status: "SLOBODAN" },
-    { id: 6, datum: "2026-05-07", vrijeme: 1000, status: "SLOBODAN" },
-    { id: 7, datum: "2026-05-07", vrijeme: 1100, status: "SLOBODAN" },
-    { id: 8, datum: "2026-05-07", vrijeme: 1500, status: "SLOBODAN" },
-    { id: 9, datum: "2026-05-12", vrijeme: 900, status: "SLOBODAN" },
-    { id: 10, datum: "2026-05-13", vrijeme: 1000, status: "SLOBODAN" },
-    { id: 11, datum: "2026-05-14", vrijeme: 1100, status: "SLOBODAN" },
-    { id: 12, datum: "2026-05-19", vrijeme: 1000, status: "SLOBODAN" },
-    { id: 13, datum: "2026-05-21", vrijeme: 1100, status: "SLOBODAN" },
-    { id: 14, datum: "2026-05-26", vrijeme: 900, status: "SLOBODAN" },
-  ];*/
   useEffect(() => {
-  const patient = localStorage.getItem("patientData");
-  const terminStr = localStorage.getItem("selectedTerminData");
-
-  if (patient) {
-    setPatientData(JSON.parse(patient));
-  }
-
-  if (terminStr) {
-    setSelectedTermin(JSON.parse(terminStr));
-  }
-}, []);
-
-  /*useEffect(() => {
     const patient = localStorage.getItem("patientData");
-    const terminId = localStorage.getItem("selectedTermin");
+    const terminStr = localStorage.getItem("selectedTerminData");
 
     if (patient) {
       setPatientData(JSON.parse(patient));
     }
 
-    if (terminId) {
-      const termin = termini.find((t) => t.id === parseInt(terminId));
-      if (termin) {
-        setSelectedTermin(termin);
-      }
+    if (terminStr) {
+      setSelectedTermin(JSON.parse(terminStr));
     }
-  }, []);*/
+  }, []);
 
   const formatVrijeme = (minute: number): string => {
     const sati = Math.floor(minute / 60).toString().padStart(2, "0");
@@ -70,19 +38,16 @@ function Step5Confirmation() {
     return `${sati}:${min}`;
   };
 
-  /*const formatDate = (datum: string) => {
-    return new Date(datum + "T00:00:00").toLocaleDateString("hr-HR", {
+  // ✅ "T12:00:00Z" — podne UTC, siguran prikaz u svim vremenskim zonama
+  const formatDate = (datum: string) => {
+    const datumStr = datum.split("T")[0]; // odbaci time/timezone ako postoji
+    return new Date(datumStr + "T12:00:00Z").toLocaleDateString("hr-HR", {
       weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-  };*/
-  const formatDate = (datum: string) => {
-  return new Date(datum).toLocaleDateString("hr-HR", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
-};
+  };
 
   const goToHome = () => {
     localStorage.removeItem("patientData");

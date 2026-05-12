@@ -106,6 +106,8 @@ const resetujNeuspjelePrijave = async (
         });
     });
 };
+
+// ✅ FIX: koristi getUTC* metode — konzistentno s Date.UTC kreiranjem u registracijaService
 const validacijaJMBG = (jmbg: string, datumRodjenja: Date): boolean => {
     if (!/^\d{13}$/.test(jmbg)) return false;
 
@@ -120,18 +122,18 @@ const validacijaJMBG = (jmbg: string, datumRodjenja: Date): boolean => {
         godinaJMBG = 1000 + godinaTriCifre;
     }
 
-    const datumIzJMBG = new Date(godinaJMBG, mjesecJMBG - 1, danJMBG);
+    const datumIzJMBG = new Date(Date.UTC(godinaJMBG, mjesecJMBG - 1, danJMBG));
 
     if (
-        datumIzJMBG.getFullYear() !== godinaJMBG ||
-        datumIzJMBG.getMonth() !== mjesecJMBG - 1 ||
-        datumIzJMBG.getDate() !== danJMBG
+        datumIzJMBG.getUTCFullYear() !== godinaJMBG ||
+        datumIzJMBG.getUTCMonth() !== mjesecJMBG - 1 ||
+        datumIzJMBG.getUTCDate() !== danJMBG
     ) return false;
 
     return (
-        datumRodjenja.getFullYear() === godinaJMBG &&
-        datumRodjenja.getMonth() === mjesecJMBG - 1 &&
-        datumRodjenja.getDate() === danJMBG
+        datumRodjenja.getUTCFullYear() === godinaJMBG &&
+        datumRodjenja.getUTCMonth() === mjesecJMBG - 1 &&
+        datumRodjenja.getUTCDate() === danJMBG
     );
 };
 
@@ -279,9 +281,8 @@ export const ponovoPosaljiVerifikacijuService = async (podaci: {
  
     return { poslano: true };
 };
-// REGISTRACIJA — IZMIJENJENO
-// Sada nakon kreiranja naloga salje verifikacioni kod na email.
-// Korisnik NE moze da se prijavi dok ne verifikuje email.
+
+// REGISTRACIJA
 export const registracijaService = async (podaci: {
     jmbg: string;
     ime: string;
@@ -294,14 +295,22 @@ export const registracijaService = async (podaci: {
 }) => {
     const { jmbg, ime, prezime, datumRodjenja, email, pristupnaSifra, brojTelefona, brojKnjizice } = podaci;
 
-    const datum = new Date(datumRodjenja + "T00:00:00");
+    // ✅ FIX: strip time/timezone dio pa parsiraj kao čisti UTC
+    // Sprječava timezone bug na serverima koji rade u UTC (npr. Render)
+    const datumStr = datumRodjenja.split("T")[0];
+    const dijelovi = datumStr.split("-").map(Number);
+    if (dijelovi.length !== 3 || dijelovi.some(isNaN)) {
+        throw { status: 400, poruka: "Datum rođenja nije validan." };
+    }
+    const datum = new Date(Date.UTC(dijelovi[0], dijelovi[1] - 1, dijelovi[2]));
 
     if (isNaN(datum.getTime())) {
         throw { status: 400, poruka: "Datum rođenja nije validan." };
     }
 
-    const danas = new Date();
-    danas.setHours(0, 0, 0, 0);
+    // ✅ FIX: poređenje danas-a također u UTC da bude konzistentno
+    const sada = new Date();
+    const danas = new Date(Date.UTC(sada.getUTCFullYear(), sada.getUTCMonth(), sada.getUTCDate()));
     if (datum > danas) {
         throw { status: 400, poruka: "Datum rođenja ne može biti u budućnosti." };
     }
@@ -361,32 +370,32 @@ export const registracijaService = async (podaci: {
     const enkriptovanBrojKnjizice = enkriptuj(brojKnjizice);
 
     const noviKorisnik = await prisma.$transaction(async (tx) => {
-    const korisnik = await tx.korisnik.create({
-        data: {
-            jmbg: enkriptovanJmbg,
-            jmbgHash,
-            ime,
-            prezime,
-            datumRodjenja: datum,
-            email,
-            pristupnaSifra: hashovanaSifra,
-            brojTelefona,
-            // NOVO: email nije verifikovan pri registraciji
-            emailVerifikovan: false,
-        }
+        const korisnik = await tx.korisnik.create({
+            data: {
+                jmbg: enkriptovanJmbg,
+                jmbgHash,
+                ime,
+                prezime,
+                datumRodjenja: datum,
+                email,
+                pristupnaSifra: hashovanaSifra,
+                brojTelefona,
+                emailVerifikovan: false,
+            }
+        });
+
+        await tx.pacijent.create({
+            data: {
+                idKorisnik: korisnik.id,
+                brojKnjizice: enkriptovanBrojKnjizice,
+                brojKnjiziceHash: brojKnjiziceHash,
+            }
+        });
+
+        return korisnik;
     });
 
-    await tx.pacijent.create({
-        data: {
-            idKorisnik: korisnik.id,   // ✅ korisnik.id, ne noviKorisnik.id!
-            brojKnjizice: enkriptovanBrojKnjizice,   // ✅ koristi već enkriptovanu varijablu
-            brojKnjiziceHash: brojKnjiziceHash,
-        }
-    });
-
-    return korisnik;
-});
-// NOVO: Generiši verifikacioni kod i pošalji na email
+    // Generiši verifikacioni kod i pošalji na email
     // ═══════════════════════════════════════════════════════════
     const verifikacioniKod = crypto.randomInt(100000, 999999).toString();
     const kodHash = crypto.createHash("sha256").update(verifikacioniKod).digest("hex");
@@ -416,11 +425,11 @@ export const registracijaService = async (podaci: {
         prezime: noviKorisnik.prezime,
         email: noviKorisnik.email,
         uloga: noviKorisnik.uloga,
-        // NOVO: signal frontendu da treba verifikacija
         emailVerifikacijaPotrebna: true,
         maskiraniEmail,
     };
 };
+
 export const prijavaService = async (podaci: {
     email: string;
     pristupnaSifra: string;
@@ -461,7 +470,8 @@ export const prijavaService = async (podaci: {
 
         throw { status: 401, poruka: GENERICKA_GRESKA_PRIJAVE };
     }
-    //Provjeri da li je email verifikovan
+
+    // Provjeri da li je email verifikovan
     if (!korisnik.emailVerifikovan) {
         throw {
             status: 403,

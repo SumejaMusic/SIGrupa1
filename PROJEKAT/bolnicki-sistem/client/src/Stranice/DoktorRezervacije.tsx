@@ -27,6 +27,25 @@ interface Termin {
   komentari: Komentar[]; nalazi: Nalaz[];
 }
 
+// ✅ Parsira ISO datum string kao čisti UTC → "YYYY-MM-DD"
+// Sprječava timezone bug gdje "2026-05-15T00:00:00.000Z" postaje "2026-05-14" lokalno
+const isoUTCdatum = (isoStr: string): string => {
+  const d = new Date(isoStr);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dan = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${dan}`;
+};
+
+// ✅ Danas u UTC formatu "YYYY-MM-DD"
+const danasUTC = (): string => {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dan = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${dan}`;
+};
+
 const formatV = (v: number) => {
   const h = Math.floor(v / 60);
   const m = v % 60;
@@ -45,7 +64,8 @@ const statusConfig = {
   otkazan: { label: "Otkazan", cls: "bg-red-100 text-red-600" },
 };
 
-const getAge = (godiste: number) => new Date().getFullYear() - godiste;
+// ✅ Godište iz datumRodjenja — UTC da ne sklizne na prethodnu godinu
+const getAge = (godiste: number) => new Date().getUTCFullYear() - godiste;
 
 function mapiriRezervaciju(r: any): Termin {
   const vrijemeOd = r.termin.vrijeme;
@@ -80,20 +100,23 @@ function mapiriRezervaciju(r: any): Termin {
     id: r.id * 1000,
     tekst: r.komentar,
     autor: `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`,
-    datum: new Date(r.datumKreiranja).toISOString().split("T")[0],
+    // ✅ UTC parsing datuma kreiranja komentara
+    datum: isoUTCdatum(r.datumKreiranja),
     jeDoktor: r.doktorRezervisao,
   }] : [];
 
   return {
     id: r.id,
-    datum: new Date(r.termin.datum).toISOString().split("T")[0],
+    // ✅ UTC parsing datuma termina
+    datum: isoUTCdatum(r.termin.datum),
     vrijemeOd,
     vrijemeDo,
     pacijent: {
       id: r.pacijent.id,
       ime: r.pacijent.korisnik.ime,
       prezime: r.pacijent.korisnik.prezime,
-      godisteRodjenja: new Date(r.pacijent.korisnik.datumRodjenja).getFullYear(),
+      // ✅ UTC godina rođenja
+      godisteRodjenja: new Date(r.pacijent.korisnik.datumRodjenja).getUTCFullYear(),
       pol: r.pacijent.korisnik.jmbg?.[6] < "5" ? "M" : "F",
       email: r.pacijent.korisnik.email,
       telefon: r.pacijent.korisnik.brojTelefona ?? "/",
@@ -430,7 +453,8 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
           setNalazi(data.map((n: any) => ({
             id: n.id,
             naziv: n.naziv,
-            datum: new Date(n.vrijemeNalaza).toISOString().split("T")[0],
+            // ✅ UTC parsing datuma nalaza
+            datum: isoUTCdatum(n.vrijemeNalaza),
             url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
           })));
         } else {
@@ -613,7 +637,8 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
                 <div key={h.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-700">
-                      {new Date(h.datumPregleda).toLocaleDateString("bs-BA")}
+                      {/* ✅ UTC prikaz datuma pregleda */}
+                      {new Date(isoUTCdatum(h.datumPregleda) + "T12:00:00Z").toLocaleDateString("bs-BA")}
                     </span>
                     <span className="text-xs text-gray-400">
                       {formatV(h.rezervacija?.termin?.vrijeme)}
@@ -636,7 +661,8 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
 export default function DoktorRezervacije() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [prikaz, setPrikaz] = useState<"dnevni" | "sedmicni" | "mjesecni">("dnevni");
-  const [selectedDatum, setSelectedDatum] = useState(new Date().toISOString().split("T")[0]);
+  // ✅ UTC danas kao početni datum
+  const [selectedDatum, setSelectedDatum] = useState(danasUTC());
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
   const [listaTermina, setListaTermina] = useState<Termin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -669,29 +695,27 @@ export default function DoktorRezervacije() {
     listaTermina.filter(t => t.datum === selectedDatum).sort((a, b) => a.vrijemeOd - b.vrijemeOd)
   );
 
-  const getWeekDays = (dateStr: string) => {
-    const d = new Date(dateStr + "T00:00:00");
-    const day = d.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    const monday = new Date(d);
-    monday.setDate(d.getDate() + diff);
+  // ✅ getWeekDays — radi s čistim YYYY-MM-DD stringovima, bez Date konverzije
+  const getWeekDays = (dateStr: string): string[] => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    // Dan u sedmici: 0=ned, 1=pon... Koristimo UTC da izbjegnemo timezone offset
+    const temp = new Date(Date.UTC(y, m - 1, d));
+    const dow = temp.getUTCDay();
+    const diff = dow === 0 ? -6 : 1 - dow; // pomak do ponedjeljka
     return Array.from({ length: 7 }, (_, i) => {
-      const dd = new Date(monday);
-      dd.setDate(monday.getDate() + i);
-      return dd.toISOString().split("T")[0];
+      const dd = new Date(Date.UTC(y, m - 1, d + diff + i));
+      return `${dd.getUTCFullYear()}-${String(dd.getUTCMonth() + 1).padStart(2, "0")}-${String(dd.getUTCDate()).padStart(2, "0")}`;
     });
   };
 
   const getMonthDays = (dateStr: string) => {
-    const d = new Date(dateStr + "T00:00:00");
-    const year = d.getFullYear();
-    const month = d.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const offset = firstDay === 0 ? 6 : firstDay - 1;
+    const [y, m] = dateStr.split("-").map(Number);
+    const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+    const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const offset = firstDow === 0 ? 6 : firstDow - 1;
     const days: (string | null)[] = Array(offset).fill(null);
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push(`${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`);
+      days.push(`${y}-${String(m).padStart(2, "0")}-${String(i).padStart(2, "0")}`);
     }
     return days;
   };
@@ -703,17 +727,18 @@ export default function DoktorRezervacije() {
     const [y, m, d] = selectedDatum.split("-").map(Number);
     let newDate: Date;
     if (prikaz === "mjesecni") {
-      newDate = new Date(y, m - 1 + delta, 1);
+      newDate = new Date(Date.UTC(y, m - 1 + delta, 1));
     } else {
-      newDate = new Date(y, m - 1, d + delta);
+      newDate = new Date(Date.UTC(y, m - 1, d + delta));
     }
     const pad = (n: number) => String(n).padStart(2, "0");
-    setSelectedDatum(`${newDate.getFullYear()}-${pad(newDate.getMonth() + 1)}-${pad(newDate.getDate())}`);
+    setSelectedDatum(`${newDate.getUTCFullYear()}-${pad(newDate.getUTCMonth() + 1)}-${pad(newDate.getUTCDate())}`);
     setSelectedTermin(null);
   };
 
+  // ✅ T12:00:00Z za siguran prikaz naziva dana/datuma
   const formatDatum = (ds: string) =>
-    new Date(ds + "T00:00:00").toLocaleDateString("bs-BA", { weekday: "long", day: "numeric", month: "long" });
+    new Date(ds + "T12:00:00Z").toLocaleDateString("bs-BA", { weekday: "long", day: "numeric", month: "long" });
 
   const handleAddKomentar = async (terminId: number, tekst: string) => {
     try {
@@ -724,7 +749,8 @@ export default function DoktorRezervacije() {
       });
       const noviK: Komentar = {
         id: Date.now(), tekst, autor: "Dr.",
-        datum: new Date().toISOString().split("T")[0], jeDoktor: true,
+        // ✅ UTC datum novog komentara
+        datum: danasUTC(), jeDoktor: true,
       };
       setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
       setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
@@ -753,10 +779,14 @@ export default function DoktorRezervacije() {
   const navLabel = () => {
     if (prikaz === "dnevni") return formatDatum(selectedDatum);
     if (prikaz === "sedmicni") return `Sedmica: ${weekDays[0]} – ${weekDays[6]}`;
-    return new Date(selectedDatum + "T00:00:00").toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
+    // ✅ T12:00:00Z za naziv mjeseca
+    return new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
   };
 
   const navDelta = prikaz === "dnevni" ? 1 : prikaz === "sedmicni" ? 7 : 1;
+
+  // ✅ Danas u UTC za isToday provjere
+  const todayStr = danasUTC();
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
@@ -899,11 +929,12 @@ export default function DoktorRezervacije() {
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="grid grid-cols-7 border-b border-gray-100">
                     {weekDays.map((ds, i) => {
-                      const isToday = ds === new Date().toISOString().split("T")[0];
+                      const isToday = ds === todayStr;
                       return (
                         <button key={ds} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }} className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}>
                           <div className="text-xs text-gray-400 mb-1">{dayNames[i]}</div>
-                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T00:00:00").getDate()}</div>
+                          {/* ✅ T12:00:00Z za dan u sedmičnom prikazu */}
+                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T12:00:00Z").getUTCDate()}</div>
                           <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
                             {filterTermini(listaTermina.filter(t => t.datum === ds)).map(t => (
                               <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
@@ -939,7 +970,8 @@ export default function DoktorRezervacije() {
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-semibold text-gray-700 capitalize">
-                      {new Date(selectedDatum + "T00:00:00").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
+                      {/* ✅ T12:00:00Z za naziv mjeseca */}
+                      {new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
                     </span>
                     <span className="text-xs text-gray-400">
                       {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {prikaziOtkazane ? "otkazanih" : "zakazanih"} termina u ovom mjesecu
@@ -953,7 +985,7 @@ export default function DoktorRezervacije() {
                   <div className="grid grid-cols-7 divide-x divide-y divide-gray-100">
                     {getMonthDays(selectedDatum).map((ds, idx) => {
                       const dayTermini = ds ? filterTermini(listaTermina.filter(t => t.datum === ds).sort((a, b) => a.vrijemeOd - b.vrijemeOd)) : [];
-                      const isToday = ds === new Date().toISOString().split("T")[0];
+                      const isToday = ds === todayStr;
                       const isSelected = ds === selectedDatum;
                       return (
                         <div
@@ -964,7 +996,8 @@ export default function DoktorRezervacije() {
                           {ds && (
                             <>
                               <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-700"}`}>
-                                {new Date(ds + "T00:00:00").getDate()}
+                                {/* ✅ UTC datum broj za mjesečni prikaz */}
+                                {new Date(ds + "T12:00:00Z").getUTCDate()}
                               </div>
                               <div className="space-y-0.5">
                                 {dayTermini.slice(0, 3).map(t => {
