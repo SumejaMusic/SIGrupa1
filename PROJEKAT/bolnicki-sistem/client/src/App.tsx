@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import HomePage from './Pages/HomePage';
+import HomePage from './Stranice/HomePage';
 //import RezervacijaPacijent from './klase/RezervacijaPacijent';
 import MojeRezervacije from './klase/MojeRezervacije';
 import Step1Odjeli from './klase/Step1Odjeli';
@@ -9,12 +9,12 @@ import Step3TipPregleda from './klase/Step3TipPregleda';
 import Step4Termini from './klase/Step4Termini';
 import Step5Potvrda from './klase/Step5Potvrda';
 import './App.css';
-import DoktorRezervacije from './Pages/DoktorRezervacije';
-import RegistracijaPage from './Pages/RegistracijaPage'
-import PrijavaPage from './Pages/PrijavaPage';
+import DoktorRezervacije from './Stranice/DoktorRezervacije';
+import RegistracijaPage from './Stranice/RegistracijaPage'
+import PrijavaPage from './Stranice/PrijavaPage';
 
-import ForgotPasswordPage from './Pages/ForgotPasswordPage';
-import ResetPasswordPage from './Pages/ResetPasswordPage';
+import ForgotPasswordPage from './Stranice/ForgotPasswordPage';
+import ResetPasswordPage from './Stranice/ResetPasswordPage';
 
 function App() {
   return (
