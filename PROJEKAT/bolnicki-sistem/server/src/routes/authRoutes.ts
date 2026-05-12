@@ -1,6 +1,9 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { body, validationResult } from "express-validator";
-import { registrujSe, prijavi, forgotPassword, resetPassword } from "../controllers/authController.js";
+import { registrujSe, prijavi, forgotPassword, resetPassword,
+   verifikujEmail,            // NOVO
+  ponovoPosaljiVerifikaciju, // NOVO
+ } from "../controllers/authController.js";
 
 const router = Router();
 
@@ -15,6 +18,34 @@ const validate = (req: Request, res: Response, next: NextFunction) => {
 
 router.post("/registracija", registrujSe);
 router.post("/prijava", prijavi);
+
+router.post(
+  "/verifikuj-email",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Unesite validnu email adresu.")
+      .normalizeEmail(),
+    body("kod")
+      .isLength({ min: 6, max: 6 })
+      .withMessage("Verifikacioni kod mora imati 6 cifara.")
+      .isNumeric()
+      .withMessage("Verifikacioni kod smije sadržavati samo brojeve."),
+  ],
+  validate,
+  verifikujEmail
+);
+router.post(
+  "/ponovo-posalji-verifikaciju",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Unesite validnu email adresu.")
+      .normalizeEmail(),
+  ],
+  validate,
+  ponovoPosaljiVerifikaciju
+);
 
 router.post(
   "/forgot-password",

@@ -1,5 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { registracijaService, prijavaService } from "../authService.js";
+import { 
+  registracijaService, 
+  prijavaService,
+  verifikujEmailService,        
+  ponovoPosaljiVerifikacijuService
+ } from "../authService.js";
 
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -12,14 +17,17 @@ export const registrujSe = async (req: Request, res: Response, next: NextFunctio
         const noviKorisnik = await registracijaService(req.body);
 
         return res.status(201).json({
-            poruka: "Korisnik uspješno registrovan",
-            korisnik: noviKorisnik
+            poruka: "Korisnik uspješno registrovan. Provjerite email za verifikacioni kod.",
+            korisnik: noviKorisnik,
+            emailVerifikacijaPotrebna: noviKorisnik.emailVerifikacijaPotrebna,
+            maskiraniEmail: noviKorisnik.maskiraniEmail,
+            email: noviKorisnik.email,
         });
     } catch (error) {
         next(error);
 
     }
-    return res.status(500).json({ poruka: "Interna greška servera." });
+    //return res.status(500).json({ poruka: "Interna greška servera." });
   }
 
 
@@ -57,6 +65,11 @@ export const prijaviSe = async (
 export const prijavi = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, pristupnaSifra } = req.body;
+
+    if (!email || !pristupnaSifra) {
+      res.status(400).json({ poruka: "Email i lozinka su obavezni." });
+      return;
+    }
 
     const rezultat = await prijavaService({
       email,
@@ -238,5 +251,51 @@ export const resetPassword = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ poruka: "Greška na serveru prilikom resetovanja lozinke." });
+  }
+};
+
+//verifikacija emaila
+export const verifikujEmail = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, kod } = req.body;
+ 
+    if (!email || !kod) {
+      res.status(400).json({ poruka: "Email i verifikacioni kod su obavezni." });
+      return;
+    }
+ 
+    await verifikujEmailService({
+      email,
+      kod,
+      ipAdresa: req.ip || req.socket.remoteAddress,
+    });
+ 
+    return res.status(200).json({
+      poruka: "Email je uspješno verifikovan! Sada se možete prijaviti.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const ponovoPosaljiVerifikaciju = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = req.body;
+ 
+    if (!email) {
+      res.status(400).json({ poruka: "Email je obavezan." });
+      return;
+    }
+ 
+    await ponovoPosaljiVerifikacijuService({
+      email,
+      ipAdresa: req.ip || req.socket.remoteAddress,
+    });
+ 
+    return res.status(200).json({
+      poruka: "Novi verifikacioni kod je poslan ukoliko račun postoji.",
+    });
+  } catch (error) {
+    next(error);
   }
 };
