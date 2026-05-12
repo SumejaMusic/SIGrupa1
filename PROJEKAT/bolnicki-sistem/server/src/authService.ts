@@ -3,11 +3,17 @@ import bcrypt from "bcrypt";
 import { enkriptuj } from "./lib/encryption.js";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { redis } from "./lib/redis.js"; //zbog email verifikacije
+import { posaljiVerifikacioniKod } from "./emailService.js";
 
 const MAX_NEUSPJELIH_PRIJAVA = 5;
 const GENERICKA_GRESKA_PRIJAVE = "Pogresan email ili lozinka.";
 const PORUKA_ZAKLJUCAN_NALOG =
     "Nalog je zakljucan zbog vise neuspjesnih pokusaja prijave. Resetujte lozinku za povrat pristupa.";
+
+
+const VERIFIKACIJA_TTL_SEKUNDI = 15 * 60; // Kod vrijedi 15 minuta
+const MAX_VERIFIKACIJA_POKUSAJA = 5;
 
 const greskaZakljucanogNaloga = () => ({
     status: 423,
@@ -129,6 +135,153 @@ const validacijaJMBG = (jmbg: string, datumRodjenja: Date): boolean => {
     );
 };
 
+// VERIFIKACIJA EMAIL-a
+export const verifikujEmailService = async (podaci: {
+    email: string;
+    kod: string;
+    ipAdresa?: string;
+}) => {
+    const { email, kod, ipAdresa } = podaci;
+ 
+    if (!email || !kod) {
+        throw { status: 400, poruka: "Email i verifikacioni kod su obavezni." };
+    }
+ 
+    const korisnik = await prisma.korisnik.findUnique({ where: { email } });
+    if (!korisnik) {
+        throw { status: 401, poruka: "Nevažeći verifikacioni kod." };
+    }
+ 
+    if (korisnik.emailVerifikovan) {
+        throw { status: 400, poruka: "Email je već verifikovan. Možete se prijaviti.", kod: "ALREADY_VERIFIED" };
+    }
+ 
+    const redisKey = `email-verifikacija:${korisnik.id}`;
+    const redisPodaciStr = await redis.get(redisKey);
+ 
+    if (!redisPodaciStr) {
+        throw {
+            status: 401,
+            poruka: "Verifikacioni kod je istekao. Zatražite novi kod.",
+            kod: "VERIFICATION_EXPIRED"
+        };
+    }
+ 
+    const redisPodaci = JSON.parse(redisPodaciStr);
+ 
+    // Provjeri broj pokušaja
+    if (redisPodaci.pokusaji >= MAX_VERIFIKACIJA_POKUSAJA) {
+        await redis.del(redisKey);
+        throw {
+            status: 429,
+            poruka: "Previše neuspjelih pokušaja. Zatražite novi kod.",
+            kod: "MAX_ATTEMPTS"
+        };
+    }
+ 
+    const uneseniKodHash = crypto.createHash("sha256").update(kod).digest("hex");
+ 
+    if (uneseniKodHash !== redisPodaci.kodHash) {
+        redisPodaci.pokusaji += 1;
+        const preostaloTTL = await redis.ttl(redisKey);
+        await redis.setex(redisKey, preostaloTTL > 0 ? preostaloTTL : 1, JSON.stringify(redisPodaci));
+ 
+        const preostalo = MAX_VERIFIKACIJA_POKUSAJA - redisPodaci.pokusaji;
+        throw {
+            status: 401,
+            poruka: preostalo > 0
+                ? `Pogrešan verifikacioni kod. Preostalo pokušaja: ${preostalo}.`
+                : "Previše neuspjelih pokušaja. Zatražite novi kod.",
+        };
+    }
+ 
+    // Kod je tačan — obriši iz Redis-a i označi email kao verifikovan
+    await redis.del(redisKey);
+ 
+    await prisma.$transaction(async (tx) => {
+        await tx.korisnik.update({
+            where: { id: korisnik.id },
+            data: { emailVerifikovan: true },
+        });
+ 
+        await tx.auditLog.create({
+            data: {
+                idKorisnika: korisnik.id,
+                tipAkcije: "EMAIL_VERIFIKOVAN",
+                izmenjenaTabela: "Korisnik",
+                stariPodaci: JSON.stringify({ emailVerifikovan: false }),
+                noviPodaci: JSON.stringify({ emailVerifikovan: true }),
+                ipAdresa,
+            },
+        });
+    });
+ 
+    return { uspjesno: true };
+};
+
+// PONOVO POŠALJI VERIFIKACIONI KOD
+// ═══════════════════════════════════════════════════════════════
+export const ponovoPosaljiVerifikacijuService = async (podaci: {
+    email: string;
+    ipAdresa?: string;
+}) => {
+    const { email, ipAdresa } = podaci;
+ 
+    const korisnik = await prisma.korisnik.findUnique({ where: { email } });
+    if (!korisnik) {
+        // Ne otkrivaj da korisnik ne postoji
+        return { poslano: true };
+    }
+ 
+    if (korisnik.emailVerifikovan) {
+        throw { status: 400, poruka: "Email je već verifikovan." };
+    }
+ 
+    // Rate limit: max 3 ponovnih slanja u 15 minuta
+    const rateLimitKey = `verifikacija-resend:${korisnik.id}`;
+    const resendCountStr = await redis.get(rateLimitKey);
+    const resendCount = resendCountStr ? parseInt(resendCountStr, 10) : 0;
+ 
+    if (resendCount >= 3) {
+        throw {
+            status: 429,
+            poruka: "Previše zahtjeva za ponovnim slanjem. Pokušajte ponovo za 15 minuta.",
+        };
+    }
+ 
+    const verifikacioniKod = crypto.randomInt(100000, 999999).toString();
+    const kodHash = crypto.createHash("sha256").update(verifikacioniKod).digest("hex");
+ 
+    const redisKey = `email-verifikacija:${korisnik.id}`;
+    const redisPodaci = JSON.stringify({
+        kodHash,
+        pokusaji: 0,
+        email: korisnik.email,
+    });
+ 
+    await redis.setex(redisKey, VERIFIKACIJA_TTL_SEKUNDI, redisPodaci);
+ 
+    const ttl = await redis.ttl(rateLimitKey);
+    const expiry = ttl > 0 ? ttl : 15 * 60;
+    await redis.setex(rateLimitKey, expiry, (resendCount + 1).toString());
+ 
+    await posaljiVerifikacioniKod(korisnik.email, korisnik.ime, verifikacioniKod);
+ 
+    await prisma.auditLog.create({
+        data: {
+            idKorisnika: korisnik.id,
+            tipAkcije: "VERIFIKACIONI_KOD_PONOVO_POSLAN",
+            izmenjenaTabela: "Korisnik",
+            noviPodaci: JSON.stringify({ pokusajSlanja: resendCount + 1 }),
+            ipAdresa,
+        },
+    });
+ 
+    return { poslano: true };
+};
+// REGISTRACIJA — IZMIJENJENO
+// Sada nakon kreiranja naloga salje verifikacioni kod na email.
+// Korisnik NE moze da se prijavi dok ne verifikuje email.
 export const registracijaService = async (podaci: {
     jmbg: string;
     ime: string;
@@ -217,7 +370,9 @@ export const registracijaService = async (podaci: {
             datumRodjenja: datum,
             email,
             pristupnaSifra: hashovanaSifra,
-            brojTelefona
+            brojTelefona,
+            // NOVO: email nije verifikovan pri registraciji
+            emailVerifikovan: false,
         }
     });
 
@@ -231,13 +386,39 @@ export const registracijaService = async (podaci: {
 
     return korisnik;
 });
-
+// NOVO: Generiši verifikacioni kod i pošalji na email
+    // ═══════════════════════════════════════════════════════════
+    const verifikacioniKod = crypto.randomInt(100000, 999999).toString();
+    const kodHash = crypto.createHash("sha256").update(verifikacioniKod).digest("hex");
+ 
+    const redisKey = `email-verifikacija:${noviKorisnik.id}`;
+    const redisPodaci = JSON.stringify({
+        kodHash,
+        pokusaji: 0,
+        email: noviKorisnik.email,
+    });
+ 
+    await redis.setex(redisKey, VERIFIKACIJA_TTL_SEKUNDI, redisPodaci);
+ 
+    await posaljiVerifikacioniKod(noviKorisnik.email, noviKorisnik.ime, verifikacioniKod);
+ 
+    // Maskiraj email za prikaz
+    const [localPart, domain] = noviKorisnik.email.split("@");
+    const maskiran =
+        localPart.length <= 2
+            ? localPart[0] + "***"
+            : localPart[0] + "***" + localPart[localPart.length - 1];
+    const maskiraniEmail = `${maskiran}@${domain}`;
+ 
     return {
         id: noviKorisnik.id,
         ime: noviKorisnik.ime,
         prezime: noviKorisnik.prezime,
         email: noviKorisnik.email,
-        uloga: noviKorisnik.uloga
+        uloga: noviKorisnik.uloga,
+        // NOVO: signal frontendu da treba verifikacija
+        emailVerifikacijaPotrebna: true,
+        maskiraniEmail,
     };
 };
 export const prijavaService = async (podaci: {
@@ -279,6 +460,15 @@ export const prijavaService = async (podaci: {
         }
 
         throw { status: 401, poruka: GENERICKA_GRESKA_PRIJAVE };
+    }
+    //Provjeri da li je email verifikovan
+    if (!korisnik.emailVerifikovan) {
+        throw {
+            status: 403,
+            poruka: "Email adresa nije verifikovana. Provjerite email za verifikacioni kod.",
+            kod: "EMAIL_NOT_VERIFIED",
+            email: korisnik.email,
+        };
     }
 
     await resetujNeuspjelePrijave(korisnik, ipAdresa);

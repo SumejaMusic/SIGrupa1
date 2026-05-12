@@ -233,6 +233,100 @@ export async function posaljiResetPasswordEmail(email: string, ime: string, toke
 
   console.log(`✅ Email za reset lozinke poslan na: ${email}`);
 }
+export async function posaljiVerifikacioniKod(email: string, ime: string, kod: string): Promise<void> {
+  const subject = `Potvrdite Vaš email — Kod: ${kod}`;
+ 
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      
+      <div style="background-color: #1a73e8; padding: 24px; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px;">✉️ Potvrdite Vaš email</h1>
+        <p style="color: #cce3ff; margin: 6px 0 0;">Dobrodošli u Bolnički Sistem</p>
+      </div>
+ 
+      <div style="padding: 30px;">
+        <p style="font-size: 16px;">Poštovani/a <strong>${ime}</strong>,</p>
+        <p style="color: #555;">Hvala Vam na registraciji! Unesite sljedeći kod da potvrdite Vašu email adresu:</p>
+ 
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="display: inline-block; background-color: #f0f4ff; border: 2px solid #1a73e8; border-radius: 8px; padding: 20px 40px; letter-spacing: 8px; font-size: 36px; font-weight: bold; color: #1a73e8;">
+            ${kod}
+          </div>
+        </div>
+ 
+        <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 14px 16px; margin-top: 20px;">
+          <strong>⚠️ Važno:</strong>
+          <ul style="margin: 8px 0 0; padding-left: 20px; color: #555;">
+            <li>Kod vrijedi <strong>15 minuta</strong>.</li>
+            <li>Nikome ne dijelite ovaj kod.</li>
+            <li>Ako niste kreirali nalog, ignorisite ovaj email.</li>
+          </ul>
+        </div>
+      </div>
+ 
+      <div style="background-color: #f8f9fa; padding: 16px; text-align: center; border-top: 1px solid #dee2e6;">
+        <p style="margin: 0; color: #888; font-size: 13px;">
+          © ${new Date().getFullYear()} Bolnički Sistem — Automatska obavijest, ne odgovarajte na ovaj email.
+        </p>
+      </div>
+    </div>
+  `;
+ 
+  // Pokušaj Brevo prvo (ako je konfigurisan)
+  if (process.env.BREVO_API_KEY) {
+    await posaljiPrekoBrevo(email, ime, subject, html);
+    return;
+  }
+ 
+  // Pokušaj Resend
+  if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.startsWith("re_dummy")) {
+    const result = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      // ═══════════════════════════════════════════════════════
+      // nakon upgradea render, uraditi sljedece:
+      //    PRIJE:  to: 'musicsumeja98@gmail.com',
+      //    POSLIJE: to: email,
+      // ═══════════════════════════════════════════════════════
+      to: 'musicsumeja98@gmail.com',
+      subject,
+      html,
+    });
+ 
+    if (result.error) {
+      throw new Error(`Resend nije poslao verifikacioni email: ${result.error.message}`);
+    }
+ 
+    console.log(`Verifikacioni kod poslan preko Resend na: ${email}`);
+    return;
+  }
+ 
+  // Fallback: Nodemailer/Gmail
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+ 
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || `"Bolnički Sistem" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject,
+      html,
+    });
+ 
+    console.log(`Verifikacioni kod poslan preko Gmail na: ${email}`);
+    return;
+  }
+ 
+  // Dev fallback
+  console.warn(" Email provider nije podesen. Verifikacioni kod za testiranje:");
+  console.warn(`   Email: ${email}`);
+  console.warn(`   Kod:   ${kod}`);
+}
+
 /*import nodemailer from 'nodemailer';
 interface RezervacijaEmailPodaci {
   pacijentEmail: string;

@@ -75,8 +75,13 @@ export default function PrijavaPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setGreske({ opsta: data.poruka || 'Pogrešan email ili lozinka.' });
-        return;
+        if (data.kod === 'EMAIL_NOT_VERIFIED') {
+          setGreske({
+            opsta: 'Vaš email nije verifikovan. Provjerite inbox za verifikacioni kod, ili se registrujte ponovo da dobijete novi kod.'
+          });
+        } else {
+          setGreske({ opsta: data.poruka || 'Pogrešan email ili lozinka.' });
+        }return;
       }
 
       localStorage.setItem('token', data.token);
