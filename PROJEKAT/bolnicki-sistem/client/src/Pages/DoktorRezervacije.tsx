@@ -646,21 +646,37 @@ export default function DoktorRezervacije() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [prikaziOtkazane, setPrikaziOtkazane] = useState(false);
 
-  const doktorId = "2";
+  const doktorId = (() => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.id?.toString() ?? null;
+  } catch {
+    return null;
+  }
+})();
+
+
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`)
-      .then(res => res.json())
-      .then(data => setListaTermina(data.map(mapiriRezervaciju)))
-      .catch(() => setListaTermina([]))
-      .finally(() => setLoading(false));
-  }, [doktorId]);
+ useEffect(() => {
+  if (!doktorId) return;
+  setLoading(true);
+  fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
+    headers: {
+      "Authorization": `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(data => setListaTermina(Array.isArray(data) ? data.map(mapiriRezervaciju) : []))
+    .catch(() => setListaTermina([]))
+    .finally(() => setLoading(false));
+}, [doktorId]);
 
   const filterTermini = (termini: Termin[]) =>
     termini.filter(t => prikaziOtkazane ? t.status === "otkazan" : t.status !== "otkazan");
@@ -716,39 +732,47 @@ export default function DoktorRezervacije() {
     new Date(ds + "T00:00:00").toLocaleDateString("bs-BA", { weekday: "long", day: "numeric", month: "long" });
 
   const handleAddKomentar = async (terminId: number, tekst: string) => {
-    try {
-      await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ komentar: tekst }),
-      });
-      const noviK: Komentar = {
-        id: Date.now(), tekst, autor: "Dr.",
-        datum: new Date().toISOString().split("T")[0], jeDoktor: true,
-      };
-      setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
-      setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
-    } catch {
-      showToast("❌ Greška pri slanju komentara.");
-    }
-  };
+  try {
+    await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ komentar: tekst }),
+    });
+    const noviK: Komentar = {
+      id: Date.now(), tekst, autor: "Dr.",
+      datum: new Date().toISOString().split("T")[0], jeDoktor: true,
+    };
+    setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
+    setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
+  } catch {
+    showToast("❌ Greška pri slanju komentara.");
+  }
+};
 
   const handlePromjenaDuzine = (_terminId: number, _zeljenaDuzina: number, _razlog: string) => {
     showToast("✓ Vaš upit je uspješno poslan administratoru.");
   };
 
   const handleOtkaziTermin = async (termin: Termin) => {
-    try {
-      const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, { method: "PATCH" });
-      if (!res.ok) throw new Error();
-      setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
-      setSelectedTermin(prev => prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev);
-      setTerminZaOtkazivanje(null);
-      showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
-    } catch {
-      showToast("❌ Greška pri otkazivanju termina.");
-    }
-  };
+  try {
+    const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    if (!res.ok) throw new Error();
+    setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
+    setSelectedTermin(prev => prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev);
+    setTerminZaOtkazivanje(null);
+    showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
+  } catch {
+    showToast("❌ Greška pri otkazivanju termina.");
+  }
+};
 
   const navLabel = () => {
     if (prikaz === "dnevni") return formatDatum(selectedDatum);
