@@ -1,18 +1,25 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 
-import HomePage from './Pages/HomePage';
+
+import HomePage from './Stranice/HomePage';
+//import RezervacijaPacijent from './klase/RezervacijaPacijent';
+
 import MojeRezervacije from './klase/MojeRezervacije';
 import Step1Odjeli from './klase/Step1Odjeli';
 import Step2Doktori from './klase/Step2Doktori';
 import Step3TipPregleda from './klase/Step3TipPregleda';
 import Step4Termini from './klase/Step4Termini';
 import Step5Potvrda from './klase/Step5Potvrda';
-import DoktorRezervacije from './Pages/DoktorRezervacije';
-import RegistracijaPage from './Pages/RegistracijaPage';
-import PrijavaPage from './Pages/PrijavaPage';
-import ForgotPasswordPage from './Pages/ForgotPasswordPage';
-import ResetPasswordPage from './Pages/ResetPasswordPage';
+
+import './App.css';
+import DoktorRezervacije from './Stranice/DoktorRezervacije';
+import RegistracijaPage from './Stranice/RegistracijaPage'
+import PrijavaPage from './Stranice/PrijavaPage';
+
+import ForgotPasswordPage from './Stranice/ForgotPasswordPage';
+import ResetPasswordPage from './Stranice/ResetPasswordPage';
+
 
 import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
