@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import { redis } from "../lib/redis.js";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+
+
 
 const prisma = new PrismaClient();
 
@@ -14,6 +16,13 @@ const TIP_PREGLEDA_ID = 1;
 let STVARNI_KORISNIK_ID: number;
 let STVARNI_PACIJENT_ID: number;
 let PACIJENT_TOKEN: string;
+
+// rezervacije.test.ts — dodaj na vrh, nakon importa
+vi.mock("../emailService.js", () => ({
+  posaljiPotvrdurezerv: vi.fn().mockResolvedValue(undefined),
+  posaljiResetPasswordEmail: vi.fn().mockResolvedValue(undefined),
+  posaljiVerifikacioniKod: vi.fn().mockResolvedValue(undefined),
+}));
 
 beforeAll(async () => {
   STVARNI_KORISNIK_ID = Number(process.env.TEST_KORISNIK_ID ?? "2");
@@ -224,8 +233,9 @@ describe("GET /api/rezervacije/doktor/:doktorId", () => {
     const kreacija = await kreirajRezervacijuHelper();
     expect(kreacija.status).toBe(201);
 
-    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`);
-
+    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`)
+    .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)      
+    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID)); 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
@@ -234,7 +244,9 @@ describe("GET /api/rezervacije/doktor/:doktorId", () => {
   });
 
   it("vraća praznu listu za doktora bez rezervacija", async () => {
-    const res = await request(app).get("/api/rezervacije/doktor/99999");
+    const res = await request(app).get("/api/rezervacije/doktor/99999")
+     .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)       // ← dodaj
+    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID)); // ← dodaj
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -402,7 +414,9 @@ describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/osoblje`);
+      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/osoblje`)
+       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)       // ← dodaj
+    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID)); // ← dodaj
 
     expect(res.status).toBe(200);
     expect(res.body.poruka).toContain("osoblja");
@@ -413,7 +427,9 @@ describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
 
   it("vraća 404 za nepostojeću rezervaciju", async () => {
     const res = await request(app)
-      .patch("/api/rezervacije/99999/otkazi/osoblje");
+      .patch("/api/rezervacije/99999/otkazi/osoblje")
+       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)       // ← dodaj
+    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID)); // ← dodaj
 
     expect(res.status).toBe(404);
   });
