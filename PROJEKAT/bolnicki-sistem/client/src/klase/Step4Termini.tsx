@@ -315,13 +315,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       },
       body: formData,
     });
-    if (!res.ok) {
-      const err = await res.json();
-      console.log("Greška rezervacije:", err);
-
-      alert(err.poruka || "Greška pri kreiranju rezervacije.");
-      return;
-    }
+   if (!res.ok) {
+  const err = await res.json();
+  console.log("Greška rezervacije:", err); // Već imaš ovo
+  console.log("Status:", res.status);
+  alert(err.poruka || err.message || JSON.stringify(err) || "Greška pri kreiranju rezervacije.");
+  return;
+}
 
     const dataToSave = {
       ime: form.ime,

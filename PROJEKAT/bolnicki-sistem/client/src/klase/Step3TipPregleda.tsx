@@ -15,7 +15,18 @@ function Step3TipPregleda() {
   const navigate = useNavigate();
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
   const [selectedDoktor, setSelectedDoktor] = useState<number | null>(null);
-
+ // ── NOVO: provjeri ulogu iz tokena ──────────────────────────────────
+  const jeDoktor = (() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return false;
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.uloga === "DOKTOR";
+    } catch {
+      return false;
+    }
+  })();
+  // ────────────────────────────────────────────────────────────────────
   /*const tipoviPregleda: TipPregleda[] = [
     {
       id: 1,
@@ -47,12 +58,16 @@ function Step3TipPregleda() {
   }, [navigate]);
 
   useEffect(() => {
-  const apiUrl = import.meta.env.VITE_API_URL;
   fetch(`${apiUrl}/api/tippregleda`)
     .then(res => res.json())
-    .then(setTipoviPregleda)
+    .then(data => {
+      const filtrirani = jeDoktor 
+        ? data 
+        : data.filter((t: TipPregleda) => !t.naziv.toLowerCase().includes("hitn"));
+      setTipoviPregleda(filtrirani);
+    })
     .catch(() => setTipoviPregleda([]));
-   }, []);
+}, [jeDoktor]); // ← dodaj jeDoktor ovdje
   const handleSelectTip = (tipId: number) => {
     setSelectedTip(tipId);
     localStorage.setItem("selectedTip", tipId.toString());
