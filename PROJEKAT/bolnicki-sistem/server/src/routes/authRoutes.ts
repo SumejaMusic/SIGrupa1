@@ -1,0 +1,89 @@
+import { Router, Request, Response, NextFunction } from "express";
+import { body, validationResult } from "express-validator";
+import { registrujSe, prijavi, forgotPassword, resetPassword,
+   verifikujEmail,            // NOVO
+  ponovoPosaljiVerifikaciju, // NOVO
+ } from "../controllers/authController.js";
+
+const router = Router();
+
+const validate = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ poruka: errors.array()[0].msg });
+    return;
+  }
+  next();
+};
+
+router.post("/registracija", registrujSe);
+router.post("/prijava", prijavi);
+
+router.post(
+  "/verifikuj-email",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Unesite validnu email adresu.")
+      .normalizeEmail(),
+    body("kod")
+      .isLength({ min: 6, max: 6 })
+      .withMessage("Verifikacioni kod mora imati 6 cifara.")
+      .isNumeric()
+      .withMessage("Verifikacioni kod smije sadržavati samo brojeve."),
+  ],
+  validate,
+  verifikujEmail
+);
+router.post(
+  "/ponovo-posalji-verifikaciju",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Unesite validnu email adresu.")
+      .normalizeEmail(),
+  ],
+  validate,
+  ponovoPosaljiVerifikaciju
+);
+
+router.post(
+  "/forgot-password",
+  [
+    body("email")
+      .isEmail()
+      .withMessage("Unesite validnu email adresu.")
+      .normalizeEmail(),
+  ],
+  validate,
+  forgotPassword
+);
+
+router.post(
+  "/reset-password",
+  [
+    body("token").notEmpty().withMessage("Token je obavezan."),
+    body("newPassword")
+      .isLength({ min: 8 })
+      .withMessage("Lozinka mora imati najmanje 8 karaktera.")
+      .matches(/[A-Z]/)
+      .withMessage("Lozinka mora sadržavati veliko slovo.")
+      .matches(/[a-z]/)
+      .withMessage("Lozinka mora sadržavati malo slovo.")
+      .matches(/[0-9]/)
+      .withMessage("Lozinka mora sadržavati broj.")
+      .matches(/[^A-Za-z0-9]/)
+      .withMessage("Lozinka mora sadržavati specijalni karakter."),
+    body("confirmPassword")
+      .custom((value, { req }) => {
+        if (value !== req.body.newPassword) {
+          throw new Error("Lozinke se ne podudaraju.");
+        }
+        return true;
+      }),
+  ],
+  validate,
+  resetPassword
+);
+
+export default router;

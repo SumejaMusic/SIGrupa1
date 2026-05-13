@@ -11,7 +11,8 @@
     "init-tailwind": "tailwindcss init -p"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.2.4",
+    "@hookform/resolvers": "^5.2.2",
+    "@tailwindcss/postcss": "^4.3.0",
     "@tanstack/react-query": "^5.99.2",
     "axios": "^1.15.1",
     "date-fns": "^4.1.0",
@@ -23,11 +24,11 @@
     "react-big-calendar": "^1.19.4",
     "react-datepicker": "^9.1.0",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.72.1",
+    "react-hook-form": "^7.75.0",
     "react-router-dom": "^7.14.2",
     "recharts": "^3.8.1",
     "socket.io-client": "^4.8.3",
-    "zod": "^4.3.6",
+    "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

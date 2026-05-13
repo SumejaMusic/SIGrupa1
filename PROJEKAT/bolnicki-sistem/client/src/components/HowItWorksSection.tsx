@@ -192,8 +192,17 @@ const navigate = useNavigate();
 
         {/* CTA */}
         <div className="mt-14 text-center">
-          <button 
-  onClick={() => navigate("/step1-odjeli")}
+        <button 
+  onClick={() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Ako je prijavljen, ide na odjele
+      navigate("/step1-odjeli");
+    } else {
+      // Ako nije prijavljen, ide na login
+      navigate("/prijava");
+    }
+  }}
   className="cta-button inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold px-8 py-3.5 rounded-xl shadow-md"
 >
   <Calendar className="w-5 h-5" />

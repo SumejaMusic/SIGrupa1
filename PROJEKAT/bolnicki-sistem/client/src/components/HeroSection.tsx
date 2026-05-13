@@ -1,10 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarCheck, ArrowRight, ClipboardList, CheckCircle2, ChevronRight } from 'lucide-react';
-
+import { useNavigate } from "react-router-dom"; // Dodaj ovo u import
+import { getUserRole } from "../utils/auth";
 export default function HeroSection() {
   const [activeStep, setActiveStep] = useState(0);
+  const navigate = useNavigate(); // Inicijalizacija navigacije
+  const handleProtectedNavigation = (targetPath: string) => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    navigate("/prijava");
+    return;
+  }
 
+  if (targetPath === "/moje-rezervacije") {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const uloga = payload.uloga; // "DOKTOR" ili "PACIJENT"
+      navigate(uloga === "DOKTOR" ? "/doktor-rezervacije" : "/moje-rezervacije");
+    } catch {
+      navigate("/moje-rezervacije");
+    }
+    return;
+  }
+
+  navigate(targetPath);
+};
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 5);
@@ -68,19 +89,26 @@ export default function HeroSection() {
               Odaberite odjel, pronađite doktora, zakažite termin — sve online. Bez čekanja, bez poziva, bez stresa.
             </p>
 
-            <div className="animate-fade-in delay-300 flex flex-wrap gap-4">
+           <div className="animate-fade-in delay-300 flex flex-wrap gap-4">
+  {/* Glavno dugme za zakazivanje */}
+  <button 
+    onClick={() => handleProtectedNavigation("/step1-odjeli")}
+    className="cta-button flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg transition-all"
+  >
+    <CalendarCheck className="w-5 h-5" />
+    Zakažite pregled
+    <ArrowRight className="w-4 h-4" />
+  </button>
 
-              <Link to="/step1-odjeli" className="cta-button flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg no-underline">
-
-                <CalendarCheck className="w-5 h-5" />
-                Zakažite pregled
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/moje-rezervacije" className="cta-button flex items-center gap-2.5 bg-white/10 hover:bg-white/18 backdrop-blur-sm border border-white/25 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 no-underline">
-                <ClipboardList className="w-5 h-5" />
-                Moje rezervacije
-              </Link>
-            </div>
+  {/* Dugme za moje rezervacije */}
+  <button 
+    onClick={() => handleProtectedNavigation("/moje-rezervacije")}
+    className="cta-button flex items-center gap-2.5 bg-white/10 hover:bg-white/18 backdrop-blur-sm border border-white/25 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200"
+  >
+    <ClipboardList className="w-5 h-5" />
+    Moje rezervacije
+  </button>
+</div>
           </div>
 
           {/* Right: Animated process visualization */}

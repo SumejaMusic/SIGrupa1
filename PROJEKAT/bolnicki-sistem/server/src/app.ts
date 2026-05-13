@@ -75,5 +75,33 @@ const io = new Server(httpServer, {
   },
 });
 
+// Error middleware — mora biti zadnji
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Server error:", err);
+
+  if (err.code === "P1001") {
+    res.status(503).json({
+      poruka: "Baza podataka nije dostupna. Provjerite DATABASE_URL i da li je PostgreSQL pokrenut.",
+      kod: "DATABASE_UNAVAILABLE",
+    });
+    return;
+  }
+
+  if (err.code === "P2022") {
+    res.status(500).json({
+      poruka: "Baza nije uskladjena sa Prisma semom. Pokrenite Prisma migracije.",
+      kod: "DATABASE_SCHEMA_OUT_OF_SYNC",
+    });
+    return;
+  }
+
+  const status = err.status || 500;
+  const poruka = err.poruka || "Interna greska servera.";
+  const odgovor: { poruka: string; kod?: string } = { poruka };
+  if (typeof err.kod === "string") {
+    odgovor.kod = err.kod;
+  }
+  res.status(status).json(odgovor);
+});
 export { io, httpServer };
 export default app;

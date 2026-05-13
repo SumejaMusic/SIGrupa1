@@ -16,8 +16,18 @@ export default function CtaBanner() {
           Vaše zdravlje ne smije čekati. Odaberite doktora, termin i budite sigurni da ste na pravom putu.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button 
-  onClick={() => navigate("/step1-odjeli")}
+        <button 
+  onClick={() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Ako je prijavljen, ide na proces rezervacije
+      navigate("/step1-odjeli");
+    } else {
+      // Ako nije prijavljen, šaljemo ga na login
+      // Možeš dodati i 'replace: true' ako ne želiš da se može vratiti nazad
+      navigate("/prijava");
+    }
+  }}
   className="cta-button inline-flex items-center justify-center gap-2.5 bg-white text-blue-800 font-bold px-8 py-3.5 rounded-xl shadow-lg hover:bg-blue-50"
 >
   <CalendarCheck className="w-5 h-5" />
