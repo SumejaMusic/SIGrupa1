@@ -80,7 +80,7 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
     }
 
     const lock = await redis.get(`termin:lock:${idTermina}`);
-
+//if (!lock && lock === String(korisnikId)) prije bilo
     if (!lock && lock === String(korisnikId)) {
       res.status(409).json({ poruka: "Termin nije zaključan. Pokrenite proces ponovo." });
       return;
