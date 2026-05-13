@@ -80,13 +80,15 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
     }
 
     const lock = await redis.get(`termin:lock:${idTermina}`);
-
+//if (!lock && lock === String(korisnikId)) prije bilo
     if (!lock && lock === String(korisnikId)) {
       res.status(409).json({ poruka: "Termin nije zaključan. Pokrenite proces ponovo." });
       return;
     }
-
-    const rezervacija = await prisma.$transaction(async (tx) => {
+    //javljalo je gresku servera jer upload pdf premasi duzinu prisma transakcije pa sam zamijenila
+    //sa kodom ispod upload pdf se radi prije transakcije ako padne pdf se brise iz baze 
+    //ako bude problem vratiti
+    /*const rezervacija = await prisma.$transaction(async (tx) => {
       const nova = await tx.rezervacije.create({
         data: {
           idTermina,
@@ -130,7 +132,67 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
 
       await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });
       return nova;
-    });
+    });*/
+    // PDF kreiraj VAN transakcije
+    const file = (req as any).file;
+    let nalazId: number | null = null;
+
+    if (file) {
+      const nalaz = await prisma.nalaz.create({
+        data: {
+          naziv: file.originalname,
+          opis: komentar ?? null,
+          dokumentPDF: file.buffer,
+        },
+      });
+      nalazId = nalaz.id;
+    }
+
+    let rezervacija;
+    try {
+      rezervacija = await prisma.$transaction(async (tx) => {
+        const nova = await tx.rezervacije.create({
+          data: {
+            idTermina,
+            idPacijent: pacijent.id,
+            idDoktor,
+            komentar: komentar ?? null,
+            hitnost: hitnost ?? false,
+            doktorRezervisao: false,
+            datumKreiranja: new Date(),
+            idTipPregleda,
+          },
+          include: {
+            termin: true,
+            pacijent: { include: { korisnik: true } },
+            doktor: { include: { korisnik: true } },
+          },
+        });
+
+        if (nalazId) {
+          await tx.historijaPregleda.create({
+            data: {
+              idPacijent: pacijent.id,
+              idDoktor,
+              idRezervacija: nova.id,
+              idNalaz: nalazId,
+              dijagnoza: "Nije unesena",
+              terapija: "Nije unesena",
+              biljeske: komentar ?? null,
+            },
+          });
+        }
+
+        await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });
+        return nova;
+      });
+    } catch (err) {
+      // Transakcija pukla — obriši PDF ako je bio uploadovan
+      if (nalazId) {
+        await prisma.nalaz.delete({ where: { id: nalazId } }).catch(() => {});
+      }
+      throw err;
+    }
 
     io.emit("termin-azuriran", { doktorId: idDoktor, terminId: idTermina });
     await redis.del(`termin:lock:${idTermina}`);

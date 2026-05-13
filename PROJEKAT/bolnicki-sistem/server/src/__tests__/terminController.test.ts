@@ -12,6 +12,9 @@ import { getCurrentKorisnikId } from "../lib/currentPatient.js";
 vi.mock("../lib/prisma.js");
 vi.mock("../lib/redis.js");
 vi.mock("../lib/currentPatient.js");
+vi.mock("../app.js", () => ({
+  io: { emit: vi.fn() },
+}));
 
 const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) => ({
   req: { params, query, body, korisnik } as any,
@@ -22,8 +25,20 @@ const mockReqRes = (params = {}, query = {}, body = {}, korisnik = { id: 1 }) =>
   next: vi.fn(),
 });
 
+// Kontroler vraća obogaćene objekte — ovo mapira originalni termin na očekivani oblik
+const obogati = (t: any, lock: string | null = null, ttl: number | null = null) => ({
+  ...t,
+  zakljucan: !!lock,
+  zakljucaoKorisnikId: lock ? Number(lock) : null,
+  preostaloSekundi: ttl,
+});
+
 beforeEach(() => {
   vi.mocked(getCurrentKorisnikId).mockReset();
+  vi.mocked(redisMock.get).mockReset();
+  vi.mocked(redisMock.ttl).mockReset();
+  vi.mocked(redisMock.setex).mockReset();
+  vi.mocked(redisMock.del).mockReset();
 });
 
 // ─────────────────────────────────────────────
@@ -33,30 +48,32 @@ describe("getSlobodniTermini", () => {
   // ─── HAPPY PATH ───────────────────────────────
 
   it("vraća sve slobodne termine kada nema filtera i nema Redis lockova", async () => {
-  const lažniTermini = [
-    { id: 1, idDoktor: 1, datum: new Date("2025-06-01"), status: "SLOBODAN" },
-    { id: 2, idDoktor: 2, datum: new Date("2025-06-02"), status: "SLOBODAN" },
-  ];
-  vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
-  vi.mocked(redisMock.get).mockResolvedValue(null);
+    const lažniTermini = [
+      { id: 1, idDoktor: 1, datum: new Date("2025-06-01"), status: "SLOBODAN" },
+      { id: 2, idDoktor: 2, datum: new Date("2025-06-02"), status: "SLOBODAN" },
+    ];
+    vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
+    vi.mocked(redisMock.get).mockResolvedValue(null);
 
-  const { req, res, next } = mockReqRes({}, {});
-  await getSlobodniTermini(req, res, next);
+    const { req, res, next } = mockReqRes({}, {});
+    await getSlobodniTermini(req, res, next);
 
-  expect(prismaMock.termin.findMany).toHaveBeenCalledWith(
-    expect.objectContaining({
-      where: expect.objectContaining({
-        idDoktor: undefined,
-        datum: expect.objectContaining({ gte: expect.any(Date) }), // ← ovo je promjena
-        status: "SLOBODAN",
-      }),
-      orderBy: [{ datum: "asc" }, { vrijeme: "asc" }],
-      include: { doktor: { include: { korisnik: true } } },
-    })
-  );
-  expect(res.json).toHaveBeenCalledWith(lažniTermini);
-  expect(next).not.toHaveBeenCalled();
-});
+    expect(prismaMock.termin.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          idDoktor: undefined,
+          datum: expect.objectContaining({ gte: expect.any(Date) }),
+          status: "SLOBODAN",
+        }),
+        orderBy: [{ datum: "asc" }, { vrijeme: "asc" }],
+        include: { doktor: { include: { korisnik: true } } },
+      })
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map((t) => obogati(t, null, null))
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
 
   it("filtrira termine po doktorId i vraća samo njegove termine — US-05 AC1", async () => {
     const lažniTermini = [
@@ -76,7 +93,9 @@ describe("getSlobodniTermini", () => {
         }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map((t) => obogati(t, null, null))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -98,7 +117,9 @@ describe("getSlobodniTermini", () => {
         }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map((t) => obogati(t, null, null))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -121,13 +142,15 @@ describe("getSlobodniTermini", () => {
         }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith(lažniTermini);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map((t) => obogati(t, null, null))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
   // ─── REDIS LOCK — US-05 AC4, US-12 ───────────
 
-  it("skriva zaključan termin i vraća samo slobodne — US-05 AC4", async () => {
+  it("označava zaključan termin i vraća ga sa zakljucan=true i TTL — US-05 AC4", async () => {
     const lažniTermini = [
       { id: 1, status: "SLOBODAN" },
       { id: 2, status: "SLOBODAN" },
@@ -136,21 +159,26 @@ describe("getSlobodniTermini", () => {
     vi.mocked(redisMock.get).mockImplementation(async (key) =>
       key === "termin:lock:1" ? "999" : null
     );
+    vi.mocked(redisMock.ttl).mockResolvedValue(90);
 
     const { req, res, next } = mockReqRes({}, {});
     await getSlobodniTermini(req, res, next);
 
-    expect(res.json).toHaveBeenCalledWith([lažniTermini[1]]);
+    expect(res.json).toHaveBeenCalledWith([
+      obogati(lažniTermini[0], "999", 90),
+      obogati(lažniTermini[1], null, null),
+    ]);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("vraća prazan niz kada su svi termini zaključani — US-05 AC4", async () => {
+  it("vraća sve termine kao zaključane kada su svi lockovani — US-05 AC4", async () => {
     const lažniTermini = [
       { id: 1, status: "SLOBODAN" },
       { id: 2, status: "SLOBODAN" },
     ];
     vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
     vi.mocked(redisMock.get).mockResolvedValue("999");
+    vi.mocked(redisMock.ttl).mockResolvedValue(60);
 
     const { req, res, next } = mockReqRes({}, {});
     await getSlobodniTermini(req, res, next);
@@ -160,20 +188,24 @@ describe("getSlobodniTermini", () => {
         where: expect.objectContaining({ status: "SLOBODAN" }),
       })
     );
-    expect(res.json).toHaveBeenCalledWith([]);
+    expect(res.json).toHaveBeenCalledWith(
+      lažniTermini.map((t) => obogati(t, "999", 60))
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("prikazuje termin zaključan od istog korisnika — US-12", async () => {
+  it("prikazuje termin zaključan od istog korisnika sa ispravnim podacima — US-12", async () => {
     const lažniTermini = [{ id: 1, status: "SLOBODAN" }];
     vi.mocked(prismaMock.termin.findMany).mockResolvedValue(lažniTermini as any);
-    // isti korisnik ima lock — termin se prikazuje kao zauzet svima
     vi.mocked(redisMock.get).mockResolvedValue("1");
+    vi.mocked(redisMock.ttl).mockResolvedValue(100);
 
     const { req, res, next } = mockReqRes({}, {});
     await getSlobodniTermini(req, res, next);
 
-    expect(res.json).toHaveBeenCalledWith([]);
+    expect(res.json).toHaveBeenCalledWith([
+      obogati(lažniTermini[0], "1", 100),
+    ]);
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -259,9 +291,10 @@ describe("getSlobodniTermini", () => {
   });
 });
 
+// ─────────────────────────────────────────────
+// getTerminById
+// ─────────────────────────────────────────────
 describe("getTerminById", () => {
-  // ─── HAPPY PATH ───────────────────────────────
-
   it("vraća termin sa svim podacima kada postoji — US-05 AC3", async () => {
     const lažniTermin = {
       id: 1,
@@ -303,8 +336,6 @@ describe("getTerminById", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // ─── 404 SLUČAJEVI ────────────────────────────
-
   it("vraća 404 kada termin ne postoji — US-05 AC3", async () => {
     vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(null);
 
@@ -318,8 +349,6 @@ describe("getTerminById", () => {
     expect(res.json).toHaveBeenCalledWith({ poruka: "Termin nije pronađen." });
     expect(next).not.toHaveBeenCalled();
   });
-
-  // ─── EDGE CASES ───────────────────────────────
 
   it("konvertuje string ID u broj prije slanja Prismi", async () => {
     const lažniTermin = { id: 42, status: "SLOBODAN", doktor: {} };
@@ -351,8 +380,6 @@ describe("getTerminById", () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  // ─── ERROR HANDLING ───────────────────────────
-
   it("poziva next pri DB grešci i ne vraća odgovor", async () => {
     const greška = new Error("DB greška");
     vi.mocked(prismaMock.termin.findUnique).mockRejectedValue(greška);
@@ -370,12 +397,11 @@ describe("getTerminById", () => {
 // zaključajTermin — US-12, US-13 AC2
 // ─────────────────────────────────────────────
 describe("zaključajTermin", () => {
-  // ─── HAPPY PATH ───────────────────────────────
-
   it("uspješno zaključava slobodan termin i vraća potvrdu — US-12 AC1", async () => {
     vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 1, idDoktor: 2 } as any);
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, {}, { id: 1 });
     await zaključajTermin(req, res, next);
@@ -393,6 +419,7 @@ describe("zaključajTermin", () => {
     vi.mocked(getCurrentKorisnikId).mockResolvedValue(3);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 1 } as any);
 
     const { req, res, next } = mockReqRes({ id: "5" }, {}, {}, { id: 3 });
     await zaključajTermin(req, res, next);
@@ -408,6 +435,7 @@ describe("zaključajTermin", () => {
     vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 1, idDoktor: 2 } as any);
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, {}, { id: 1 });
     await zaključajTermin(req, res, next);
@@ -420,8 +448,6 @@ describe("zaključajTermin", () => {
     expect(res.status).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
-
-  // ─── 409 SLUČAJEVI — US-13 AC2 ───────────────
 
   it("vraća 409 kada termin zaključao drugi korisnik i ne postavlja novi lock — US-13 AC2", async () => {
     vi.mocked(getCurrentKorisnikId).mockResolvedValue(1);
@@ -439,12 +465,11 @@ describe("zaključajTermin", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // ─── EDGE CASES ───────────────────────────────
-
   it("konvertuje string ID termina u ispravan Redis ključ", async () => {
     vi.mocked(getCurrentKorisnikId).mockResolvedValue(7);
     vi.mocked(redisMock.get).mockResolvedValue(null);
     vi.mocked(redisMock.setex).mockResolvedValue("OK");
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 42, idDoktor: 1 } as any);
 
     const { req, res, next } = mockReqRes({ id: "42" }, {}, {}, { id: 7 });
     await zaključajTermin(req, res, next);
@@ -471,8 +496,6 @@ describe("zaključajTermin", () => {
     expect(redisMock.setex).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
-
-  // ─── ERROR HANDLING ───────────────────────────
 
   it("poziva next pri Redis grešci na get i ne vraća odgovor", async () => {
     const greška = new Error("Redis greška");
@@ -502,11 +525,13 @@ describe("zaključajTermin", () => {
   });
 });
 
+// ─────────────────────────────────────────────
+// oslobodiTermin — US-12
+// ─────────────────────────────────────────────
 describe("oslobodiTermin", () => {
-  // ─── HAPPY PATH ───────────────────────────────
-
   it("uspješno oslobađa zaključan termin i vraća potvrdu — US-12", async () => {
     vi.mocked(redisMock.del).mockResolvedValue(1);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 1, idDoktor: 2 } as any);
 
     const { req, res, next } = mockReqRes({ id: "1" });
     await oslobodiTermin(req, res, next);
@@ -519,6 +544,7 @@ describe("oslobodiTermin", () => {
 
   it("uspješno oslobađa termin koji nije bio zaključan — US-12", async () => {
     vi.mocked(redisMock.del).mockResolvedValue(0);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 1, idDoktor: 2 } as any);
 
     const { req, res, next } = mockReqRes({ id: "1" });
     await oslobodiTermin(req, res, next);
@@ -529,10 +555,9 @@ describe("oslobodiTermin", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  // ─── EDGE CASES ───────────────────────────────
-
   it("konvertuje string ID u ispravan Redis ključ", async () => {
     vi.mocked(redisMock.del).mockResolvedValue(1);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 42, idDoktor: 1 } as any);
 
     const { req, res, next } = mockReqRes({ id: "42" });
     await oslobodiTermin(req, res, next);
@@ -544,6 +569,7 @@ describe("oslobodiTermin", () => {
 
   it("poziva del samo jednom po zahtjevu", async () => {
     vi.mocked(redisMock.del).mockResolvedValue(1);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 1, idDoktor: 2 } as any);
 
     const { req, res, next } = mockReqRes({ id: "1" });
     await oslobodiTermin(req, res, next);
@@ -551,8 +577,6 @@ describe("oslobodiTermin", () => {
     expect(redisMock.del).toHaveBeenCalledTimes(1);
     expect(next).not.toHaveBeenCalled();
   });
-
-  // ─── ERROR HANDLING ───────────────────────────
 
   it("poziva next pri Redis grešci i ne vraća odgovor", async () => {
     const greška = new Error("Redis greška");

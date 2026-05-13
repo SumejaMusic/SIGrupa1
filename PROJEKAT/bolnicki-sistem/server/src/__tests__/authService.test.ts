@@ -26,16 +26,20 @@ const napraviKorisnika = async (overrides: Record<string, unknown> = {}) => ({
   vrijemeZakljucavanja: null,
   zadnjiNeuspjeliPokusaj: null,
   uloga: "PACIJENT",
+  emailVerifikovan: true,   // ← ovo nedostaje
   ...overrides,
 });
 
 beforeEach(() => {
   process.env.JWT_SECRET = "test-secret";
+  
+  vi.mocked(prismaMock.korisnik.update).mockResolvedValue({} as any);
+  vi.mocked(prismaMock.auditLog.create).mockResolvedValue({} as any);  // ← ovo nedostaje
+
   (prismaMock.$transaction as any).mockImplementation(async (callbackOrQueries: any) => {
     if (typeof callbackOrQueries === "function") {
       return callbackOrQueries(prismaMock);
     }
-
     return Promise.all(callbackOrQueries);
   });
 });
