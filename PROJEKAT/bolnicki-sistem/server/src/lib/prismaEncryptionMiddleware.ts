@@ -41,8 +41,13 @@ function decryptResult(model: Prisma.ModelName, result: unknown) {
 export const applyEncryptionMiddleware: Prisma.Middleware = async (params, next) => {
   const model = params.model as Prisma.ModelName | undefined;
 
+  console.log("=== MIDDLEWARE POKRENUT ===", model, params.action);
+
   if (model && ['create', 'update', 'upsert'].includes(params.action)) {
+    console.log("Data PRIJE:", JSON.stringify(params.args.data));
     if (params.args.data) encryptFields(model, params.args.data);
+    console.log("Data NAKON:", JSON.stringify(params.args.data));
+
     if (params.action === 'upsert') {
       if (params.args.create) encryptFields(model, params.args.create);
       if (params.args.update) encryptFields(model, params.args.update);
