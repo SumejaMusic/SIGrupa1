@@ -28,7 +28,7 @@ interface Termin {
 }
 
 // ✅ Parsira ISO datum string kao čisti UTC → "YYYY-MM-DD"
-// Sprječava timezone bug gdje "2026-05-15T00:00:00.000Z" postaje "2026-05-14" lokalno
+// Sprječava timezone bug gdje "2026-05-15y.000Z" postaje "2026-05-14" lokalno
 const isoUTCdatum = (isoStr: string): string => {
   const d = new Date(isoStr);
   const y = d.getUTCFullYear();
