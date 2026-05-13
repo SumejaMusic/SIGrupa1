@@ -19,11 +19,12 @@ beforeAll(async () => {
   STVARNI_KORISNIK_ID = Number(process.env.TEST_KORISNIK_ID ?? "2");
   STVARNI_PACIJENT_ID = 1;
 
-  PACIJENT_TOKEN = jwt.sign(
-    { id: STVARNI_KORISNIK_ID, uloga: "PACIJENT" },
-    process.env.JWT_SECRET!,
-    { expiresIn: "1h" }
-  );
+  const jwtSecret = process.env.JWT_SECRET ?? "test-secret";
+PACIJENT_TOKEN = jwt.sign(
+  { id: STVARNI_KORISNIK_ID, uloga: "PACIJENT" },
+  jwtSecret,
+  { expiresIn: "1h" }
+);
 });
 
 afterAll(async () => {
