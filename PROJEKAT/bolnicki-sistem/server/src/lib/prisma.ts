@@ -1,5 +1,10 @@
-//singleton instanca; bitno
+// singleton instanca; bitno
 
 import { PrismaClient } from "@prisma/client";
-export const prisma = new PrismaClient();
+import { applyEncryptionMiddleware } from "./prismaEncryptionMiddleware.js";
 
+const prisma = new PrismaClient();
+
+prisma.$use(applyEncryptionMiddleware);
+
+export { prisma };
