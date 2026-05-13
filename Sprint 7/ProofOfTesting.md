@@ -117,6 +117,16 @@ Integracioni testovi provjeravaju stvarni rad API endpointa, komunikaciju sa tes
 | **Ukupno** | **17** | **Uspješno** |
 
 ---
+## Dokaz izvršenja testova
+
+### Unit testovi
+
+![Rezultat unit testova](images/registration_unit_tests.png)
+
+### Integracioni testovi
+
+![Rezultat integracionih testova](images/registration_integration_tests.png)
+---
 
 ## Zaključak
 
