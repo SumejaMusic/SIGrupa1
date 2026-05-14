@@ -5,9 +5,12 @@ import { PrismaClient } from "@prisma/client";
 
 // emailService.ts je direktno u src/ — putanja relativna od src/__integration_tests__/
 vi.mock("../emailService.js", () => ({
-    sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
-    sendEmail:             vi.fn().mockResolvedValue(undefined),
-    default:               { sendVerificationEmail: vi.fn().mockResolvedValue(undefined) },
+    sendVerificationEmail:   vi.fn().mockResolvedValue(undefined),
+    sendEmail:               vi.fn().mockResolvedValue(undefined),
+    posaljiVerifikacioniKod: vi.fn().mockResolvedValue(undefined),
+    posaljiPotvrdurezerv:    vi.fn().mockResolvedValue(undefined),
+    posaljiResetPasswordEmail: vi.fn().mockResolvedValue(undefined),
+    default:                 { sendVerificationEmail: vi.fn().mockResolvedValue(undefined) },
 }));
 
 const prisma = new PrismaClient();
