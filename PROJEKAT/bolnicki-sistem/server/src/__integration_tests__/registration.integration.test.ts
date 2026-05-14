@@ -1,9 +1,8 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import { PrismaClient } from "@prisma/client";
 
-// emailService.ts je direktno u src/ — putanja relativna od src/__integration_tests__/
 vi.mock("../emailService.js", () => ({
     sendVerificationEmail:     vi.fn().mockResolvedValue(undefined),
     sendEmail:                 vi.fn().mockResolvedValue(undefined),
@@ -15,72 +14,64 @@ vi.mock("../emailService.js", () => ({
 
 vi.mock("../lib/redis.js", () => ({
     redis: {
-        setex: vi.fn().mockResolvedValue("OK"),
-        get:   vi.fn().mockResolvedValue(null),
-        del:   vi.fn().mockResolvedValue(1),
-        ttl:   vi.fn().mockResolvedValue(900),
-        set:   vi.fn().mockResolvedValue("OK"),
+        setex:  vi.fn().mockResolvedValue("OK"),
+        get:    vi.fn().mockResolvedValue(null),
+        del:    vi.fn().mockResolvedValue(1),
+        ttl:    vi.fn().mockResolvedValue(900),
+        set:    vi.fn().mockResolvedValue("OK"),
         exists: vi.fn().mockResolvedValue(0),
     },
 }));
 
 const prisma = new PrismaClient();
 
-afterEach(async () => {
+// ─── helper: briše sve korisnike s prefiksom "registracija-test-" ────────────
+async function ocistiTestKorisnike() {
     const korisnici = await prisma.korisnik.findMany({
-        where: {
-            email: {
-                startsWith: "registracija-test-",
-            },
-        },
-        select: {
-            id: true,
-        },
+        where:  { email: { startsWith: "registracija-test-" } },
+        select: { id: true },
     });
 
-    const korisnikIds = korisnici.map((korisnik) => korisnik.id);
+    const ids = korisnici.map((k) => k.id);
+    if (ids.length === 0) return;
 
-    await prisma.pacijent.deleteMany({
-        where: {
-            idKorisnik: {
-                in: korisnikIds,
-            },
-        },
-    });
+    await prisma.pacijent.deleteMany({ where: { idKorisnik: { in: ids } } });
+    await prisma.korisnik.deleteMany({ where: { id:          { in: ids } } });
+}
 
-    await prisma.korisnik.deleteMany({
-        where: {
-            id: {
-                in: korisnikIds,
-            },
-        },
-    });
-});
+// Čisti i PRIJE i POSLIJE — štiti od prljavog stanja iz prethodnog runa
+beforeEach(async () => { await ocistiTestKorisnike(); });
+afterEach(async ()  => { await ocistiTestKorisnike(); });
 
+// ─── factory podataka ─────────────────────────────────────────────────────────
 const validniPodaci = {
-    ime: "Amina",
-    prezime: "Hodžić",
-    jmbg: "1101900123456",
-    datumRodjenja: "1900-01-11",
-    email: "amina-integ@test.ba",
+    ime:            "Amina",
+    prezime:        "Hodžić",
+    jmbg:           "1101900123456",
+    datumRodjenja:  "1900-01-11",
+    email:          "amina-integ@test.ba",
     pristupnaSifra: "Test@123",
-    brojTelefona: "+38761123456",
-    brojKnjizice: "INT-001",
+    brojTelefona:   "+38761123456",
+    brojKnjizice:   "INT-001",
 };
 
-let registracijaCounter = 0;
-
+// Timestamp + random sufiks — garantovana jedinstvenost čak i pri paralelnom pokretanju
 const jedinstveniPodaci = (overrides = {}) => {
-    registracijaCounter++;
+    const ts  = Date.now();
+    const rnd = Math.floor(Math.random() * 1_000_000);
+    const uid = `${ts}${rnd}`;           // ~19 cifara — dovoljno za prefiks
 
     return {
         ...validniPodaci,
-        email: `registracija-test-${registracijaCounter}-${Date.now()}@test.ba`,
-        jmbg: `110190012345${registracijaCounter % 10}`,
-        brojKnjizice: `INT-${registracijaCounter}-${Date.now()}`,
+        email:        `registracija-test-${uid}@test.ba`,
+        // JMBG mora biti tačno 13 cifara — uzimamo posljednjih 13 iz uid-a
+        jmbg:         uid.slice(-13),
+        brojKnjizice: `INT-${uid}`,
         ...overrides,
     };
 };
+
+// ─── testovi ──────────────────────────────────────────────────────────────────
 
 describe("POST /api/auth/registracija — uspješni scenariji", () => {
     it("registruje novog korisnika i vraća 201", async () => {
@@ -89,16 +80,17 @@ describe("POST /api/auth/registracija — uspješni scenariji", () => {
         const res = await request(app)
             .post("/api/auth/registracija")
             .send(podaci);
+
         console.log("STATUS:", res.status);
-        console.log("BODY:", JSON.stringify(res.body, null, 2));
+        console.log("BODY:",   JSON.stringify(res.body, null, 2));
 
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty("poruka", "Korisnik uspješno registrovan. Provjerite email za verifikacioni kod.");
         expect(res.body).toHaveProperty("korisnik");
         expect(res.body.korisnik).toHaveProperty("id");
-        expect(res.body.korisnik).toHaveProperty("ime", podaci.ime);
+        expect(res.body.korisnik).toHaveProperty("ime",     podaci.ime);
         expect(res.body.korisnik).toHaveProperty("prezime", podaci.prezime);
-        expect(res.body.korisnik).toHaveProperty("email", podaci.email);
+        expect(res.body.korisnik).toHaveProperty("email",   podaci.email);
     });
 
     it("dodjeljuje ulogu PACIJENT novom korisniku", async () => {
@@ -121,16 +113,16 @@ describe("POST /api/auth/registracija — uspješni scenariji", () => {
 
         expect(regRes.status).toBe(201);
 
-        // Ručno označavamo email kao verifikovan u bazi kako bi prijava prošla
+        // Ručno označavamo email kao verifikovan kako bi prijava prošla
         await prisma.korisnik.update({
             where: { email: podaci.email },
-            data: { emailVerifikovan: true },
+            data:  { emailVerifikovan: true },
         });
 
         const loginRes = await request(app)
             .post("/api/auth/prijava")
             .send({
-                email: podaci.email,
+                email:          podaci.email,
                 pristupnaSifra: podaci.pristupnaSifra,
             });
 
@@ -212,7 +204,7 @@ describe("POST /api/auth/registracija — validacija polja", () => {
             .send({
                 ...jedinstveniPodaci(),
                 datumRodjenja: "2099-01-01",
-                jmbg: "0101099123456",
+                jmbg:          "0101099123456",
             });
 
         expect(res.status).toBe(400);
@@ -234,7 +226,8 @@ describe("POST /api/auth/registracija — duplikati", () => {
             .post("/api/auth/registracija")
             .send({
                 ...podaci,
-                jmbg: "1101900123450",
+                // email ostaje isti — testiramo duplikat
+                jmbg:         jedinstveniPodaci().jmbg,
                 brojKnjizice: `DUP-${Date.now()}`,
             });
 
@@ -255,7 +248,8 @@ describe("POST /api/auth/registracija — duplikati", () => {
             .post("/api/auth/registracija")
             .send({
                 ...podaci,
-                email: `drugi-${Date.now()}@test.ba`,
+                // jmbg ostaje isti — testiramo duplikat
+                email:        `registracija-test-dup-jmbg-${Date.now()}@test.ba`,
                 brojKnjizice: `DUP-JMBG-${Date.now()}`,
             });
 
@@ -276,8 +270,9 @@ describe("POST /api/auth/registracija — duplikati", () => {
             .post("/api/auth/registracija")
             .send({
                 ...podaci,
-                email: `treci-${Date.now()}@test.ba`,
-                jmbg: "1101900123450",
+                // brojKnjizice ostaje isti — testiramo duplikat
+                email: `registracija-test-dup-knjizica-${Date.now()}@test.ba`,
+                jmbg:  jedinstveniPodaci().jmbg,
             });
 
         expect(res2.status).toBe(409);
