@@ -79,4 +79,6 @@ jobs:
           REDIS_URL: "redis://localhost:6380"
           TEST_KORISNIK_ID: "2"
           TEST_PATIENT_EMAIL: "pacijent@test.com"
+          MASTER_ENCRYPTION_KEY: "b273fca07b41387b72ef988af53bf5513f34edf921efd65fb43bed1c472e8a66"
+          JWT_SECRET: "nekiDugačakTajniKljučKojiNikoNeZna123!"
         run: npx vitest run --config vitest.ci.config.ts
