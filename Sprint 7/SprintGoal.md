@@ -23,7 +23,7 @@ Sprint se smatra uspješnim kada je kompletni tok — **registracija → login �
 | US-26 | Detekcija neobičnog ponašanja — blokiranje naloga nakon neuspješnih pokušaja |
 | US-27 | Enkripcija osjetljivih podataka |
 | US-20 | Logovanje svih akcija u sistemu — audit log |
-| US-31 | Automatski podsjetnik za pacijente sa hroničnim bolestima *(prebačeno iz Sprinta 6)* |
+
 
 > **Napomena:** Admin panel i menadžment panel sa svim njihovim mogućnostima, koji su prethodno bili planirani za Sprint 7, pomjereni su u kasniji sprint u skladu s novim redoslijedom releasea.
 
@@ -70,4 +70,4 @@ Sprint se smatra uspješnim kada je kompletni tok — **registracija → login �
 - [ ] Nakon isteka sesije pristup prethodnim podacima je onemogućen (NFR-14)
 - [ ] Osjetljivi zdravstveni podaci u bazi zaštićeni su AES-256 enkripcijom (NFR-24)
 - [ ] Sve akcije u sistemu evidentirane su u audit log-u (NFR-08)
-- [ ] US-31 — automatski podsjetnik za pacijente sa hroničnim bolestima implementiran uz oslonac na autentifikaciju
+

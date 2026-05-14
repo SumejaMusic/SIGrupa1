@@ -125,9 +125,7 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | getNalaziZaRezervaciju vraća prazan niz ako nema historije, ali frontend mora biti spreman na oba slučaja ([] i [nalaz]) — nekonzistentan response shape može izazvati greške u prikazu |
 | **Ko je koristio alat** | Amina Alispahić |
  
-# AI Usage Log
-
-Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja uloge AI alata tokom rada na projektu.
+## Unos 007 - Podrška za email i Render deploy
 
 | Stavka | Opis |
 | :--- | :--- |
@@ -142,4 +140,37 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Stara Nodemailer konfiguracija (Gmail SMTP) i `EMAIL_USER`/`EMAIL_PASS` environment varijable — uklonjene s Rendera. |
 | **Rizici, problemi ili greške** | 1. Resend free plan: slanje moguće samo na verificirani email bez vlastite domene. 2. API ključ je bio privremeno izložen u chat poruci — preporučeno premještanje u `.env`. 3. `onboarding@resend.dev` ograničen na testne svrhe — za produkciju potrebna vlastita domena. 4. 502 greška na PDF endpointu još u dijagnostičkoj fazi. |
 | **Ko je koristio alat** |Mušić  Sumeja |
+
+## Unos 008 - Implementacija resetovanja lozinke
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 13.05.2026 |
+| **Sprint broj** | 7 |
+| **Alat koji je korišten** | Google Antigravity |
+| **Svrha korištenja** | Pomoć pri implementaciji funkcionalnosti za resetovanje lozinke, validaciju podataka, sigurnosne mehanizme i slanje email obavijesti u bolničkom sistemu. |
+| **Kratak opis zadatka ili upita** | Implementirana backend i frontend funkcionalnost za “Forgot Password” i “Reset Password”, uključujući generisanje sigurnog tokena, hashiranje tokena i lozinke, ograničavanje broja zahtjeva (rate limiting), validaciju lozinke, evidenciju u audit logu, email slanje preko Brevo/Resend/Nodemailer servisa i reset korisničkog naloga nakon blokade. |
+| **Šta je AI predložio ili generisao** | AI je predložio strukturu Express ruta i kontrolera, korištenje `crypto.randomBytes` za generisanje tokena, hashiranje tokena i lozinke, Prisma transakcije za sigurnu obradu resetovanja, validaciju lozinke putem `express-validator`, generisanje HTML email template-a za reset lozinke i verifikaciju emaila, te fallback mehanizme za email servise (Brevo, Resend, Nodemailer). |
+| **Šta je tim prihvatio** | Tim je prihvatio implementaciju sigurnog reset password toka, generisanje i validaciju tokena, rate limiting, audit log evidenciju, validaciju lozinke, frontend integraciju i email template-ove za reset lozinke i verifikaciju korisnika. |
+| **Šta je tim izmijenio** | Tim je prilagodio poruke sistema na bosanskom jeziku, izmijenio email sadržaj i dizajn template-a, dodao lokalni fallback za razvojno okruženje, prilagodio konfiguraciju email providera i povezao reset lozinke sa otključavanjem korisničkog naloga. |
+| **Šta je tim odbacio** | Odbijena je mogućnost prikazivanja različitih poruka za postojeće i nepostojeće korisnike radi sigurnosti sistema, kao i čuvanje običnog tokena u bazi podataka bez hashiranja. |
+| **Rizici, problemi ili greške** | Problemi sa konfiguracijom email servisa u lokalnom okruženju, potreba za pravilnim `.env` konfiguracijama, mogućnost isteka tokena, problemi sa rate limiting testiranjem i potreba za sigurnim rukovanjem reset linkovima. |
+| **Ko je koristio alat** | Lamija Halilović |
+
+## Unos 009 — Enkripcija osjetljivih medicinskih podataka
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 13.05.2026 |
+| **Sprint broj** | Sprint 5 |
+| **Alat koji je korišten** | Claude (Anthropic) |
+| **Svrha korištenja** | Implementacija enkripcije osjetljivih medicinskih podataka (dijagnoza i medicinska istorija pacijenata) radi zaštite privatnosti i usklađenosti s regulativama |
+| **Kratak opis zadatka ili upita** | AI je dobio zadatak da predloži i implementira mehanizam enkripcije za polja `dijagnoza` i `medicinaIstorija` u bazi podataka, koristeći Prisma middleware kako bi enkripcija/dekripcija bila transparentna za ostatak aplikacije |
+| **Šta je AI predložio ili generisao** | Prisma middleware za automatsku enkripciju/dekripciju osjetljivih polja pri čitanju i pisanju; AES-256-GCM enkripciju putem Node.js `crypto` modula; upravljanje enkripcijskim ključevima putem environment varijabli; identifikaciju osjetljivih polja u Prisma shemi (`dijagnoza`, `medicinskaIstorija`); error handling za slučajeve neispravnog ključa ili oštećenih podataka |
+| **Šta je tim prihvatio** | Kompletnu strukturu Prisma middleware-a; pristup pohrane ključa u `.env` fajlu; logiku automatske enkripcije pri kreiranju/ažuriranju i dekripcije pri čitanju zapisa |
+| **Šta je tim izmijenio** | Nazivi polja su prilagođeni stvarnoj Prisma shemi projekta; dodata je dodatna provjera za `NULL` vrijednosti kako bi se spriječile greške na postojećim zapisima bez podataka; migracijska skripta je ručno prilagođena za postojeće podatke |
+| **Šta je tim odbacio** | Prijedlog rotacije enkripcijskog ključa (key rotation) — funkcionalnost odgođena za kasniju fazu; automatsko logovanje svih dekripcijskih operacija zbog performansnih razloga |
+| **Rizici, problemi ili greške** | AI inicijalno nije uzeo u obzir postojeće nešifrirane zapise u bazi — zahtijevalo je dodatnu migracijsku skriptu; jedan primjer koda koristio je zastarjeli Node.js `crypto` API koji je ručno ispravljen; potrebno je pažljivo upravljanje backup-om ključa kako bi se spriječio trajan gubitak podataka |
+| **Ko je koristio alat** | Almedin Šehić |
+
 

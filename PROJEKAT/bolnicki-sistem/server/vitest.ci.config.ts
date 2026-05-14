@@ -9,6 +9,9 @@ export default defineConfig({
     sequence: {
       concurrent: false,
     },
+    env: {
+      JWT_SECRET: "test-secret",  // ← dodaj ovo
+    },
     testTimeout: 30000,
     hookTimeout: 60000,
   },

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, User, Calendar, MapPin, X, FileText, MessageSquare, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { handleExpiredSession } from "../utils/auth";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
 
 interface Komentar {
@@ -380,8 +381,12 @@ const MojeRezervacije = () => {
         "Content-Type": "application/json"
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) { handleExpiredSession(); return null; }
+        return res.json();
+      })
       .then(data => {
+        if (!data) return;
         const mapirano = data.map((r: any) => ({
           id: r.id,
           // ✅ UTC parsing — sprječava da "2026-05-15T00:00:00.000Z" postane "2026-05-14"
