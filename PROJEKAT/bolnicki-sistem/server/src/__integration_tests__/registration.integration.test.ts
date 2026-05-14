@@ -5,12 +5,23 @@ import { PrismaClient } from "@prisma/client";
 
 // emailService.ts je direktno u src/ — putanja relativna od src/__integration_tests__/
 vi.mock("../emailService.js", () => ({
-    sendVerificationEmail:   vi.fn().mockResolvedValue(undefined),
-    sendEmail:               vi.fn().mockResolvedValue(undefined),
-    posaljiVerifikacioniKod: vi.fn().mockResolvedValue(undefined),
-    posaljiPotvrdurezerv:    vi.fn().mockResolvedValue(undefined),
+    sendVerificationEmail:     vi.fn().mockResolvedValue(undefined),
+    sendEmail:                 vi.fn().mockResolvedValue(undefined),
+    posaljiVerifikacioniKod:   vi.fn().mockResolvedValue(undefined),
+    posaljiPotvrdurezerv:      vi.fn().mockResolvedValue(undefined),
     posaljiResetPasswordEmail: vi.fn().mockResolvedValue(undefined),
-    default:                 { sendVerificationEmail: vi.fn().mockResolvedValue(undefined) },
+    default:                   { sendVerificationEmail: vi.fn().mockResolvedValue(undefined) },
+}));
+
+vi.mock("../lib/redis.js", () => ({
+    redis: {
+        setex: vi.fn().mockResolvedValue("OK"),
+        get:   vi.fn().mockResolvedValue(null),
+        del:   vi.fn().mockResolvedValue(1),
+        ttl:   vi.fn().mockResolvedValue(900),
+        set:   vi.fn().mockResolvedValue("OK"),
+        exists: vi.fn().mockResolvedValue(0),
+    },
 }));
 
 const prisma = new PrismaClient();
@@ -78,10 +89,8 @@ describe("POST /api/auth/registracija — uspješni scenariji", () => {
         const res = await request(app)
             .post("/api/auth/registracija")
             .send(podaci);
-    console.log("STATUS:", res.status);
-    console.log("BODY:", JSON.stringify(res.body, null, 2)); // ← ovo dodaj
-    
-
+        console.log("STATUS:", res.status);
+        console.log("BODY:", JSON.stringify(res.body, null, 2));
 
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty("poruka", "Korisnik uspješno registrovan. Provjerite email za verifikacioni kod.");
