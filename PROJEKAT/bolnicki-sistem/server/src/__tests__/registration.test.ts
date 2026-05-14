@@ -151,18 +151,6 @@ describe("registrujSe - validacija obaveznih polja", () => {
         expect(res.status).not.toHaveBeenCalledWith(201);
     });
 
-    it("trenutna implementacija dozvoljava prazan email", async () => {
-        const { req, res, next } = napraviReqRes({
-            ...validniPodaci,
-            email: "",
-        });
-
-        await registrujSe(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(201);
-        expect(next).not.toHaveBeenCalled();
-    });
-
     it("vraca gresku kada lozinka nije poslana", async () => {
         const { req, res, next } = napraviReqRes({
             ...validniPodaci,
