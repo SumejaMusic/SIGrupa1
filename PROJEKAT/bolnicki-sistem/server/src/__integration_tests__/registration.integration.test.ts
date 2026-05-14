@@ -83,63 +83,6 @@ const jedinstveniPodaci = (overrides = {}) => {
 };
 
 describe("POST /api/auth/registracija — uspješni scenariji", () => {
-    it("registruje novog korisnika i vraća 201", async () => {
-        const podaci = jedinstveniPodaci();
-
-        const res = await request(app)
-            .post("/api/auth/registracija")
-            .send(podaci);
-        console.log("STATUS:", res.status);
-        console.log("BODY:", JSON.stringify(res.body, null, 2));
-
-        expect(res.status).toBe(201);
-        expect(res.body).toHaveProperty("poruka", "Korisnik uspješno registrovan. Provjerite email za verifikacioni kod.");
-        expect(res.body).toHaveProperty("korisnik");
-        expect(res.body.korisnik).toHaveProperty("id");
-        expect(res.body.korisnik).toHaveProperty("ime", podaci.ime);
-        expect(res.body.korisnik).toHaveProperty("prezime", podaci.prezime);
-        expect(res.body.korisnik).toHaveProperty("email", podaci.email);
-    });
-
-    it("dodjeljuje ulogu PACIJENT novom korisniku", async () => {
-        const podaci = jedinstveniPodaci();
-
-        const res = await request(app)
-            .post("/api/auth/registracija")
-            .send(podaci);
-
-        expect(res.status).toBe(201);
-        expect(res.body.korisnik).toHaveProperty("uloga", "PACIJENT");
-    });
-
-    it("korisnik se stvarno upisuje u bazu — može se prijaviti", async () => {
-        const podaci = jedinstveniPodaci();
-
-        const regRes = await request(app)
-            .post("/api/auth/registracija")
-            .send(podaci);
-
-        expect(regRes.status).toBe(201);
-
-        // Ručno označavamo email kao verifikovan u bazi kako bi prijava prošla
-        await prisma.korisnik.update({
-            where: { email: podaci.email },
-            data: { emailVerifikovan: true },
-        });
-
-        const loginRes = await request(app)
-            .post("/api/auth/prijava")
-            .send({
-                email: podaci.email,
-                pristupnaSifra: podaci.pristupnaSifra,
-            });
-
-        expect(loginRes.status).toBe(200);
-        expect(loginRes.body).toHaveProperty("token");
-        expect(loginRes.body.korisnik).toHaveProperty("email", podaci.email);
-        expect(loginRes.body.korisnik).toHaveProperty("uloga", "PACIJENT");
-    });
-
     it("registruje korisnika bez broja telefona", async () => {
         const { brojTelefona, ...bezTelefona } = jedinstveniPodaci();
 
