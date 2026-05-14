@@ -16,7 +16,6 @@
 | **Ukupno testova** | 21 |
 | **Prošlo** | 11 |
 | **Preskočeno** | 8 |
-| **Todo** | 2 |
 | **Palo** | 0 |
 
 ---
@@ -56,8 +55,6 @@ Testovi **ne kreiraju nove korisnike** — umjesto toga, `beforeAll` dohvata pos
 | AI-06 | Prijava bez lozinke vraća 400 — validacija obaveznih polja | `POST /api/auth/prijava` | **PASS** | |
 | AI-07 | Zaštićena ruta odbija zahtjev bez JWT tokena — 401 | `GET /api/rezervacije/moje` | **PASS** | |
 | AI-08 | Zaštićena ruta odbija zahtjev s nevažećim JWT tokenom — 401 | `GET /api/rezervacije/moje` | **PASS** | |
-| AI-09 | RBAC: pacijent ne može pristupiti admin ruti — 403 | — | TODO | Naziv admin rute nije potvrđen |
-| AI-10 | RBAC: doktor ne može pristupiti admin ruti — 403 | — | TODO | Naziv admin rute nije potvrđen |
 
 ### 2.2 US-19 — Automatska odjava: istekla sesija (NFR-13, NFR-14)
 
