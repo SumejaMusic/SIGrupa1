@@ -173,4 +173,18 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | AI inicijalno nije uzeo u obzir postojeće nešifrirane zapise u bazi — zahtijevalo je dodatnu migracijsku skriptu; jedan primjer koda koristio je zastarjeli Node.js `crypto` API koji je ručno ispravljen; potrebno je pažljivo upravljanje backup-om ključa kako bi se spriječio trajan gubitak podataka |
 | **Ko je koristio alat** | Almedin Šehić |
 
+# Unos 010 — Implementacija JWT autentifikacije (Login)
 
+| Stavka | Opis |
+|--------|------|
+| **Datum** | 14.05.2026 |
+| **Sprint broj** | 7 |
+| **Alat koji je korišten** | Perplexity AI(Claude Sonnet) |
+| **Svrha korištenja** | Pomoć pri implementaciji JWT autentifikacije i zamjeni privremenih test funkcija stvarnim login mehanizmom u bolničkom sistemu. |
+| **Kratak opis zadatka ili upita** | AI je dobio zadatak da pomogne u zamjeni test funkcija poput `getCurrentPacijent` s pravim JWT token-based autentifikacijskim tokom, uključujući backend login endpoint, generisanje tokena i frontend integraciju s Vite + React aplikacijom. |
+| **Šta je AI predložio ili generisao** | AI je predložio strukturu JWT login endpointa, middleware za verifikaciju tokena (`authMiddleware`), čuvanje tokena u `localStorage`, te zamjenu mock funkcija stvarnim token-based pristupom podacima prijavljenog korisnika. |
+| **Šta je tim prihvatio** | JWT pristup za autentifikaciju, strukturu `authMiddleware`-a, čuvanje tokena u `localStorage` i prosljeđivanje tokena kroz `Authorization: Bearer` header. |
+| **Šta je tim izmijenio** | Tim je prilagodio strukturu odgovora login endpointa postojećoj konvenciji projekta i uskladio nazive polja s Prisma shemom. |
+| **Šta je tim odbacio** | Korištenje `httpOnly` cookie pristupa za čuvanje tokena, jer je tim ostao pri `localStorage` rješenju. |
+| **Rizici, problemi ili greške** | Problemi s Prisma konfiguracijom i validacijom sheme nakon izmjena, te potreba za usklađivanjem frontend i backend tipova podataka pri radu s JWT tokenom. |
+| **Ko je koristio alat** | Kenan Hatibović |
