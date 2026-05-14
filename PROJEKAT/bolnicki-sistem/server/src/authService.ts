@@ -295,6 +295,12 @@ export const registracijaService = async (podaci: {
 }) => {
     const { jmbg, ime, prezime, datumRodjenja, email, pristupnaSifra, brojTelefona, brojKnjizice } = podaci;
 
+    if (!jmbg) throw { status: 400, poruka: "JMBG je obavezan." };
+    if (!datumRodjenja) throw { status: 400, poruka: "Datum rođenja je obavezan." };
+    if (!email) throw { status: 400, poruka: "Email je obavezan." };
+
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regexEmail.test(email)) throw { status: 400, poruka: "Email nije validan." };
     // ✅ FIX: strip time/timezone dio pa parsiraj kao čisti UTC
     // Sprječava timezone bug na serverima koji rade u UTC (npr. Render)
     const datumStr = datumRodjenja.split("T")[0];
