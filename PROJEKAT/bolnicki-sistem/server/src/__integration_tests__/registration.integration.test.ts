@@ -75,6 +75,10 @@ describe("POST /api/auth/registracija — uspješni scenariji", () => {
         const res = await request(app)
             .post("/api/auth/registracija")
             .send(podaci);
+    console.log("STATUS:", res.status);
+    console.log("BODY:", JSON.stringify(res.body, null, 2)); // ← ovo dodaj
+    
+
 
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty("poruka", "Korisnik uspješno registrovan. Provjerite email za verifikacioni kod.");
