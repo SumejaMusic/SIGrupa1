@@ -210,15 +210,6 @@ Body: { "email": "<emailDoktora>", "pristupnaSifra": "TestAuth123!" }
 | DOKTOR nije u bazi (2FA test) | 1 | Test AI-18 eksplicitno skipa za tok s `zahtijeva2FA: true` |
 | Ruta nije potvrđena (`.skip`) | 3 | 2FA verifikacijski testovi čekaju potvrdu naziva rute iz `authController.ts` |
 
----
-
-## 5. Otvorene stavke (TODO)
-
-| ID | Opis | Akcija |
-| :--- | :--- | :--- |
-| TODO-01 | RBAC: pacijent/doktor ne može pristupiti admin ruti | Potvrditi naziv admin rute iz `authController.ts` i ukloniti `.todo` |
-| TODO-02 | US-16 reset lozinke — 5 testova | Potvrditi naziv rute (`/api/auth/reset-lozinka`, `/api/auth/nova-lozinka`) i ukloniti `.skip` |
-| TODO-03 | US-25 2FA verifikacija — 3 testa | Potvrditi naziv rute `/api/auth/2fa/verifikacija` i ukloniti `.skip` |
 
 ---
 
