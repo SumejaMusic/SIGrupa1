@@ -1,6 +1,5 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import request from "supertest";
-import app from "../app.js";
 import { PrismaClient } from "@prisma/client";
 
 // emailService.ts je direktno u src/ — putanja relativna od src/__integration_tests__/
@@ -25,8 +24,9 @@ vi.mock("../lib/redis.js", () => ({
 }));
 
 const prisma = new PrismaClient();
+let app: any;
 
-afterEach(async () => {
+const obrisiRegistracijskeKorisnike = async () => {
     const korisnici = await prisma.korisnik.findMany({
         where: {
             email: {
@@ -55,7 +55,14 @@ afterEach(async () => {
             },
         },
     });
+};
+
+beforeAll(async () => {
+    app = (await import("../app.js")).default;
 });
+
+beforeEach(obrisiRegistracijskeKorisnike);
+afterEach(obrisiRegistracijskeKorisnike);
 
 const validniPodaci = {
     ime: "Amina",
