@@ -3,17 +3,11 @@ import request from "supertest";
 import app from "../app.js";
 import { PrismaClient } from "@prisma/client";
 
-// ──────────────────────────────────────────────────────────────────────────────
-// MOCK EMAIL SERVISA
-// Promijeni putanju ako se tvoj email servis nalazi negdje drugdje.
-// Uobičajene putanje: "../services/emailService.js"
-//                     "../utils/mailer.js"
-//                     "../helpers/sendEmail.js"
-// ──────────────────────────────────────────────────────────────────────────────
-vi.mock("../services/emailService.js", () => ({
+// emailService.ts je direktno u src/ — putanja relativna od src/__integration_tests__/
+vi.mock("../emailService.js", () => ({
     sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
     sendEmail:             vi.fn().mockResolvedValue(undefined),
-    // dodaj ostale exportovane funkcije ako ih ima
+    default:               { sendVerificationEmail: vi.fn().mockResolvedValue(undefined) },
 }));
 
 const prisma = new PrismaClient();
