@@ -11,3 +11,21 @@ export function getUserRole(): "doktor" | "pacijent" | null {
     return null;
   }
 }
+
+export function isTokenValid(): boolean {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.exp ? payload.exp * 1000 > Date.now() : false;
+  } catch {
+    return false;
+  }
+}
+
+export function handleExpiredSession(): void {
+  localStorage.removeItem("token");
+  localStorage.removeItem("korisnik");
+  window.dispatchEvent(new Event("istekla-sesija"));
+  window.location.replace("/prijava");
+}

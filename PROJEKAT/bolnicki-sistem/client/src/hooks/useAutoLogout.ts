@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
-const NEAKTIVNOST_MS = 15 * 60 * 1000; // 15 minuta → prikaži upozorenje
-const UPOZORENJE_MS  =  2 * 60 * 1000; // 2 minute → automatska odjava ako nema reakcije
-//const NEAKTIVNOST_MS = 10 * 1000; // 10 sekundi
-//const UPOZORENJE_MS  =  5 * 1000; // 5 sekundi
+//const NEAKTIVNOST_MS = 3 * 60 * 1000; // 15 minuta → prikaži upozorenje
+//const UPOZORENJE_MS  =  1 * 60 * 1000; // 2 minute → automatska odjava ako nema reakcije
+const NEAKTIVNOST_MS = 15 * 1000; // 10 sekundi
+const UPOZORENJE_MS  =  5 * 1000; // 5 sekundi
 export function useAutoLogout(onUpozorenje: () => void, onZatvoriModal: () => void) {
   const navigate = useNavigate();
   const timerNeaktivnosti = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -6,6 +6,7 @@ import {
   Plus, CheckCircle, XCircle, Timer, Search
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { handleExpiredSession } from "../utils/auth";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -698,8 +699,14 @@ export default function DoktorRezervacije() {
       "Authorization": `Bearer ${localStorage.getItem("token")}`
     }
   })
-    .then(res => res.json())
-    .then(data => setListaTermina(Array.isArray(data) ? data.map(mapiriRezervaciju) : []))
+    .then(res => {
+      if (res.status === 401) { handleExpiredSession(); return null; }
+      return res.json();
+    })
+    .then(data => {
+      if (!data) return;
+      setListaTermina(Array.isArray(data) ? data.map(mapiriRezervaciju) : []);
+    })
     .catch(() => setListaTermina([]))
     .finally(() => setLoading(false));
 }, [doktorId]);
