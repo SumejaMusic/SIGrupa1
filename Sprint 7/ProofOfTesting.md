@@ -8,7 +8,7 @@
 **Dodatni endpoint korišten u integracionom testu:** `POST /api/auth/prijava`  
 **Test framework:** Vitest v4.1.5  
 **Rezultat:** Uspješno  
-- Unit testovi: 23/23 prošlo  
+- Unit testovi: 22/22 prošlo  
 - Integracioni testovi: 17/17 prošlo  
 
 ---
@@ -19,7 +19,7 @@ Unit testovi provjeravaju ponašanje funkcije `registrujSe` na nivou kontrolera/
 
 **Izvršeno:** 13.05.2026.  
 **Komanda:** `npm test -- --run src/__tests__/registration.test.ts`  
-**Rezultat:** Uspješno — 23/23 testova prošlo  
+**Rezultat:** Uspješno — 22/22 testova prošlo  
 **Trajanje:** 882ms  
 
 | ID testa | Nivo testiranja | Naziv testa | Preduslovi | Testni koraci | Testni podaci | Očekivani rezultat | Status |
@@ -29,24 +29,23 @@ Unit testovi provjeravaju ponašanje funkcije `registrujSe` na nivou kontrolera/
 | UT-REG-003 | Unit | Dozvoljava registraciju bez broja telefona | Broj telefona je opciono polje | Pozvati `registrujSe` bez `brojTelefona` | Validni podaci bez telefona | Status 201, registracija uspješna | Uspješno |
 | UT-REG-004 | Unit | Vraća grešku kada ime nije poslano | Funkcija dostupna | Pozvati `registrujSe` sa praznim imenom | `ime: ""` | Pozvan `next` sa greškom, registracija nije izvršena | Uspješno |
 | UT-REG-005 | Unit | Vraća grešku kada prezime nije poslano | Funkcija dostupna | Pozvati `registrujSe` sa praznim prezimenom | `prezime: ""` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-006 | Unit | Trenutna implementacija dozvoljava prazan email | Mockovana baza | Pozvati `registrujSe` sa praznim emailom | `email: ""` | Status 201 prema trenutnoj implementaciji | Uspješno |
-| UT-REG-007 | Unit | Vraća grešku kada lozinka nije poslana | Funkcija dostupna | Pozvati `registrujSe` bez lozinke | `pristupnaSifra: ""` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-008 | Unit | Vraća grešku kada JMBG nije poslan | Funkcija dostupna | Pozvati `registrujSe` bez JMBG-a | `jmbg: ""` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-009 | Unit | Vraća grešku kada broj knjižice nije poslan | Funkcija dostupna | Pozvati `registrujSe` bez broja knjižice | `brojKnjizice: ""` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-010 | Unit | Vraća grešku kada ime sadrži brojeve | Funkcija dostupna | Pozvati `registrujSe` sa neispravnim imenom | `ime: "Amina123"` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-011 | Unit | Vraća grešku kada JMBG nema 13 cifara | Funkcija dostupna | Pozvati `registrujSe` sa kraćim JMBG-om | `jmbg: "12345"` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-012 | Unit | Vraća grešku kada JMBG ne odgovara datumu rođenja | Funkcija dostupna | Poslati JMBG i datum koji se ne poklapaju | `jmbg: "1101900123456"`, `datumRodjenja: "2000-05-15"` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-013 | Unit | Vraća grešku kada je datum rođenja u budućnosti | Funkcija dostupna | Poslati budući datum rođenja | `datumRodjenja: "2099-01-01"` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-014 | Unit | Vraća grešku kada lozinka nema veliko slovo | Funkcija dostupna | Poslati lozinku bez velikog slova | `test@123` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-015 | Unit | Vraća grešku kada lozinka nema malo slovo | Funkcija dostupna | Poslati lozinku bez malog slova | `TEST@123` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-016 | Unit | Vraća grešku kada lozinka nema broj | Funkcija dostupna | Poslati lozinku bez broja | `Test@abc` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-017 | Unit | Vraća grešku kada lozinka nema specijalni karakter | Funkcija dostupna | Poslati lozinku bez specijalnog karaktera | `Test1234` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-018 | Unit | Vraća grešku kada je lozinka kraća od 8 karaktera | Funkcija dostupna | Poslati kratku lozinku | `Te@1` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-019 | Unit | Vraća grešku kada broj telefona nije u ispravnom formatu | Funkcija dostupna | Poslati neispravan telefon | `123abc` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-020 | Unit | Vraća grešku kada email već postoji | Mockovana baza vraća postojećeg korisnika | Pozvati `registrujSe` sa postojećim emailom | `amina@test.ba` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-021 | Unit | Vraća grešku kada JMBG već postoji | Mockovana baza vraća postojećeg korisnika po JMBG hash-u | Pozvati `registrujSe` sa postojećim JMBG-om | `1101900123456` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-022 | Unit | Vraća grešku kada broj knjižice već postoji | Mockovana baza vraća postojećeg pacijenta | Pozvati `registrujSe` sa postojećim brojem knjižice | `123456789` | Pozvan `next` sa greškom | Uspješno |
-| UT-REG-023 | Unit | Vraća grešku kada baza podataka baci neočekivanu grešku | Mockovana Prisma baza baca grešku | Pozvati `registrujSe` dok baza vraća `Connection lost` | Validni podaci | Pozvan `next` sa greškom, registracija nije izvršena | Uspješno |
+| UT-REG-006 | Unit | Vraća grešku kada lozinka nije poslana | Funkcija dostupna | Pozvati `registrujSe` bez lozinke | `pristupnaSifra: ""` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-007 | Unit | Vraća grešku kada JMBG nije poslan | Funkcija dostupna | Pozvati `registrujSe` bez JMBG-a | `jmbg: ""` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-008 | Unit | Vraća grešku kada broj knjižice nije poslan | Funkcija dostupna | Pozvati `registrujSe` bez broja knjižice | `brojKnjizice: ""` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-009 | Unit | Vraća grešku kada ime sadrži brojeve | Funkcija dostupna | Pozvati `registrujSe` sa neispravnim imenom | `ime: "Amina123"` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-010 | Unit | Vraća grešku kada JMBG nema 13 cifara | Funkcija dostupna | Pozvati `registrujSe` sa kraćim JMBG-om | `jmbg: "12345"` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-011 | Unit | Vraća grešku kada JMBG ne odgovara datumu rođenja | Funkcija dostupna | Poslati JMBG i datum koji se ne poklapaju | `jmbg: "1101900123456"`, `datumRodjenja: "2000-05-15"` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-012 | Unit | Vraća grešku kada je datum rođenja u budućnosti | Funkcija dostupna | Poslati budući datum rođenja | `datumRodjenja: "2099-01-01"` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-013 | Unit | Vraća grešku kada lozinka nema veliko slovo | Funkcija dostupna | Poslati lozinku bez velikog slova | `test@123` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-014 | Unit | Vraća grešku kada lozinka nema malo slovo | Funkcija dostupna | Poslati lozinku bez malog slova | `TEST@123` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-015 | Unit | Vraća grešku kada lozinka nema broj | Funkcija dostupna | Poslati lozinku bez broja | `Test@abc` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-016 | Unit | Vraća grešku kada lozinka nema specijalni karakter | Funkcija dostupna | Poslati lozinku bez specijalnog karaktera | `Test1234` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-017 | Unit | Vraća grešku kada je lozinka kraća od 8 karaktera | Funkcija dostupna | Poslati kratku lozinku | `Te@1` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-018 | Unit | Vraća grešku kada broj telefona nije u ispravnom formatu | Funkcija dostupna | Poslati neispravan telefon | `123abc` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-019 | Unit | Vraća grešku kada email već postoji | Mockovana baza vraća postojećeg korisnika | Pozvati `registrujSe` sa postojećim emailom | `amina@test.ba` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-020 | Unit | Vraća grešku kada JMBG već postoji | Mockovana baza vraća postojećeg korisnika po JMBG hash-u | Pozvati `registrujSe` sa postojećim JMBG-om | `1101900123456` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-021 | Unit | Vraća grešku kada broj knjižice već postoji | Mockovana baza vraća postojećeg pacijenta | Pozvati `registrujSe` sa postojećim brojem knjižice | `123456789` | Pozvan `next` sa greškom | Uspješno |
+| UT-REG-022 | Unit | Vraća grešku kada baza podataka baci neočekivanu grešku | Mockovana Prisma baza baca grešku | Pozvati `registrujSe` dok baza vraća `Connection lost` | Validni podaci | Pozvan `next` sa greškom, registracija nije izvršena | Uspješno |
 
 ---
 
@@ -89,17 +88,17 @@ Integracioni testovi provjeravaju stvarni rad API endpointa, komunikaciju sa tes
 
 **Datum izvršenja:** 13.05.2026.  
 **Komanda:** `npm test -- --run src/__tests__/registration.test.ts`  
-**Ukupno:** Uspješno — 23/23 prošlo  
+**Ukupno:** Uspješno — 22/22 prošlo  
 **Trajanje:** 882ms  
 
 | Grupa testova | Broj testova | Rezultat |
 |---|---:|---|
 | registrujSe — uspješna registracija | 3 | Uspješno |
-| registrujSe — validacija obaveznih polja | 6 | Uspješno |
+| registrujSe — validacija obaveznih polja | 5 | Uspješno |
 | registrujSe — validacija formata | 10 | Uspješno |
 | registrujSe — provjera jedinstvenosti | 3 | Uspješno |
 | registrujSe — interna greška servera | 1 | Uspješno |
-| **Ukupno** | **23** | **Uspješno** |
+| **Ukupno** | **22** | **Uspješno** |
 
 ### Integracioni testovi — `registration.integration.test.ts`
 
@@ -134,4 +133,4 @@ Automatizovani testovi za modul registracije su uspješno izvršeni. Unit testov
 
 Tok registracije je dodatno provjeren kroz login scenario, pri čemu se nakon registracije email ručno označava kao verifikovan u testnoj bazi kako bi se omogućila prijava novo kreiranog korisnika.
 
-Ukupan rezultat automatizovanog testiranja: **40/40 testova uspješno prošlo**.
+Ukupan rezultat automatizovanog testiranja: **39/39 testova uspješno prošlo**.
