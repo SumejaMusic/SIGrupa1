@@ -161,7 +161,7 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 
 | Stavka | Opis |
 | :--- | :--- |
-| **Datum** | 29.–30.04.2026 |
+| **Datum** | 13.05.2026 |
 | **Sprint broj** | Sprint 5 |
 | **Alat koji je korišten** | Claude (Anthropic) |
 | **Svrha korištenja** | Implementacija enkripcije osjetljivih medicinskih podataka (dijagnoza i medicinska istorija pacijenata) radi zaštite privatnosti i usklađenosti s regulativama |
