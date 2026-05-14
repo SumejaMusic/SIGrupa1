@@ -203,3 +203,21 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Korištenje Local Storage-a za sesije i klijentsku provjeru uloga bez serverske verifikacije (zbog sigurnosnih propusta). |
 | **Rizici, problemi ili greške** | Rizik od neovlaštenog pristupa riješen provjerom vlasništva nad resursom u kontrolerima. |
 | **Ko je koristio alat** | Amina Alispahić |
+
+
+# Unos 012 — Implementacija Detekcije neobičnog ponašanja 
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 14.05.2026. |
+| **Sprint broj** | Sprint 7 |
+| **Alat koji je korišten** | Codex 5.5 |
+| **Svrha korištenja** | Pomoć pri implementaciji sigurnosne funkcionalnosti US-26 — detekcija neobičnog ponašanja i blokiranje naloga nakon više neuspješnih pokušaja prijave |
+| **Kratak opis zadatka ili upita** | AI je korišten za analizu postojećeg login sistema, Prisma šeme i backend strukture, te za implementaciju mehanizma koji prati neuspješne pokušaje prijave i automatski zaključava korisnički nalog nakon 5 neuspješnih pokušaja. |
+| **Šta je AI predložio ili generisao** | 1. Dodavanje novih polja u model Korisnik: `nalogZakljucan`, `vrijemeZakljucavanja` i `zadnjiNeuspjeliPokusaj`. 2. Proširenje login logike tako da se broj neuspješnih pokušaja povećava nakon pogrešne lozinke. 3. Automatsko zaključavanje naloga nakon 5 pokušaja. 4. Vraćanje posebnog statusa za zaključan nalog. 5. Evidentiranje događaja u audit log. 6. Omogućavanje povratka pristupa kroz reset lozinke. |
+| **Šta je tim prihvatio** | Logika blokiranja naloga nakon 5 neuspješnih pokušaja, resetovanje brojača nakon uspješne prijave, otključavanje naloga nakon resetovanja lozinke, dodavanje audit log zapisa i dodavanje testova za ovu funkcionalnost. |
+| **Šta je tim izmijenio** | Prilagođeni su nazivi polja i poruke postojećem stilu projekta. Dodana je Prisma migracija za nova polja u bazi. Poboljšana je lokalna konfiguracija servera kroz `.env` i jasnije poruke za greške vezane za bazu i enkripcijski ključ. |
+| **Šta je tim odbacio** | Nije prihvaćeno kompleksnije rješenje sa automatskim vremenskim otključavanjem naloga, jer je za ovaj zahtjev bilo dovoljno da korisnik povrati pristup putem resetovanja lozinke. |
+| **Rizici, problemi ili greške** | 1. Lokalni server može prijaviti internu grešku ako baza nije dostupna ili ako nedostaje `MASTER_ENCRYPTION_KEY`. 2. AI je pomogao u dijagnostici problema i predložio jasnije error poruke. 3. Potrebno je paziti da se Prisma migracije pokrenu nad bazom koja se koristi lokalno ili na deploymentu. |
+| **Ko je koristio alat** | Hamza Husović |
+
