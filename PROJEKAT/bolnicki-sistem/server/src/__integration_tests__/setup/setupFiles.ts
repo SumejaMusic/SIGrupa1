@@ -13,6 +13,15 @@ const redis = new Redis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: 3,
 });
 
+const resetSequenceToTableMax = async (tableName: string) => {
+  await prisma.$executeRawUnsafe(`
+    SELECT setval(
+      pg_get_serial_sequence('"${tableName}"', 'id'),
+      COALESCE((SELECT MAX(id) FROM "${tableName}"), 1)
+    )
+  `);
+};
+
 beforeEach(async () => {
   // Brisanje u ispravnom redoslijedu — djeca prije roditelja (FK constraints)
   await prisma.podsjetnik.deleteMany();
@@ -127,6 +136,9 @@ beforeEach(async () => {
   });
 
   // ── Seed: Tip pregleda ───────────────────────────────────────
+  await resetSequenceToTableMax("Korisnik");
+  await resetSequenceToTableMax("Pacijent");
+
   await prisma.tipPregleda.upsert({
     where: { id: 1 },
     update: {},
