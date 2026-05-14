@@ -1,7 +1,20 @@
-import { describe, it, expect, afterEach, afterAll } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import { PrismaClient } from "@prisma/client";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MOCK EMAIL SERVISA
+// Promijeni putanju ako se tvoj email servis nalazi negdje drugdje.
+// Uobičajene putanje: "../services/emailService.js"
+//                     "../utils/mailer.js"
+//                     "../helpers/sendEmail.js"
+// ──────────────────────────────────────────────────────────────────────────────
+vi.mock("../services/emailService.js", () => ({
+    sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+    sendEmail:             vi.fn().mockResolvedValue(undefined),
+    // dodaj ostale exportovane funkcije ako ih ima
+}));
 
 const prisma = new PrismaClient();
 
@@ -35,7 +48,6 @@ afterEach(async () => {
         },
     });
 });
-
 
 const validniPodaci = {
     ime: "Amina",
@@ -102,7 +114,7 @@ describe("POST /api/auth/registracija — uspješni scenariji", () => {
         // Ručno označavamo email kao verifikovan u bazi kako bi prijava prošla
         await prisma.korisnik.update({
             where: { email: podaci.email },
-            data: { emailVerifikovan: true }
+            data: { emailVerifikovan: true },
         });
 
         const loginRes = await request(app)
