@@ -188,3 +188,18 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Korištenje `httpOnly` cookie pristupa za čuvanje tokena, jer je tim ostao pri `localStorage` rješenju. |
 | **Rizici, problemi ili greške** | Problemi s Prisma konfiguracijom i validacijom sheme nakon izmjena, te potreba za usklađivanjem frontend i backend tipova podataka pri radu s JWT tokenom. |
 | **Ko je koristio alat** | Kenan Hatibović |
+
+# Unos 011 — Implementacija automatske odjave nakon neaktivnosti
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 14. 05. 2026. |
+| **Sprint broj** | Sprint 7 |
+| **Alat koji je korišten** | Claude |
+| **Svrha korištenja** | Implementacija napredne sigurnosne logike: upravljanje sesijama, sinhronizacija tabova i autorizacija po ulogama. |
+| **Kratak opis zadatka ili upita** | Implementacija automatske odjave nakon 15 min, WebSocket sinhronizacija sesija, te uvođenje Middleware zaštite za ograničavanje pristupa rutama na osnovu uloga (Doktor/Pacijent). |
+| **Šta je AI predložio ili generisao** | Logiku za `useAutoLogout`, strukturu `AutoLogoutModal`, WebSocket emitere, te predložak Middleware funkcije za provjeru JWT tokena i `user.role` atributa pri svakom zahtjevu. |
+| **Šta je tim prihvatio** | Upotrebu WebSocketa za logout, te strogu podjelu ruta (npr. `/doctor/*` rute dostupne samo sa `role: 'doctor'`). |
+| **Šta je tim izmijenio** | Dodata je `dispatchEvent` logika za trenutni tab, te je implementirano automatsko preusmjeravanje (redirect) na login stranicu sa "return-to" parametrom ukoliko neprijavljeni korisnik pokuša pristupiti rezervacijama. |
+| **Šta je tim odbacio** | Korištenje Local Storage-a za sesije i klijentsku provjeru uloga bez serverske verifikacije (zbog sigurnosnih propusta). |
+| **Rizici, problemi ili greške** | Rizik od neovlaštenog pristupa riješen provjerom vlasništva nad resursom u kontrolerima. |
+| **Ko je koristio alat** | Amina Alispahić |
