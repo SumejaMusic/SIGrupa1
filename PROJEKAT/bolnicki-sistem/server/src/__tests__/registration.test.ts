@@ -4,11 +4,20 @@ import { registrujSe } from "../controllers/authController.js";
 
 vi.mock("../lib/prisma.js");
 
-// emailService.ts je direktno u src/ — putanja relativna od src/__tests__/
 vi.mock("../emailService.js", () => ({
     sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
     sendEmail:             vi.fn().mockResolvedValue(undefined),
+    posaljiVerifikacioniKod: vi.fn().mockResolvedValue(undefined),
     default:               { sendVerificationEmail: vi.fn().mockResolvedValue(undefined) },
+}));
+
+vi.mock("../lib/redis.js", () => ({
+    redis: {
+        setex: vi.fn().mockResolvedValue("OK"),
+        get:   vi.fn().mockResolvedValue(null),
+        del:   vi.fn().mockResolvedValue(1),
+        ttl:   vi.fn().mockResolvedValue(900),
+    }
 }));
 
 vi.mock("../lib/encryption.js", () => ({
