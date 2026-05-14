@@ -157,4 +157,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | Problemi sa konfiguracijom email servisa u lokalnom okruženju, potreba za pravilnim `.env` konfiguracijama, mogućnost isteka tokena, problemi sa rate limiting testiranjem i potreba za sigurnim rukovanjem reset linkovima. |
 | **Ko je koristio alat** | Lamija Halilović |
 
+## Unos 009 — Enkripcija osjetljivih medicinskih podataka
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 29.–30.04.2026 |
+| **Sprint broj** | Sprint 5 |
+| **Alat koji je korišten** | Claude (Anthropic) |
+| **Svrha korištenja** | Implementacija enkripcije osjetljivih medicinskih podataka (dijagnoza i medicinska istorija pacijenata) radi zaštite privatnosti i usklađenosti s regulativama |
+| **Kratak opis zadatka ili upita** | AI je dobio zadatak da predloži i implementira mehanizam enkripcije za polja `dijagnoza` i `medicinaIstorija` u bazi podataka, koristeći Prisma middleware kako bi enkripcija/dekripcija bila transparentna za ostatak aplikacije |
+| **Šta je AI predložio ili generisao** | Prisma middleware za automatsku enkripciju/dekripciju osjetljivih polja pri čitanju i pisanju; AES-256-GCM enkripciju putem Node.js `crypto` modula; upravljanje enkripcijskim ključevima putem environment varijabli; identifikaciju osjetljivih polja u Prisma shemi (`dijagnoza`, `medicinskaIstorija`); error handling za slučajeve neispravnog ključa ili oštećenih podataka |
+| **Šta je tim prihvatio** | Kompletnu strukturu Prisma middleware-a; pristup pohrane ključa u `.env` fajlu; logiku automatske enkripcije pri kreiranju/ažuriranju i dekripcije pri čitanju zapisa |
+| **Šta je tim izmijenio** | Nazivi polja su prilagođeni stvarnoj Prisma shemi projekta; dodata je dodatna provjera za `NULL` vrijednosti kako bi se spriječile greške na postojećim zapisima bez podataka; migracijska skripta je ručno prilagođena za postojeće podatke |
+| **Šta je tim odbacio** | Prijedlog rotacije enkripcijskog ključa (key rotation) — funkcionalnost odgođena za kasniju fazu; automatsko logovanje svih dekripcijskih operacija zbog performansnih razloga |
+| **Rizici, problemi ili greške** | AI inicijalno nije uzeo u obzir postojeće nešifrirane zapise u bazi — zahtijevalo je dodatnu migracijsku skriptu; jedan primjer koda koristio je zastarjeli Node.js `crypto` API koji je ručno ispravljen; potrebno je pažljivo upravljanje backup-om ključa kako bi se spriječio trajan gubitak podataka |
+| **Ko je koristio alat** | Almedin Šehić |
+
 
