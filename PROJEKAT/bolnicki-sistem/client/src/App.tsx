@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 //import { useState } from 'react';
-
-
+import { useEffect, useState, useCallback } from "react";  // dodaj useCallback
+import { isTokenValid, handleExpiredSession } from './utils/auth';
 import HomePage from './Stranice/HomePage';
 //import RezervacijaPacijent from './klase/RezervacijaPacijent';
 
@@ -45,7 +45,10 @@ function ProtectedRoute({ children, allowedUloga }: {
 }) {
   const token = localStorage.getItem("token");
 
-  if (!token) return <Navigate to="/prijava" replace />;
+  if (!token || !isTokenValid()) {
+    if (token) handleExpiredSession();
+    return <Navigate to="/prijava" replace />;
+  }
 
   // Provjeri ulogu samo ako je specificirana
   if (allowedUloga) {
@@ -58,7 +61,7 @@ function ProtectedRoute({ children, allowedUloga }: {
   return <>{children}</>;
 }
 
-import { useEffect, useState, useCallback } from "react";  // dodaj useCallback
+
 
 function AppContent() {
   const [prikaziModal, setPrikaziModal] = useState(false);
