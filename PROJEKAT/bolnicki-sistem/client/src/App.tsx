@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
+//import { useState } from 'react';
 
 
 import HomePage from './Stranice/HomePage';
@@ -23,7 +23,6 @@ import ResetPasswordPage from './Stranice/ResetPasswordPage';
 
 import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
-import { isTokenValid, handleExpiredSession } from './utils/auth';
 
 import './App.css';
 
@@ -46,10 +45,7 @@ function ProtectedRoute({ children, allowedUloga }: {
 }) {
   const token = localStorage.getItem("token");
 
-  if (!token || !isTokenValid()) {
-    if (token) handleExpiredSession();
-    return <Navigate to="/prijava" replace />;
-  }
+  if (!token) return <Navigate to="/prijava" replace />;
 
   // Provjeri ulogu samo ako je specificirana
   if (allowedUloga) {
@@ -62,23 +58,28 @@ function ProtectedRoute({ children, allowedUloga }: {
   return <>{children}</>;
 }
 
+import { useEffect, useState, useCallback } from "react";  // dodaj useCallback
+
 function AppContent() {
   const [prikaziModal, setPrikaziModal] = useState(false);
 
-  const { odjavi, resetujTimer } = useAutoLogout(
-    () => setPrikaziModal(true),
-    () => setPrikaziModal(false),
-  );
+  const onUpozorenje = useCallback(() => setPrikaziModal(true), []);
+  const onZatvoriModal = useCallback(() => setPrikaziModal(false), []);
 
-  const handleProduzeSesiju = () => {
+  const { odjavi, resetujTimer } = useAutoLogout(onUpozorenje, onZatvoriModal);
+
+  const handleProduzeSesiju = useCallback(() => {
     setPrikaziModal(false);
     resetujTimer();
-  };
+  }, [resetujTimer]);
 
-  const handleOtkazi = () => {
+  const handleOtkazi = useCallback(() => {
     setPrikaziModal(false);
     odjavi();
-  };
+  }, [odjavi]);
+
+  // ...ostatak isti
+
 
   return (
     <>
