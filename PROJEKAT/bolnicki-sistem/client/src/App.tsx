@@ -11,7 +11,7 @@ import Step2Doktori from './klase/Step2Doktori';
 import Step3TipPregleda from './klase/Step3TipPregleda';
 import Step4Termini from './klase/Step4Termini';
 import Step5Potvrda from './klase/Step5Potvrda';
-
+import StaffPanel from './klase/StaffPanel'
 import './App.css';
 import DoktorRezervacije from './Stranice/DoktorRezervacije';
 import RegistracijaPage from './Stranice/RegistracijaPage'
@@ -25,6 +25,7 @@ import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
 
 import './App.css';
+import Layout from './components/Layout';
 
 // ─── Helper: čita uloga iz JWT tokena ─────────────────────────────────────
 function getUloga(): string | null {
@@ -41,7 +42,7 @@ function getUloga(): string | null {
 // ─── ProtectedRoute ────────────────────────────────────────────────────────
 function ProtectedRoute({ children, allowedUloga }: {
   children: React.ReactNode;
-  allowedUloga?: "DOKTOR" | "PACIJENT";
+  allowedUloga?: "DOKTOR" | "PACIJENT" | "MEDICINSKO_OSOBLJE";
 }) {
   const token = localStorage.getItem("token");
 
@@ -88,7 +89,7 @@ function AppContent() {
     <>
       <Routes>
   <Route path="/" element={<HomePage />} />
-
+  
   {/* Javne rute — bez prijave */}
   <Route path="/registracija"    element={<RegistracijaPage />} />
   <Route path="/prijava"         element={<PrijavaPage />} />
@@ -102,6 +103,17 @@ function AppContent() {
   <Route path="/moje-rezervacije" element={
     <ProtectedRoute allowedUloga="PACIJENT">
       <MojeRezervacije />
+    </ProtectedRoute>
+  } />
+
+{/* Samo medicinsko osoblje */}
+  <Route path="/osoblje-panel" element={
+    <ProtectedRoute allowedUloga="MEDICINSKO_OSOBLJE">
+    
+      <Layout step={0} totalSteps={0} breadcrumbs={[]} >
+      <StaffPanel />
+    </Layout>
+    
     </ProtectedRoute>
   } />
 

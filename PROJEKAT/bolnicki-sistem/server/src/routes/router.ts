@@ -8,10 +8,14 @@ import { getNalaziZaPacijenta, getNalazPDF, getNalaziZaRezervaciju } from "../co
 import { getKomentari } from "../controllers/reservationController.js"; // ← dodaj
 import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientController.js";
 import authRoutes from "./authRoutes.js";
+import osobljeRoutes from "./osobljeRoutes.js";
+ 
+// Unutar router.use() bloka, pored ostalih ruta:
 
 const router = Router();
 
 router.use("/termini", terminRoutes);
+router.use("/osoblje",     osobljeRoutes);  
 router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
