@@ -6,7 +6,7 @@ type Props = {
 };
 
 const UKUPNO_SEKUNDI = 120;
-
+//const UKUPNO_SEKUNDI = 5;
 export function AutoLogoutModal({ onProduzeSesiju, onOtkazi }: Props) {
   const [sekunde, setSekunde] = useState(UKUPNO_SEKUNDI);
 

@@ -65,6 +65,14 @@ const statusConfig = {
   otkazan: { label: "Otkazan", cls: "bg-red-100 text-red-600" },
 };
 
+const mapirajKomentar = (k: any, fallbackAutor: string): Komentar => ({
+  id: k.id,
+  tekst: k.tekst,
+  autor: k.autor ?? (k.korisnik ? `${k.korisnik.ime} ${k.korisnik.prezime}` : fallbackAutor),
+  datum: k.datum ?? isoUTCdatum(k.datumKreiranja ?? new Date().toISOString()),
+  jeDoktor: Boolean(k.jeDoktor),
+});
+
 // ✅ Godište iz datumRodjenja — UTC da ne sklizne na prethodnu godinu
 const getAge = (godiste: number) => new Date().getUTCFullYear() - godiste;
 
@@ -97,14 +105,16 @@ function mapiriRezervaciju(r: any): Termin {
   if (r.datumOtkazivanja) status = "otkazan";
   else if (r.zavrseno) status = "zavrsen";
 
-  const komentari: Komentar[] = r.komentar ? [{
-    id: r.id * 1000,
-    tekst: r.komentar,
-    autor: `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`,
-    // ✅ UTC parsing datuma kreiranja komentara
-    datum: isoUTCdatum(r.datumKreiranja),
-    jeDoktor: r.doktorRezervisao,
-  }] : [];
+  const pacijentAutor = `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`;
+  const komentari: Komentar[] = Array.isArray(r.komentari) && r.komentari.length > 0
+    ? r.komentari.map((k: any) => mapirajKomentar(k, k.jeDoktor ? "Doktor" : pacijentAutor))
+    : r.komentar ? [{
+      id: r.id * 1000,
+      tekst: r.komentar,
+      autor: pacijentAutor,
+      datum: isoUTCdatum(r.datumKreiranja),
+      jeDoktor: r.doktorRezervisao,
+    }] : [];
 
   return {
     id: r.id,
@@ -765,7 +775,7 @@ export default function DoktorRezervacije() {
 
   const handleAddKomentar = async (terminId: number, tekst: string) => {
   try {
-    await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
+    const res = await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -773,9 +783,14 @@ export default function DoktorRezervacije() {
       },
       body: JSON.stringify({ komentar: tekst }),
     });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
     const noviK: Komentar = {
-      id: Date.now(), tekst, autor: "Dr.",
-      datum: danasUTC(), jeDoktor: true,
+      id: data.id ?? Date.now(),
+      tekst: data.tekst ?? tekst,
+      autor: data.autor ?? "Doktor",
+      datum: data.datum ?? danasUTC(),
+      jeDoktor: data.jeDoktor ?? true,
     };
     setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
     setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
