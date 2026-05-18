@@ -5,7 +5,7 @@
 Ovaj izvještaj sumira rezultate završenog sprinta, identifikuje isporučene vrijednosti i definiše korekcije plana na osnovu povratnih informacija.
 
  # **Sprint broj:** 
- Sprint 7 
+ Sprint 8
  # **Planirani sprint goal:**  
  # **Šta je završeno:**  
     
