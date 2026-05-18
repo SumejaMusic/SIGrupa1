@@ -1,8 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
+import { dekriptuj } from "../lib/encryption.js";
+
+function safeDecrypt(vrijednost: string): string {
+  try {
+    return dekriptuj(vrijednost);
+  } catch {
+    return vrijednost;
+  }
+}
+
+function dekriptujRecept(r: any) {
+  return {
+    ...r,
+    nazivLijeka: safeDecrypt(r.nazivLijeka),
+    doza: safeDecrypt(r.doza),
+    napomena: r.napomena ? safeDecrypt(r.napomena) : r.napomena,
+  };
+}
 
 // POST /api/pregledi/:rezervacijaId/zavrsi
-// Kreira ili ažurira HistorijaPregleda, opcionalno dodaje Recept
 export const zavrsiPregled = async (
   req: Request,
   res: Response,
@@ -19,7 +36,7 @@ export const zavrsiPregled = async (
 
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: rezervacijaId },
-      include: { historija: true },
+      include: { historija: true, termin: true },
     });
 
     if (!rezervacija) {
@@ -31,7 +48,6 @@ export const zavrsiPregled = async (
       let historija;
 
       if (rezervacija.historija) {
-        // Ažuriraj postojeću historiju
         historija = await tx.historijaPregleda.update({
           where: { idRezervacija: rezervacijaId },
           data: {
@@ -41,7 +57,6 @@ export const zavrsiPregled = async (
           },
         });
       } else {
-        // Kreiraj novu historiju
         historija = await tx.historijaPregleda.create({
           data: {
             idPacijent: rezervacija.idPacijent,
@@ -50,11 +65,11 @@ export const zavrsiPregled = async (
             dijagnoza,
             terapija,
             biljeske: biljeske ?? null,
+            datumPregleda: rezervacija.termin.datum,
           },
         });
       }
 
-      // Dodaj recept ako je proslijeđen
       let noviRecept = null;
       if (recept?.nazivLijeka && recept?.doza && recept?.trajanje) {
         noviRecept = await tx.recept.create({
@@ -69,7 +84,6 @@ export const zavrsiPregled = async (
         });
       }
 
-      // Označi rezervaciju kao završenu
       await tx.rezervacije.update({
         where: { id: rezervacijaId },
         data: { zavrseno: true },
@@ -88,7 +102,6 @@ export const zavrsiPregled = async (
 };
 
 // GET /api/pregledi/:rezervacijaId
-// Dohvata historiju pregleda za rezervaciju (za prikaz u side panelu)
 export const getPregled = async (
   req: Request,
   res: Response,
@@ -107,7 +120,15 @@ export const getPregled = async (
       },
     });
 
-    res.json(historija ?? null);
+    if (!historija) {
+      res.json(null);
+      return;
+    }
+
+    res.json({
+      ...historija,
+      recepti: historija.recepti.map(dekriptujRecept),
+    });
   } catch (err) {
     next(err);
   }

@@ -10,10 +10,12 @@ import {
   dodajKomentar,
   promijeniTrajanje,
   getKomentari,
+  kreirajRezervacijuDoktor
 } from "../controllers/reservationController.js";
 
 const router = Router();
 
+router.post("/doktor", autentifikuj, upload.single("pdf"), kreirajRezervacijuDoktor);
 router.post("/", autentifikuj, upload.single("pdf"), kreirajRezervaciju);
 router.get("/moje", autentifikuj, getRezervacijeZaPacijenta);
 router.get("/:id/komentari", autentifikuj, getKomentari);

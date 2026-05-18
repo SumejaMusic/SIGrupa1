@@ -97,7 +97,13 @@ if (socket && socket.connected) {
   socket.emit('LOGIN_SUCCESS', { 
     korisnik: data.korisnik 
   });}
-      navigate('/');
+  // kada se uloguje doktor otvara se odmah njegov panel 
+  const uloga = data.korisnik?.uloga;
+  if (uloga==="DOKTOR") {
+    navigate('/doktor-rezervacije')
+  } else {
+    navigate('/');
+  }
     } catch {
       setGreske({ opsta: 'Greška servera. Pokušajte ponovo.' });
     } finally {

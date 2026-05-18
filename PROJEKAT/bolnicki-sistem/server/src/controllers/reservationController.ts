@@ -405,3 +405,128 @@ export const getKomentari = async (req: Request, res: Response, next: NextFuncti
     next(err);
   }
 };
+
+// kreiranje rezervacije od strane doktora
+export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const idTermina = Number(req.body.idTermina);
+    const idPacijent = Number(req.body.idPacijent);
+    // posto doktor rezervise kada je on prijavljen uzimam doktorid iz jwt tokena
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+    
+    const idDoktor = korisnikPayload.doktorId;
+    const idTipPregledaRaw = req.body.idTipPregleda;
+    const idTipPregleda = idTipPregledaRaw === undefined || idTipPregledaRaw === null
+      ? null : Number(idTipPregledaRaw);
+    const komentar = req.body.komentar;
+    const hitnost = req.body.hitnost ?? false;
+
+    if (!Number.isInteger(idTermina) || idTermina <= 0) {
+      res.status(400).json({ poruka: "Nedostaje ispravan idTermina." });
+      return;
+    }
+
+    if (!Number.isInteger(idPacijent) || idPacijent <= 0) {
+      res.status(400).json({ poruka: "Nedostaje ispravan idPacijent." });
+      return;
+    }
+
+    if (!idDoktor) {
+      res.status(403).json({ poruka: "Nemate dozvolu za ovu akciju." });
+      return;
+    }
+
+    const pacijent = await prisma.pacijent.findUnique({
+      where: { id: idPacijent },
+      include: { korisnik: true },
+    });
+
+    if (!pacijent) {
+      res.status(404).json({ poruka: "Pacijent nije pronađen." });
+      return;
+    }
+
+    const termin = await prisma.termin.findUnique({ where: { id: idTermina } });
+
+    if (!termin) {
+      res.status(404).json({ poruka: "Termin nije pronađen." });
+      return;
+    }
+
+    const idDoktorTermina = termin.idDoktor;
+
+    if (termin.status !== "SLOBODAN") {
+      res.status(409).json({ poruka: "Termin više nije slobodan." });
+      return;
+    }
+
+    const duplikat = await prisma.rezervacije.findFirst({
+      where: { idPacijent: pacijent.id, idTermina, datumOtkazivanja: null },
+    });
+
+    if (duplikat) {
+      res.status(409).json({ poruka: "Rezervacija za ovaj termin već postoji." });
+      return;
+    }
+
+    const rezervacija = await prisma.$transaction(async (tx) => {
+      const nova = await tx.rezervacije.create({
+        data: {
+          idTermina,
+          idPacijent: idPacijent,
+          idDoktor: idDoktorTermina,
+          komentar: komentar ?? null,
+          hitnost,
+          doktorRezervisao: true,
+          datumKreiranja: new Date(),
+          idTipPregleda,
+        },
+        include: {
+          termin: true, 
+          pacijent: { include: { korisnik: true }},
+          doktor: { include: {korisnik: true }},
+        },
+      });
+
+      await tx.rezervacijaSpecijalista.create({
+        data: {
+          idSpecijaliste: idDoktorTermina,
+          idDoktorOpste: idDoktor,
+          idRezervacije: nova.id,
+          razlogPregleda: komentar ?? "Upućivanje od strane doktora",
+        },
+      });
+      await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });
+      return nova;
+    });
+    io.emit("termin-azuriran", { doktorId: idDoktorTermina, terminId: idTermina });
+
+    const doktorKorisnik = rezervacija.doktor.korisnik;
+    const pacijentKorisnik = rezervacija.pacijent.korisnik;
+
+    try {
+      await posaljiPotvrdurezerv({
+        pacijentEmail: pacijentKorisnik.email,
+        pacijentIme: pacijentKorisnik.ime,
+        pacijentPrezime: pacijentKorisnik.prezime,
+        doktorIme: doktorKorisnik.ime,
+        doktorPrezime: doktorKorisnik.prezime,
+        doktorSpecijalizacija: rezervacija.doktor.specijalizacija,
+        datum: rezervacija.termin.datum,
+        vrijeme: rezervacija.termin.vrijeme,
+        rezervacijaId: rezervacija.id,
+        hitnost: rezervacija.hitnost ?? false,
+        komentar: rezervacija.komentar ?? undefined,
+      });
+    } catch (emailErr) {
+      console.error("Email NIJE poslan:", emailErr);
+    }
+    res.status(201).json(rezervacija);
+  } catch (err) {
+    next(err);
+  }
+};

@@ -307,8 +307,20 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (idTipPregleda) formData.append("idTipPregleda", String(idTipPregleda));
     if (form.pdfFile) formData.append("pdf", form.pdfFile);
 
+    const isDoctorMode = localStorage.getItem("doctorMode") === "true";
+    const doctorPatientData = JSON.parse(localStorage.getItem("doctorPatient") || "null");
+
+    if (isDoctorMode && doctorPatientData?.id) {
+      formData.append("idPacijent", String(doctorPatientData.id));
+    }
+
+    const url = isDoctorMode
+    ? `${apiUrl}/api/rezervacije/doktor`
+    : `${apiUrl}/api/rezervacije`;
+    
     const token = localStorage.getItem("token");
-    const res = await fetch(`${apiUrl}/api/rezervacije`, {
+
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

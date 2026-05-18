@@ -29,3 +29,15 @@ export function handleExpiredSession(): void {
   window.dispatchEvent(new Event("istekla-sesija"));
   window.location.replace("/prijava");
 }
+
+export function getDoktorId(): string | null {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.doktorId?.toString() ?? null;
+  } catch {
+    return null;
+  }
+}
