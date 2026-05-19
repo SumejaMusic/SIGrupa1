@@ -489,9 +489,16 @@ export const prijavaService = async (podaci: {
 
     await resetujNeuspjelePrijave(korisnik, ipAdresa);
 
+    let doktorId = null;
+    if (korisnik.uloga==="DOKTOR") {
+        const doktor = await prisma.doktor.findFirst({
+            where: {idKorisnik: korisnik.id}
+        });
+        doktorId = doktor?.id ?? null;
+    }
     // generisanje JWT tokena
     const token = jwt.sign(
-        { id: korisnik.id, uloga: korisnik.uloga },
+        { id: korisnik.id, uloga: korisnik.uloga, doktorId },
         process.env.JWT_SECRET!,
         { expiresIn: "8h" }
     );

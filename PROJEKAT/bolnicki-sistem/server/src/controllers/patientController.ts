@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
+import { dekriptuj } from "../lib/encryption.js";
 
 // GET /api/pacijenti
 export const getSviPacijenti = async (req: Request, res: Response, next: NextFunction) => {
@@ -34,6 +35,25 @@ export const getSviPacijenti = async (req: Request, res: Response, next: NextFun
     next(err);
   }
 };
+
+// pomocna funkcija za dekriptovanje jednog recepta, da se moze prikaszat doktoru
+function dekriptujRecept(r: any) {
+  return {
+    ...r,
+    nazivLijeka: safeDecrypt(r.nazivLijeka),
+    doza: safeDecrypt(r.doza),
+    napomena: r.napomena ? safeDecrypt(r.napomena) : r.napomena,
+  };
+}
+
+function safeDecrypt(vrijednost: string): string {
+  try {
+    return dekriptuj(vrijednost);
+  } catch {
+    return vrijednost; 
+  }
+}
+
 // GET /api/historija/pacijent/:pacijentId
 export const getHistorijaPacijenta = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -47,11 +67,17 @@ export const getHistorijaPacijenta = async (req: Request, res: Response, next: N
           }
         },
         nalaz: true,
+        recepti: true,
       },
       orderBy: { datumPregleda: "desc" }
     });
 
-    res.json(historija);
+    const historijaSDekriptovanim = historija.map(h => ({
+      ...h,
+      recepti: h.recepti.map(dekriptujRecept),
+    }));
+
+    res.json(historijaSDekriptovanim);
   } catch (err) {
     next(err);
   }
