@@ -19,11 +19,10 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-
-import { handleExpiredSession, getDoktorId } from "../utils/auth";
 import { Sidebar } from "../components/Sidebar";
 import { TerminRed } from "../components/TerminRed";
 import { TerminDetalji } from "../components/TerminDetalj";
+import { handleExpiredSession, getDoktorId, getDoktorIme, odjava } from "../utils/auth";
 
 import type {
   TipPregleda,
@@ -341,7 +340,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-green-600 to-green-700 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
@@ -359,7 +357,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
           </button>
         </div>
 
-        {/* Body */}
         <div className="overflow-y-auto flex-1 p-5">
           {uspjesno ? (
             <div className="flex flex-col items-center justify-center text-center py-10">
@@ -376,8 +373,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                   {greska}
                 </div>
               )}
-
-              {/* Dijagnoza */}
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                   Dijagnoza <span className="text-red-500">*</span>
@@ -390,8 +385,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                   className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 bg-gray-50"
                 />
               </div>
-
-              {/* Terapija */}
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                   Terapija <span className="text-red-500">*</span>
@@ -404,8 +397,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                   className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 bg-gray-50"
                 />
               </div>
-
-              {/* Bilješke */}
               <div>
                 <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                   Bilješke <span className="text-gray-400 font-normal">(opcionalno)</span>
@@ -418,8 +409,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                   className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 bg-gray-50"
                 />
               </div>
-
-              {/* Recept toggle */}
               <div className="border border-gray-200 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setDodajRecept(p => !p)}
@@ -436,7 +425,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                   </div>
                   {dodajRecept ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                 </button>
-
                 {dodajRecept && (
                   <div className="p-4 space-y-3 border-t border-gray-200 bg-white">
                     <div className="grid grid-cols-2 gap-3">
@@ -451,7 +439,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                           className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
                         />
                       </div>
-
                       <div>
                         <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                           Doza <span className="text-red-500">*</span>
@@ -463,7 +450,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                           className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
                         />
                       </div>
-
                       <div>
                         <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                           Trajanje (dana) <span className="text-red-500">*</span>
@@ -475,7 +461,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                           className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
                         />
                       </div>
-
                       <div className="col-span-2">
                         <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
                           Napomena <span className="text-gray-400 font-normal">(opcionalno)</span>
@@ -495,7 +480,6 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
           )}
         </div>
 
-        {/* Footer */}
         {!uspjesno && (
           <div className="px-5 pb-5 pt-3 flex gap-3 flex-shrink-0 border-t border-gray-100">
             <button
@@ -514,11 +498,7 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
             >
-              {loading ? (
-                <span>Čuvanje...</span>
-              ) : (
-                <><CheckCircle size={15} /> Završi pregled</>
-              )}
+              {loading ? <span>Čuvanje...</span> : <><CheckCircle size={15} /> Završi pregled</>}
             </button>
           </div>
         )}
@@ -540,7 +520,15 @@ export default function DoktorRezervacije() {
   const [terminZaOtkazivanje, setTerminZaOtkazivanje] = useState<Termin | null>(null);
   const [terminZaZavrsavanje, setTerminZaZavrsavanje] = useState<Termin | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [prikaziOtkazane, setPrikaziOtkazane] = useState(false);
+
+  const [doktorIme, setDoktorIme] = useState("Dr.");
+
+  useEffect(() => {
+    setDoktorIme(getDoktorIme());
+  }, []);
+
+  // ── Novi state: "zakazani" | "zavrseni" | "otkazani" ──────────────────────
+  const [filterStatus, setFilterStatus] = useState<"zakazani" | "zavrseni" | "otkazani">("zakazani");
 
   const doktorId = getDoktorId();
 
@@ -553,9 +541,7 @@ export default function DoktorRezervacije() {
     if (!doktorId) return;
     setLoading(true);
     fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     })
       .then(res => {
         if (res.status === 401) { handleExpiredSession(); return null; }
@@ -569,8 +555,12 @@ export default function DoktorRezervacije() {
       .finally(() => setLoading(false));
   }, [doktorId]);
 
-  const filterTermini = (termini: Termin[]) =>
-    termini.filter(t => prikaziOtkazane ? t.status === "otkazan" : t.status !== "otkazan");
+  // ── Filtriranje po novom state-u ──────────────────────────────────────────
+  const filterTermini = (termini: Termin[]) => {
+    if (filterStatus === "otkazani") return termini.filter(t => t.status === "otkazan");
+    if (filterStatus === "zavrseni") return termini.filter(t => t.status === "zavrsen");
+    return termini.filter(t => t.status === "zakazan");
+  };
 
   const dnevniTermini = filterTermini(
     listaTermina.filter(t => t.datum === selectedDatum).sort((a, b) => a.vrijemeOd - b.vrijemeOd)
@@ -647,9 +637,7 @@ export default function DoktorRezervacije() {
     try {
       const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, {
         method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        }
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
       });
       if (!res.ok) throw new Error();
       setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
@@ -661,9 +649,7 @@ export default function DoktorRezervacije() {
     }
   };
 
-  // ─── Handler: Završi pregled ─────────────────────────────────────────────
   const handleZavrsiPregled = (rezervacijaId: number) => {
-    // Označi termin kao završen u lokalnoj listi
     setListaTermina(prev =>
       prev.map(t => t.id !== rezervacijaId ? t : { ...t, status: "zavrsen" as StatusTermina })
     );
@@ -678,6 +664,14 @@ export default function DoktorRezervacije() {
     if (prikaz === "sedmicni") return `Sedmica: ${weekDays[0]} – ${weekDays[6]}`;
     return new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
   };
+
+  // ── Label za prazno stanje i brojač ──────────────────────────────────────
+  const filterLabel = filterStatus === "otkazani" ? "otkazanih" : filterStatus === "zavrseni" ? "završenih" : "zakazanih";
+  const filterLabelJed = filterStatus === "otkazani" ? "otkazan" : filterStatus === "zavrseni" ? "završen" : "zakazan";
+  const praznoLabel =
+    filterStatus === "otkazani" ? "Nema otkazanih termina za ovaj dan" :
+    filterStatus === "zavrseni" ? "Nema završenih termina za ovaj dan" :
+    "Nema termina za ovaj dan";
 
   const navDelta = prikaz === "dnevni" ? 1 : prikaz === "sedmicni" ? 7 : 1;
   const todayStr = danasUTC();
@@ -711,7 +705,6 @@ export default function DoktorRezervacije() {
         />
       )}
 
-      {/* ─── Modal Završi pregled ────────────────────────────────────────── */}
       {terminZaZavrsavanje && (
         <ModalZavrsiPregled
           termin={terminZaZavrsavanje}
@@ -733,7 +726,7 @@ export default function DoktorRezervacije() {
             )}
             <div>
               <h1 className="text-lg font-bold text-gray-900">Moje rezervacije</h1>
-              <p className="text-xs text-gray-500">Dr. Kardiologija</p>
+              <p className="text-xs text-gray-500">{doktorIme}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -743,15 +736,35 @@ export default function DoktorRezervacije() {
             >
               <Plus size={15} /> Nova rezervacija
             </button>
-            <button
-              onClick={() => { setPrikaziOtkazane(p => !p); setSelectedTermin(null); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                prikaziOtkazane ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <XCircle size={15} />
-              {prikaziOtkazane ? "Otkazani termini" : "Zakazani termini"}
-            </button>
+
+            {/* ── Tri dugmeta za filter statusa ─────────────────────────── */}
+            <div className="flex bg-gray-100 rounded-xl p-0.5 gap-0.5">
+              <button
+                onClick={() => { setFilterStatus("zakazani"); setSelectedTermin(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterStatus === "zakazani" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <Calendar size={13} /> Zakazani
+              </button>
+              <button
+                onClick={() => { setFilterStatus("zavrseni"); setSelectedTermin(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterStatus === "zavrseni" ? "bg-white text-green-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <CheckCircle size={13} /> Završeni
+              </button>
+              <button
+                onClick={() => { setFilterStatus("otkazani"); setSelectedTermin(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterStatus === "otkazani" ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <XCircle size={13} /> Otkazani
+              </button>
+            </div>
+
             <div className="flex bg-gray-100 rounded-lg p-0.5">
               {(["dnevni", "sedmicni", "mjesecni"] as const).map(p => (
                 <button
@@ -797,7 +810,7 @@ export default function DoktorRezervacije() {
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                       <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                         <span className="text-sm font-semibold text-gray-700">
-                          {dnevniTermini.length} {prikaziOtkazane ? "otkazan" : "zakazan"}{dnevniTermini.length !== 1 ? "ih" : ""} termin{dnevniTermini.length !== 1 ? "a" : ""}
+                          {dnevniTermini.length} {filterLabelJed}{dnevniTermini.length !== 1 ? "ih" : ""} termin{dnevniTermini.length !== 1 ? "a" : ""}
                         </span>
                         <div className="flex gap-1.5">
                           {Object.entries(tipConfig).map(([tip, cfg]) => {
@@ -811,9 +824,7 @@ export default function DoktorRezervacije() {
                         {dnevniTermini.length === 0 ? (
                           <div className="text-center py-12">
                             <Calendar size={32} className="text-gray-200 mx-auto mb-2" />
-                            <p className="text-sm text-gray-400">
-                              {prikaziOtkazane ? "Nema otkazanih termina za ovaj dan" : "Nema termina za ovaj dan"}
-                            </p>
+                            <p className="text-sm text-gray-400">{praznoLabel}</p>
                           </div>
                         ) : (
                           dnevniTermini.map(t => (
@@ -895,7 +906,7 @@ export default function DoktorRezervacije() {
                       {new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
                     </span>
                     <span className="text-xs text-gray-400">
-                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {prikaziOtkazane ? "otkazanih" : "zakazanih"} termina u ovom mjesecu
+                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {filterLabel} termina u ovom mjesecu
                     </span>
                   </div>
                   <div className="grid grid-cols-7 border-b border-gray-100">

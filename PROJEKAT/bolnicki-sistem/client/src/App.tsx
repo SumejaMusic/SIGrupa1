@@ -105,14 +105,12 @@ function AppContent() {
     </ProtectedRoute>
   } />
 
-  {/* Samo doktor, dok nema rbac zakomentarisana, kasnije cu vratiti */}
-  {/* <Route path="/doktor-rezervacije" element={
-    <ProtectedRoute allowedUloga="DOKTOR">
-      <DoktorRezervacije />
-    </ProtectedRoute>
-  } /> */}
-  
-  <Route path="/doktor-rezervacije" element={<DoktorRezervacije />} />
+  {/* Samo doktor */}
+  <Route path="/doktor-rezervacije" element={
+  <ProtectedRoute allowedUloga="DOKTOR">
+    <DoktorRezervacije />
+  </ProtectedRoute>
+} />
 
   {/* Prijavljeni korisnici — i pacijent i doktor */}
   <Route path="/step1-odjeli" element={

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import { odjava } from "../utils/auth";
 
 export function Sidebar({
   open,
@@ -40,7 +41,7 @@ export function Sidebar({
           ))}
         </nav>
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <button className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm whitespace-nowrap">
+          <button onClick={odjava} className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm whitespace-nowrap">
             <LogOut size={16} /> Odjava
           </button>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400">

@@ -41,3 +41,25 @@ export function getDoktorId(): string | null {
     return null;
   }
 }
+
+export function getDoktorIme(): string {
+  try {
+    const korisnik = localStorage.getItem("korisnik");
+    if (!korisnik) return "Dr.";
+    const parsed = JSON.parse(korisnik);
+    const ime = parsed.ime ?? "";
+    const prezime = parsed.prezime ?? "";
+    if (!ime && !prezime) return "Dr.";
+    return `Dr. ${ime} ${prezime}`;
+  } catch {
+    return "Dr.";
+  }
+}
+
+export function odjava(): void {
+  localStorage.removeItem("token");
+  localStorage.removeItem("korisnik");
+  localStorage.removeItem("doctorPatient");
+  localStorage.removeItem("doctorMode");
+  window.location.replace("/prijava");
+}
