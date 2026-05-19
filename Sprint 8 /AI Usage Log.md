@@ -221,4 +221,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | 1. Lokalni server može prijaviti internu grešku ako baza nije dostupna ili ako nedostaje `MASTER_ENCRYPTION_KEY`. 2. AI je pomogao u dijagnostici problema i predložio jasnije error poruke. 3. Potrebno je paziti da se Prisma migracije pokrenu nad bazom koja se koristi lokalno ili na deploymentu. |
 | **Ko je koristio alat** | Hamza Husović |
 
+## Unos 013 - Implementacija RBAC za postojece funkcionalnosti
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 19.05.2026. |
+| **Sprint broj** | Sprint 8 |
+| **Alat koji je korišten** | Claude (Opus) |
+| **Svrha korištenja** | Razvoj i implementacija sigurnosnih mehanizama (autorizacije i kontrole pristupa) na backendu i frontendu. |
+| **Kratak opis zadatka ili upita** | Implementacija RBAC (Role-Based Access Control) sistema za uloge: ADMINISTRATOR, PACIJENT, DOKTOR, MEDICINSKO_OSOBLJE i VLASNIK, uključujući zaštitu API ruta, pametno preusmjeravanje na frontendu i dinamički prikaz elemenata u navigaciji. |
+| **Šta je AI predložio ili generisao** | Kreiranje tvorničke funkcije `autorizuj` kao Express middleware-a na backendu, uvođenje dinamičkog niza `allowedUloge` i funkcije `getDefaultRoute` unutar `ProtectedRoute` komponente na React frontendu, te prilagođavanje login logike i navigacijske trake za uslovno renderovanje dugmadi prema ulogama. |
+| **Šta je tim prihvatio** | Kompletnu arhitekturu middleware-a sa statusnim kodovima 401 i 403, strukturu zaštićenih ruta na klijentu, automatsku WebSocket sinhronizaciju sesije (`LOGIN_SUCCESS`) nakon prijave, te vizuelno odvajanje admin opcija (ljubičasti akcenat) u navbaru. |
+| **Šta je tim izmijenio** | Tip povratne vrijednosti funkcije `getUserRole` u auth utilitijima je proširen na opštiji `string | null` kako bi se mapirale novouvedene administratorske i osoblinske uloge bez striktnog ograničavanja na stare tipove. |
+| **Šta je tim odbacio** | Prvobitnu logiku koja je u `ProtectedRoute` provjeravala samo pojedinačnu ulogu (`allowedUloga`), jer je bila nefleksibilna za rute kojima treba pristupiti više različitih rola istovremeno. |
+| **Rizici, problemi ili greške** | Potencijalni sigurnosni rizik od propusta u zaštiti pojedinačnih API endpoints ako se izostavi middleware, što je eliminisano striktnim mapiranjem kroz `router.ts` i `reservationRoutes.ts`. Kod uspješno kompajlira na obje strane bez TypeScript grešaka. |
+| **Ko je koristio alat** | Lamija Halilović |
+
 
