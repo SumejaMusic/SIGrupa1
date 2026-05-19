@@ -38,10 +38,21 @@ export default function DoctorsSection() {
     });
   };
 
-  const handleZakaziTermin = (doc: Doktor) => {
-    // Pamti i doktora i odjel u localStorage — step2 i step3 ih čitaju odatle
+ const handleZakaziTermin = (doc: Doktor) => {
+    // 1. Provjera da li korisnik ima validan token
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      // Ako nije prijavljen, šaljemo ga na prijavu
+      // Opcionalno: možeš spasiti lokaciju na koju je htio ići da ga vratiš poslije login-a
+      navigate("/prijava");
+      return;
+    }
+
+    // 2. Ako je prijavljen, nastavljamo sa čuvanjem podataka i navigacijom
     localStorage.setItem("selectedDoktor", doc.id.toString());
     localStorage.setItem("selectedOdjel", doc.odjelId.toString());
+    
     navigate("/step3-tip-pregleda");
   };
 

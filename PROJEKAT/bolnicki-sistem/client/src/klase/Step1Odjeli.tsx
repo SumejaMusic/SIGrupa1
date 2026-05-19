@@ -69,8 +69,8 @@ const defaultInfo: OdjelInfo = {
   specijalizacije: ["Opća specijalizacija", "Klinička praksa"],
   nagrade: ["Certifikat kvalitete 2023"],
 };
-
 const apiUrl = import.meta.env.VITE_API_URL;
+  //const apiUrl = "http://localhost:5000";
 
 function Step1Odjeli() {
   const navigate = useNavigate();
@@ -80,12 +80,15 @@ function Step1Odjeli() {
   const [selectedOdjel, setSelectedOdjel] = useState<number | null>(null);
   const [odjeli, setOdjeli] = useState<Odjel[]>([]);
 
-  useEffect(() => {
-    fetch(`${apiUrl}/api/odjeli`)
-      .then(res => res.json())
-      .then(data => setOdjeli(data))
-      .catch(() => setOdjeli([]));
-  }, []);
+ useEffect(() => {
+  fetch(`${apiUrl}/api/odjeli`)
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) setOdjeli(data);
+      else setOdjeli([]);
+    })
+    .catch(() => setOdjeli([]));
+}, []);
 
   const filteredOdjeli = odjeli
   .filter((o) => o.naziv.toLowerCase() !== "testni odjel")
@@ -140,10 +143,14 @@ function Step1Odjeli() {
                   onMouseLeave={() => { setHoveredOdjel(null); setHoveredNaziv(""); }}
                 >
                   {/* Hover Popup - rendered INSIDE the relative div, above the card */}
-                  {hoveredOdjel === odjel.id && (
-                    <div className="absolute left-0 bottom-full mb-3 w-72 bg-white border-2 border-blue-400 rounded-xl shadow-2xl z-50 p-5">
-                      {/* Arrow pointing down */}
-                      <div className="absolute bottom-[-10px] left-8 w-4 h-4 bg-white border-r-2 border-b-2 border-blue-400 rotate-45"></div>
+                  {/* Promijeni poziciju iz 'bottom-full mb-3' u 'top-full mt-3' */}
+{hoveredOdjel === odjel.id && (
+  <div className="absolute left-0 top-full mt-3 w-72 bg-white border-2 border-blue-400 rounded-xl shadow-2xl z-[999] p-5">
+    
+    {/* Strelica - okreni je prema GORE */}
+    <div className="absolute top-[-10px] left-8 w-4 h-4 bg-white border-l-2 border-t-2 border-blue-400 rotate-45"></div>
+
+   
 
                       <h3 className="font-bold text-base text-gray-900 mb-1">{odjel.naziv}</h3>
                       <p className="text-xs text-gray-500 mb-3 leading-relaxed">{odjel.opis}</p>

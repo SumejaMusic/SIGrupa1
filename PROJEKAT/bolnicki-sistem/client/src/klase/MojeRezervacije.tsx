@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Clock, User, AlertCircle, Calendar, MapPin, X, FileText, MessageSquare, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, User, Calendar, MapPin, X, FileText, MessageSquare, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { handleExpiredSession } from "../utils/auth";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
 
 interface Komentar {
@@ -29,6 +30,25 @@ interface Rezervacija {
   komentari: Komentar[];
   nalazi: Nalaz[];
 }
+
+// ✅ Parsira ISO datum string kao čisti UTC YYYY-MM-DD
+// Sprječava timezone bug gdje "2026-05-15T00:00:00.000Z" postaje "2026-05-14" u lokalnom vremenu
+const isoUTCdatum = (isoStr: string): string => {
+  const d = new Date(isoStr);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dan = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${dan}`;
+};
+
+// ✅ Danas u UTC formatu
+const danasUTC = (): string => {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dan = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${dan}`;
+};
 
 // ─── Sidebar ───────────────────────────────────────────────────────────────
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -109,7 +129,6 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
   };
 
-  // ✅ Fetch nalazi sa tokenom
   useEffect(() => {
     if (tab !== "nalazi") return;
     setLoadingNalazi(true);
@@ -122,7 +141,8 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
           setNalazi(data.map((n: any) => ({
             id: n.id,
             naziv: n.naziv,
-            datum: n.vrijemeNalaza.split("T")[0],
+            // ✅ UTC parsing datuma nalaza
+            datum: isoUTCdatum(n.vrijemeNalaza),
             url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
           })));
         } else {
@@ -133,7 +153,6 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
       .finally(() => setLoadingNalazi(false));
   }, [tab, rez.id]);
 
-  // ✅ Fetch komentara sa tokenom
   useEffect(() => {
     if (tab !== "komentari") return;
     fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentari`, {
@@ -146,7 +165,6 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
       .catch(() => {});
   }, [tab, rez.id]);
 
-  // ✅ Slanje komentara sa tokenom
   const handleSendKomentar = async () => {
     if (!noviKomentar.trim()) return;
     setSaljemo(true);
@@ -163,7 +181,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
         id: Date.now(),
         tekst: noviKomentar.trim(),
         autor: "Vi",
-        datum: new Date().toISOString().split("T")[0],
+        datum: danasUTC(),
         jeDoktor: false,
       }]);
       setNoviKomentar("");
@@ -346,14 +364,13 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
 // ─── Glavni komponent ───────────────────────────────────────────────────────
 const MojeRezervacije = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
-  const [selectedDate, setSelectedDate] = useState<string | null>("2026-05-14");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(danasUTC());
   const [detaljiRez, setDetaljiRez] = useState<Rezervacija | null>(null);
   const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
   const [loading, setLoading] = useState(false);
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // ✅ Fetch moje rezervacije sa tokenom
   useEffect(() => {
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -364,11 +381,16 @@ const MojeRezervacije = () => {
         "Content-Type": "application/json"
       }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) { handleExpiredSession(); return null; }
+        return res.json();
+      })
       .then(data => {
+        if (!data) return;
         const mapirano = data.map((r: any) => ({
           id: r.id,
-          datum: (() => { const d = new Date(r.termin.datum); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })(),
+          // ✅ UTC parsing — sprječava da "2026-05-15T00:00:00.000Z" postane "2026-05-14"
+          datum: isoUTCdatum(r.termin.datum),
           vrijeme: r.termin.vrijeme,
           doktor: `Dr. ${r.doktor.korisnik.ime} ${r.doktor.korisnik.prezime}`,
           tip: r.tipPregleda?.naziv?.toLowerCase().includes("hitni") ? "hitni"
@@ -380,7 +402,8 @@ const MojeRezervacije = () => {
             id: r.id * 1000,
             tekst: r.komentar,
             autor: "Vi",
-            datum: r.datumKreiranja.split("T")[0],
+            // ✅ UTC parsing datuma kreiranja
+            datum: isoUTCdatum(r.datumKreiranja),
             jeDoktor: false,
           }] : [],
           nalazi: [],
@@ -400,6 +423,7 @@ const MojeRezervacije = () => {
   const getDaysInMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
   const getFirstDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1).getDay();
 
+  // ✅ Koristi UTC za generisanje YYYY-MM-DD stringa za kalendar ćelije
   const toDateStr = (year: number, month: number, day: number) =>
     `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
@@ -416,8 +440,10 @@ const MojeRezervacije = () => {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
   };
 
-  const formatDateLabel = (ds: string) =>
-    new Date(ds + "T00:00:00").toLocaleDateString("bs-BA", { day: "numeric", month: "long" });
+  const formatDateLabel = (ds: string) => {
+    // ✅ "T12:00:00Z" — podne UTC, sigurno isti dan u svim zonama za prikaz
+    return new Date(ds + "T12:00:00Z").toLocaleDateString("bs-BA", { day: "numeric", month: "long" });
+  };
 
   const monthName = currentDate.toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
 
@@ -430,10 +456,9 @@ const MojeRezervacije = () => {
     return arr;
   };
 
-  const today = new Date();
-  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+  // ✅ Danas u UTC
+  const todayStr = danasUTC();
 
-  // ✅ Otkazivanje sa tokenom
   const handleCancel = async (id: number) => {
     if (!window.confirm("Jeste li sigurni da želite otkazati ovu rezervaciju?")) return;
     try {

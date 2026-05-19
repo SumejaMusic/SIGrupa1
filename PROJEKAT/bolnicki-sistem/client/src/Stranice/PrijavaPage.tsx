@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity } from 'lucide-react';
 import { apiUrl } from '../lib/api';
+import { io } from "socket.io-client";
 
+// 2. Inicijalizuj socket koristeći funkciju apiUrl
+const socket = io(apiUrl('/'));
 interface Greske {
   email?: string;
   pristupnaSifra?: string;
@@ -86,7 +89,30 @@ export default function PrijavaPage() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('korisnik', JSON.stringify(data.korisnik));
-      navigate('/');
+      window.dispatchEvent(new Event("istekla-sesija")); //dodano
+      // 2. Pošalji poruku preko WebSocketa (ako je konekcija otvorena)
+// Ovo će obavijestiti OSTALE otvorene tabove da se prijave
+if (socket && socket.connected) {
+  // Socket.io automatski pretvara objekte u JSON, ne treba JSON.stringify
+  socket.emit('LOGIN_SUCCESS', { 
+    korisnik: data.korisnik 
+  });}
+      // Redirect prema ulozi korisnika
+      const uloga = data.korisnik.uloga;
+      switch (uloga) {
+        case "DOKTOR":
+          navigate("/doktor-rezervacije");
+          break;
+        case "PACIJENT":
+          navigate("/moje-rezervacije");
+          break;
+        case "MEDICINSKO_OSOBLJE":
+        case "ADMINISTRATOR":
+        case "VLASNIK":
+        default:
+          navigate("/");
+          break;
+      }
     } catch {
       setGreske({ opsta: 'Greška servera. Pokušajte ponovo.' });
     } finally {

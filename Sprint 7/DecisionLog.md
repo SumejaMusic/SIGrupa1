@@ -81,6 +81,28 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | **Posljedice odluke** | Potrebno je ažurirati projektnu dokumentaciju i plan sprintova. Razvojni tim mora fokus prebaciti na sigurnosne protokole ranije nego što je planirano. Omogućava se ispravno testiranje autorizacijskih nivoa za sve buduće module. |
 | **Status odluke** | **Aktivna** |
  
+---
 
+## DEC-006 — Prebacivanje funkcionalnosti automatskih podsjetnika u naredni sprint
+
+| Stavka | Opis |
+| :--- | :--- |
+| **ID odluke** | DEC-006 |
+| **Datum** | 15.5.2026 |
+| **Kratak naziv odluke** | Prebacivanje US-31 u naredni sprint |
+| **Opis problema ili pitanja** | Funkcionalnost automatskih email podsjetnika za pacijente sa hroničnim bolestima prvobitno je planirana za trenutni sprint, ali je procijenjeno da nije direktno povezana sa glavnim ciljevima i prioritetima ovog sprinta. |
+| **Razmatrane opcije** | 1. Implementirati funkcionalnost u trenutnom sprintu.<br>7. Prebaciti funkcionalnost u naredni sprint gdje se tematski i tehnički bolje uklapa. |
+| **Odabrana opcija** | **Opcija 2:** Prebacivanje funkcionalnosti u naredni sprint |
+| **Razlog izbora** | Funkcionalnost se više uklapa u kontekst narednog sprinta koji uključuje dodatne notifikacijske i automatizovane procese. Također, implementacija zavisi od već stabilizovane autentifikacije i postojećeg Resend email servisa definisanog u DEC-004. Time se smanjuje rizik od preopterećenja trenutnog sprinta i omogućava fokus na prioritetnije korisničke zahtjeve. |
+| **Posljedice odluke** | User Story **US-31 — Automatski podsjetnik za pacijente sa hroničnim bolestima** biće implementiran u narednom sprintu koristeći postojeći Resend servis i scheduler mehanizam za slanje podsjetnika 7 dana prije pregleda ili obnove terapije. Potrebno je ažurirati sprint backlog i plan implementacije. |
+| **Status odluke** | Aktivna |
+
+### Povezani User Story
+
+| ID | Naziv | Status |
+| :--- | :--- | :--- |
+| US-31 | Automatski podsjetnik za pacijente sa hroničnim bolestima | Prebačeno u naredni sprint |
+
+---
 
 
