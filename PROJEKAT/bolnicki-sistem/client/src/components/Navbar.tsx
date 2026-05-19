@@ -243,6 +243,44 @@ export default function Navbar() {
 
               </div>
 
+              {/* Navigacija prema ulozi */}
+              {korisnik.uloga === 'PACIJENT' && (
+                <button
+                  onClick={() => navigate('/moje-rezervacije')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    scrolled
+                      ? 'text-blue-700 border border-blue-200 hover:bg-blue-50'
+                      : 'text-white border border-white/30 hover:bg-white/10'
+                  }`}
+                >
+                  Moje Rezervacije
+                </button>
+              )}
+              {korisnik.uloga === 'DOKTOR' && (
+                <button
+                  onClick={() => navigate('/doktor-rezervacije')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    scrolled
+                      ? 'text-blue-700 border border-blue-200 hover:bg-blue-50'
+                      : 'text-white border border-white/30 hover:bg-white/10'
+                  }`}
+                >
+                  Doktor Panel
+                </button>
+              )}
+              {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
+                <button
+                  onClick={() => navigate('/')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    scrolled
+                      ? 'text-purple-700 border border-purple-200 hover:bg-purple-50'
+                      : 'text-white border border-white/30 hover:bg-white/10'
+                  }`}
+                >
+                  Admin Panel
+                </button>
+              )}
+
               <button
 
                 onClick={odjava}
@@ -341,15 +379,32 @@ export default function Navbar() {
 
           ))}
 
-          <div className="flex gap-3 pt-2 border-t border-gray-100">
+          <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
 
             {korisnik ? (
 
-              <button onClick={odjava} className="flex-1 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50">
+              <>
+                {korisnik.uloga === 'PACIJENT' && (
+                  <button onClick={() => { navigate('/moje-rezervacije'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-50">
+                    Moje Rezervacije
+                  </button>
+                )}
+                {korisnik.uloga === 'DOKTOR' && (
+                  <button onClick={() => { navigate('/doktor-rezervacije'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-50">
+                    Doktor Panel
+                  </button>
+                )}
+                {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
+                  <button onClick={() => { navigate('/'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
+                    Admin Panel
+                  </button>
+                )}
+                <button onClick={odjava} className="flex-1 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50">
 
                 Odjava
 
               </button>
+              </>
 
             ) : (
 
