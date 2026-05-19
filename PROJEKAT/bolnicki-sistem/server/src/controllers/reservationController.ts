@@ -79,9 +79,27 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
       return;
     }
 
+    const preklapanje = await prisma.rezervacije.findFirst({
+      where: {
+        idPacijent: pacijent.id,
+        datumOtkazivanja: null,
+        termin: {
+          datum: termin.datum,
+          vrijeme: termin.vrijeme,
+        },
+      },
+    });
+
+    if (preklapanje) {
+      res.status(409).json({ 
+        poruka: "Već imate zakazan pregled u isto vrijeme kod drugog doktora." 
+      });
+      return;
+    }
+
     const lock = await redis.get(`termin:lock:${idTermina}`);
 //if (!lock && lock === String(korisnikId)) prije bilo
-    if (!lock && lock === String(korisnikId)) {
+    if (!lock || lock !== String(korisnikId)) {
       res.status(409).json({ poruka: "Termin nije zaključan. Pokrenite proces ponovo." });
       return;
     }
@@ -491,6 +509,24 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
 
     if (duplikat) {
       res.status(409).json({ poruka: "Rezervacija za ovaj termin već postoji." });
+      return;
+    }
+
+    const preklapanje = await prisma.rezervacije.findFirst({
+      where: {
+        idPacijent: pacijent.id,
+        datumOtkazivanja: null,
+        termin: {
+          datum: termin.datum,
+          vrijeme: termin.vrijeme,
+        },
+      },
+    });
+
+    if (preklapanje) {
+      res.status(409).json({ 
+        poruka: "Pacijent već ima zakazan pregled u isto vrijeme." 
+      });
       return;
     }
 

@@ -8,6 +8,7 @@
 
 
 import { Router } from "express";
+import { autentifikuj } from "../middleware/authMiddleware.js";
 import {
   getSlobodniTermini,
   getTerminById,
@@ -27,10 +28,10 @@ router.get("/:id", getTerminById);
  
 // POST /api/termini/:id/zakljucaj
 // US-12, NFR-22 — Buffer zona 2 minute
-router.post("/:id/zakljucaj", zaključajTermin);
+router.post("/:id/zakljucaj", autentifikuj, zaključajTermin);
  
 // POST /api/termini/:id/oslobodi
 // US-12 — Ručno oslobađanje termina
-router.post("/:id/oslobodi", oslobodiTermin);
+router.post("/:id/oslobodi", autentifikuj, oslobodiTermin);
  
 export default router;
