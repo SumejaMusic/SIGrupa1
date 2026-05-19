@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { redis } from "../lib/redis.js";
-import { posaljiPotvrdurezerv } from "../emailService.js";
+import { posaljiPotvrdurezerv, posaljiOtkazivanjeRezerv } from "../emailService.js";
 import { io } from "../app.js";
 import multer from "multer";
 
@@ -336,7 +336,11 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
   try {
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
-      include: { termin: true, pacijent: { include: { korisnik: true } } },
+      include: { 
+        termin: true, 
+        pacijent: { include: { korisnik: true } },
+        doktor: { include: { korisnik: true } }, 
+      },
     });
 
     if (!rezervacija) {
@@ -348,6 +352,23 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
       await tx.rezervacije.update({ where: { id: rezervacija.id }, data: { doktorOtkazao: true, datumOtkazivanja: new Date() } });
       await tx.termin.update({ where: { id: rezervacija.idTermina }, data: { status: "SLOBODAN" } });
     });
+
+    const pacijentKorisnik = rezervacija.pacijent.korisnik;
+    try {
+      await posaljiOtkazivanjeRezerv({
+        pacijentEmail: pacijentKorisnik.email,
+        pacijentIme: pacijentKorisnik.ime,
+        pacijentPrezime: pacijentKorisnik.prezime,
+        doktorIme: rezervacija.doktor?.korisnik?.ime ?? "",
+        doktorPrezime: rezervacija.doktor?.korisnik?.prezime ?? "",
+        doktorSpecijalizacija: rezervacija.doktor?.specijalizacija ?? "",
+        datum: rezervacija.termin.datum,
+        vrijeme: rezervacija.termin.vrijeme,
+        rezervacijaId: rezervacija.id,
+      });
+    } catch (emailErr) {
+      console.error("❌ Email otkazivanja NIJE poslan:", emailErr);
+    }
 
     res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
   } catch (err) {
