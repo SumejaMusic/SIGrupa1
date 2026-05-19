@@ -8,7 +8,6 @@ import { getNalaziZaPacijenta, getNalazPDF, getNalaziZaRezervaciju } from "../co
 import { getKomentari } from "../controllers/reservationController.js"; // ← dodaj
 import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientController.js";
 import authRoutes from "./authRoutes.js";
-import pregledRoutes from "./pregledRoutes.js"
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizuj } from "../middleware/autorizacija.js";
 
