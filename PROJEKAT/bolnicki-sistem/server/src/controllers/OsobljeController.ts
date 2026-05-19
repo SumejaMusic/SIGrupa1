@@ -26,8 +26,14 @@ import {
   getAllOdjeliService,
   getAllSobeService,
   getSlobodniTerminiDoktoraService,
+  getTipoviPregledaService,
+  getSlobodniDatumiDoktoraService,
 } from "../osobljeService.js";
+import { redis } from "../lib/redis.js";
+import { io } from "../app.js";
+import { getAllTerminiService } from "../osobljeService.js"; // dodaj u postojeći import
 
+import { prisma } from "../lib/prisma.js";
 // Helper: dohvata ID prijavljenog korisnika iz req.korisnik (postavljeno od autentifikuj)
 // ili iz x-test-korisnik-id headera koji se koristi u testovima (vidi app.ts test middleware)
 function getKorisnikId(req: Request): number {
@@ -140,33 +146,48 @@ export async function otkaziTermin(req: Request, res: Response, next: NextFuncti
 
 export async function kreirajTerminZaPacijenta(req: Request, res: Response, next: NextFunction) {
   try {
-    const { idDoktor, idPacijent, datum, vrijemeMinute, idTipPregleda, komentar, hitnost } = req.body;
+    const { idTermina, idDoktor, idPacijent, idTipPregleda, komentar, hitnost } = req.body;
 
-    if (!idDoktor || !idPacijent || !datum || vrijemeMinute === undefined) {
-      res.status(400).json({
-        poruka: "Obavezna polja: idDoktor, idPacijent, datum, vrijemeMinute.",
-      });
+    if (!idTermina || !idDoktor || !idPacijent) {
+      res.status(400).json({ poruka: "Obavezna polja: idTermina, idDoktor, idPacijent." });
       return;
     }
 
-    if (typeof vrijemeMinute !== "number" || vrijemeMinute < 0 || vrijemeMinute > 1439) {
-      res.status(400).json({
-        poruka: "vrijemeMinute mora biti broj između 0 i 1439 (minuti od ponoći).",
-      });
+    const terminId = Number(idTermina);
+    const doktorId = Number(idDoktor);
+
+    // Provjeri Redis lock — ako je već zaključan od nekog drugog, odbij
+    const lock = await redis.get(`termin:lock:${terminId}`);
+    if (lock) {
+      res.status(409).json({ poruka: "Termin je trenutno u procesu rezervacije." });
       return;
     }
 
-    const rezervacija = await kreirajTerminZaPacijentomService({
-      idDoktor:      Number(idDoktor),
-      idPacijent:    Number(idPacijent),
-      datum:         new Date(datum),
-      vrijemeMinute: Number(vrijemeMinute),
-      idTipPregleda: idTipPregleda ? Number(idTipPregleda) : undefined,
-      komentar,
-      hitnost:       Boolean(hitnost),
-    });
+    // Postavi lock na 30 sekundi
+    await redis.setex(`termin:lock:${terminId}`, 30, 'osoblje');
 
-    res.status(201).json(rezervacija);
+    try {
+      const rezervacija = await kreirajTerminZaPacijentomService({
+        idTermina:     terminId,
+        idDoktor:      doktorId,
+        idPacijent:    Number(idPacijent),
+        idTipPregleda: idTipPregleda ? Number(idTipPregleda) : undefined,
+        komentar,
+        hitnost:       Boolean(hitnost),
+      });
+
+      // Obavijesti sve klijente da je termin zauzet
+      io.emit("termin-azuriran", { doktorId, terminId });
+
+      // Oslobodi lock
+      await redis.del(`termin:lock:${terminId}`);
+
+      res.status(201).json(rezervacija);
+    } catch (err) {
+      // Ako service baci grešku, oslobodi lock
+      await redis.del(`termin:lock:${terminId}`);
+      throw err;
+    }
   } catch (err: any) {
     if (err.status) {
       res.status(err.status).json({ poruka: err.poruka });
@@ -180,25 +201,24 @@ export async function kreirajTerminZaPacijenta(req: Request, res: Response, next
 // Body: { naziv, opis?, fajl (base64 string), mimeType }
 // Klijent čita fajl, konvertuje u base64 i šalje kao JSON.
 // mimeType mora biti "application/pdf" — service baca 400 ako nije.
-
 export async function dodajNalaz(req: Request, res: Response, next: NextFunction) {
   try {
-    const idHistorije = Number(req.params.idHistorije);
-    if (isNaN(idHistorije)) {
-      res.status(400).json({ poruka: "Neispravan ID historije pregleda." });
+    const idRezervacije = Number(req.params.idRezervacije); // ← bio idHistorije
+    if (isNaN(idRezervacije)) {
+      res.status(400).json({ poruka: "Neispravan ID rezervacije." });
       return;
     }
-
+ 
     const { naziv, opis, fajl, mimeType } = req.body;
-
+ 
     if (!naziv || !fajl || !mimeType) {
       res.status(400).json({
         poruka: "Obavezna polja: naziv, fajl (base64 string), mimeType.",
       });
       return;
     }
-
-    const nalaz = await dodajNalazService(idHistorije, naziv, opis, fajl, mimeType);
+ 
+    const nalaz = await dodajNalazService(idRezervacije, naziv, opis, fajl, mimeType);
     res.status(201).json(nalaz);
   } catch (err: any) {
     if (err.status) {
@@ -208,7 +228,7 @@ export async function dodajNalaz(req: Request, res: Response, next: NextFunction
     next(err);
   }
 }
-
+ 
 // ─── 7. GET /api/osoblje/nalazi/pacijent/:idPacijenta ─────────────────────────
 // Vraća listu metadata nalaza. PDF je dostupan kroz zasebnu rutu.
 
@@ -378,8 +398,8 @@ export async function getAllSobe(req: Request, res: Response, next: NextFunction
     res.status(200).json(await getAllSobeService());
   } catch (err) { next(err); }
 }
-import { getAllTerminiService } from "../osobljeService.js"; // dodaj u postojeći import
-import { prisma } from "../lib/prisma.js";
+
+
 
 export async function getAllTermini(req: Request, res: Response, next: NextFunction) {
   try {
@@ -397,4 +417,30 @@ export async function getSlobodniTerminiDoktora(req: Request, res: Response, nex
     const termini = await getSlobodniTerminiDoktoraService(idDoktor, datum);
     res.status(200).json(termini);
   } catch (err) { next(err); }
+}
+export async function getTipoviPregleda(req: Request, res: Response) {
+  try {
+    const tipovi = await getTipoviPregledaService();
+    res.json(tipovi);
+  } catch (err: any) {
+    res.status(err.status ?? 500).json({ poruka: err.poruka ?? "Greška servera." });
+  }
+}
+export async function getSlobodniDatumiDoktora(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const idDoktor = Number(req.params.idDoktor);
+    if (isNaN(idDoktor)) {
+      res.status(400).json({ poruka: "Neispravan ID doktora." });
+      return;
+    }
+ 
+    const datumi = await getSlobodniDatumiDoktoraService(idDoktor);
+    res.status(200).json(datumi);
+  } catch (err) {
+    next(err);
+  }
 }
