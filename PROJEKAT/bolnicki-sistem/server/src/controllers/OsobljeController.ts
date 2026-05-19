@@ -140,30 +140,22 @@ export async function otkaziTermin(req: Request, res: Response, next: NextFuncti
 
 export async function kreirajTerminZaPacijenta(req: Request, res: Response, next: NextFunction) {
   try {
-    const { idDoktor, idPacijent, datum, vrijemeMinute, idTipPregleda, komentar, hitnost } = req.body;
+    const { idTermina, idDoktor, idPacijent, idTipPregleda, komentar, hitnost } = req.body;
 
-    if (!idDoktor || !idPacijent || !datum || vrijemeMinute === undefined) {
+    if (!idTermina || !idDoktor || !idPacijent) {
       res.status(400).json({
-        poruka: "Obavezna polja: idDoktor, idPacijent, datum, vrijemeMinute.",
-      });
-      return;
-    }
-
-    if (typeof vrijemeMinute !== "number" || vrijemeMinute < 0 || vrijemeMinute > 1439) {
-      res.status(400).json({
-        poruka: "vrijemeMinute mora biti broj između 0 i 1439 (minuti od ponoći).",
+        poruka: "Obavezna polja: idTermina, idDoktor, idPacijent.",
       });
       return;
     }
 
     const rezervacija = await kreirajTerminZaPacijentomService({
-      idDoktor:      Number(idDoktor),
-      idPacijent:    Number(idPacijent),
-      datum:         new Date(datum),
-      vrijemeMinute: Number(vrijemeMinute),
+      idTermina: Number(idTermina),
+      idDoktor: Number(idDoktor),
+      idPacijent: Number(idPacijent),
       idTipPregleda: idTipPregleda ? Number(idTipPregleda) : undefined,
       komentar,
-      hitnost:       Boolean(hitnost),
+      hitnost: Boolean(hitnost),
     });
 
     res.status(201).json(rezervacija);
