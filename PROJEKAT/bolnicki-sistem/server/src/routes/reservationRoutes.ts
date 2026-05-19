@@ -11,6 +11,7 @@ import {
   dodajKomentar,
   promijeniTrajanje,
   getKomentari,
+  kreirajRezervacijuDoktor
 } from "../controllers/reservationController.js";
 
 const router = Router();

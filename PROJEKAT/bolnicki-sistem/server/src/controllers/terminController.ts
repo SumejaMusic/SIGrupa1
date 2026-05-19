@@ -88,30 +88,24 @@ export const getTerminById = async (
 // POST /api/termini/:id/zakljucaj
 // US-12, NFR-22 — Buffer zona, Redis lock na 2 minute
 // ─────────────────────────────────────────────
-export const zaključajTermin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const zaključajTermin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const terminId = Number(req.params.id);
-    const korisnikId = await getCurrentKorisnikId();
-
-    if (!korisnikId) {
-      res.status(404).json({ poruka: "Profil pacijenta nije pronađen." });
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
       return;
     }
+    const korisnikId = korisnikPayload.id;
 
     const lockKey = `termin:lock:${terminId}`;
 
-    // Provjeri da li je već zaključan od nekog drugog
     const postojećiLock = await redis.get(lockKey);
     if (postojećiLock && postojećiLock !== String(korisnikId)) {
       res.status(409).json({ poruka: "Termin je trenutno zauzet. Pokušajte ponovo." });
       return;
     }
 
-    // Postavi lock sa TTL od 120 sekundi
     await redis.setex(lockKey, BUFFER_TTL_SECONDS, String(korisnikId));
     const termin = await prisma.termin.findUnique({ where: { id: terminId } });
     io.emit("termin-azuriran", { doktorId: termin?.idDoktor });

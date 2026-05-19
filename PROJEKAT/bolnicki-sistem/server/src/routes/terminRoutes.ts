@@ -8,6 +8,7 @@
 
 
 import { Router } from "express";
+import { autentifikuj } from "../middleware/authMiddleware.js";
 import {
   getSlobodniTermini,
   getTerminById,

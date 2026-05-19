@@ -19,6 +19,7 @@ router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
 router.use("/odjeli", odjelRoutes);
 router.use("/auth", authRoutes);
+router.use("/pregledi", pregledRoutes); 
 
 router.get("/nalazi/pacijent/:pacijentId", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getNalaziZaPacijenta);
 router.get("/nalazi/rezervacija/:rezervacijaId", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getNalaziZaRezervaciju);
