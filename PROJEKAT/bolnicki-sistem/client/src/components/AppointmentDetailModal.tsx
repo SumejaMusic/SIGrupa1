@@ -74,7 +74,16 @@ interface Appointment {
     } | null;
   } | null;
 }
-
+const formatToBOSDate = (dateString: string): string => {
+  if (!dateString) return 'N/A';
+  const d = new Date(dateString);
+  // Koristimo UTC metode jer bazični stringovi iz baze često dolaze kao čist datum bez pomaka
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const year = d.getUTCFullYear();
+  
+  return `${day}.${month}.${year}.`;
+};
 interface Props {
   appointment: Appointment;
   onClose: () => void;
@@ -106,6 +115,23 @@ const isTerminUProslosti = (apt: Appointment): boolean => {
 };
 
 export default function AppointmentDetailModal({ appointment: apt, onClose, onCancel, onUploadPdf, onMarkUrgent }: Props) {
+   const handleOpenPdf = async (nalazId: number) => {
+    const token = localStorage.getItem('token') ?? '';
+    try {
+      const res = await fetch(`/api/osoblje/nalazi/${nalazId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        console.error('PDF nije dostupan');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch {
+      console.error('Greška pri otvaranju PDF-a');
+    }
+  };
   let currentStatusKey = apt.termin.status;
   if (apt.zavrseno) currentStatusKey = 'ZAKAZAN';
   if (apt.datumOtkazivanja !== null) currentStatusKey = 'OTKAZAN';
@@ -123,8 +149,8 @@ export default function AppointmentDetailModal({ appointment: apt, onClose, onCa
   // Upload nalaza je uvijek dozvoljen (i za prošle termine) osim za otkazane
   const canUpload = !isOtkazan;
 
-  const formattedDate = apt.termin.datum.split('T')[0];
-  const formattedDob = apt.pacijent.korisnik.datumRodjenja.split('T')[0];
+const formattedDate = formatToBOSDate(apt.termin.datum);
+const formattedDob = formatToBOSDate(apt.pacijent.korisnik.datumRodjenja);
 
   const nalaz = apt.historija?.nalaz;
 
@@ -191,7 +217,10 @@ export default function AppointmentDetailModal({ appointment: apt, onClose, onCa
               <InfoRow icon={<Clock size={14} />} label="Datum i vrijeme" value={`${formattedDate} u ${formatIntTime(apt.termin.vrijeme)}`} />
               <InfoRow icon={<Stethoscope size={14} />} label="Doktor" value={`Dr. ${apt.doktor.korisnik.ime} ${apt.doktor.korisnik.prezime}`} />
               <InfoRow icon={<Building2 size={14} />} label="Odjel" value={apt.doktor.odjel.naziv} />
-              <InfoRow icon={<DoorOpen size={14} />} label="Soba / Sprat" value={apt.soba ? `Soba ${apt.soba?.naziv ?? apt.doktor.soba?.naziv ?? 'N/A'} (Sprat ${apt.soba.sprat})` : 'Nije dodijeljena'} />
+              <InfoRow icon={<DoorOpen size={14} />} label="Soba / Sprat" value={(() => {
+  const soba = apt.soba ?? apt.doktor.soba ?? null;
+  return soba ? `Soba ${soba.naziv} (Sprat ${soba.sprat})` : 'Nije dodijeljena';
+})()} />
             </div>
           </section>
 
@@ -204,27 +233,33 @@ export default function AppointmentDetailModal({ appointment: apt, onClose, onCa
           )}
 
           {/* Lab results */}
-          {nalaz && (
-            <section>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Vezani medicinski nalaz</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group">
-                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText size={16} className="text-red-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate group-hover:text-blue-600 transition-colors">
-                      {nalaz.naziv}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Učitan: {nalaz.vrijemeNalaza.split('T')[0]} {nalaz.opis ? `· ${nalaz.opis}` : ''}
-                    </p>
-                  </div>
-                  <span className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium">Otvori</span>
-                </div>
-              </div>
-            </section>
-          )}
+        {nalaz && (
+    <section>
+      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        Vezani medicinski nalaz
+      </h3>
+      <div
+        onClick={() => handleOpenPdf(nalaz.id)}  // ← OVO JE KLJUČNO, bilo je bez onClick!
+        className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group"
+      >
+        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <FileText size={16} className="text-red-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-800 truncate group-hover:text-blue-600 transition-colors">
+            {nalaz.naziv}
+          </p>
+          <p className="text-xs text-gray-500">
+            Učitan: {nalaz.vrijemeNalaza.split('T')[0]}
+            {nalaz.opis ? ` · ${nalaz.opis}` : ''}
+          </p>
+        </div>
+        <span className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+          Otvori PDF →
+        </span>
+      </div>
+    </section>
+  )}
         </div>
 
         {/* Actions */}

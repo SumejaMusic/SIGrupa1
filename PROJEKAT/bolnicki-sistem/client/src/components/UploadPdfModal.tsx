@@ -82,7 +82,7 @@ export default function UploadPdfModal({ appointment: apt, onConfirm, onClose }:
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
+const [naziv, setNaziv] = useState('');
   const handleFile = (f: File | undefined) => {
     if (!f) return;
     if (f.type !== 'application/pdf') {
@@ -100,12 +100,12 @@ export default function UploadPdfModal({ appointment: apt, onConfirm, onClose }:
     handleFile(e.dataTransfer.files[0]);
   };
 
-  const handleSubmit = () => {
-  if (!file) return;
+const handleSubmit = () => {
+  if (!file || !naziv.trim()) return;
   const reader = new FileReader();
   reader.onload = () => {
     const base64 = (reader.result as string).split(',')[1];
-    onConfirm(file.name, base64, file.type);
+    onConfirm(naziv.trim(), base64, file.type); // ← naziv umjesto file.name
   };
   reader.readAsDataURL(file);
 };
@@ -117,7 +117,10 @@ export default function UploadPdfModal({ appointment: apt, onConfirm, onClose }:
           <div>
             <h2 className="text-lg font-bold text-gray-900">Dodaj laboratorijski nalaz</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              {apt.pacijent.korisnik.ime} {apt.pacijent.korisnik.prezime} · {apt.termin.datum}
+              {apt.pacijent.korisnik.ime} {apt.pacijent.korisnik.prezime} · {(() => {
+  const [god, mjes, dan] = apt.termin.datum.substring(0, 10).split('-');
+  return `${dan}.${mjes}.${god}.`;
+})()}
             </p>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
@@ -126,6 +129,17 @@ export default function UploadPdfModal({ appointment: apt, onConfirm, onClose }:
         </div>
 
         <div className="p-6 space-y-4">
+          <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Naziv nalaza *
+  </label>
+  <input
+    value={naziv}
+    onChange={e => setNaziv(e.target.value)}
+    placeholder="npr. Krvna slika, RTG pluća..."
+    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+</div>
           {/* Drop zone */}
           <div
             onDragOver={e => { e.preventDefault(); setDragging(true); }}
@@ -198,7 +212,7 @@ export default function UploadPdfModal({ appointment: apt, onConfirm, onClose }:
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!file}
+            disabled={!file || !naziv.trim()}
             className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             Sačuvaj nalaz

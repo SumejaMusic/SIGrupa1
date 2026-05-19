@@ -12,7 +12,6 @@ import NewAppointmentModal from '../components/NewAppointmentModal';
 
 type ViewMode = 'week' | 'day' | 'list';
 
-// Svi statusi su sada 100% usklađeni sa funkcijom getUIStatus i tvojom bazom
 type FilterStatus = 'all' | 'ZAKAZAN' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
 
 const STATUS_LABEL: Record<FilterStatus, string> = {
@@ -101,23 +100,28 @@ interface Appointment {
 const getUIStatus = (apt: Appointment): FilterStatus => {
   if (apt.termin.status === 'OTKAZAN' || apt.datumOtkazivanja !== null) return 'OTKAZAN';
   if (apt.zavrseno) return 'ZAVRSEN';
-  //if (apt.hitnost) return 'HITAN';
   return 'ZAKAZAN'; 
 };
 
-// Pomoćna funkcija koja pretvara Int vrijeme (npr. 900 ili 1430) u lijep format "09:00" ili "14:30"
-// Zamijeni sa:
 const formatIntTime = (time: number): string => {
   const hours = Math.floor(time / 60);
   const minutes = time % 60;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
+// ✅ POPRAVLJENO: inicijalizacija sa UTC midnight da izbjegnemo timezone offset
+const createUTCToday = () => {
+  const now = new Date();
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+};
+
 export default function StaffPanel() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // ✅ POPRAVLJENO: currentDate se kreira kao UTC midnight
+  const [tipoviPregleda, setTipoviPregleda] = useState<{id: number; naziv: string}[]>([]);
+  const [currentDate, setCurrentDate] = useState(createUTCToday);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('ZAKAZAN');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
@@ -127,9 +131,10 @@ export default function StaffPanel() {
   const [loading, setLoading] = useState(true);
 
   const [allPatients, setAllPatients] = useState<Appointment['pacijent'][]>([]);
-const [doctors, setDoctors] = useState<Appointment['doktor'][]>([]);
-const [departments, setDepartments] = useState<Appointment['doktor']['odjel'][]>([]);
-const [rooms, setRooms] = useState<{ id: number; naziv: string; sprat: number; }[]>([]);
+  const [doctors, setDoctors] = useState<Appointment['doktor'][]>([]);
+  const [departments, setDepartments] = useState<Appointment['doktor']['odjel'][]>([]);
+  const [rooms, setRooms] = useState<{ id: number; naziv: string; sprat: number; }[]>([]);
+
   const getToken = () => localStorage.getItem('token') ?? '';
 
   const showNotif = (msg: string) => {
@@ -137,13 +142,12 @@ const [rooms, setRooms] = useState<{ id: number; naziv: string; sprat: number; }
     setTimeout(() => setNotification(null), 3500);
   };
 
-  // Učitavanje podataka s backenda
   useEffect(() => {
     async function fetchTermini() {
       try {
         const res = await fetch('/api/osoblje/termini/svi', {
-  headers: { Authorization: `Bearer ${getToken()}` }
-});
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
         if (!res.ok) throw new Error('Greška na serveru');
         const data = await res.json();
         setAppointments(data);
@@ -156,152 +160,164 @@ const [rooms, setRooms] = useState<{ id: number; naziv: string; sprat: number; }
     }
     fetchTermini();
   }, []);
-useEffect(() => {
-  const headers = { Authorization: `Bearer ${getToken()}` };
 
-  Promise.all([
-    fetch('/api/osoblje/pacijenti', { headers }).then(r => r.json()),
-    fetch('/api/osoblje/doktori',   { headers }).then(r => r.json()),
-    fetch('/api/osoblje/odjeli',    { headers }).then(r => r.json()),
-    fetch('/api/osoblje/sobe',      { headers }).then(r => r.json()),
-  ]).then(([pts, docs, depts, rms]) => {
-    setAllPatients(pts);
-    setDoctors(docs);
-    setDepartments(depts);
-    setRooms(rms);
-  }).catch(() => showNotif('Greška pri učitavanju podataka za novi termin.'));
-}, []);
- const filteredAppointments = useMemo(() => {
-  return appointments.filter(a => {
-    const matchStatus = filterStatus === 'all'
-      || (filterStatus === 'HITAN' ? a.hitnost === true : getUIStatus(a) === filterStatus);
+  useEffect(() => {
+    const headers = { Authorization: `Bearer ${getToken()}` };
+    Promise.all([
+      fetch('/api/osoblje/pacijenti', { headers }).then(r => r.json()),
+      fetch('/api/osoblje/doktori',   { headers }).then(r => r.json()),
+      fetch('/api/osoblje/odjeli',    { headers }).then(r => r.json()),
+      fetch('/api/osoblje/sobe',      { headers }).then(r => r.json()),
+      fetch('/api/osoblje/tipovi-pregleda', { headers }).then(r => r.json()), // ← DODAJ
+    ]).then(([pts, docs, depts, rms, tipovi]) => {
+      setAllPatients(pts);
+      setDoctors(docs);
+      setDepartments(depts);
+      setRooms(rms);
+      setTipoviPregleda(tipovi); // ← DODAJ
+    }).catch(() => showNotif('Greška pri učitavanju podataka za novi termin.'));
+  }, []);
+
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter(a => {
+      const matchStatus = filterStatus === 'all'
+        || (filterStatus === 'HITAN' 
+              ? ((a.hitnost === true || a.tipPregleda?.naziv === "Hitni pregled") && getUIStatus(a) === 'ZAKAZAN') 
+              : getUIStatus(a) === filterStatus);
+      
+      const q = searchQuery.toLowerCase();
+      const matchSearch = !q || (
+        `${a.pacijent.korisnik.ime} ${a.pacijent.korisnik.prezime}`.toLowerCase().includes(q) ||
+        `${a.doktor.korisnik.ime} ${a.doktor.korisnik.prezime}`.toLowerCase().includes(q) ||
+        (a.tipPregleda?.naziv && a.tipPregleda.naziv.toLowerCase().includes(q))
+      );
+      return matchStatus && matchSearch;
+    });
+  }, [appointments, filterStatus, searchQuery]);
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
     
-    const q = searchQuery.toLowerCase();
-    const matchSearch = !q || (
-      `${a.pacijent.korisnik.ime} ${a.pacijent.korisnik.prezime}`.toLowerCase().includes(q) ||
-      `${a.doktor.korisnik.ime} ${a.doktor.korisnik.prezime}`.toLowerCase().includes(q) ||
-      (a.tipPregleda?.naziv && a.tipPregleda.naziv.toLowerCase().includes(q))
-    );
-    return matchStatus && matchSearch;
-  });
-}, [appointments, filterStatus, searchQuery]);
-
-const stats = useMemo(() => {
-  const now = new Date();
-  const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
-  
- const todayApts = appointments.filter(a => {
-  const aptDate = new Date(a.termin.datum);
-  const aptStr = `${aptDate.getUTCFullYear()}-${String(aptDate.getUTCMonth() + 1).padStart(2,'0')}-${String(aptDate.getUTCDate()).padStart(2,'0')}`;
-  return aptStr === todayStr;
-});
-  
-  return {
-    total: todayApts.length,
-    scheduled: todayApts.filter(a => getUIStatus(a) === 'ZAKAZAN').length,
-    urgent: todayApts.filter(a => a.hitnost === true).length,
-    completed: todayApts.filter(a => getUIStatus(a) === 'ZAVRSEN').length,
-  };
-}, [appointments]);
+    // ✅ POPRAVLJENO: koristi substring(0,10) umjesto new Date() parsiranja
+    const todayApts = appointments.filter(a => {
+      const aptStr = a.termin.datum.substring(0, 10);
+      return aptStr === todayStr;
+    });
+    
+    return {
+      total: todayApts.length,
+      scheduled: todayApts.filter(a => getUIStatus(a) === 'ZAKAZAN').length,
+      urgent: todayApts.filter(a => a.hitnost === true || a.tipPregleda?.naziv === "Hitni pregled").length,
+      completed: todayApts.filter(a => getUIStatus(a) === 'ZAVRSEN').length,
+    };
+  }, [appointments]);
 
   const handleCancel = (apt: Appointment) => {
     setSelectedApt(null);
     setCancelTarget(apt);
   };
 
-  // ─── 2. confirmCancel — dodaj potvrda: true ───────────────────────────────────
-const confirmCancel = async () => {
-  if (!cancelTarget) return;
-  try {
-    const res = await fetch(`/api/osoblje/termini/${cancelTarget.id}/otkazi`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ potvrda: true })  // ← DODAJ OVO
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.poruka ?? 'Neuspješno otkazivanje');
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    try {
+      const res = await fetch(`/api/osoblje/termini/${cancelTarget.id}/otkazi`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ potvrda: true })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.poruka ?? 'Neuspješno otkazivanje');
+      }
+      setAppointments(prev => prev.map(a =>
+        a.id === cancelTarget.id
+          ? { ...a, datumOtkazivanja: new Date().toISOString(), termin: { ...a.termin, status: 'OTKAZAN' } }
+          : a
+      ));
+      showNotif(`Termin otkazan. Email obavijest je poslana na ${cancelTarget.pacijent.korisnik.email}.`);
+    } catch (err: any) {
+      showNotif(err.message ?? 'Greška pri otkazivanju termina.');
+    } finally {
+      setCancelTarget(null);
     }
-    setAppointments(prev => prev.map(a =>
-      a.id === cancelTarget.id
-        ? { ...a, datumOtkazivanja: new Date().toISOString(), termin: { ...a.termin, status: 'OTKAZAN' } }
-        : a
-    ));
-    showNotif(`Termin otkazan. Email obavijest je poslana na ${cancelTarget.pacijent.korisnik.email}.`);
-  } catch (err: any) {
-    showNotif(err.message ?? 'Greška pri otkazivanju termina.');
-  } finally {
-    setCancelTarget(null);
-  }
-};
+  };
 
+  // ✅ POPRAVLJENO: handleUploadPdf sada samo otvara modal i postavlja ciljni termin
   const handleUploadPdf = (apt: Appointment) => {
     setSelectedApt(null);
     setUploadTarget(apt);
   };
-const confirmUpload = async (naziv: string, base64: string, mimeType: string) => {
-  if (!uploadTarget) return;
 
-  // Treba idHistorije — ako historija ne postoji, ne možemo uploadati nalaz
-  const idHistorije = uploadTarget.historija?.id;
-  if (!idHistorije) {
-    showNotif('Greška: Termin nema završenu historiju pregleda. Nalaz se može dodati tek nakon pregleda.');
-    setUploadTarget(null);
-    return;
-  }
+  // ✅ POPRAVLJENO: confirmUpload sada ispravno gađa ID rezervacije (termina)
+  const confirmUpload = async (naziv: string, base64: string, mimeType: string) => {
+    if (!uploadTarget) return;
+    
+    try {
+      // Šaljemo na ID rezervacije (npr. /api/osoblje/nalazi/74)
+      const res = await fetch(`/api/osoblje/nalazi/${uploadTarget.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ 
+          naziv, 
+          fajl: base64, 
+          mimeType 
+        })
+      });
 
-  try {
-    const res = await fetch(`/api/osoblje/nalazi/${idHistorije}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ naziv, fajl: base64, mimeType })
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.poruka ?? 'Greška pri uploadu');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.poruka ?? 'Greška pri uploadu nalaza');
+      }
+
+      const noviNalaz = await res.json();
+      
+      // Osvježavamo klijentsko stanje (state)
+      setAppointments(prev => prev.map(a =>
+        a.id === uploadTarget.id
+          ? { 
+              ...a, 
+              historija: a.historija 
+                ? { ...a.historija, nalaz: noviNalaz } 
+                : { id: 0, dijagnoza: '', terapija: '', nalaz: noviNalaz } // Kreiramo objekat historije ako ne postoji
+            }
+          : a
+      ));
+      
+      showNotif(`Nalaz "${naziv}" uspješno dodan.`);
+    } catch (err: any) {
+      showNotif(err.message ?? 'Greška pri uploadu nalaza.');
+    } finally {
+      setUploadTarget(null);
     }
-    const noviNalaz = await res.json();
+  };
 
-    setAppointments(prev => prev.map(a =>
-      a.id === uploadTarget.id
-        ? { ...a, historija: a.historija ? { ...a.historija, nalaz: noviNalaz } : a.historija }
-        : a
-    ));
-    showNotif(`Nalaz "${naziv}" uspješno dodan.`);
-  } catch (err: any) {
-    showNotif(err.message ?? 'Greška pri uploadu nalaza.');
-  } finally {
-    setUploadTarget(null);
-  }
-};
-
- // ─── 3. handleMarkUrgent — API poziv + optimistički update ────────────────────
-const handleMarkUrgent = async (apt: Appointment) => {
-  try {
-    const res = await fetch(`/api/osoblje/termini/${apt.id}/hitnost`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ hitnost: true })
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.poruka ?? 'Greška');
+  const handleMarkUrgent = async (apt: Appointment) => {
+    try {
+      const res = await fetch(`/api/osoblje/termini/${apt.id}/hitnost`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ hitnost: true })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.poruka ?? 'Greška');
+      }
+      setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, hitnost: true } : a));
+      showNotif('Termin označen kao hitan.');
+    } catch (err: any) {
+      showNotif(err.message ?? 'Greška pri označavanju kao hitan.');
     }
-    setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, hitnost: true } : a));
-    showNotif('Termin označen kao hitan.');
-  } catch (err: any) {
-    showNotif(err.message ?? 'Greška pri označavanju kao hitan.');
-  }
-};
+  };
 
   const currentApt = selectedApt ? appointments.find(a => a.id === selectedApt.id) ?? selectedApt : null;
 
@@ -323,7 +339,7 @@ const handleMarkUrgent = async (apt: Appointment) => {
               <Activity size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-gray-900 leading-none">Panel medicinskog osoblja</h1>
+              <h1 className="text-sm font-bold text-gray-900 leading-none"></h1>
             </div>
           </div>
 
@@ -451,42 +467,84 @@ const handleMarkUrgent = async (apt: Appointment) => {
           onClose={() => setUploadTarget(null)}
         />
       )}
-     {showNewModal && (
-  <NewAppointmentModal
-    allPatients={allPatients}
-    doctors={doctors}
-    departments={departments}
-    rooms={rooms}
-    onConfirm={async (data) => {
+      {showNewModal && (
+        <NewAppointmentModal
+  allPatients={allPatients}
+  doctors={doctors}
+  departments={departments}
+  rooms={rooms}
+  tipoviPregleda={tipoviPregleda}  // ← DODAJ
+ 
+        onConfirm={async (data) => {
+  try {
+    // Korak 1: Kreiraj rezervaciju
+    const res = await fetch('/api/osoblje/termini', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({
+        idTermina:     data.idTermina,
+        idDoktor:      data.doktorId,
+        idPacijent:    data.pacijentId,
+        idTipPregleda: data.tipPregledaId,
+        komentar:      data.komentar,
+        hitnost:       data.hitnost
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.poruka ?? 'Greška pri zakazivanju');
+    }
+
+    const novaRezervacija = await res.json();
+
+    // Korak 2: Ako postoji nalaz, uploaduj odmah nakon kreiranja
+    if (data.nalaz) {
       try {
-        const res = await fetch('/api/osoblje/termini', {
+        const nalazRes = await fetch(`/api/osoblje/nalazi/${novaRezervacija.id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${getToken()}`
           },
-        body: JSON.stringify({
-  idTermina:  data.idTermina,   // ✅ ovo je ključno
-  idDoktor:   data.doktorId,
-  idPacijent: data.pacijentId,
-  komentar:   data.komentar,
-})
+          body: JSON.stringify({
+            naziv:    data.nalaz.naziv,
+            fajl:     data.nalaz.base64,
+            mimeType: data.nalaz.mimeType,
+          })
         });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.poruka ?? 'Greška');
+
+        if (nalazRes.ok) {
+          const noviNalaz = await nalazRes.json();
+          novaRezervacija.historija = {
+            id: 0, dijagnoza: '', terapija: '',
+            nalaz: noviNalaz
+          };
+        } else {
+          showNotif('Termin zakazan, ali nalaz nije mogao biti priložen.');
         }
-        const noviTermin = await res.json();
-        setAppointments(prev => [...prev, noviTermin]);
-        setShowNewModal(false);
-        showNotif('Novi termin uspješno zakazan.');
-      } catch (err: any) {
-        showNotif(err.message ?? 'Greška pri zakazivanju termina.');
+      } catch {
+        showNotif('Termin zakazan, ali nalaz nije mogao biti priložen.');
       }
-    }}
-    onClose={() => setShowNewModal(false)}
-  />
-)}
+    }
+
+    setAppointments(prev => [...prev, novaRezervacija]);
+    setShowNewModal(false);
+    showNotif(
+      data.nalaz
+        ? `Termin zakazan i nalaz "${data.nalaz.naziv}" priložen.`
+        : 'Novi termin uspješno zakazan.'
+    );
+  } catch (err: any) {
+    showNotif(err.message ?? 'Greška pri zakazivanju termina.');
+  }
+}}
+          onClose={() => setShowNewModal(false)}
+        />
+      )}
     </div>
   );
 }
@@ -507,7 +565,6 @@ function StatChip({ icon, label, value, color }: { icon: React.ReactNode; label:
 }
 
 function ListView({ appointments, onAppointmentClick }: { appointments: Appointment[]; onAppointmentClick: (a: Appointment) => void }) {
-  // Ključevi su sada mapirani direktno na domaće nazive koje vraća getUIStatus
   const STATUS_STYLES: Record<FilterStatus, string> = {
     all: '',
     ZAKAZAN: 'bg-blue-100 text-blue-700',
@@ -526,7 +583,7 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
 
   const sorted = [...appointments].sort((a, b) => {
     if (a.termin.datum !== b.termin.datum) return a.termin.datum.localeCompare(b.termin.datum);
-    return a.termin.vrijeme - b.termin.vrijeme; // Ispravljeno sortiranje numeričkog vremena
+    return a.termin.vrijeme - b.termin.vrijeme;
   });
 
   return (
@@ -549,7 +606,8 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
         )}
         {sorted.map((apt, i) => {
           const uiStatus = getUIStatus(apt);
-          const formattedDate = apt.termin.datum.split('T')[0]; // Čišćenje ISO stringa za ljepši prikaz
+          // ✅ POPRAVLJENO: substring(0,10) umjesto split('T')[0] — konzistentno sa kalendarom
+          const formattedDate = apt.termin.datum.substring(0, 10);
 
           return (
             <div
@@ -586,15 +644,15 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
               </span>
               
               <div className="self-center flex flex-col gap-1">
-  <span className={`px-2 py-1 rounded-lg text-xs font-semibold text-center ${STATUS_STYLES[uiStatus]}`}>
-    {STATUS_LABELS[uiStatus]}
-  </span>
-  {apt.hitnost && (
-    <span className="px-2 py-1 rounded-lg text-xs font-semibold text-center bg-red-100 text-red-700">
-      Hitno
-    </span>
-  )}
-</div>
+                <span className={`px-2 py-1 rounded-lg text-xs font-semibold text-center ${STATUS_STYLES[uiStatus]}`}>
+                  {STATUS_LABELS[uiStatus]}
+                </span>
+                {apt.hitnost && (
+                  <span className="px-2 py-1 rounded-lg text-xs font-semibold text-center bg-red-100 text-red-700">
+                    Hitno
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}

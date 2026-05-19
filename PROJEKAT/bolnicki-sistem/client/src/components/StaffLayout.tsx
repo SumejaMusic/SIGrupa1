@@ -1,16 +1,11 @@
 // src/components/StaffLayout.tsx
-//
-// Jednostavan layout za medicinski panel — samo sidebar + content.
-// Nema koraka, nema breadcrumbs, nema progress bara.
-// Kopiran sidebar pattern iz Layout.tsx ali bez svega vezanog za rezervacijski tok.
-
 import { ReactNode, useState, useEffect } from "react";
 import {
   Calendar, Users, AlertTriangle, XCircle,
   LogOut, ChevronLeft, Menu, Activity, Bell
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-
+import {  User, ChevronDown, Home,  Stethoscope } from "lucide-react";
 interface Props {
   children: ReactNode;
 }
@@ -51,21 +46,24 @@ export default function StaffLayout({ children }: Props) {
     : "?";
 
   const menuItems = [
-    { icon: Calendar,      label: "Dnevni raspored",  href: "/osoblje" },
-    { icon: Users,         label: "Pretraga pacijenta", href: "/osoblje/pretraga" },
-    { icon: AlertTriangle, label: "Hitni termini",    href: "/osoblje/hitni" },
-    { icon: XCircle,       label: "Otkazani termini", href: "/osoblje/otkazani" },
+    { icon: Home, label: "Naslovna", href: "/" },
+    
+    //{ icon: Stethoscope, label: "Odjeli", href: "/step1-odjeli" }, ne znam treba li za medicinsko osoblje
+    { icon: User, label: "Profil", href: "#" },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    // 🌟 POPRAVAK: h-screen i overflow-hidden eliminišu trzanje čitave stranice na ekranu
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+      
       {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
+      {/* 🌟 POPRAVAK: Izbačen fixed i ml-64. Dodana glatka tranzicija sa min-w koji drži layout stabilnim */}
       <div
-        className={`bg-white border-r border-gray-200 flex flex-col fixed h-screen z-50 transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden border-r-0"
+        className={`bg-white border-r border-gray-200 flex flex-col h-full flex-shrink-0 transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "w-64 opacity-100" : "w-0 opacity-0 overflow-hidden border-r-0"
         }`}
       >
-        <div className="p-6 flex flex-col h-full">
+        <div className="p-6 flex flex-col h-full min-w-[256px]">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8 whitespace-nowrap">
             <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -74,10 +72,10 @@ export default function StaffLayout({ children }: Props) {
             <span className="text-xl font-bold tracking-tight text-blue-900">SwiftMed</span>
           </Link>
 
-          {/* Uloga badge */}
+          {/* Uloga badge (Zadržano kako si tražila!) */}
           <div className="mb-6 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100">
             <p className="text-xs text-blue-500 font-medium">Prijavljeni kao</p>
-            <p className="text-sm font-semibold text-blue-800">
+            <p className="text-sm font-semibold text-blue-800 truncate">
               {korisnik?.ime} {korisnik?.prezime}
             </p>
             <p className="text-xs text-blue-400 capitalize">
@@ -86,10 +84,9 @@ export default function StaffLayout({ children }: Props) {
           </div>
 
           {/* Navigacija */}
-          <nav className="flex-1 space-y-1">
+          <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              // Exact match za /osoblje, startsWith za podstranice
               const isActive =
                 item.href === "/osoblje"
                   ? location.pathname === "/osoblje"
@@ -113,7 +110,7 @@ export default function StaffLayout({ children }: Props) {
           </nav>
 
           {/* Footer: odjava + collapse */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 flex-shrink-0">
             <button
               onClick={handleOdjava}
               className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-xl transition-colors text-sm font-medium whitespace-nowrap"
@@ -123,7 +120,7 @@ export default function StaffLayout({ children }: Props) {
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
@@ -132,18 +129,15 @@ export default function StaffLayout({ children }: Props) {
       </div>
 
       {/* ── Main content ────────────────────────────────────────────────────── */}
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          sidebarOpen ? "ml-64" : "ml-0"
-        }`}
-      >
-        {/* Topbar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-40 flex items-center justify-between">
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+        
+        {/* Topbar (Čist, bez koraka i breadcrumbsa!) */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
               >
                 <Menu size={20} />
               </button>
@@ -154,18 +148,19 @@ export default function StaffLayout({ children }: Props) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg">
+            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Bell size={20} className="text-gray-600" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
             </button>
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
               {inicijali}
             </div>
           </div>
         </header>
 
         {/* Stranica */}
-        <main className="flex-1 p-6 overflow-auto">
+        {/* 🌟 POPRAVAK: Skrolovanje je izolovano samo ovdje, dok Topbar i Sidebar stoje fiksno */}
+        <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
           {children}
         </main>
       </div>

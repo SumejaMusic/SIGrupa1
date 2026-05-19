@@ -1,5 +1,10 @@
-import { useState, useEffect } from 'react';
-import { X, Search, User, ChevronDown, Clock, MapPin, Stethoscope, Calendar } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+// Dodajte Upload, FileText, CheckCircle u lucide import
+import {
+  X, Search, User, Clock, MapPin, Upload, FileText, CheckCircle as CheckCircleIcon,
+  Stethoscope, Calendar, AlertCircle, CheckCircle2,
+  Building2, ChevronRight, Layers, 
+} from 'lucide-react';
 
 interface Pacijent {
   id: number;
@@ -24,8 +29,14 @@ interface Doktor {
 
 interface SlobodanTermin {
   id: number;
-  vrijeme: number; // minuti od ponoći
+  vrijeme: number;
   datum: string;
+}
+
+interface TipPregleda {
+  id: number;
+  naziv: string;
+  cijena?: number;
 }
 
 interface Props {
@@ -33,22 +44,19 @@ interface Props {
   doctors: Doktor[];
   departments: { id: number; naziv: string; }[];
   rooms: { id: number; naziv: string; sprat: number; }[];
+  tipoviPregleda: TipPregleda[];
   onConfirm: (data: {
-    pacijentId: number;   // idKorisnik
-    doktorId: number;
-    idTermina: number;
-    datum: string;
-    komentar: string;
-  }) => void;
+  pacijentId: number;
+  doktorId: number;
+  idTermina: number;
+  datum: string;
+  komentar: string;
+  tipPregledaId: number;
+  hitnost: boolean;
+  nalaz?: { naziv: string; base64: string; mimeType: string; } | null;
+}) => void;
   onClose: () => void;
 }
-
-const VISIT_TYPES = [
-  'Opšti pregled', 'Kontrolni pregled', 'Pregled srca', 'EKG',
-  'Ehokardiografija', 'Neurološki pregled', 'CT skeniranje',
-  'Ortopedski pregled', 'RTG snimak', 'Pedijatrijski pregled',
-  'Internistički pregled', 'Laboratorijska analiza',
-];
 
 const fmtVrijeme = (min: number) => {
   const h = Math.floor(min / 60);
@@ -56,27 +64,95 @@ const fmtVrijeme = (min: number) => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 };
 
-export default function NewAppointmentModal({ allPatients, doctors, onConfirm, onClose }: Props) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+const AVATAR_COLORS = [
+  ['#dbeafe', '#1d4ed8'],
+  ['#dcfce7', '#15803d'],
+  ['#fce7f3', '#be185d'],
+  ['#ede9fe', '#7c3aed'],
+  ['#ffedd5', '#c2410c'],
+  ['#cffafe', '#0e7490'],
+];
 
-  // Korak 1
+const getAvatarColor = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.length];
+
+export default function NewAppointmentModal({
+  allPatients, doctors, departments, tipoviPregleda, onConfirm, onClose
+}: Props) {
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Korak 1 — Pacijent
   const [search, setSearch] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Pacijent | null>(null);
 
-  // Korak 2
+  // Korak 2 — Odjel → Doktor → Datum → Termin
+  const [selectedOdjelId, setSelectedOdjelId] = useState<number | ''>('');
   const [selectedDoctor, setSelectedDoctor] = useState<Doktor | null>(null);
   const [date, setDate] = useState('');
+  const [slobodniDatumi, setSlobodniDatumi] = useState<string[]>([]); // dostupni datumi za doktora
+  const [loadingDatumi, setLoadingDatumi] = useState(false);
   const [slobodniTermini, setSlobodniTermini] = useState<SlobodanTermin[]>([]);
   const [loadingTermini, setLoadingTermini] = useState(false);
-
-  // Korak 3
   const [selectedTermin, setSelectedTermin] = useState<SlobodanTermin | null>(null);
-  const [type, setType] = useState('');
+
+  // Korak 3 — Tip pregleda, hitnost, komentar
+  const [selectedTipPregledaId, setSelectedTipPregledaId] = useState<number | ''>('');
+  const [hitnost, setHitnost] = useState(false);
   const [komentar, setKomentar] = useState('');
 
   const getToken = () => localStorage.getItem('token') ?? '';
+  // U komponenti, pored ostalih state varijabli u Koraku 3 dodajte:
+const [nalazFile, setNalazFile]   = useState<File | null>(null);
+const [nalazNaziv, setNalazNaziv] = useState('');
+const [nalazError, setNalazError] = useState('');
+const nalazInputRef = useRef<HTMLInputElement>(null);
 
-  // Dohvati slobodne termine kad se promijeni doktor ili datum
+// Korak 4 — Nalaz (opcionalan)
+
+
+const handleNalazFile = (f: File | undefined) => {
+  if (!f) return;
+  if (f.type !== 'application/pdf') {
+    setNalazError('Dozvoljeni su samo PDF fajlovi.');
+    setNalazFile(null);
+    return;
+  }
+  setNalazError('');
+  setNalazFile(f);
+  if (!nalazNaziv.trim()) setNalazNaziv(f.name.replace('.pdf', ''));
+};
+  const odjeliFiltered = departments.filter(dep =>
+    doctors.some(d => d.odjel.id === dep.id)
+  );
+
+  const doctorsInOdjel = selectedOdjelId
+    ? doctors.filter(d => d.odjel.id === selectedOdjelId)
+    : [];
+
+  // Kad se odabere doktor — učitaj slobodne datume (narednih 60 dana)
+  useEffect(() => {
+    if (!selectedDoctor) {
+      setSlobodniDatumi([]);
+      setDate('');
+      setSlobodniTermini([]);
+      setSelectedTermin(null);
+      return;
+    }
+    setLoadingDatumi(true);
+    setDate('');
+    setSlobodniTermini([]);
+    setSelectedTermin(null);
+    // API vraća niz ISO datuma koji imaju barem jedan slobodan termin
+    // npr. ["2025-06-02","2025-06-04",...]
+    fetch(`/api/osoblje/termini/slobodni-datumi/${selectedDoctor.id}`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    })
+      .then(r => r.json())
+      .then(d => setSlobodniDatumi(Array.isArray(d) ? d : []))
+      .catch(() => setSlobodniDatumi([]))
+      .finally(() => setLoadingDatumi(false));
+  }, [selectedDoctor]);
+
+  // Kad se odabere datum — učitaj slobodne termine za taj dan
   useEffect(() => {
     if (!selectedDoctor || !date) {
       setSlobodniTermini([]);
@@ -89,343 +165,714 @@ export default function NewAppointmentModal({ allPatients, doctors, onConfirm, o
       headers: { Authorization: `Bearer ${getToken()}` }
     })
       .then(r => r.json())
-      .then(data => setSlobodniTermini(Array.isArray(data) ? data : []))
+      .then(d => setSlobodniTermini(Array.isArray(d) ? d : []))
       .catch(() => setSlobodniTermini([]))
       .finally(() => setLoadingTermini(false));
   }, [selectedDoctor, date]);
+
+  useEffect(() => {
+    const tip = tipoviPregleda.find(t => t.id === selectedTipPregledaId);
+    if (tip?.naziv === 'Hitni pregled') setHitnost(true);
+  }, [selectedTipPregledaId, tipoviPregleda]);
 
   const filteredPatients = allPatients.filter(p =>
     search.length >= 2 &&
     `${p.korisnik.ime} ${p.korisnik.prezime}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const soba = selectedDoctor?.soba;
-
   const canStep2 = !!selectedPatient;
   const canStep3 = !!selectedDoctor && !!date && !!selectedTermin;
-  const canSubmit = canStep3 && !!type;
+  const canSubmit = canStep3 && selectedTipPregledaId !== '';
 
-  const handleSubmit = () => {
-    if (!selectedPatient || !selectedDoctor || !selectedTermin || !type) return;
-    onConfirm({
-      pacijentId: selectedPatient.korisnik.id,
-      doktorId:   selectedDoctor.id,
-      idTermina:  selectedTermin.id,
-      datum:      date,
-      komentar:   komentar || type,
-    });
+  // Zamijenite handleSubmit:
+const handleSubmit = () => {
+  if (!selectedPatient || !selectedDoctor || !selectedTermin || selectedTipPregledaId === '') return;
+  const tip = tipoviPregleda.find(t => t.id === selectedTipPregledaId);
+
+  const podaci = {
+    pacijentId:    selectedPatient.korisnik.id,
+    doktorId:      selectedDoctor.id,
+    idTermina:     selectedTermin.id,
+    datum:         date,
+    tipPregledaId: selectedTipPregledaId,
+    hitnost:       tip?.naziv === 'Hitni pregled' ? true : hitnost,
+    komentar:      komentar || tip?.naziv || '',
   };
 
-  const stepLabels = ['Pacijent', 'Doktor & Datum', 'Termin & Detalji'];
+  if (nalazFile && nalazNaziv.trim()) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      onConfirm({ ...podaci, nalaz: { naziv: nalazNaziv.trim(), base64, mimeType: 'application/pdf' } });
+    };
+    reader.readAsDataURL(nalazFile);
+  } else {
+    onConfirm({ ...podaci, nalaz: null });
+  }
+};
+
+  const stepInfo = [
+    { label: 'Pacijent', icon: User },
+    { label: 'Doktor & Termin', icon: Stethoscope },
+    { label: 'Detalji', icon: Layers },
+    { label: 'Nalaz',          icon: FileText },  // ← NOVO
+  ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        .appt-modal * { font-family: 'DM Sans', sans-serif; box-sizing: border-box; }
+        .appt-modal .mono { font-family: 'DM Mono', monospace; }
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div>
-            <h2 className="text-base font-bold text-gray-900">Novi termin</h2>
-            <p className="text-xs text-gray-500 mt-0.5">{stepLabels[step - 1]}</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
-            <X size={18} />
-          </button>
-        </div>
+        .appt-modal .step-pill {
+          display: flex; align-items: center; gap: 6px;
+          padding: 5px 12px 5px 8px;
+          border-radius: 999px;
+          font-size: 12px; font-weight: 600;
+          border: 1.5px solid transparent;
+          transition: all .2s;
+        }
+        .appt-modal .step-pill.done { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
+        .appt-modal .step-pill.active { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+        .appt-modal .step-pill.idle { background:#f9fafb; border-color:#e5e7eb; color:#9ca3af; }
+        .appt-modal .step-pill .dot {
+          width:20px; height:20px; border-radius:50%;
+          display:flex; align-items:center; justify-content:center;
+          font-size:10px; font-weight:700; flex-shrink:0;
+        }
+        .appt-modal .step-pill.done .dot { background:#16a34a; color:#fff; }
+        .appt-modal .step-pill.active .dot { background:#2563eb; color:#fff; }
+        .appt-modal .step-pill.idle .dot { background:#e5e7eb; color:#9ca3af; }
 
-        {/* Step indikator */}
-        <div className="px-6 pt-3 flex gap-1.5">
-          {[1, 2, 3].map(s => (
-            <div
-              key={s}
-              className={`flex-1 h-1 rounded-full transition-colors ${step >= s ? 'bg-blue-600' : 'bg-gray-200'}`}
-            />
-          ))}
-        </div>
+        .appt-modal .field-label {
+          display:block; font-size:11px; font-weight:700;
+          text-transform:uppercase; letter-spacing:.05em;
+          color:#6b7280; margin-bottom:6px;
+        }
 
-        {/* Sadržaj */}
-        <div className="p-6 space-y-4 max-h-[62vh] overflow-y-auto">
+        .appt-modal .styled-input {
+          width:100%; padding:10px 14px;
+          border:1.5px solid #e5e7eb; border-radius:12px;
+          font-size:14px; color:#111827; background:#fff;
+          outline:none; transition:border-color .15s, box-shadow .15s;
+        }
+        .appt-modal .styled-input:focus {
+          border-color:#2563eb;
+          box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+        }
 
-          {/* ── KORAK 1: Pacijent ── */}
-          {step === 1 && (
-            <>
-              <p className="text-sm font-medium text-gray-600">Pronađite pacijenta u bazi</p>
+        /* Doctor cards */
+        .appt-modal .doc-card {
+          display:flex; align-items:center; gap:12px;
+          padding:12px 14px; border-radius:14px;
+          border:1.5px solid #e5e7eb; cursor:pointer;
+          transition:all .15s; background:#fff;
+          position:relative;
+        }
+        .appt-modal .doc-card:hover { border-color:#93c5fd; background:#f8fbff; transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,.08); }
+        .appt-modal .doc-card.selected { border-color:#2563eb; background:#eff6ff; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+        .appt-modal .doc-card .doc-check {
+          position:absolute; top:8px; right:10px;
+          width:18px; height:18px; border-radius:50%;
+          background:#2563eb; display:flex; align-items:center; justify-content:center;
+        }
 
-              <div className="relative">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  value={search}
-                  onChange={e => { setSearch(e.target.value); setSelectedPatient(null); }}
-                  placeholder="Ime ili prezime pacijenta..."
-                  className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+        /* Termin chips */
+        .appt-modal .termin-chip {
+          padding:8px 4px; border-radius:10px; text-align:center;
+          font-size:13px; font-weight:600;
+          border:1.5px solid #e5e7eb; cursor:pointer;
+          transition:all .15s; background:#fff; color:#374151;
+        }
+        .appt-modal .termin-chip:hover { border-color:#93c5fd; background:#f0f7ff; }
+        .appt-modal .termin-chip.selected { background:#2563eb; color:#fff; border-color:#2563eb; box-shadow:0 2px 8px rgba(37,99,235,.3); }
+        .appt-modal .termin-chip.zakazan { background:#f3f4f6; color:#9ca3af; border-color:#e5e7eb; cursor:default; text-decoration:line-through; }
+
+        /* Dept pills */
+        .appt-modal .dept-pill {
+          display:flex; align-items:center; gap:6px; padding:8px 14px;
+          border-radius:10px; border:1.5px solid #e5e7eb;
+          font-size:13px; font-weight:600; color:#374151;
+          cursor:pointer; transition:all .15s; background:#fff; white-space:nowrap;
+        }
+        .appt-modal .dept-pill:hover { border-color:#93c5fd; background:#f0f7ff; color:#1d4ed8; }
+        .appt-modal .dept-pill.selected { background:#2563eb; color:#fff; border-color:#2563eb; }
+
+        /* Patient row */
+        .appt-modal .patient-row {
+          display:flex; align-items:center; gap:10px;
+          padding:10px 12px; border-radius:12px;
+          border-bottom:1px solid #f3f4f6; cursor:pointer;
+          transition:background .1s;
+        }
+        .appt-modal .patient-row:hover { background:#f5f8ff; }
+        .appt-modal .patient-row:last-child { border-bottom:none; }
+
+        .appt-modal .summary-row {
+          display:flex; align-items:center; gap:8px; padding:3px 0;
+        }
+
+        .appt-modal .tip-card {
+          border:1.5px solid #e5e7eb; border-radius:12px;
+          padding:10px 14px; cursor:pointer; transition:all .15s;
+          background:#fff;
+        }
+        .appt-modal .tip-card:hover { border-color:#93c5fd; background:#f8fbff; }
+        .appt-modal .tip-card.selected { border-color:#2563eb; background:#eff6ff; }
+
+        .appt-modal .btn-primary {
+          padding:10px 22px; background:#2563eb; color:#fff;
+          border-radius:12px; font-size:14px; font-weight:700;
+          border:none; cursor:pointer; transition:all .15s;
+          box-shadow:0 2px 8px rgba(37,99,235,.25);
+        }
+        .appt-modal .btn-primary:hover { background:#1d4ed8; transform:translateY(-1px); box-shadow:0 4px 14px rgba(37,99,235,.3); }
+        .appt-modal .btn-primary:disabled { background:#bfdbfe; color:#eff6ff; box-shadow:none; cursor:not-allowed; transform:none; }
+
+        .appt-modal .btn-secondary {
+          padding:10px 18px; background:#fff;
+          border:1.5px solid #e5e7eb; color:#374151;
+          border-radius:12px; font-size:14px; font-weight:600;
+          cursor:pointer; transition:all .15s;
+        }
+        .appt-modal .btn-secondary:hover { background:#f9fafb; border-color:#d1d5db; }
+
+        .appt-modal .scroll-area { overflow-y:auto; scrollbar-width:thin; scrollbar-color:#e5e7eb transparent; }
+        .appt-modal .scroll-area::-webkit-scrollbar { width:4px; }
+        .appt-modal .scroll-area::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius:4px; }
+
+        @keyframes fadeSlideUp {
+          from { opacity:0; transform:translateY(8px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        .appt-modal .animate-in { animation: fadeSlideUp .22s ease forwards; }
+      `}</style>
+
+      <div style={{
+        position:'fixed', inset:0, zIndex:50,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        padding:'16px', background:'rgba(0,0,0,.45)', backdropFilter:'blur(4px)'
+      }}>
+        <div className="appt-modal" style={{
+          background:'#fff', borderRadius:'20px',
+          boxShadow:'0 24px 60px rgba(0,0,0,.18)',
+          width:'100%', maxWidth:'520px', overflow:'hidden',
+          display:'flex', flexDirection:'column'
+        }}>
+
+          {/* ── Header ── */}
+          <div style={{ padding:'20px 24px 14px', borderBottom:'1px solid #f3f4f6' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+              <div>
+                <h2 style={{ fontSize:'17px', fontWeight:700, color:'#0f172a', margin:0 }}>
+                  Zakazivanje termina
+                </h2>
+                <p style={{ fontSize:'12px', color:'#94a3b8', marginTop:2 }}>
+                  {selectedPatient
+                    ? `Za: ${selectedPatient.korisnik.ime} ${selectedPatient.korisnik.prezime}`
+                    : 'Odaberite pacijenta za nastavak'}
+                </p>
               </div>
+              <button onClick={onClose} style={{
+                width:32, height:32, borderRadius:'10px', border:'1.5px solid #e5e7eb',
+                background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                color:'#6b7280', flexShrink:0
+              }}>
+                <X size={16} />
+              </button>
+            </div>
 
-              {filteredPatients.length > 0 && !selectedPatient && (
-                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm max-h-52 overflow-y-auto">
-                  {filteredPatients.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => { setSelectedPatient(p); setSearch(`${p.korisnik.ime} ${p.korisnik.prezime}`); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-100 last:border-0"
-                    >
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-blue-700">
-                        {p.korisnik.ime[0]}{p.korisnik.prezime[0]}
+            {/* Step pills */}
+            <div style={{ display:'flex', gap:6, marginTop:14, flexWrap:'wrap' }}>
+              {stepInfo.map((s, i) => {
+                const n = i + 1;
+                const cls = n < step ? 'done' : n === step ? 'active' : 'idle';
+                return (
+                  <div key={n} className={`step-pill ${cls}`}>
+                    <div className="dot">
+                      {n < step ? <CheckCircle2 size={11} /> : n}
+                    </div>
+                    {s.label}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Body ── */}
+          <div className="scroll-area animate-in" style={{ padding:'20px 24px', maxHeight:'65vh', flex:1 }}>
+
+            {/* ════════ KORAK 1: PACIJENT ════════ */}
+            {step === 1 && (
+              <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                <p style={{ fontSize:13, color:'#6b7280', margin:0 }}>
+                  Pretražite pacijenta po imenu ili prezimenu.
+                </p>
+
+                <div style={{ position:'relative' }}>
+                  <Search size={15} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }} />
+                  <input
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setSelectedPatient(null); }}
+                    placeholder="Unesite ime ili prezime…"
+                    className="styled-input"
+                    style={{ paddingLeft:36 }}
+                  />
+                </div>
+
+                {filteredPatients.length > 0 && !selectedPatient && (
+                  <div style={{ border:'1.5px solid #e5e7eb', borderRadius:14, overflow:'hidden', maxHeight:220 }} className="scroll-area">
+                    {filteredPatients.map(p => {
+                      const [bg, fg] = getAvatarColor(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          className="patient-row"
+                          onClick={() => { setSelectedPatient(p); setSearch(`${p.korisnik.ime} ${p.korisnik.prezime}`); }}
+                        >
+                          <div style={{ width:36, height:36, borderRadius:'50%', background:bg, color:fg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, flexShrink:0 }}>
+                            {p.korisnik.ime[0]}{p.korisnik.prezime[0]}
+                          </div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <p style={{ margin:0, fontSize:14, fontWeight:600, color:'#0f172a' }}>{p.korisnik.ime} {p.korisnik.prezime}</p>
+                            <p style={{ margin:0, fontSize:12, color:'#9ca3af' }}>
+                              Knjižica: <span className="mono">{p.brojKnjizice}</span> · {p.korisnik.brojTelefona ?? 'Bez telefona'}
+                            </p>
+                          </div>
+                          <ChevronRight size={14} style={{ color:'#d1d5db', flexShrink:0 }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {search.length >= 2 && filteredPatients.length === 0 && !selectedPatient && (
+                  <div style={{ textAlign:'center', padding:'20px 0', fontSize:13, color:'#9ca3af' }}>
+                    Nema pacijenata za „{search}"
+                  </div>
+                )}
+
+                {selectedPatient && (() => {
+                  const [bg, fg] = getAvatarColor(selectedPatient.id);
+                  return (
+                    <div style={{ display:'flex', alignItems:'center', gap:12, padding:14, background:'#f0f9ff', border:'1.5px solid #bae6fd', borderRadius:14 }}>
+                      <div style={{ width:42, height:42, borderRadius:'50%', background:bg, color:fg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, flexShrink:0 }}>
+                        {selectedPatient.korisnik.ime[0]}{selectedPatient.korisnik.prezime[0]}
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{p.korisnik.ime} {p.korisnik.prezime}</p>
-                        <p className="text-xs text-gray-500">
-                          Knjižica: {p.brojKnjizice} · {p.korisnik.brojTelefona ?? 'Bez telefona'}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ margin:0, fontSize:14, fontWeight:700, color:'#0c4a6e' }}>{selectedPatient.korisnik.ime} {selectedPatient.korisnik.prezime}</p>
+                        <p style={{ margin:0, fontSize:12, color:'#0369a1', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          Knjižica: <span className="mono">{selectedPatient.brojKnjizice}</span>
                         </p>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {search.length >= 2 && filteredPatients.length === 0 && !selectedPatient && (
-                <p className="text-sm text-gray-400 text-center py-4">Nema rezultata za "{search}"</p>
-              )}
-
-              {selectedPatient && (
-                <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
-                    {selectedPatient.korisnik.ime[0]}{selectedPatient.korisnik.prezime[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900">{selectedPatient.korisnik.ime} {selectedPatient.korisnik.prezime}</p>
-                    <p className="text-xs text-gray-500 truncate">Knjižica: {selectedPatient.brojKnjizice} · {selectedPatient.korisnik.email}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedPatient(null); setSearch(''); }}
-                    className="text-xs text-blue-600 hover:underline flex-shrink-0"
-                  >
-                    Promijeni
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── KORAK 2: Doktor & Datum ── */}
-          {step === 2 && (
-            <div className="space-y-4">
-              {/* Doktor */}
-              <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Doktor</label>
-                <div className="relative">
-                  <select
-                    value={selectedDoctor?.id ?? ''}
-                    onChange={e => {
-                      const doc = doctors.find(d => d.id === parseInt(e.target.value, 10)) ?? null;
-                      setSelectedDoctor(doc);
-                      setSlobodniTermini([]);
-                      setSelectedTermin(null);
-                    }}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    <option value="">Odaberite doktora</option>
-                    {doctors.map(d => (
-                      <option key={d.id} value={d.id}>
-                        Dr. {d.korisnik.ime} {d.korisnik.prezime} — {d.specijalizacija}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Info o doktoru — odjel i soba */}
-              {selectedDoctor && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 rounded-xl px-3 py-2.5 flex items-center gap-2">
-                    <Stethoscope size={14} className="text-blue-500 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400">Odjel</p>
-                      <p className="text-sm font-semibold text-gray-800">{selectedDoctor.odjel.naziv}</p>
+                      <button
+                        onClick={() => { setSelectedPatient(null); setSearch(''); }}
+                        style={{ fontSize:12, fontWeight:600, color:'#0369a1', background:'none', border:'none', cursor:'pointer', whiteSpace:'nowrap' }}
+                      >
+                        Promijeni
+                      </button>
                     </div>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl px-3 py-2.5 flex items-center gap-2">
-                    <MapPin size={14} className="text-blue-500 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400">Soba</p>
-                      <p className="text-sm font-semibold text-gray-800">
-                        {soba ? `${soba.naziv} (Sprat ${soba.sprat})` : 'Nije dodijeljena'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Datum */}
-              <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1.5 block flex items-center gap-1">
-                  <Calendar size={12} /> Datum pregleda
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={e => { setDate(e.target.value); setSelectedTermin(null); }}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  );
+                })()}
               </div>
+            )}
 
-              {/* Slobodni termini */}
-              {selectedDoctor && date && (
+            {/* ════════ KORAK 2: ODJEL → DOKTOR → DATUM → TERMIN ════════ */}
+            {step === 2 && (
+              <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+
+                {/* Odjel */}
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1.5 block flex items-center gap-1">
-                    <Clock size={12} /> Slobodni termini
-                  </label>
-                  {loadingTermini ? (
-                    <div className="py-4 text-center text-sm text-gray-400">Učitavanje termina...</div>
-                  ) : slobodniTermini.length === 0 ? (
-                    <div className="py-4 text-center text-sm text-red-500 bg-red-50 rounded-xl border border-red-100">
-                      Nema slobodnih termina za odabrani datum
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
-                      {slobodniTermini.map(t => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => setSelectedTermin(t)}
-                          className={`py-2 rounded-xl text-sm font-semibold border transition-all ${
-                            selectedTermin?.id === t.id
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:bg-blue-50'
-                          }`}
-                        >
-                          {fmtVrijeme(t.vrijeme)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <span className="field-label"><Building2 size={10} style={{ display:'inline', marginRight:4 }} />Odaberite odjel</span>
+                  <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                    {odjeliFiltered.map(dep => (
+                      <div
+                        key={dep.id}
+                        className={`dept-pill ${selectedOdjelId === dep.id ? 'selected' : ''}`}
+                        onClick={() => {
+                          setSelectedOdjelId(dep.id);
+                          setSelectedDoctor(null);
+                          setSlobodniTermini([]);
+                          setSelectedTermin(null);
+                        }}
+                      >
+                        <Building2 size={13} />
+                        {dep.naziv}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* ── KORAK 3: Detalji ── */}
-          {step === 3 && (
-            <div className="space-y-4">
-              {/* Sažetak */}
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
-                <div className="flex items-center gap-2">
-                  <User size={13} className="text-blue-500" />
-                  <span className="text-xs text-gray-500">Pacijent:</span>
-                  <span className="text-sm font-semibold text-gray-800">
-                    {selectedPatient?.korisnik.ime} {selectedPatient?.korisnik.prezime}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Stethoscope size={13} className="text-blue-500" />
-                  <span className="text-xs text-gray-500">Doktor:</span>
-                  <span className="text-sm font-semibold text-gray-800">
-                    Dr. {selectedDoctor?.korisnik.ime} {selectedDoctor?.korisnik.prezime}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock size={13} className="text-blue-500" />
-                  <span className="text-xs text-gray-500">Termin:</span>
-                  <span className="text-sm font-semibold text-gray-800">
-                    {date} u {selectedTermin ? fmtVrijeme(selectedTermin.vrijeme) : '—'}
-                  </span>
-                </div>
-                {soba && (
-                  <div className="flex items-center gap-2">
-                    <MapPin size={13} className="text-blue-500" />
-                    <span className="text-xs text-gray-500">Soba:</span>
-                    <span className="text-sm font-semibold text-gray-800">{soba.naziv} (Sprat {soba.sprat})</span>
+                {/* Doktori iz odjela */}
+                {selectedOdjelId && (
+                  <div>
+                    <span className="field-label"><Stethoscope size={10} style={{ display:'inline', marginRight:4 }} />Odaberite doktora</span>
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      {doctorsInOdjel.map(d => {
+                        const [bg, fg] = getAvatarColor(d.id);
+                        const isSelected = selectedDoctor?.id === d.id;
+                        return (
+                          <div
+                            key={d.id}
+                            className={`doc-card ${isSelected ? 'selected' : ''}`}
+                            onClick={() => {
+                              setSelectedDoctor(d);
+                              setSlobodniTermini([]);
+                              setSelectedTermin(null);
+                            }}
+                          >
+                            <div style={{ width:40, height:40, borderRadius:'50%', background:bg, color:fg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, flexShrink:0 }}>
+                              {d.korisnik.ime[0]}{d.korisnik.prezime[0]}
+                            </div>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <p style={{ margin:0, fontSize:14, fontWeight:700, color:'#0f172a' }}>
+                                Dr. {d.korisnik.ime} {d.korisnik.prezime}
+                              </p>
+                              <p style={{ margin:0, fontSize:12, color:'#6b7280', marginTop:1 }}>
+                                {d.specijalizacija}
+                                {d.soba && (
+                                  <span style={{ marginLeft:8, color:'#94a3b8' }}>
+                                    <MapPin size={10} style={{ display:'inline', marginRight:2 }} />
+                                    {d.soba.naziv} · Sprat {d.soba.sprat}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <div className="doc-check">
+                                <CheckCircle2 size={11} color="#fff" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Slobodni datumi za odabranog doktora */}
+                {selectedDoctor && (
+                  <div>
+                    <span className="field-label">
+                      <Calendar size={10} style={{ display:'inline', marginRight:4 }} />
+                      Dostupni datumi
+                    </span>
+                    {loadingDatumi ? (
+                      <div style={{ padding:'16px 0', textAlign:'center', fontSize:13, color:'#94a3b8' }}>
+                        Učitavanje dostupnih datuma…
+                      </div>
+                    ) : slobodniDatumi.length === 0 ? (
+                      <div style={{ padding:'14px', textAlign:'center', fontSize:13, color:'#ef4444', background:'#fef2f2', border:'1.5px solid #fecaca', borderRadius:12 }}>
+                        Nema slobodnih termina u narednom periodu
+                      </div>
+                    ) : (
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
+                        {slobodniDatumi.map(d => {
+                          const dt = new Date(d + 'T00:00:00');
+                          const dayName = dt.toLocaleDateString('bs-BA', { weekday:'short' });
+                          const dayNum  = dt.getDate();
+                          const month   = dt.toLocaleDateString('bs-BA', { month:'short' });
+                          const isSelected = date === d;
+                          return (
+                            <div
+                              key={d}
+                              onClick={() => { setDate(d); setSelectedTermin(null); }}
+                              style={{
+                                padding:'10px 8px', borderRadius:12, textAlign:'center',
+                                border: isSelected ? '2px solid #2563eb' : '1.5px solid #e5e7eb',
+                                background: isSelected ? '#eff6ff' : '#fff',
+                                cursor:'pointer', transition:'all .15s',
+                                boxShadow: isSelected ? '0 0 0 3px rgba(37,99,235,.1)' : 'none',
+                              }}
+                            >
+                              <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'.04em', color: isSelected ? '#2563eb' : '#9ca3af' }}>
+                                {dayName}
+                              </div>
+                              <div style={{ fontSize:20, fontWeight:800, color: isSelected ? '#1d4ed8' : '#0f172a', lineHeight:1.2, marginTop:2 }}>
+                                {dayNum}
+                              </div>
+                              <div style={{ fontSize:11, fontWeight:600, color: isSelected ? '#3b82f6' : '#6b7280', marginTop:1 }}>
+                                {month}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Slobodni termini za odabrani datum */}
+                {selectedDoctor && date && (
+                  <div>
+                    <span className="field-label">
+                      <Clock size={10} style={{ display:'inline', marginRight:4 }} />
+                      Slobodni termini — {new Date(date + 'T00:00:00').toLocaleDateString('bs-BA', { weekday:'long', day:'numeric', month:'long' })}
+                    </span>
+                    {loadingTermini ? (
+                      <div style={{ padding:'16px 0', textAlign:'center', fontSize:13, color:'#94a3b8' }}>
+                        Učitavanje termina…
+                      </div>
+                    ) : slobodniTermini.length === 0 ? (
+                      <div style={{ padding:'14px', textAlign:'center', fontSize:13, color:'#ef4444', background:'#fef2f2', border:'1.5px solid #fecaca', borderRadius:12 }}>
+                        Nema slobodnih termina za odabrani datum
+                      </div>
+                    ) : (
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:8 }}>
+                        {slobodniTermini.map(t => (
+                          <div
+                            key={t.id}
+                            className={`termin-chip mono ${selectedTermin?.id === t.id ? 'selected' : ''}`}
+                            onClick={() => setSelectedTermin(t)}
+                          >
+                            {fmtVrijeme(t.vrijeme)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {selectedTermin && (
+                      <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:10, fontSize:13, color:'#16a34a', fontWeight:600 }}>
+                        <CheckCircle2 size={14} />
+                        Odabran termin: <span className="mono">{fmtVrijeme(selectedTermin.vrijeme)}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+            )}
 
-              {/* Vrsta pregleda */}
-              <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Vrsta pregleda *</label>
-                <div className="relative">
-                  <select
-                    value={type}
-                    onChange={e => setType(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                  >
-                    <option value="">Odaberite vrstu pregleda</option>
-                    {VISIT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            {/* ════════ KORAK 3: DETALJI PREGLEDA ════════ */}
+            {step === 3 && (
+              <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+                {/* Sažetak */}
+                <div style={{ background:'#f8fafc', border:'1.5px solid #e2e8f0', borderRadius:14, padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+                  {[
+                    { icon: User, label:'Pacijent', value:`${selectedPatient?.korisnik.ime} ${selectedPatient?.korisnik.prezime}` },
+                    { icon: Stethoscope, label:'Doktor', value:`Dr. ${selectedDoctor?.korisnik.ime} ${selectedDoctor?.korisnik.prezime}` },
+                    { icon: Building2, label:'Odjel', value: selectedDoctor?.odjel.naziv },
+                    { icon: Clock, label:'Termin', value: (() => {
+  if (!date) return '—';
+  const [god, mjes, dan] = date.split('-');
+  return `${dan}.${mjes}.${god}. u ${selectedTermin ? fmtVrijeme(selectedTermin.vrijeme) : '—'}`;
+})() },
+                    ...(selectedDoctor?.soba ? [{ icon: MapPin, label:'Soba', value:`${selectedDoctor.soba.naziv} (Sprat ${selectedDoctor.soba.sprat})` }] : []),
+                  ].map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="summary-row">
+                      <Icon size={13} style={{ color:'#2563eb', flexShrink:0 }} />
+                      <span style={{ fontSize:12, color:'#64748b', width:60, flexShrink:0 }}>{label}:</span>
+                      <span style={{ fontSize:13, fontWeight:600, color:'#0f172a' }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tip pregleda */}
+                <div>
+                  <span className="field-label">Vrsta pregleda *</span>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {tipoviPregleda.map(t => (
+                      <div
+                        key={t.id}
+                        className={`tip-card ${selectedTipPregledaId === t.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedTipPregledaId(t.id)}
+                        style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}
+                      >
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div style={{
+                            width:8, height:8, borderRadius:'50%',
+                            background: selectedTipPregledaId === t.id ? '#2563eb' : '#d1d5db',
+                            flexShrink:0, transition:'background .15s'
+                          }} />
+                          <span style={{ fontSize:14, fontWeight:600, color: selectedTipPregledaId === t.id ? '#1d4ed8' : '#374151' }}>
+                            {t.naziv}
+                          </span>
+                        </div>
+                        {t.cijena !== undefined && (
+                          <span className="mono" style={{ fontSize:13, fontWeight:600, color:'#6b7280' }}>
+                            {t.cijena} KM
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                
+
+                {/* Komentar */}
+                <div>
+                  <label className="field-label">Komentar / Razlog posjete</label>
+                  <textarea
+                    value={komentar}
+                    onChange={e => setKomentar(e.target.value)}
+                    rows={3}
+                    placeholder="Unesite razlog posjete ili napomenu…"
+                    className="styled-input"
+                    style={{ resize:'none', lineHeight:1.5 }}
+                  />
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Komentar */}
-              <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Komentar / Razlog posjete</label>
-                <textarea
-                  value={komentar}
-                  onChange={e => setKomentar(e.target.value)}
-                  rows={3}
-                  placeholder="Unesite razlog posjete ili napomenu..."
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
-          {step > 1 && (
-            <button
-              type="button"
-              onClick={() => setStep(prev => (prev - 1) as 1 | 2 | 3)}
-              className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors"
-            >
-              Nazad
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors"
-          >
-            Odustani
-          </button>
-          <div className="flex-1" />
-
-          {step === 1 && (
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              disabled={!canStep2}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              Dalje →
-            </button>
-          )}
-          {step === 2 && (
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              disabled={!canStep3}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              Dalje →
-            </button>
-          )}
-          {step === 3 && (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              Zakaži termin
-            </button>
-          )}
-        </div>
+{/* ════════ KORAK 4: NALAZ (OPCIONALAN) ════════ */}
+{step === 4 && (
+  <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+    
+    {/* Info banner */}
+    <div style={{ padding:'12px 14px', background:'#eff6ff', border:'1.5px solid #bfdbfe', borderRadius:12, display:'flex', alignItems:'flex-start', gap:10 }}>
+      <FileText size={15} style={{ color:'#2563eb', flexShrink:0, marginTop:1 }} />
+      <div>
+        <p style={{ margin:0, fontSize:13, fontWeight:600, color:'#1d4ed8' }}>Ovaj korak je opcionalan</p>
+        <p style={{ margin:0, fontSize:12, color:'#3b82f6', marginTop:2 }}>
+          Možete priložiti PDF nalaz uz rezervaciju ili preskočiti ovaj korak.
+        </p>
       </div>
     </div>
+
+    {/* Naziv nalaza */}
+    <div>
+      <label className="field-label">Naziv nalaza</label>
+      <input
+        value={nalazNaziv}
+        onChange={e => setNalazNaziv(e.target.value)}
+        placeholder="npr. Krvna slika, RTG pluća, EKG..."
+        className="styled-input"
+        disabled={!nalazFile}
+        style={{ opacity: nalazFile ? 1 : 0.5 }}
+      />
+    </div>
+
+    {/* Drop zona */}
+    <div
+      onClick={() => nalazInputRef.current?.click()}
+      onDragOver={e => e.preventDefault()}
+      onDrop={e => { e.preventDefault(); handleNalazFile(e.dataTransfer.files[0]); }}
+      style={{
+        border: `2px dashed ${nalazFile ? '#10b981' : '#d1d5db'}`,
+        borderRadius: 14,
+        padding: '28px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        cursor: 'pointer',
+        background: nalazFile ? '#f0fdf4' : '#fafafa',
+        transition: 'all .2s',
+        textAlign: 'center',
+      }}
+    >
+      {nalazFile ? (
+        <>
+          <div style={{ width:48, height:48, borderRadius:12, background:'#d1fae5', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <CheckCircle2 size={24} color="#059669" />
+          </div>
+          <div>
+            <p style={{ margin:0, fontSize:14, fontWeight:700, color:'#065f46' }}>{nalazFile.name}</p>
+            <p style={{ margin:0, fontSize:12, color:'#6b7280', marginTop:2 }}>{(nalazFile.size / 1024).toFixed(1)} KB · PDF</p>
+          </div>
+          <button
+            onClick={e => { e.stopPropagation(); setNalazFile(null); setNalazNaziv(''); setNalazError(''); }}
+            style={{ fontSize:12, fontWeight:600, color:'#ef4444', background:'none', border:'1.5px solid #fecaca', borderRadius:8, padding:'4px 12px', cursor:'pointer' }}
+          >
+            Ukloni fajl
+          </button>
+        </>
+      ) : (
+        <>
+          <div style={{ width:48, height:48, borderRadius:12, background:'#f3f4f6', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Upload size={22} color="#9ca3af" />
+          </div>
+          <div>
+            <p style={{ margin:0, fontSize:14, fontWeight:600, color:'#374151' }}>Kliknite ili prevucite PDF ovdje</p>
+            <p style={{ margin:0, fontSize:12, color:'#9ca3af', marginTop:2 }}>Isključivo PDF fajlovi</p>
+          </div>
+        </>
+      )}
+      <input
+        ref={nalazInputRef}
+        type="file"
+        accept="application/pdf"
+        style={{ display:'none' }}
+        onChange={e => handleNalazFile(e.target.files?.[0])}
+      />
+    </div>
+
+    {nalazError && (
+      <p style={{ fontSize:12, color:'#ef4444', margin:0 }}>{nalazError}</p>
+    )}
+
+    {/* Validacija — naziv obavezan ako je fajl odabran */}
+    {nalazFile && !nalazNaziv.trim() && (
+      <div style={{ padding:'10px 14px', background:'#fffbeb', border:'1.5px solid #fde68a', borderRadius:10 }}>
+        <p style={{ margin:0, fontSize:12, color:'#92400e', fontWeight:600 }}>
+          Unesite naziv nalaza da biste nastavili.
+        </p>
+      </div>
+    )}
+  </div>
+)}
+          {/* ── Footer ── */}
+          <div style={{ padding:'14px 24px 18px', borderTop:'1px solid #f3f4f6', background:'#fafafa', display:'flex', alignItems:'center', gap:8 }}>
+  {step > 1 && (
+    <button className="btn-secondary" onClick={() => setStep(prev => (prev - 1) as 1|2|3|4)}>
+      ← Nazad
+    </button>
+  )}
+  <button className="btn-secondary" onClick={onClose}>
+    Odustani
+  </button>
+  <div style={{ flex:1 }} />
+
+  {step === 1 && (
+    <button className="btn-primary" disabled={!canStep2} onClick={() => setStep(2)}>
+      Dalje →
+    </button>
+  )}
+  {step === 2 && (
+    <button className="btn-primary" disabled={!canStep3} onClick={() => setStep(3)}>
+      Pregled detalja →
+    </button>
+  )}
+  {step === 3 && (
+    <button className="btn-primary" disabled={!canSubmit} onClick={() => setStep(4)}>
+      Dalje →
+    </button>
+  )}
+  {step === 4 && (
+    <div style={{ display:'flex', gap:8 }}>
+      {/* Preskoci — uvijek dostupno */}
+      <button
+        className="btn-secondary"
+        onClick={() => onConfirm({
+          pacijentId:    selectedPatient!.korisnik.id,
+          doktorId:      selectedDoctor!.id,
+          idTermina:     selectedTermin!.id,
+          datum:         date,
+          tipPregledaId: selectedTipPregledaId as number,
+          hitnost:       tipoviPregleda.find(t => t.id === selectedTipPregledaId)?.naziv === 'Hitni pregled' ? true : hitnost,
+          komentar:      komentar || tipoviPregleda.find(t => t.id === selectedTipPregledaId)?.naziv || '',
+          nalaz:         null,
+        })}
+      >
+        Preskoči →
+      </button>
+      {/* Zakaži sa nalazom — disabled ako je fajl bez naziva */}
+      <button
+        className="btn-primary"
+        disabled={!nalazFile || !nalazNaziv.trim()}
+        onClick={handleSubmit}
+      >
+        ✓ Zakaži s nalazom
+      </button>
+    </div>
+  )}
+</div>
+        </div>
+      </div>
+    </>
   );
 }

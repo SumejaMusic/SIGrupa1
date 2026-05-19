@@ -26,6 +26,7 @@ import { AutoLogoutModal } from './components/AutoLogoutModal';
 
 import './App.css';
 import Layout from './components/Layout';
+import StaffLayout from './components/StaffLayout';
 
 // ─── Helper: čita uloga iz JWT tokena ─────────────────────────────────────
 function getUloga(): string | null {
@@ -110,9 +111,9 @@ function AppContent() {
   <Route path="/osoblje-panel" element={
     <ProtectedRoute allowedUloga="MEDICINSKO_OSOBLJE">
     
-      <Layout step={0} totalSteps={0} breadcrumbs={[]} >
+      <StaffLayout>
       <StaffPanel />
-    </Layout>
+    </StaffLayout>
     
     </ProtectedRoute>
   } />

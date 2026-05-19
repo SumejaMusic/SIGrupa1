@@ -1,6 +1,6 @@
+import React from 'react';
 import { ChevronLeft, ChevronRight, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
-// Lokalna definicija tipa — usklađena sa stvarnim podacima iz baze
 interface Appointment {
   id: number;
   doktorRezervisao: boolean;
@@ -14,7 +14,7 @@ interface Appointment {
   termin: {
     id: number;
     datum: string;
-    vrijeme: number; // Int u bazi, npr. 930 = 09:30, 1430 = 14:30
+    vrijeme: number; // npr. 510 = 08:30 (8 * 60 + 30)
     status: 'SLOBODAN' | 'ZAKAZAN' | 'POTVRDJEN' | 'OTKAZAN';
     opis: string | null;
   };
@@ -29,7 +29,7 @@ interface Appointment {
     id: number;
     naziv: string;
     sprat: number;
-  }| null;
+  } | null;
 
   pacijent: {
     id: number;
@@ -56,24 +56,12 @@ interface Appointment {
       id: number;
       naziv: string;
     };
-    soba?:{
+    soba?: {
       id: number;
       naziv: string;
       sprat: number;
-    }
+    };
   };
-
-  historija?: {
-    id: number;
-    dijagnoza: string;
-    terapija: string;
-    nalaz?: {
-      id: number;
-      naziv: string;
-      vrijemeNalaza: string;
-      opis: string | null;
-    } | null;
-  } | null;
 }
 
 interface Props {
@@ -84,31 +72,29 @@ interface Props {
   view: 'week' | 'day';
 }
 
-// Određuje UI status iz stvarnih polja rezervacije (isto kao getUIStatus u StaffPanel)
 type UIStatus = 'ZAKAZAN' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
 
 const getUIStatus = (apt: Appointment): UIStatus => {
   if (apt.termin.status === 'OTKAZAN' || apt.datumOtkazivanja !== null) return 'OTKAZAN';
   if (apt.zavrseno) return 'ZAVRSEN';
-  if (apt.hitnost) return 'HITAN';
+  if (apt.hitnost || apt.tipPregleda?.naziv === 'Hitni pregled') return 'HITAN'; // ← dodano tipPregleda provjera
   return 'ZAKAZAN';
 };
 
 const STATUS_STYLES: Record<UIStatus, string> = {
-  ZAKAZAN:  'bg-blue-50 border-blue-300 hover:bg-blue-100',
-  HITAN:    'bg-red-50 border-red-400 hover:bg-red-100',
-  ZAVRSEN:  'bg-emerald-50 border-emerald-300 hover:bg-emerald-100',
-  OTKAZAN:  'bg-gray-50 border-gray-300 hover:bg-gray-100 opacity-60',
+  ZAKAZAN: 'bg-blue-50 border-blue-300 hover:bg-blue-100',
+  HITAN: 'bg-red-50 border-red-400 hover:bg-red-100',
+  ZAVRSEN: 'bg-emerald-50 border-emerald-300 hover:bg-emerald-100',
+  OTKAZAN: 'bg-gray-50 border-gray-300 hover:bg-gray-100 opacity-60',
 };
 
 const STATUS_BADGE: Record<UIStatus, { label: string; cls: string; icon: React.ReactNode }> = {
-  ZAKAZAN: { label: 'Zakazano', cls: 'bg-blue-100 text-blue-700',     icon: <Clock size={10} /> },
-  HITAN:   { label: 'Hitno',    cls: 'bg-red-100 text-red-700',       icon: <AlertTriangle size={10} /> },
+  ZAKAZAN: { label: 'Zakazano', cls: 'bg-blue-100 text-blue-700', icon: <Clock size={10} /> },
+  HITAN: { label: 'Hitno', cls: 'bg-red-100 text-red-700', icon: <AlertTriangle size={10} /> },
   ZAVRSEN: { label: 'Završeno', cls: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle size={10} /> },
-  OTKAZAN: { label: 'Otkazano', cls: 'bg-gray-100 text-gray-500',     icon: <XCircle size={10} /> },
+  OTKAZAN: { label: 'Otkazano', cls: 'bg-gray-100 text-gray-500', icon: <XCircle size={10} /> },
 };
 
-// Pretvara Int vrijeme iz baze (npr. 930 → "09:30", 1430 → "14:30")
 const formatIntTime = (vrijeme: number): string => {
   const hours = Math.floor(vrijeme / 60);
   const minutes = vrijeme % 60;
@@ -121,23 +107,41 @@ const getHourFromInt = (vrijeme: number): number => {
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 7); // 07:00 – 17:00
 
-const fmt = (d: Date) =>
-  `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+// ✅ SIGURAN STRUKTURNI FORMAT: Pretvara UTC Date u čist "YYYY-MM-DD" bez uticaja lokalne vremenske zone
+const fmtUTC = (d: Date) =>
+  `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 
-const DAYS_BS   = ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'];
-const MONTHS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni',
-                   'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
+// ✅ Vraća današnji dan resetovan na čistu UTC ponoć
+const getUTCToday = () => {
+  const now = new Date();
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
+};
 
+const DAYS_BS = ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'];
+const MONTHS_BS = [
+  'Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni',
+  'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'
+];
+
+// ✅ POPRAVLJENO: Kreira niz dana isključivo u UTC okviru
 function getWeekDays(date: Date): Date[] {
-  // Koristimo UTC dan sedmice
   const day = date.getUTCDay();
-  const monday = new Date(date);
-  monday.setUTCDate(date.getUTCDate() - ((day === 0 ? 7 : day) - 1));
-  monday.setUTCHours(0, 0, 0, 0);
+  const diffToMonday = (day === 0 ? 7 : day) - 1;
+  
+  const monday = new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate() - diffToMonday,
+    0, 0, 0, 0
+  ));
+
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setUTCDate(monday.getUTCDate() + i);
-    return d;
+    return new Date(Date.UTC(
+      monday.getUTCFullYear(),
+      monday.getUTCMonth(),
+      monday.getUTCDate() + i,
+      0, 0, 0, 0
+    ));
   });
 }
 
@@ -145,27 +149,33 @@ export default function CalendarView({ appointments, currentDate, onDateChange, 
   const weekDays = getWeekDays(currentDate);
 
   const navigate = (dir: number) => {
-  const d = new Date(currentDate);
-  d.setUTCDate(d.getUTCDate() + (view === 'week' ? dir * 7 : dir));
-  onDateChange(d);
-};
+    const d = new Date(Date.UTC(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate() + (view === 'week' ? dir * 7 : dir),
+      0, 0, 0, 0
+    ));
+    onDateChange(d);
+  };
 
-  const goToday = () => onDateChange(new Date());
+  const goToday = () => {
+    onDateChange(getUTCToday());
+  };
 
   const displayDays = view === 'week' ? weekDays : [currentDate];
 
-  // Filtrira termine za određeni dan i sat koristeći stvarna polja iz baze
- const getAptsForSlot = (date: Date, hour: number) =>
-  appointments.filter(a => {
-    const aptDate = new Date(a.termin.datum);
-    const aptDateStr = `${aptDate.getUTCFullYear()}-${String(aptDate.getUTCMonth() + 1).padStart(2,'0')}-${String(aptDate.getUTCDate()).padStart(2,'0')}`;
-    const dateStr = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
-    const aptHour = getHourFromInt(a.termin.vrijeme);
-    return aptDateStr === dateStr && aptHour === hour;
-  });
+  // ✅ POPRAVLJENO: Poredi čisti YYYY-MM-DD iz baze sa fmtUTC stringom kolone
+  const getAptsForSlot = (date: Date, hour: number) =>
+    appointments.filter(a => {
+      const aptDateStr = a.termin.datum.substring(0, 10); 
+      const dateStr = fmtUTC(date);
+      const aptHour = getHourFromInt(a.termin.vrijeme);
+      return aptDateStr === dateStr && aptHour === hour;
+    });
+
   const title = view === 'week'
-  ? `${weekDays[0].getUTCDate()} – ${weekDays[6].getUTCDate()} ${MONTHS_BS[currentDate.getUTCMonth()]} ${currentDate.getUTCFullYear()}`
-  : `${currentDate.getUTCDate()} ${MONTHS_BS[currentDate.getUTCMonth()]} ${currentDate.getUTCFullYear()}`;
+    ? `${weekDays[0].getUTCDate()} – ${weekDays[6].getUTCDate()} ${MONTHS_BS[currentDate.getUTCMonth()]} ${currentDate.getUTCFullYear()}`
+    : `${currentDate.getUTCDate()} ${MONTHS_BS[currentDate.getUTCMonth()]} ${currentDate.getUTCFullYear()}`;
 
   return (
     <div className="flex flex-col h-full">
@@ -198,7 +208,8 @@ export default function CalendarView({ appointments, currentDate, onDateChange, 
           <div className={`grid sticky top-0 z-10 bg-white border-b border-gray-200 ${view === 'week' ? 'grid-cols-[64px_repeat(7,1fr)]' : 'grid-cols-[64px_1fr]'}`}>
             <div className="h-12" />
             {displayDays.map((d, i) => {
-              const isToday = fmt(d) === fmt(new Date());
+              // ✅ POPRAVLJENO: Poredi isključivo UTC stringove da odredi današnji dan
+              const isToday = fmtUTC(d) === fmtUTC(getUTCToday());
               return (
                 <div
                   key={i}
@@ -219,7 +230,7 @@ export default function CalendarView({ appointments, currentDate, onDateChange, 
                 <span className="text-xs text-gray-400 font-medium">{String(hour).padStart(2, '0')}:00</span>
               </div>
               {displayDays.map((d, i) => {
-                const isToday = fmt(d) === fmt(new Date());
+                const isToday = fmtUTC(d) === fmtUTC(getUTCToday());
                 const slots = getAptsForSlot(d, hour);
                 return (
                   <div key={i} className={`border-l border-t border-gray-100 p-1 min-h-[80px] ${isToday ? 'bg-blue-50/30' : ''}`}>
