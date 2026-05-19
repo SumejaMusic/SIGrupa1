@@ -33,16 +33,30 @@ function getUloga(): string | null {
     const token = localStorage.getItem("token");
     if (!token) return null;
     const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.uloga ?? null; // "DOKTOR" ili "PACIJENT"
+    return payload.uloga ?? null;
   } catch {
     return null;
   }
 }
 
+// ─── Helper: default ruta za svaku ulogu ──────────────────────────────────
+function getDefaultRoute(uloga: string | null): string {
+  switch (uloga) {
+    case "DOKTOR": return "/doktor-rezervacije";
+    case "PACIJENT": return "/moje-rezervacije";
+    case "MEDICINSKO_OSOBLJE": return "/";
+    case "ADMINISTRATOR": return "/";
+    case "VLASNIK": return "/";
+    default: return "/prijava";
+  }
+}
+
+type Uloga = "ADMINISTRATOR" | "PACIJENT" | "DOKTOR" | "MEDICINSKO_OSOBLJE" | "VLASNIK";
+
 // ─── ProtectedRoute ────────────────────────────────────────────────────────
-function ProtectedRoute({ children, allowedUloga }: {
+function ProtectedRoute({ children, allowedUloge }: {
   children: React.ReactNode;
-  allowedUloga?: "DOKTOR" | "PACIJENT";
+  allowedUloge?: Uloga[];
 }) {
   const token = localStorage.getItem("token");
 
@@ -51,11 +65,11 @@ function ProtectedRoute({ children, allowedUloga }: {
     return <Navigate to="/prijava" replace />;
   }
 
-  // Provjeri ulogu samo ako je specificirana
-  if (allowedUloga) {
+  // Provjeri ulogu samo ako su specificirane dozvoljene uloge
+  if (allowedUloge && allowedUloge.length > 0) {
     const uloga = getUloga();
-    if (uloga !== allowedUloga) {
-      return <Navigate to={uloga === "DOKTOR" ? "/doktor-rezervacije" : "/moje-rezervacije"} replace />;
+    if (!uloga || !allowedUloge.includes(uloga as Uloga)) {
+      return <Navigate to={getDefaultRoute(uloga)} replace />;
     }
   }
 
@@ -94,35 +108,35 @@ function AppContent() {
   {/* Stara ruta */}
   <Route path="/doctor-view" element={<Navigate to="/doktor-rezervacije" replace />} />
 
-  {/* Samo pacijent */}
+  {/* Samo pacijent (+ admin može sve) */}
   <Route path="/moje-rezervacije" element={
-    <ProtectedRoute allowedUloga="PACIJENT">
+    <ProtectedRoute allowedUloge={["PACIJENT", "ADMINISTRATOR"]}>
       <MojeRezervacije />
     </ProtectedRoute>
   } />
 
-  {/* Samo doktor */}
+  {/* Samo doktor (+ admin može sve) */}
   <Route path="/doktor-rezervacije" element={
-    <ProtectedRoute allowedUloga="DOKTOR">
+    <ProtectedRoute allowedUloge={["DOKTOR", "ADMINISTRATOR"]}>
       <DoktorRezervacije />
     </ProtectedRoute>
   } />
 
-  {/* Prijavljeni korisnici — i pacijent i doktor */}
+  {/* Rezervacija — pacijent, doktor i admin */}
   <Route path="/step1-odjeli" element={
-    <ProtectedRoute><Step1Odjeli /></ProtectedRoute>
+    <ProtectedRoute allowedUloge={["PACIJENT", "DOKTOR", "ADMINISTRATOR"]}><Step1Odjeli /></ProtectedRoute>
   } />
   <Route path="/step2-doktori" element={
-    <ProtectedRoute><Step2Doktori /></ProtectedRoute>
+    <ProtectedRoute allowedUloge={["PACIJENT", "DOKTOR", "ADMINISTRATOR"]}><Step2Doktori /></ProtectedRoute>
   } />
   <Route path="/step3-tip-pregleda" element={
-    <ProtectedRoute><Step3TipPregleda /></ProtectedRoute>
+    <ProtectedRoute allowedUloge={["PACIJENT", "DOKTOR", "ADMINISTRATOR"]}><Step3TipPregleda /></ProtectedRoute>
   } />
   <Route path="/step4-termini" element={
-    <ProtectedRoute><Step4Termini /></ProtectedRoute>
+    <ProtectedRoute allowedUloge={["PACIJENT", "DOKTOR", "ADMINISTRATOR"]}><Step4Termini /></ProtectedRoute>
   } />
   <Route path="/step5-potvrda" element={
-    <ProtectedRoute><Step5Potvrda /></ProtectedRoute>
+    <ProtectedRoute allowedUloge={["PACIJENT", "DOKTOR", "ADMINISTRATOR"]}><Step5Potvrda /></ProtectedRoute>
   } />
 </Routes>
 

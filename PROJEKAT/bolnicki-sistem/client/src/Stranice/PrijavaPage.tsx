@@ -97,7 +97,22 @@ if (socket && socket.connected) {
   socket.emit('LOGIN_SUCCESS', { 
     korisnik: data.korisnik 
   });}
-      navigate('/');
+      // Redirect prema ulozi korisnika
+      const uloga = data.korisnik.uloga;
+      switch (uloga) {
+        case "DOKTOR":
+          navigate("/doktor-rezervacije");
+          break;
+        case "PACIJENT":
+          navigate("/moje-rezervacije");
+          break;
+        case "MEDICINSKO_OSOBLJE":
+        case "ADMINISTRATOR":
+        case "VLASNIK":
+        default:
+          navigate("/");
+          break;
+      }
     } catch {
       setGreske({ opsta: 'Greška servera. Pokušajte ponovo.' });
     } finally {
