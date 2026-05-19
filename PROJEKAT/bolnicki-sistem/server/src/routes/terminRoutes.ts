@@ -15,6 +15,7 @@ import {
   zaključajTermin,
   oslobodiTermin,
 } from "../controllers/terminController.js";
+import { autorizuj } from "../middleware/autorizacija.js";
 
 
 const router = Router();
@@ -28,10 +29,10 @@ router.get("/:id", getTerminById);
  
 // POST /api/termini/:id/zakljucaj
 // US-12, NFR-22 — Buffer zona 2 minute
-router.post("/:id/zakljucaj", autentifikuj, zaključajTermin);
+router.post("/:id/zakljucaj", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "ADMINISTRATOR"), zaključajTermin);
  
 // POST /api/termini/:id/oslobodi
 // US-12 — Ručno oslobađanje termina
-router.post("/:id/oslobodi", autentifikuj, oslobodiTermin);
+router.post("/:id/oslobodi", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "ADMINISTRATOR"), oslobodiTermin);
  
 export default router;

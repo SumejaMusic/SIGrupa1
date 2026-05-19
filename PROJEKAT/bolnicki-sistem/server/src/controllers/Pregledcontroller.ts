@@ -29,9 +29,20 @@ export const zavrsiPregled = async (
     const rezervacijaId = Number(req.params.rezervacijaId);
     const { dijagnoza, terapija, biljeske, recept } = req.body;
 
-    if (!dijagnoza || !terapija) {
+    if (!dijagnoza?.trim() || !terapija?.trim()) {
       res.status(400).json({ poruka: "Dijagnoza i terapija su obavezni." });
       return;
+    }
+
+    if (recept !== undefined && recept !== null) {
+      if (!recept.nazivLijeka?.trim() || !recept.doza?.trim() || !recept.trajanje) {
+        res.status(400).json({ poruka: "Recept mora sadržavati naziv lijeka, dozu i trajanje." });
+        return;
+      }
+      if (Number(recept.trajanje) <= 0) {
+        res.status(400).json({ poruka: "Trajanje recepta mora biti pozitivan broj." });
+        return;
+      }
     }
 
     const rezervacija = await prisma.rezervacije.findUnique({
@@ -44,6 +55,22 @@ export const zavrsiPregled = async (
       return;
     }
 
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    if (korisnikPayload.doktorId && korisnikPayload.doktorId !== rezervacija.idDoktor) {
+      res.status(403).json({ poruka: "Nemate pravo završiti ovaj pregled." });
+      return;
+    }
+
+    if (rezervacija.zavrseno) {
+      res.status(409).json({ poruka: "Ovaj pregled je već završen." });
+      return;
+    }
+
     const rezultat = await prisma.$transaction(async (tx) => {
       let historija;
 
@@ -51,9 +78,9 @@ export const zavrsiPregled = async (
         historija = await tx.historijaPregleda.update({
           where: { idRezervacija: rezervacijaId },
           data: {
-            dijagnoza,
-            terapija,
-            biljeske: biljeske ?? null,
+            dijagnoza: dijagnoza.trim(),
+            terapija: terapija.trim(),
+            biljeske: biljeske?.trim() ?? null,
           },
         });
       } else {
@@ -62,9 +89,9 @@ export const zavrsiPregled = async (
             idPacijent: rezervacija.idPacijent,
             idDoktor: rezervacija.idDoktor,
             idRezervacija: rezervacijaId,
-            dijagnoza,
-            terapija,
-            biljeske: biljeske ?? null,
+            dijagnoza: dijagnoza.trim(),
+            terapija: terapija.trim(),
+            biljeske: biljeske?.trim() ?? null,
             datumPregleda: rezervacija.termin.datum,
           },
         });
@@ -76,10 +103,10 @@ export const zavrsiPregled = async (
           data: {
             idHistorijaPregleda: historija.id,
             idDoktor: rezervacija.idDoktor,
-            nazivLijeka: recept.nazivLijeka,
-            doza: recept.doza,
+            nazivLijeka: recept.nazivLijeka.trim(),
+            doza: recept.doza.trim(),
             trajanje: Number(recept.trajanje),
-            napomena: recept.napomena ?? null,
+            napomena: recept.napomena?.trim() ?? null,
           },
         });
       }
@@ -109,6 +136,12 @@ export const getPregled = async (
 ) => {
   try {
     const rezervacijaId = Number(req.params.rezervacijaId);
+
+    // Provjera da je rezervacijaId validan broj
+    if (!Number.isInteger(rezervacijaId) || rezervacijaId <= 0) {
+      res.status(400).json({ poruka: "Nevažeći ID rezervacije." });
+      return;
+    }
 
     const historija = await prisma.historijaPregleda.findUnique({
       where: { idRezervacija: rezervacijaId },

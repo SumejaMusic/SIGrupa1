@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { autentifikuj } from "../middleware/authMiddleware.js";
+import { autorizuj } from "../middleware/autorizacija.js";
 import {
   upload,
   kreirajRezervaciju,
@@ -15,14 +16,14 @@ import {
 
 const router = Router();
 
-router.post("/doktor", autentifikuj, upload.single("pdf"), kreirajRezervacijuDoktor);
-router.post("/", autentifikuj, upload.single("pdf"), kreirajRezervaciju);
-router.get("/moje", autentifikuj, getRezervacijeZaPacijenta);
-router.get("/:id/komentari", autentifikuj, getKomentari);
-router.get("/doktor/:doktorId", autentifikuj, getRezervacijeZaDoktora);
-router.patch("/:id/otkazi/pacijent", autentifikuj, otkaziRezervacijuPacijent);
-router.patch("/:id/otkazi/osoblje", autentifikuj, otkaziRezervacijuOsoblje);
-router.patch("/:id/komentar", autentifikuj, dodajKomentar);
-router.patch("/:id/trajanje", autentifikuj, promijeniTrajanje);
+router.post("/", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "ADMINISTRATOR"), upload.single("pdf"), kreirajRezervaciju);
+router.post("/doktor", autentifikuj, autorizuj("DOKTOR", "ADMINISTRATOR"), upload.single("pdf"), kreirajRezervacijuDoktor);
+router.get("/moje", autentifikuj, autorizuj("PACIJENT", "ADMINISTRATOR"), getRezervacijeZaPacijenta);
+router.get("/doktor/:doktorId", autentifikuj, autorizuj("DOKTOR", "ADMINISTRATOR"), getRezervacijeZaDoktora);
+router.get("/:id/komentari", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getKomentari);
+router.patch("/:id/otkazi/pacijent", autentifikuj, autorizuj("PACIJENT", "ADMINISTRATOR"), otkaziRezervacijuPacijent);
+router.patch("/:id/otkazi/osoblje", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"), otkaziRezervacijuOsoblje);
+router.patch("/:id/komentar", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), dodajKomentar);
+router.patch("/:id/trajanje", autentifikuj, autorizuj("DOKTOR", "ADMINISTRATOR"), promijeniTrajanje);
 
 export default router;

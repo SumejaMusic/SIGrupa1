@@ -59,7 +59,9 @@ export function TerminDetalji({
     setLoadingNalazi(true);
     setNalazi([]);
 
-    fetch(`${apiUrl}/api/nalazi/pacijent/${termin.pacijent.id}`)
+    fetch(`${apiUrl}/api/nalazi/pacijent/${termin.pacijent.id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -82,7 +84,9 @@ export function TerminDetalji({
 
     setLoadingHistorija(true);
 
-    fetch(`${apiUrl}/api/historija/pacijent/${termin.pacijent.id}`)
+    fetch(`${apiUrl}/api/historija/pacijent/${termin.pacijent.id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
       .then(res => res.json())
       .then(data => setHistorija(Array.isArray(data) ? data : []))
       .catch(() => setHistorija([]))

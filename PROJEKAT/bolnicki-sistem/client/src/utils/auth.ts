@@ -1,4 +1,4 @@
-export function getUserRole(): "doktor" | "pacijent" | null {
+export function getUserRole(): string | null {
   const token = localStorage.getItem("token");
   if (!token) return null;
 
