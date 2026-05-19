@@ -60,31 +60,23 @@ function Step4Termini() {
   const [charCount, setCharCount] = useState(0);
 
   // Detektuj da li je doktor prijavljen iz tokena
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (payload.doktorId) {
-      setIsDoctorMode(true);
-      fetch(`${apiUrl}/api/pacijenti`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          setPacijenti(data);
-
-          // ✅ Dodato — čitaj predodabranog pacijenta iz localStoragea
-          const doctorPatient = localStorage.getItem("doctorPatient");
-          if (doctorPatient) {
-            const p = JSON.parse(doctorPatient);
-            setOdabraniPacijentId(p.id);
-          }
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      if (payload.doktorId) {
+        setIsDoctorMode(true);
+        // Učitaj listu pacijenata za dropdown
+        fetch(`${apiUrl}/api/pacijenti`, {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        .catch(() => {});
-    }
-  } catch {}
-}, []);
+          .then((r) => r.json())
+          .then(setPacijenti)
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
 
   // Fetch termina + WebSocket
   useEffect(() => {
@@ -128,10 +120,7 @@ useEffect(() => {
       setCountdown((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(timer);
-          fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
+          fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, { method: "POST" });
           setSelectedTermin(null);
           alert("Vrijeme za unos podataka je isteklo. Odaberite termin ponovo.");
           return null;
@@ -521,10 +510,7 @@ useEffect(() => {
                 <button
                   onClick={async () => {
                     if (selectedTermin) {
-                      await fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, {
-                        method: "POST",
-                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-                      });
+                      await fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, { method: "POST" });
                     }
                     setSelectedTermin(null);
                   }}

@@ -15,6 +15,7 @@ import {
   zaključajTermin,
   oslobodiTermin,
 } from "../controllers/terminController.js";
+import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizuj } from "../middleware/autorizacija.js";
 
 

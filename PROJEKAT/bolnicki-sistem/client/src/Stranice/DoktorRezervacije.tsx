@@ -50,9 +50,7 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/pacijenti`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
+    fetch(`${apiUrl}/api/pacijenti`)
       .then(res => res.json())
       .then(data => setPacijenti(Array.isArray(data) ? data : []))
       .catch(() => setPacijenti([]))
