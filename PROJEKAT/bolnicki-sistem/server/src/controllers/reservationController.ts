@@ -64,6 +64,30 @@ const formatirajKomentar = (komentar: KomentarSaKorisnikom) => ({
   jeDoktor: komentar.jeDoktor,
 });
 
+const mozePristupitiRezervaciji = (
+  korisnikPayload: any,
+  rezervacija: {
+    idDoktor?: number | null;
+    pacijent?: { idKorisnik: number } | null;
+    doktor?: { idKorisnik: number } | null;
+  }
+) => {
+  if (["ADMINISTRATOR", "MEDICINSKO_OSOBLJE", "VLASNIK"].includes(korisnikPayload?.uloga)) {
+    return true;
+  }
+
+  if (korisnikPayload?.uloga === "PACIJENT") {
+    return rezervacija.pacijent?.idKorisnik === korisnikPayload.id;
+  }
+
+  if (korisnikPayload?.uloga === "DOKTOR") {
+    return rezervacija.doktor?.idKorisnik === korisnikPayload.id ||
+      rezervacija.idDoktor === korisnikPayload.doktorId;
+  }
+
+  return false;
+};
+
 // POST /api/rezervacije
 export const kreirajRezervaciju = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -486,11 +510,21 @@ export const dodajKomentar = async (req: Request, res: Response, next: NextFunct
 
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
-      select: { id: true },
+      select: {
+        id: true,
+        idDoktor: true,
+        pacijent: { select: { idKorisnik: true } },
+        doktor: { select: { idKorisnik: true } },
+      },
     });
 
     if (!rezervacija) {
       res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    if (!mozePristupitiRezervaciji(korisnikPayload, rezervacija)) {
+      res.status(403).json({ poruka: "Nemate dozvolu za komentarisanje ove rezervacije." });
       return;
     }
 
@@ -528,7 +562,13 @@ export const getKomentari = async (req: Request, res: Response, next: NextFuncti
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
       include: {
-        pacijent: { include: { korisnik: { select: { ime: true, prezime: true } } } },
+        pacijent: {
+          select: {
+            idKorisnik: true,
+            korisnik: { select: { ime: true, prezime: true } },
+          },
+        },
+        doktor: { select: { idKorisnik: true } },
         komentari: {
           include: { korisnik: { select: { ime: true, prezime: true } } },
           orderBy: { datumKreiranja: "asc" },
@@ -538,6 +578,12 @@ export const getKomentari = async (req: Request, res: Response, next: NextFuncti
 
     if (!rezervacija) {
       res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    const korisnikPayload = (req as any).korisnik;
+    if (!mozePristupitiRezervaciji(korisnikPayload, rezervacija)) {
+      res.status(403).json({ poruka: "Nemate dozvolu za pregled komentara ove rezervacije." });
       return;
     }
 

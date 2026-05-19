@@ -600,9 +600,16 @@ describe("otkaziRezervacijuOsoblje", () => {
 // dodajKomentar
 // ─────────────────────────────────────────────
 describe("dodajKomentar", () => {
+  const rezervacijaZaPacijenta = {
+    id: 1,
+    idDoktor: 2,
+    pacijent: { idKorisnik: 1 },
+    doktor: { idKorisnik: 2 },
+  };
+
   it("uspješno dodaje novi komentar bez brisanja postojećih komentara — US-22 AC1", async () => {
     const datumKreiranja = new Date("2026-05-18T10:00:00.000Z");
-    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({ id: 1 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaPacijenta as any);
     vi.mocked(prismaMock.komentar.create).mockResolvedValue({
       id: 7,
       tekst: "Imam alergiju na penicilin",
@@ -616,7 +623,12 @@ describe("dodajKomentar", () => {
 
     expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
-      select: { id: true },
+      select: {
+        id: true,
+        idDoktor: true,
+        pacijent: { select: { idKorisnik: true } },
+        doktor: { select: { idKorisnik: true } },
+      },
     });
     expect(prismaMock.komentar.create).toHaveBeenCalledWith({
       data: {
@@ -653,7 +665,7 @@ describe("dodajKomentar", () => {
   });
 
   it("konvertuje string ID u broj prije slanja Prismi", async () => {
-    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({ id: 42 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({ ...rezervacijaZaPacijenta, id: 42 } as any);
     vi.mocked(prismaMock.komentar.create).mockResolvedValue({
       id: 1,
       tekst: "Test komentar",
@@ -667,13 +679,18 @@ describe("dodajKomentar", () => {
 
     expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith({
       where: { id: 42 },
-      select: { id: true },
+      select: {
+        id: true,
+        idDoktor: true,
+        pacijent: { select: { idKorisnik: true } },
+        doktor: { select: { idKorisnik: true } },
+      },
     });
     expect(next).not.toHaveBeenCalled();
   });
 
   it("označava komentar doktora sa jeDoktor=true", async () => {
-    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({ id: 1 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaPacijenta as any);
     vi.mocked(prismaMock.komentar.create).mockResolvedValue({
       id: 3,
       tekst: "Doktorska napomena",
@@ -707,7 +724,7 @@ describe("dodajKomentar", () => {
 
   it("poziva next pri grešci i ne vraća odgovor", async () => {
     const greška = new Error("DB greška");
-    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({ id: 1 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaPacijenta as any);
     vi.mocked(prismaMock.komentar.create).mockRejectedValue(greška);
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, { komentar: "Test" });
@@ -728,7 +745,8 @@ describe("getKomentari", () => {
       id: 1,
       komentar: "Legacy",
       datumKreiranja: new Date("2026-05-18T08:00:00.000Z"),
-      pacijent: { korisnik: { ime: "Ana", prezime: "Anić" } },
+      pacijent: { idKorisnik: 1, korisnik: { ime: "Ana", prezime: "Anić" } },
+      doktor: { idKorisnik: 2 },
       komentari: [
         {
           id: 11,
@@ -762,7 +780,8 @@ describe("getKomentari", () => {
       id: 1,
       komentar: "Stari komentar",
       datumKreiranja: new Date("2026-05-18T08:00:00.000Z"),
-      pacijent: { korisnik: { ime: "Ana", prezime: "Anić" } },
+      pacijent: { idKorisnik: 1, korisnik: { ime: "Ana", prezime: "Anić" } },
+      doktor: { idKorisnik: 2 },
       komentari: [],
     } as any);
 
