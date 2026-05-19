@@ -29,7 +29,7 @@ interface Appointment {
     id: number;
     naziv: string;
     sprat: number;
-  };
+  }| null;
 
   pacijent: {
     id: number;
@@ -56,6 +56,11 @@ interface Appointment {
       id: number;
       naziv: string;
     };
+    soba?:{
+      id: number;
+      naziv: string;
+      sprat: number;
+    }
   };
 
   historija?: {
@@ -116,9 +121,8 @@ const getHourFromInt = (vrijeme: number): number => {
 
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 7); // 07:00 – 17:00
 
-const fmt = (d: Date) => {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+const fmt = (d: Date) =>
+  `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
 
 const DAYS_BS   = ['Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub'];
 const MONTHS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni',
@@ -154,13 +158,11 @@ export default function CalendarView({ appointments, currentDate, onDateChange, 
  const getAptsForSlot = (date: Date, hour: number) =>
   appointments.filter(a => {
     const aptDate = new Date(a.termin.datum);
-    // Koristimo lokalno vrijeme jer baza čuva datum u lokalnom vremenu
-    const aptDateStr = `${aptDate.getFullYear()}-${String(aptDate.getMonth() + 1).padStart(2, '0')}-${String(aptDate.getDate()).padStart(2, '0')}`;
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const aptDateStr = `${aptDate.getUTCFullYear()}-${String(aptDate.getUTCMonth() + 1).padStart(2,'0')}-${String(aptDate.getUTCDate()).padStart(2,'0')}`;
+    const dateStr = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
     const aptHour = getHourFromInt(a.termin.vrijeme);
     return aptDateStr === dateStr && aptHour === hour;
   });
-
   const title = view === 'week'
   ? `${weekDays[0].getUTCDate()} – ${weekDays[6].getUTCDate()} ${MONTHS_BS[currentDate.getUTCMonth()]} ${currentDate.getUTCFullYear()}`
   : `${currentDate.getUTCDate()} ${MONTHS_BS[currentDate.getUTCMonth()]} ${currentDate.getUTCFullYear()}`;
@@ -246,7 +248,7 @@ export default function CalendarView({ appointments, currentDate, onDateChange, 
                             Dr. {apt.doktor.korisnik.prezime}
                           </p>
                           <p className="text-[11px] text-gray-400 truncate">
-                            {apt.doktor.odjel.naziv} · Soba {apt.soba?.naziv ?? 'N/A'}
+                            {apt.doktor.odjel.naziv} · Soba {apt.soba?.naziv ?? apt.doktor.soba?.naziv ?? 'N/A'}
                           </p>
                         </div>
                       );

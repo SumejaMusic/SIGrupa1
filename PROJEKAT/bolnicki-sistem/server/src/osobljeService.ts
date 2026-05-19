@@ -9,11 +9,11 @@ import { prisma } from "./lib/prisma.js";
 // ─── Tipovi ───────────────────────────────────────────────────────────────────
 
 export interface KreirajTerminInput {
+  idTermina:      number;  // ← ovo mora postojati
   idDoktor:      number;
   idPacijent:    number; // ovo je idKorisnik pacijenta — iz JWT-a
   idTipPregleda?: number;
-  datum:         Date;
-  vrijemeMinute: number; // minuti od ponoći, npr. 9:00 = 540
+  
   komentar?:     string;
   hitnost?:      boolean;
 }
@@ -58,6 +58,7 @@ export async function getDnevniTerminiService(datum: Date) {
     include: {
       korisnik: { select: { id: true, ime: true, prezime: true } }, // ← id
       odjel: true,   // ← DODAJ (frontend čita apt.doktor.odjel.naziv)
+      soba: true,  // ← OVDJE, ne na vrhu
     },
   },
   tipPregleda: true,
@@ -219,51 +220,31 @@ export async function otkaziTerminService(idRezervacije: number) {
 // budu atomične — ne može se desiti da termin ostane SLOBODAN a rezervacija se kreira.
 
 export async function kreirajTerminZaPacijentomService(input: KreirajTerminInput) {
-  const { idDoktor, idPacijent, idTipPregleda, datum, vrijemeMinute, komentar, hitnost = false } = input;
+  const { idTermina, idDoktor, idPacijent, idTipPregleda, komentar, hitnost = false } = input;
 
-  // idPacijent iz requesta je idKorisnik — pretvaramo u Pacijent zapis
   const pacijent = await prisma.pacijent.findUnique({
     where: { idKorisnik: idPacijent },
   });
-  if (!pacijent) {
-    throw { status: 404, poruka: "Pacijent nije pronađen." };
-  }
+  if (!pacijent) throw { status: 404, poruka: "Pacijent nije pronađen." };
 
   const doktor = await prisma.doktor.findUnique({ where: { id: idDoktor } });
-  if (!doktor) {
-    throw { status: 404, poruka: "Doktor nije pronađen." };
-  }
-
-  // Tražimo slobodan termin za tog doktora u to specifično vrijemeMinute na taj datum
-  const pocetakDana = new Date(datum);
-  pocetakDana.setUTCHours(0, 0, 0, 0);
-  const krajDana = new Date(datum);
-  krajDana.setUTCHours(23, 59, 59, 999);
+  if (!doktor) throw { status: 404, poruka: "Doktor nije pronađen." };
 
   const termin = await prisma.termin.findFirst({
-    where: {
-      idDoktor: idDoktor,
-      status:   "SLOBODAN",
-      datum:    { gte: pocetakDana, lte: krajDana },
-      vrijeme:  vrijemeMinute,
-    },
+    where: { id: idTermina, idDoktor, status: "SLOBODAN" },
   });
+  if (!termin) throw { status: 409, poruka: "Odabrani termin nije slobodan ili ne postoji." };
 
-  if (!termin) {
-    throw { status: 409, poruka: "Odabrani termin nije slobodan ili ne postoji." };
-  }
-
-  // Atomično: kreiraj rezervaciju + zauzmi termin
   const [novaRezervacija] = await prisma.$transaction([
     prisma.rezervacije.create({
       data: {
         idTermina:        termin.id,
         idPacijent:       pacijent.id,
-        idDoktor:         idDoktor,
+        idDoktor,
         idTipPregleda:    idTipPregleda ?? null,
         komentar:         komentar ?? null,
-        hitnost:          hitnost,
-        doktorRezervisao: true, // osoblje je kreator rezervacije
+        hitnost,
+        doktorRezervisao: true,
       },
     }),
     prisma.termin.update({
@@ -274,7 +255,6 @@ export async function kreirajTerminZaPacijentomService(input: KreirajTerminInput
 
   return novaRezervacija;
 }
-
 // ─── 6. Upload PDF nalaza ─────────────────────────────────────────────────────
 // ACC kriterij: samo PDF dozvoljen, čuva se trajno, vezan za historiju pregleda.
 //
@@ -436,6 +416,7 @@ export async function getOtkazaniTerminiService(datum?: Date) {
     include: {
       korisnik: { select: { id: true, ime: true, prezime: true } }, // ← id
       odjel: true,   // ← DODAJ (frontend čita apt.doktor.odjel.naziv)
+      soba: true,  // ← OVDJE, ne na vrhu
     },
   },
   tipPregleda: true,
@@ -479,7 +460,9 @@ export async function getHitniTerminiService() {
     include: {
       korisnik: { select: { id: true, ime: true, prezime: true } }, // ← id
       odjel: true,   // ← DODAJ (frontend čita apt.doktor.odjel.naziv)
+      soba: true,  // ← OVDJE, ne na vrhu
     },
+    soba: true,  // ← ovo ostavi za direktnu sobu na rezervaciji
   },
   tipPregleda: true,
   soba: true,        // ← DODAJ
@@ -520,7 +503,9 @@ export async function getZavrseniPregledService(idPacijenta?: number) {
       doktor: {
         include: {
           korisnik: { select: { ime: true, prezime: true } },
+
         },
+      
       },
       tipPregleda: true,
       historija:   true,
@@ -570,6 +555,7 @@ export async function postaviHitnostService(idRezervacije: number, hitnost: bool
         include: {
           korisnik: { select: { ime: true, prezime: true } },
         },
+       
       },
     },
   });
@@ -629,7 +615,9 @@ export async function getAllTerminiService() {
         include: {
           korisnik: { select: { id: true, ime: true, prezime: true } },
           odjel: true,
+          soba: true,  // ← OVDJE, ne na vrhu
         },
+       
       },
       tipPregleda: true,
       soba: true,
@@ -643,5 +631,20 @@ export async function getAllTerminiService() {
       { termin: { datum: 'asc' } },
       { termin: { vrijeme: 'asc' } },
     ],
+  });
+}
+export async function getSlobodniTerminiDoktoraService(idDoktor: number, datum: string) {
+  const pocetakDana = new Date(datum);
+  pocetakDana.setUTCHours(0, 0, 0, 0);
+  const krajDana = new Date(datum);
+  krajDana.setUTCHours(23, 59, 59, 999);
+
+  return prisma.termin.findMany({
+    where: {
+      idDoktor,
+      status: 'SLOBODAN',
+      datum: { gte: pocetakDana, lte: krajDana },
+    },
+    orderBy: { vrijeme: 'asc' },
   });
 }

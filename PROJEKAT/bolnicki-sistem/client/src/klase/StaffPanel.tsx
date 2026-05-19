@@ -51,7 +51,7 @@ interface Appointment {
     id: number;
     naziv: string;            
     sprat: number;
-  };
+  } | null;
 
   pacijent: {
     id: number;
@@ -77,6 +77,11 @@ interface Appointment {
     odjel: {
       id: number;
       naziv: string;          
+    };
+    soba?: {
+      id: number;
+      naziv: string;
+      sprat: number;
     };
   };
 
@@ -124,7 +129,7 @@ export default function StaffPanel() {
   const [allPatients, setAllPatients] = useState<Appointment['pacijent'][]>([]);
 const [doctors, setDoctors] = useState<Appointment['doktor'][]>([]);
 const [departments, setDepartments] = useState<Appointment['doktor']['odjel'][]>([]);
-const [rooms, setRooms] = useState<Appointment['soba'][]>([]);
+const [rooms, setRooms] = useState<{ id: number; naziv: string; sprat: number; }[]>([]);
   const getToken = () => localStorage.getItem('token') ?? '';
 
   const showNotif = (msg: string) => {
@@ -183,13 +188,13 @@ useEffect(() => {
 
 const stats = useMemo(() => {
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const todayStr = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
   
-  const todayApts = appointments.filter(a => {
-    const aptDate = new Date(a.termin.datum);
-    const aptStr = `${aptDate.getFullYear()}-${String(aptDate.getMonth() + 1).padStart(2, '0')}-${String(aptDate.getDate()).padStart(2, '0')}`;
-    return aptStr === todayStr;
-  });
+ const todayApts = appointments.filter(a => {
+  const aptDate = new Date(a.termin.datum);
+  const aptStr = `${aptDate.getUTCFullYear()}-${String(aptDate.getUTCMonth() + 1).padStart(2,'0')}-${String(aptDate.getUTCDate()).padStart(2,'0')}`;
+  return aptStr === todayStr;
+});
   
   return {
     total: todayApts.length,
@@ -460,13 +465,12 @@ const handleMarkUrgent = async (apt: Appointment) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${getToken()}`
           },
-          body: JSON.stringify({
-            idDoktor:      data.doktorId,
-            idPacijent:    data.pacijentId,
-            datum:         data.datum,
-            vrijemeMinute: data.vrijeme,
-            komentar:      data.komentar,
-          })
+        body: JSON.stringify({
+  idTermina:  data.idTermina,   // ✅ ovo je ključno
+  idDoktor:   data.doktorId,
+  idPacijent: data.pacijentId,
+  komentar:   data.komentar,
+})
         });
         if (!res.ok) {
           const err = await res.json();
@@ -568,7 +572,7 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
               
               <div className="self-center min-w-0">
                 <p className="text-sm text-gray-700 truncate">{apt.doktor.odjel.naziv}</p>
-                <p className="text-xs text-gray-400">Soba {apt.soba?.naziv ?? 'N/A'}</p>
+                <p className="text-xs text-gray-400">Soba {apt.soba?.naziv ?? apt.doktor.soba?.naziv ?? 'N/A'}</p>
               </div>
               
               <span className="text-sm text-gray-600 self-center">{formattedDate}</span>

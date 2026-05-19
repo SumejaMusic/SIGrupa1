@@ -28,7 +28,7 @@ interface Appointment {
     id: number;
     naziv: string;
     sprat: number;
-  };
+  } | null;
 
   pacijent: {
     id: number;

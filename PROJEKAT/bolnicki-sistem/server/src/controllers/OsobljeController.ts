@@ -25,6 +25,7 @@ import {
   getAllDoktoriService,
   getAllOdjeliService,
   getAllSobeService,
+  getSlobodniTerminiDoktoraService,
 } from "../osobljeService.js";
 
 // Helper: dohvata ID prijavljenog korisnika iz req.korisnik (postavljeno od autentifikuj)
@@ -378,9 +379,22 @@ export async function getAllSobe(req: Request, res: Response, next: NextFunction
   } catch (err) { next(err); }
 }
 import { getAllTerminiService } from "../osobljeService.js"; // dodaj u postojeći import
+import { prisma } from "../lib/prisma.js";
 
 export async function getAllTermini(req: Request, res: Response, next: NextFunction) {
   try {
     res.status(200).json(await getAllTerminiService());
+  } catch (err) { next(err); }
+}
+export async function getSlobodniTerminiDoktora(req: Request, res: Response, next: NextFunction) {
+  try {
+    const idDoktor = Number(req.params.idDoktor);
+    const datum = req.query.datum as string;
+    if (!datum) {
+      res.status(400).json({ poruka: "Parametar 'datum' je obavezan." });
+      return;
+    }
+    const termini = await getSlobodniTerminiDoktoraService(idDoktor, datum);
+    res.status(200).json(termini);
   } catch (err) { next(err); }
 }

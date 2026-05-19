@@ -29,7 +29,7 @@ import {
 import { getAllTermini } from "../controllers/OsobljeController.js"; // dodaj u import
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizacija }  from "../middleware/Autorizacija.js";
-
+import { getSlobodniTerminiDoktora } from "../controllers/OsobljeController.js";
 const router = Router();
 
 const osobljeMW = [
@@ -61,7 +61,7 @@ router.get("/termini/hitni", osobljeMW, getHitniTermini);
 // GET /api/osoblje/termini/zavrseni?idPacijenta=5
 // idPacijenta je opcionalan
 router.get("/termini/zavrseni", osobljeMW, getZavrseniPregledi);
-
+router.get("/termini/slobodni/:idDoktor", osobljeMW, getSlobodniTerminiDoktora);
 // GET /api/osoblje/termini/:id
 router.get("/termini/:id", osobljeMW, getDetaljiTermina);
 

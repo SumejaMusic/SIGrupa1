@@ -55,6 +55,11 @@ interface Appointment {
       id: number;
       naziv: string;          
     };
+    soba?:{
+      id: number;
+      naziv: string;
+      sprat: number;
+    }
   };
 
   historija?: {
@@ -186,7 +191,7 @@ export default function AppointmentDetailModal({ appointment: apt, onClose, onCa
               <InfoRow icon={<Clock size={14} />} label="Datum i vrijeme" value={`${formattedDate} u ${formatIntTime(apt.termin.vrijeme)}`} />
               <InfoRow icon={<Stethoscope size={14} />} label="Doktor" value={`Dr. ${apt.doktor.korisnik.ime} ${apt.doktor.korisnik.prezime}`} />
               <InfoRow icon={<Building2 size={14} />} label="Odjel" value={apt.doktor.odjel.naziv} />
-              <InfoRow icon={<DoorOpen size={14} />} label="Soba / Sprat" value={apt.soba ? `Soba ${apt.soba.naziv} (Sprat ${apt.soba.sprat})` : 'Nije dodijeljena'} />
+              <InfoRow icon={<DoorOpen size={14} />} label="Soba / Sprat" value={apt.soba ? `Soba ${apt.soba?.naziv ?? apt.doktor.soba?.naziv ?? 'N/A'} (Sprat ${apt.soba.sprat})` : 'Nije dodijeljena'} />
             </div>
           </section>
 
