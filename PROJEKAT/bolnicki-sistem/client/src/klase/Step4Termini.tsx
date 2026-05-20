@@ -37,7 +37,7 @@ type Pacijent = {
 };
 
 function Step4Termini() {
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL ?? "";
 
   const [termini, setTermini] = useState<Termin[]>([]);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -67,13 +67,23 @@ function Step4Termini() {
       const payload = JSON.parse(atob(token.split(".")[1]));
       if (payload.doktorId) {
         setIsDoctorMode(true);
+        const storedPatient = localStorage.getItem("doctorPatient");
+        if (storedPatient) {
+          try {
+            const parsed = JSON.parse(storedPatient) as Partial<Pacijent>;
+            if (typeof parsed.id === "number") {
+              setOdabraniPacijentId(parsed.id);
+            }
+          } catch {}
+        }
+
         // Učitaj listu pacijenata za dropdown
         fetch(`${apiUrl}/api/pacijenti`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-          .then((r) => r.json())
-          .then(setPacijenti)
-          .catch(() => {});
+          .then((r) => r.ok ? r.json() : [])
+          .then((data) => setPacijenti(Array.isArray(data) ? data : []))
+          .catch(() => setPacijenti([]));
       }
     } catch {}
   }, []);
@@ -120,7 +130,10 @@ function Step4Termini() {
       setCountdown((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(timer);
-          fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, { method: "POST" });
+          fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          });
           setSelectedTermin(null);
           alert("Vrijeme za unos podataka je isteklo. Odaberite termin ponovo.");
           return null;
@@ -237,7 +250,15 @@ function Step4Termini() {
       }
 
       // Pronađi podatke odabranog pacijenta za step5
-      const odabraniPacijent = pacijenti.find((p) => p.id === odabraniPacijentId);
+      const storedDoctorPatient = (() => {
+        try {
+          const stored = localStorage.getItem("doctorPatient");
+          return stored ? JSON.parse(stored) as Pacijent : null;
+        } catch {
+          return null;
+        }
+      })();
+      const odabraniPacijent = pacijenti.find((p) => p.id === odabraniPacijentId) ?? storedDoctorPatient;
 
       localStorage.setItem("selectedTermin", selectedTermin.id.toString());
       localStorage.setItem("selectedTerminData", JSON.stringify(selectedTermin));
@@ -510,7 +531,10 @@ function Step4Termini() {
                 <button
                   onClick={async () => {
                     if (selectedTermin) {
-                      await fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, { method: "POST" });
+                      await fetch(`${apiUrl}/api/termini/${selectedTermin.id}/oslobodi`, {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+                      });
                     }
                     setSelectedTermin(null);
                   }}

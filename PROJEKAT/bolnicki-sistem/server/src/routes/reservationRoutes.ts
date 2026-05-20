@@ -16,6 +16,7 @@ import {
 
 const router = Router();
 
+router.post("/doktor", autentifikuj, autorizuj("DOKTOR"), upload.single("pdf"), kreirajRezervacijuDoktor);
 router.post("/", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "ADMINISTRATOR"), upload.single("pdf"), kreirajRezervaciju);
 router.get("/moje", autentifikuj, autorizuj("PACIJENT", "ADMINISTRATOR"), getRezervacijeZaPacijenta);
 router.get("/:id/komentari", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getKomentari);
