@@ -18,6 +18,76 @@ export const upload = multer({
 
 console.log("reservationController učitan");
 
+type KomentarSaKorisnikom = {
+  id: number;
+  tekst: string;
+  jeDoktor: boolean;
+  datumKreiranja: Date;
+  korisnik?: {
+    ime: string;
+    prezime: string;
+  } | null;
+};
+
+const izracunajVrijemeTermina = (termin: { datum: Date; vrijeme?: number | null }) => {
+  const datum = new Date(termin.datum);
+  const imaVrijemeUDatumu =
+    datum.getHours() !== 0 ||
+    datum.getMinutes() !== 0 ||
+    datum.getSeconds() !== 0 ||
+    datum.getMilliseconds() !== 0;
+  const imaVrijemeUDatumuUTC =
+    datum.getUTCHours() !== 0 ||
+    datum.getUTCMinutes() !== 0 ||
+    datum.getUTCSeconds() !== 0 ||
+    datum.getUTCMilliseconds() !== 0;
+
+  if (!Number.isInteger(termin.vrijeme) || (imaVrijemeUDatumu && imaVrijemeUDatumuUTC)) {
+    return datum;
+  }
+
+  const datumSaSatnicom = new Date(datum);
+  datumSaSatnicom.setHours(0, 0, 0, 0);
+  datumSaSatnicom.setMinutes(termin.vrijeme as number);
+  return datumSaSatnicom;
+};
+
+const korisnikJeDoktor = (korisnikPayload: any) => korisnikPayload?.uloga === "DOKTOR";
+
+const formatirajKomentar = (komentar: KomentarSaKorisnikom) => ({
+  id: komentar.id,
+  tekst: komentar.tekst,
+  autor: komentar.korisnik
+    ? `${komentar.korisnik.ime} ${komentar.korisnik.prezime}`
+    : komentar.jeDoktor ? "Doktor" : "Pacijent",
+  datum: new Date(komentar.datumKreiranja).toISOString().split("T")[0],
+  jeDoktor: komentar.jeDoktor,
+});
+
+const mozePristupitiRezervaciji = (
+  korisnikPayload: any,
+  rezervacija: {
+    idDoktor?: number | null;
+    pacijent?: { idKorisnik: number } | null;
+    doktor?: { idKorisnik: number } | null;
+  }
+) => {
+  if (["ADMINISTRATOR", "MEDICINSKO_OSOBLJE", "VLASNIK"].includes(korisnikPayload?.uloga)) {
+    return true;
+  }
+
+  if (korisnikPayload?.uloga === "PACIJENT") {
+    return rezervacija.pacijent?.idKorisnik === korisnikPayload.id;
+  }
+
+  if (korisnikPayload?.uloga === "DOKTOR") {
+    return rezervacija.doktor?.idKorisnik === korisnikPayload.id ||
+      rezervacija.idDoktor === korisnikPayload.doktorId;
+  }
+
+  return false;
+};
+
 // POST /api/rezervacije
 export const kreirajRezervaciju = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -27,7 +97,7 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
     const idTipPregledaRaw = req.body.idTipPregleda ?? req.body.tipPregledaId;
     const idTipPregleda = idTipPregledaRaw === undefined || idTipPregledaRaw === null
       ? null : Number(idTipPregledaRaw);
-    const komentar = req.body.komentar;
+    const komentar = typeof req.body.komentar === "string" ? req.body.komentar.trim() : "";
     const hitnost = req.body.hitnost;
 
     if (!Number.isInteger(idTermina) || idTermina <= 0 || !Number.isInteger(idDoktor) || idDoktor <= 0) {
@@ -70,6 +140,12 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
       return;
     }
 
+    const vrijemeTermina = izracunajVrijemeTermina(termin);
+    if (vrijemeTermina.getTime() <= Date.now()) {
+      res.status(400).json({ poruka: "Nevalidna rezervacija: ne možete rezervisati termin u prošlosti." });
+      return;
+    }
+
     const duplikat = await prisma.rezervacije.findFirst({
       where: { idPacijent: pacijent.id, idTermina, datumOtkazivanja: null },
     });
@@ -91,8 +167,8 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
     });
 
     if (preklapanje) {
-      res.status(409).json({ 
-        poruka: "Već imate zakazan pregled u isto vrijeme kod drugog doktora." 
+      res.status(409).json({
+        poruka: "Već imate zakazan pregled u isto vrijeme kod drugog doktora."
       });
       return;
     }
@@ -104,7 +180,7 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
       return;
     }
     //javljalo je gresku servera jer upload pdf premasi duzinu prisma transakcije pa sam zamijenila
-    //sa kodom ispod upload pdf se radi prije transakcije ako padne pdf se brise iz baze 
+    //sa kodom ispod upload pdf se radi prije transakcije ako padne pdf se brise iz baze
     //ako bude problem vratiti
     /*const rezervacija = await prisma.$transaction(async (tx) => {
       const nova = await tx.rezervacije.create({
@@ -174,7 +250,7 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
             idTermina,
             idPacijent: pacijent.id,
             idDoktor,
-            komentar: komentar ?? null,
+            komentar: komentar || null,
             hitnost: hitnost ?? false,
             doktorRezervisao: false,
             datumKreiranja: new Date(),
@@ -186,6 +262,18 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
             doktor: { include: { korisnik: true } },
           },
         });
+
+        if (komentar) {
+          await tx.komentar.create({
+            data: {
+              idRezervacije: nova.id,
+              idKorisnik: korisnikPayload.id,
+              tekst: komentar,
+              jeDoktor: korisnikJeDoktor(korisnikPayload),
+              datumKreiranja: nova.datumKreiranja,
+            },
+          });
+        }
 
         if (nalazId) {
           await tx.historijaPregleda.create({
@@ -269,6 +357,10 @@ export const getRezervacijeZaPacijenta = async (req: Request, res: Response, nex
         doktor: { include: { korisnik: true, soba: true } },
         tipPregleda: true,
         soba: true,
+        komentari: {
+          include: { korisnik: { select: { ime: true, prezime: true } } },
+          orderBy: { datumKreiranja: "asc" },
+        },
       },
       orderBy: { datumKreiranja: "desc" },
     });
@@ -284,7 +376,14 @@ export const getRezervacijeZaDoktora = async (req: Request, res: Response, next:
   try {
     const rezervacije = await prisma.rezervacije.findMany({
       where: { idDoktor: Number(req.params.doktorId) },
-      include: { termin: true, pacijent: { include: { korisnik: true } } },
+      include: {
+        termin: true,
+        pacijent: { include: { korisnik: true } },
+        komentari: {
+          include: { korisnik: { select: { ime: true, prezime: true } } },
+          orderBy: { datumKreiranja: "asc" },
+        },
+      },
       orderBy: { datumKreiranja: "desc" },
     });
 
@@ -354,10 +453,10 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
   try {
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
-      include: { 
-        termin: true, 
+      include: {
+        termin: true,
         pacijent: { include: { korisnik: true } },
-        doktor: { include: { korisnik: true } }, 
+        doktor: { include: { korisnik: true } },
       },
     });
 
@@ -397,12 +496,51 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
 // PATCH /api/rezervacije/:id/komentar
 export const dodajKomentar = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { komentar } = req.body;
-    const rezervacija = await prisma.rezervacije.update({
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    const tekst = typeof req.body.komentar === "string" ? req.body.komentar.trim() : "";
+    if (!tekst) {
+      res.status(400).json({ poruka: "Komentar ne može biti prazan." });
+      return;
+    }
+
+    const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
-      data: { komentar },
+      select: {
+        id: true,
+        idDoktor: true,
+        pacijent: { select: { idKorisnik: true } },
+        doktor: { select: { idKorisnik: true } },
+      },
     });
-    res.json(rezervacija);
+
+    if (!rezervacija) {
+      res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    if (!mozePristupitiRezervaciji(korisnikPayload, rezervacija)) {
+      res.status(403).json({ poruka: "Nemate dozvolu za komentarisanje ove rezervacije." });
+      return;
+    }
+
+    const komentar = await prisma.komentar.create({
+      data: {
+        idRezervacije: rezervacija.id,
+        idKorisnik: korisnikPayload.id,
+        tekst,
+        jeDoktor: korisnikJeDoktor(korisnikPayload),
+      },
+      include: {
+        korisnik: { select: { ime: true, prezime: true } },
+      },
+    });
+
+    res.status(201).json(formatirajKomentar(komentar));
   } catch (err) {
     next(err);
   }
@@ -423,7 +561,19 @@ export const getKomentari = async (req: Request, res: Response, next: NextFuncti
   try {
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: Number(req.params.id) },
-      select: { komentar: true, datumKreiranja: true },
+      include: {
+        pacijent: {
+          select: {
+            idKorisnik: true,
+            korisnik: { select: { ime: true, prezime: true } },
+          },
+        },
+        doktor: { select: { idKorisnik: true } },
+        komentari: {
+          include: { korisnik: { select: { ime: true, prezime: true } } },
+          orderBy: { datumKreiranja: "asc" },
+        },
+      },
     });
 
     if (!rezervacija) {
@@ -431,10 +581,21 @@ export const getKomentari = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
+    const korisnikPayload = (req as any).korisnik;
+    if (!mozePristupitiRezervaciji(korisnikPayload, rezervacija)) {
+      res.status(403).json({ poruka: "Nemate dozvolu za pregled komentara ove rezervacije." });
+      return;
+    }
+
+    if (rezervacija.komentari.length > 0) {
+      res.json(rezervacija.komentari.map(formatirajKomentar));
+      return;
+    }
+
     const komentari = rezervacija.komentar ? [{
       id: Number(req.params.id) * 1000,
       tekst: rezervacija.komentar,
-      autor: "Vi",
+      autor: `${rezervacija.pacijent.korisnik.ime} ${rezervacija.pacijent.korisnik.prezime}`,
       datum: new Date(rezervacija.datumKreiranja).toISOString().split("T")[0],
       jeDoktor: false,
     }] : [];
@@ -456,12 +617,12 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
       res.status(401).json({ poruka: "Niste prijavljeni." });
       return;
     }
-    
+
     const idDoktor = korisnikPayload.doktorId;
     const idTipPregledaRaw = req.body.idTipPregleda;
     const idTipPregleda = idTipPregledaRaw === undefined || idTipPregledaRaw === null
       ? null : Number(idTipPregledaRaw);
-    const komentar = req.body.komentar;
+    const komentar = typeof req.body.komentar === "string" ? req.body.komentar.trim() : "";
     const hitnost = req.body.hitnost ?? false;
 
     if (!Number.isInteger(idTermina) || idTermina <= 0) {
@@ -503,6 +664,12 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
       return;
     }
 
+    const vrijemeTermina = izracunajVrijemeTermina(termin);
+    if (vrijemeTermina.getTime() <= Date.now()) {
+      res.status(400).json({ poruka: "Nevalidna rezervacija: ne možete rezervisati termin u prošlosti." });
+      return;
+    }
+
     const duplikat = await prisma.rezervacije.findFirst({
       where: { idPacijent: pacijent.id, idTermina, datumOtkazivanja: null },
     });
@@ -524,8 +691,8 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
     });
 
     if (preklapanje) {
-      res.status(409).json({ 
-        poruka: "Pacijent već ima zakazan pregled u isto vrijeme." 
+      res.status(409).json({
+        poruka: "Pacijent već ima zakazan pregled u isto vrijeme."
       });
       return;
     }
@@ -536,25 +703,37 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
           idTermina,
           idPacijent: idPacijent,
           idDoktor: idDoktorTermina,
-          komentar: komentar ?? null,
+          komentar: komentar || null,
           hitnost,
           doktorRezervisao: true,
           datumKreiranja: new Date(),
           idTipPregleda,
         },
         include: {
-          termin: true, 
+          termin: true,
           pacijent: { include: { korisnik: true }},
           doktor: { include: {korisnik: true }},
         },
       });
+
+      if (komentar) {
+        await tx.komentar.create({
+          data: {
+            idRezervacije: nova.id,
+            idKorisnik: korisnikPayload.id,
+            tekst: komentar,
+            jeDoktor: korisnikJeDoktor(korisnikPayload),
+            datumKreiranja: nova.datumKreiranja,
+          },
+        });
+      }
 
       await tx.rezervacijaSpecijalista.create({
         data: {
           idSpecijaliste: idDoktorTermina,
           idDoktorOpste: idDoktor,
           idRezervacije: nova.id,
-          razlogPregleda: komentar ?? "Upućivanje od strane doktora",
+          razlogPregleda: komentar || "Upućivanje od strane doktora",
         },
       });
       await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });

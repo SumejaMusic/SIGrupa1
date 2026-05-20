@@ -18,11 +18,11 @@ const router = Router();
 
 router.post("/", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "ADMINISTRATOR"), upload.single("pdf"), kreirajRezervaciju);
 router.get("/moje", autentifikuj, autorizuj("PACIJENT", "ADMINISTRATOR"), getRezervacijeZaPacijenta);
-router.get("/:id/komentari", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getKomentari);
+router.get("/:id/komentari", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getKomentari);
 router.get("/doktor/:doktorId", autentifikuj, autorizuj("DOKTOR", "ADMINISTRATOR"), getRezervacijeZaDoktora);
 router.patch("/:id/otkazi/pacijent", autentifikuj, autorizuj("PACIJENT", "ADMINISTRATOR"), otkaziRezervacijuPacijent);
 router.patch("/:id/otkazi/osoblje", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"), otkaziRezervacijuOsoblje);
-router.patch("/:id/komentar", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), dodajKomentar);
+router.patch("/:id/komentar", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), dodajKomentar);
 router.patch("/:id/trajanje", autentifikuj, autorizuj("DOKTOR", "ADMINISTRATOR"), promijeniTrajanje);
 
 export default router;

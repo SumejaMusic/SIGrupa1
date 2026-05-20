@@ -29,6 +29,7 @@ model Korisnik {
   osobljeProfile         MediciskoOsoblje?
   pacijentProfile        Pacijent?
   passwordResetTokens    PasswordResetToken[]
+  komentari              Komentar[]
 }
 
 model PasswordResetToken {
@@ -125,6 +126,7 @@ model Rezervacije {
   doktorOtkazao    Boolean                  @default(false)
   zavrseno         Boolean                  @default(false)
   historija        HistorijaPregleda?
+  komentari        Komentar[]
   podsjetnik       Podsjetnik?
   specijalista     RezervacijaSpecijalista?
   doktor           Doktor                   @relation(fields: [idDoktor], references: [id])
@@ -252,6 +254,20 @@ model TipPregleda {
   trajanjeMinuta Int
   zahtijevaSalu  Boolean       @default(false)
   rezervacije    Rezervacije[]
+}
+
+model Komentar {
+  id              Int         @id @default(autoincrement())
+  idRezervacije   Int
+  idKorisnik      Int?
+  tekst           String
+  jeDoktor        Boolean     @default(false)
+  datumKreiranja  DateTime    @default(now())
+  korisnik        Korisnik?   @relation(fields: [idKorisnik], references: [id], onDelete: SetNull)
+  rezervacija     Rezervacije @relation(fields: [idRezervacije], references: [id], onDelete: Cascade)
+
+  @@index([idRezervacije])
+  @@index([idKorisnik])
 }
 
 enum Uloga {

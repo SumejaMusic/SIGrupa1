@@ -4,6 +4,7 @@ import doctorRoutes from "./doctorRoutes.js";
 import tipPregledaRoutes from "./tipPregledaRoutes.js";
 import reservationRoutes from "./reservationRoutes.js";
 import odjelRoutes from "./odjelRoutes.js";
+import pregledRoutes from "./pregledRoutes.js";
 import { getNalaziZaPacijenta, getNalazPDF, getNalaziZaRezervaciju } from "../controllers/nalazController.js";
 import { getKomentari } from "../controllers/reservationController.js"; // ← dodaj
 import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientController.js";

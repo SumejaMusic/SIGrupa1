@@ -36,6 +36,14 @@ export const statusConfig = {
 
 export const getAge = (godiste: number) => new Date().getUTCFullYear() - godiste;
 
+const mapirajKomentar = (k: any, fallbackAutor: string): Komentar => ({
+  id: k.id,
+  tekst: k.tekst,
+  autor: k.autor ?? (k.korisnik ? `${k.korisnik.ime} ${k.korisnik.prezime}` : fallbackAutor),
+  datum: k.datum ?? isoUTCdatum(k.datumKreiranja ?? new Date().toISOString()),
+  jeDoktor: Boolean(k.jeDoktor),
+});
+
 export function mapirajRezervaciju(r: any): Termin {
   const vrijemeOd = r.termin.vrijeme;
   const trajanje = r.tipPregleda?.trajanjeMinuta ?? r.doktor?.trajanjePregleda ?? 30;
@@ -65,14 +73,17 @@ export function mapirajRezervaciju(r: any): Termin {
   if (r.datumOtkazivanja) status = "otkazan";
   else if (r.zavrseno) status = "zavrsen";
 
-  const komentari: Komentar[] = r.komentar ? [{
-    id: r.id * 1000,
-    tekst: r.komentar,
-    autor: `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`,
-    // ✅ UTC parsing datuma kreiranja komentara
-    datum: isoUTCdatum(r.datumKreiranja),
-    jeDoktor: r.doktorRezervisao,
-  }] : [];
+  const pacijentAutor = `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`;
+  const komentari: Komentar[] = Array.isArray(r.komentari) && r.komentari.length > 0
+    ? r.komentari.map((k: any) => mapirajKomentar(k, k.jeDoktor ? "Doktor" : pacijentAutor))
+    : r.komentar ? [{
+      id: r.id * 1000,
+      tekst: r.komentar,
+      autor: pacijentAutor,
+      // ✅ UTC parsing datuma kreiranja komentara
+      datum: isoUTCdatum(r.datumKreiranja),
+      jeDoktor: r.doktorRezervisao,
+    }] : [];
 
   return {
     id: r.id,

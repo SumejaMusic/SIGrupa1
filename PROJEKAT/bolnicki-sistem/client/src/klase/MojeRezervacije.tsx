@@ -50,6 +50,16 @@ const danasUTC = (): string => {
   return `${y}-${m}-${dan}`;
 };
 
+const mapirajKomentar = (k: any): Komentar => ({
+  id: k.id,
+  tekst: k.tekst,
+  autor: k.autor ?? (k.jeDoktor
+    ? (k.korisnik ? `${k.korisnik.ime} ${k.korisnik.prezime}` : "Doktor")
+    : "Vi"),
+  datum: k.datum ?? isoUTCdatum(k.datumKreiranja ?? new Date().toISOString()),
+  jeDoktor: Boolean(k.jeDoktor),
+});
+
 // ─── Sidebar ───────────────────────────────────────────────────────────────
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const location = useLocation();
@@ -169,7 +179,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
     if (!noviKomentar.trim()) return;
     setSaljemo(true);
     try {
-      await fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentar`, {
+      const res = await fetch(`${apiUrl}/api/rezervacije/${rez.id}/komentar`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -177,12 +187,14 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
         },
         body: JSON.stringify({ komentar: noviKomentar.trim() }),
       });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
       setKomentari(prev => [...prev, {
-        id: Date.now(),
-        tekst: noviKomentar.trim(),
-        autor: "Vi",
-        datum: danasUTC(),
-        jeDoktor: false,
+        id: data.id ?? Date.now(),
+        tekst: data.tekst ?? noviKomentar.trim(),
+        autor: data.autor ?? "Vi",
+        datum: data.datum ?? danasUTC(),
+        jeDoktor: data.jeDoktor ?? false,
       }]);
       setNoviKomentar("");
     } catch {
@@ -398,14 +410,15 @@ const MojeRezervacije = () => {
              : "kontrolni",
           komentar: r.komentar || "",
           soba: r.soba?.naziv || r.doktor?.soba?.naziv || "—",
-          komentari: r.komentar ? [{
-            id: r.id * 1000,
-            tekst: r.komentar,
-            autor: "Vi",
-            // ✅ UTC parsing datuma kreiranja
-            datum: isoUTCdatum(r.datumKreiranja),
-            jeDoktor: false,
-          }] : [],
+          komentari: Array.isArray(r.komentari) && r.komentari.length > 0
+            ? r.komentari.map(mapirajKomentar)
+            : r.komentar ? [{
+              id: r.id * 1000,
+              tekst: r.komentar,
+              autor: "Vi",
+              datum: isoUTCdatum(r.datumKreiranja),
+              jeDoktor: false,
+            }] : [],
           nalazi: [],
         }));
         setRezervacije(mapirano);

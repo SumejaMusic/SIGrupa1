@@ -610,7 +610,7 @@ export default function DoktorRezervacije() {
 
   const handleAddKomentar = async (terminId: number, tekst: string) => {
     try {
-      await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
+      const res = await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -618,9 +618,14 @@ export default function DoktorRezervacije() {
         },
         body: JSON.stringify({ komentar: tekst }),
       });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
       const noviK: Komentar = {
-        id: Date.now(), tekst, autor: "Dr.",
-        datum: danasUTC(), jeDoktor: true,
+        id: data.id ?? Date.now(),
+        tekst: data.tekst ?? tekst,
+        autor: data.autor ?? "Doktor",
+        datum: data.datum ?? danasUTC(),
+        jeDoktor: data.jeDoktor ?? true,
       };
       setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
       setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
