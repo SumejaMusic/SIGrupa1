@@ -104,7 +104,7 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | US-31 | Automatski podsjetnik za pacijente sa hroničnim bolestima | Prebačeno u naredni sprint |
 
 ---
-## DEC-007 — Prebacivanje osnovne funkcionalnosti admin panela u Sprint 8
+## DEC-007 — Prebacivanje osnovne funkcionalnosti admin panela u Sprint 9
 
 | Stavka | Opis |
 | :--- | :--- |
@@ -112,17 +112,17 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | **Datum** | 18.5.2026 |
 | **Kratak naziv odluke** | Prebacivanje dodjele korisničkih uloga iz Sprinta 10 u Sprint 8 |
 | **Opis problema ili pitanja** | RBAC mehanizam implementiran u Sprintu 7 nije moguće u potpunosti validirati bez mogućnosti dodjele uloga korisnicima. Role-based prijavljivanje i personalizovani paneli (doktor, medicinsko osoblje, pacijent, admin) ne mogu biti testirani u integraciji dok admin nema mogućnost dodjele i upravljanja ulogama putem admin panela. |
-| **Razmatrane opcije** | 1. Nastavak po originalnom planu — dodjela uloga ostaje u Sprintu 10 (Release 4).<br>2. Prebacivanje osnovne funkcionalnosti admin panela za dodjelu uloga u Sprint 8. |
-| **Odabrana opcija** | **Opcija 2:** Prebacivanje dodjele korisničkih uloga u Sprint 8 |
-| **Razlog izbora** | Dodjela uloga je direktna zavisnost za validaciju role-based toka prijave i personalizovanih panela koji su primarni cilj Sprinta 8. Bez ove funkcionalnosti, RBAC implementiran u Sprintu 7 ostaje nepotpun i netestiran u kontekstu ostatka sistema. Pomjeranjem ove funkcionalnosti smanjuje se tehnički dug i rizik integracije u kasnijim sprintovima. |
-| **Posljedice odluke** | User Storiji **US-02** i **US-33** (Admin panel — korisnički interfejs i backend funkcionalnosti) implementiraju se u Sprintu 8 u obimu koji pokriva dodjelu i upravljanje ulogama korisnika. Preostale admin panel funkcionalnosti ostaju planirane prema originalnom redoslijedu. Potrebno je ažurirati sprint backlog i plan implementacije za Sprint 8 i Sprint 10. |
+| **Razmatrane opcije** | 1. Nastavak po originalnom planu — dodjela uloga ostaje u Sprintu 10 (Release 4).<br>2. Prebacivanje osnovne funkcionalnosti admin panela za dodjelu uloga u Sprint 9. |
+| **Odabrana opcija** | **Opcija 2:** Prebacivanje dodjele korisničkih uloga u Sprint 9 |
+| **Razlog izbora** | Dodjela uloga je direktna zavisnost za validaciju role-based toka prijave i personalizovanih panela koji su primarni cilj Sprinta 9. Bez ove funkcionalnosti, RBAC implementiran u Sprintu 7 ostaje nepotpun i netestiran u kontekstu ostatka sistema. Pomjeranjem ove funkcionalnosti smanjuje se tehnički dug i rizik integracije u kasnijim sprintovima. |
+| **Posljedice odluke** | User Storiji **US-02** i **US-33** (Admin panel — korisnički interfejs i backend funkcionalnosti) implementiraju se u Sprintu 9 u obimu koji pokriva dodjelu i upravljanje ulogama korisnika. Preostale admin panel funkcionalnosti ostaju planirane prema originalnom redoslijedu. Potrebno je ažurirati sprint backlog i plan implementacije za Sprint 9 i Sprint 10. |
 | **Status odluke** | Aktivna |
 
 ### Povezani User Storiji
 
 | ID | Naziv | Status |
 | :--- | :--- | :--- |
-| US-02 | Admin panel — korisnički interfejs za administraciju (dodjela uloga) | Prebačeno u Sprint 8 |
-| US-33 | Admin panel — backend funkcionalnosti (dodjela uloga) | Prebačeno u Sprint 8 |
+| US-02 | Admin panel — korisnički interfejs za administraciju (dodjela uloga) | Prebačeno u Sprint 9 |
+| US-33 | Admin panel — backend funkcionalnosti (dodjela uloga) | Prebačeno u Sprint 9 |
 
 
