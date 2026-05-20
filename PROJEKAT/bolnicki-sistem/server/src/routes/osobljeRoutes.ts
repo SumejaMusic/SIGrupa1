@@ -22,7 +22,7 @@ import {
   getAllTermini,
   getSlobodniTerminiDoktora,
   getSlobodniDatumiDoktora,   // ← NOVO
-} from "../controllers/OsobljeController.js";
+} from "../controllers/osobljeController.js";
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizuj }  from "../middleware/autorizacija.js";
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { zavrsiPregled, getPregled } from "../controllers/Pregledcontroller.js";
+import { zavrsiPregled, getPregled } from "../controllers/pregledController.js";
 
 const router = Router();
 
