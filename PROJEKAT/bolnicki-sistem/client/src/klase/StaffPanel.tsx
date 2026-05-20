@@ -208,7 +208,7 @@ export default function StaffPanel() {
     return {
       total: todayApts.length,
       scheduled: todayApts.filter(a => getUIStatus(a) === 'ZAKAZAN').length,
-      urgent: todayApts.filter(a => a.hitnost === true || a.tipPregleda?.naziv === "Hitni pregled").length,
+      urgent: todayApts.filter(a => (a.hitnost === true || a.tipPregleda?.naziv === "Hitni pregled") && getUIStatus(a) === 'ZAKAZAN').length,
       completed: todayApts.filter(a => getUIStatus(a) === 'ZAVRSEN').length,
     };
   }, [appointments]);
