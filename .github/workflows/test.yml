@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [main, dev, osnoveRezervacije, fix/github-actions, feature/integrationTests]
+    branches: [main, dev, osnoveRezervacije, fix/github-actions, feature/integrationTests, fix/IntegrationTestovi]
   pull_request:
-    branches: [main, dev, osnoveRezervacije, fix/github-actions]
+    branches: [main, dev, osnoveRezervacije, fix/github-actions, fix/IntegrationTestovi]
 
 jobs:
   unit-tests:

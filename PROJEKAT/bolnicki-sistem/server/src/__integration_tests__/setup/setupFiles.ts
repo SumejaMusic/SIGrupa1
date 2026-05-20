@@ -1,6 +1,38 @@
-import { beforeEach, afterAll } from "vitest";
+import { beforeEach, afterAll, vi } from "vitest";
+import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { Redis } from "ioredis";
+
+(globalThis as any).pregledRoutes = Router();
+
+vi.mock("../../middleware/autorizacija.js", () => {
+  const autorizuj = (...uloge: any[]) => {
+    const dozvoljeneUloge = uloge.flat().filter(Boolean);
+
+    return (req: any, res: any, next: any) => {
+      const korisnik = req.korisnik;
+
+      if (!korisnik) {
+        res.status(401).json({ poruka: "Niste prijavljeni." });
+        return;
+      }
+
+      if (dozvoljeneUloge.length > 0 && !dozvoljeneUloge.includes(korisnik.uloga)) {
+        res.status(403).json({
+          poruka: "Nemate dozvolu za pristup ovom resursu.",
+        });
+        return;
+      }
+
+      next();
+    };
+  };
+
+  return {
+    autorizacija: autorizuj,
+    autorizuj,
+  };
+});
 
 const prisma = new PrismaClient({
   datasources: {
@@ -54,7 +86,7 @@ beforeEach(async () => {
   // ── Seed: Korisnik doktora ───────────────────────────────────
   const korisnikDoktor = await prisma.korisnik.upsert({
     where: { email: "doktor@test.com" },
-    update: {},
+    update: { emailVerifikovan: true },
     create: {
       id: 1,
       jmbg: "1234567890123",
@@ -64,6 +96,7 @@ beforeEach(async () => {
       datumRodjenja: new Date("1980-01-01"),
       email: "doktor@test.com",
       pristupnaSifra: "hash_placeholder",
+      emailVerifikovan: true,
       uloga: "DOKTOR",
     },
   });
@@ -99,7 +132,7 @@ beforeEach(async () => {
   // ID=2 je fiksirani — PACIJENT_KORISNIK_ID u testovima ovisi o ovome
   const korisnikPacijent = await prisma.korisnik.upsert({
     where: { email: "musicsumeja98@gmail.com" },
-    update: {},
+    update: { emailVerifikovan: true },
     create: {
       id: 2,
       jmbg: "876543210987",
@@ -109,6 +142,7 @@ beforeEach(async () => {
       datumRodjenja: new Date("1995-05-15"),
       email: "musicsumeja98@gmail.com",
       pristupnaSifra: "hash_placeholder",
+      emailVerifikovan: true,
       uloga: "PACIJENT",
     },
   });
@@ -145,7 +179,7 @@ beforeEach(async () => {
       {
         id: 1,
         idDoktor: doktor.id,
-        datum: new Date("2026-04-13"),
+        datum: new Date("2030-04-13"),
         vrijeme: 540, // 9:00
         opis: "Jutarnji termin",
         status: "SLOBODAN",
@@ -153,7 +187,7 @@ beforeEach(async () => {
       {
         id: 2,
         idDoktor: doktor.id,
-        datum: new Date("2026-04-13"),
+        datum: new Date("2030-04-13"),
         vrijeme: 570, // 9:30
         opis: "Drugi jutarnji termin",
         status: "SLOBODAN",

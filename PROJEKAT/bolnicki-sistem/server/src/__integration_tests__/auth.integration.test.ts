@@ -12,6 +12,7 @@ vi.mock("../emailService.js", () => ({
   posaljiPotvrdurezerv:      vi.fn().mockResolvedValue(undefined),
   posaljiResetPasswordEmail: vi.fn().mockResolvedValue(undefined),
   posaljiVerifikacioniKod:   vi.fn().mockResolvedValue(undefined),
+  posaljiOtkazivanjeRezerv:  vi.fn().mockResolvedValue(undefined),
 }));
 
 import { posaljiResetPasswordEmail, posaljiVerifikacioniKod } from "../emailService.js";
@@ -75,6 +76,7 @@ beforeAll(async () => {
       where: { id: { in: idsZaUpdate } },
       data: {
         pristupnaSifra:         noviHash,
+        emailVerifikovan:       true,
         nalogZakljucan:         false,
         brojNeuspjelihPrijava:  0,
         vrijemeZakljucavanja:   null,
