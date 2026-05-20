@@ -62,7 +62,7 @@ import {
   getSlobodniTerminiDoktora,
   getTipoviPregleda,
   getSlobodniDatumiDoktora,
-} from "../controllers/osobljeController.js";
+} from "../controllers/osobljeController.ts";
 
 import {
   getDnevniTerminiService,
@@ -85,7 +85,7 @@ import {
   getTipoviPregledaService,
   getSlobodniDatumiDoktoraService,
   getAllTerminiService,
-} from "../osobljeService.js";
+} from "../osobljeService.ts";
 
 // ─── Helper: kreira mock req/res/next ────────────────────────────────────────
 const mockReqRes = (params = {}, query = {}, body = {}, headers = {}) => ({

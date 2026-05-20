@@ -8,7 +8,7 @@ vi.mock("../lib/encryption.js", () => ({
   dekriptuj: vi.fn((v: string) => `decrypted:${v}`),
 }));
 
-import { zavrsiPregled, getPregled } from "../controllers/pregledController.js";
+import { zavrsiPregled, getPregled } from "../controllers/pregledController.ts";
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 const mockReqRes = (params = {}, body = {}) => ({
