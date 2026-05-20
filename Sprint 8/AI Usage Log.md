@@ -238,3 +238,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Ko je koristio alat** | Lamija Halilović |
 
 
+## Unos 014 - Testiranje
+
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 20. Maj 2026. |
+| **Sprint broj** |Sprint 8 |
+| **Alat koji je korišten** | Gemini (AI Collaborator) |
+| **Svrha korištenja** | Refaktorisanje, ispravljanje i refaktorizacija integracijskih testova (Vitest + Supertest) |
+| **Kratak opis zadatka ili upita** | Usklađivanje starih integracijskih testova za termine i rezervacije sa novim izmjenama u API backend kontrolerima (prelazak na snake_case ID-eve, nove rute za Redis lock i implementaciju JWT autorizacije). |
+| **Šta je AI predložio ili generisao** | Kompletna dva testna fajla (`rezervacije.test.ts` i `termini.test.ts`). AI je spojio staru logiku sa novim zahtjevima, zamijenio `camelCase` ključeve sa bazi prilagođenim `idPrefiks` ključevima (`idTermina`, `idPacijent`), te generisao JWT tokene za simulaciju različitih uloga (Pacijent, Doktor, Admin). |
+| **Šta je tim prihvatio** | * Zamjenu ručnog Redis postavljanja (`redis.setex`) sa stvarnim API pozivima ka rutama za zaključavanje.<br>* Strukturu payload-a koja koristi `idTermina`, `idDoktor`, `idPacijent`, i `idTipPregleda`.<br>* Nove rute `POST /api/termini/:id/lock` i `DELETE /api/termini/:id/unlock` umjesto starih `/zakljucaj` i `/oslobodi`. |
+| **Šta je tim izmijenio** | Prilagođene su `expect` provjere kako bi hvatale dinamičke odgovore kontrolera (npr. provjera `response.body.locked` i fleksibilno hvatanje grešaka kroz `message` ili `poruka`). |
+| **Šta je tim odbacio** | Odbačen je stari način slanja korisničkog ID-ja kroz custom header (`x-test-korisnik-id`) u korist standardnog `Authorization: Bearer <token>` i slanja `userId` unutar request body-ja. |
+| **Rizici, problemi ili greške** | * **Rizik od trke (Race Condition):** Tokom paralelnog izvršavanja testova, fiksni ID-evi poput `TERMIN_ID = 1` mogu izazvati konflikte ako baza nije izolovana.<br>* **Problem:** Inkonzistentnost u imenovanju polja (camelCase vs. snake_case/id-prefiksa) između frontend specifikacije i Prisma modela, što je uspješno riješeno ovim refaktorom. |
+| **Ko je koristio alat** |Mušić Sumeja |
+
