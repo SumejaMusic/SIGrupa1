@@ -24,14 +24,12 @@ import {
   getSlobodniDatumiDoktora,   // ← NOVO
 } from "../controllers/OsobljeController.js";
 import { autentifikuj } from "../middleware/authMiddleware.js";
-import { autorizuj }  from "../middleware/autorizacija.js";
-
+import { autorizacija } from "../middleware/autorizacija.js";
 const router = Router();
 
 const osobljeMW = [
   autentifikuj,
-  autorizuj("MEDICINSKO_OSOBLJE", "DOKTOR", "ADMINISTRATOR"), // Popravljeno: proslijeđeno direktno kao argumenti, ne kao niz
-];
+autorizacija(["MEDICINSKO_OSOBLJE", "DOKTOR"])];
 
 // ─── Termini ─────────────────────────────────────────────────────────────────
 
