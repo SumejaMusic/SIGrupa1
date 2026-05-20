@@ -255,3 +255,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | * **Rizik od trke (Race Condition):** Tokom paralelnog izvršavanja testova, fiksni ID-evi poput `TERMIN_ID = 1` mogu izazvati konflikte ako baza nije izolovana.<br>* **Problem:** Inkonzistentnost u imenovanju polja (camelCase vs. snake_case/id-prefiksa) između frontend specifikacije i Prisma modela, što je uspješno riješeno ovim refaktorom. |
 | **Ko je koristio alat** |Mušić Sumeja |
 
+## Unos 015 — Ispravka komentara rezervacije i zabrana rezervacije u prošlosti
+
+| Stavka | Opis |
+|:--- |:--- |
+| **Datum** | 20.5.2026. |
+| **Sprint broj** | Sprint 8 |
+| **Alat koji je korišten** | Codex 5.5 |
+| **Svrha korištenja** | Pomoć pri rješavanju merge konflikta i provjeri bugfix izmjena za komentare rezervacija i validaciju termina u prošlosti. |
+| **Kratak opis zadatka/upita** | Potrebno je bilo spojiti granu sa `main`, zadržati postojeće funkcionalnosti sa `main` grane, sačuvati bugfix izmjene i provjeriti da sve radi nakon merge-a. |
+| **Šta je AI predložio** | Rješavanje konflikata u frontend i backend fajlovima, zadržavanje novije strukture sa `main` grane i ponovno dodavanje bugfix logike za više komentara i blokiranje rezervacija u prošlosti. |
+| **Šta je tim prihvatio** | Zadržavanje strukture sa `main` grane, očuvanje bugfix logike za više komentara, dodavanje provjere za rezervacije u prošlosti i sigurnosna provjera pristupa komentarima rezervacije. |
+| **Šta je tim izmijenio** | Dodana je tabela `Komentar`, komentari se sada čuvaju kao zasebni zapisi, frontend prikazuje niz komentara, a backend koristi `prisma.komentar.create` umjesto prepisivanja postojećeg komentara. Dodana je validacija koja blokira rezervaciju termina u prošlosti. |
+| **Šta je tim odbacio** | Direktno mijenjanje `main` grane i odbacivanje postojećih funkcionalnosti sa `main` grane. |
+| **Uočeni rizici/problemi** | Merge konflikt je uključivao fajlove koji su refaktorisani na `main` grani, pa je bilo potrebno pažljivo spojiti postojeće funkcionalnosti sa novim bugfix izmjenama. |
+| **Korisnik alata** | Hamza Husović i Kenan Hatibović |
+```.
+
