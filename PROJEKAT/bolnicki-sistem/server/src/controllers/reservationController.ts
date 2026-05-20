@@ -623,7 +623,8 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
     const idTipPregleda = idTipPregledaRaw === undefined || idTipPregledaRaw === null
       ? null : Number(idTipPregledaRaw);
     const komentar = typeof req.body.komentar === "string" ? req.body.komentar.trim() : "";
-    const hitnost = req.body.hitnost ?? false;
+    const hitnost = req.body.hitnost === true || req.body.hitnost === "true";
+    const korisnikId = korisnikPayload.id;
 
     if (!Number.isInteger(idTermina) || idTermina <= 0) {
       res.status(400).json({ poruka: "Nedostaje ispravan idTermina." });
@@ -697,49 +698,94 @@ export const kreirajRezervacijuDoktor = async (req: Request, res: Response, next
       return;
     }
 
-    const rezervacija = await prisma.$transaction(async (tx) => {
-      const nova = await tx.rezervacije.create({
+    const lockKey = `termin:lock:${idTermina}`;
+    const lock = await redis.get(lockKey);
+    if (!lock || lock !== String(korisnikId)) {
+      res.status(409).json({ poruka: "Termin nije zaključan. Pokrenite proces ponovo." });
+      return;
+    }
+
+    const file = (req as any).file;
+    let nalazId: number | null = null;
+
+    if (file) {
+      const nalaz = await prisma.nalaz.create({
         data: {
-          idTermina,
-          idPacijent: idPacijent,
-          idDoktor: idDoktorTermina,
-          komentar: komentar || null,
-          hitnost,
-          doktorRezervisao: true,
-          datumKreiranja: new Date(),
-          idTipPregleda,
-        },
-        include: {
-          termin: true,
-          pacijent: { include: { korisnik: true }},
-          doktor: { include: {korisnik: true }},
+          naziv: file.originalname,
+          opis: komentar || null,
+          dokumentPDF: file.buffer,
         },
       });
+      nalazId = nalaz.id;
+    }
 
-      if (komentar) {
-        await tx.komentar.create({
+    let rezervacija;
+    try {
+      rezervacija = await prisma.$transaction(async (tx) => {
+        const nova = await tx.rezervacije.create({
           data: {
-            idRezervacije: nova.id,
-            idKorisnik: korisnikPayload.id,
-            tekst: komentar,
-            jeDoktor: korisnikJeDoktor(korisnikPayload),
-            datumKreiranja: nova.datumKreiranja,
+            idTermina,
+            idPacijent: idPacijent,
+            idDoktor: idDoktorTermina,
+            komentar: komentar || null,
+            hitnost,
+            doktorRezervisao: true,
+            datumKreiranja: new Date(),
+            idTipPregleda,
+          },
+          include: {
+            termin: true,
+            pacijent: { include: { korisnik: true }},
+            doktor: { include: {korisnik: true }},
           },
         });
-      }
 
-      await tx.rezervacijaSpecijalista.create({
-        data: {
-          idSpecijaliste: idDoktorTermina,
-          idDoktorOpste: idDoktor,
-          idRezervacije: nova.id,
-          razlogPregleda: komentar || "Upućivanje od strane doktora",
-        },
+        if (komentar) {
+          await tx.komentar.create({
+            data: {
+              idRezervacije: nova.id,
+              idKorisnik: korisnikPayload.id,
+              tekst: komentar,
+              jeDoktor: korisnikJeDoktor(korisnikPayload),
+              datumKreiranja: nova.datumKreiranja,
+            },
+          });
+        }
+
+        if (nalazId) {
+          await tx.historijaPregleda.create({
+            data: {
+              idPacijent: idPacijent,
+              idDoktor: idDoktorTermina,
+              idRezervacija: nova.id,
+              idNalaz: nalazId,
+              dijagnoza: "Nije unesena",
+              terapija: "Nije unesena",
+              biljeske: komentar || null,
+            },
+          });
+        }
+
+        await tx.rezervacijaSpecijalista.create({
+          data: {
+            idSpecijaliste: idDoktorTermina,
+            idDoktorOpste: idDoktor,
+            idRezervacije: nova.id,
+            razlogPregleda: komentar || "Upućivanje od strane doktora",
+          },
+        });
+        await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });
+        return nova;
       });
-      await tx.termin.update({ where: { id: idTermina }, data: { status: "ZAKAZAN" } });
-      return nova;
-    });
+    } catch (err) {
+      if (nalazId) {
+        await prisma.nalaz.delete({ where: { id: nalazId } }).catch(() => {});
+      }
+      throw err;
+    }
+
     io.emit("termin-azuriran", { doktorId: idDoktorTermina, terminId: idTermina });
+    await redis.del(lockKey);
 
     const doktorKorisnik = rezervacija.doktor.korisnik;
     const pacijentKorisnik = rezervacija.pacijent.korisnik;

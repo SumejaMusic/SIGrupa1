@@ -16,7 +16,6 @@ import osobljeRoutes from "./osobljeRoutes.js";
 
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizuj } from "../middleware/autorizacija.js";
-import pregledRoutes from "./pregledRoutes.js";
 
 
 const router = Router();

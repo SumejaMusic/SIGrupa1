@@ -40,7 +40,7 @@ import {
   mapirajRezervaciju
 } from "../utils/rezervacijeUtils";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL ?? "";
 
 // ─── Modal: Nova rezervacija ───────────────────────────────────────────────
 function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
@@ -48,13 +48,54 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   const [pretraga, setPretraga] = useState("");
   const [pacijenti, setPacijenti] = useState<Pacijent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [greska, setGreska] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/pacijenti`)
-      .then(res => res.json())
-      .then(data => setPacijenti(Array.isArray(data) ? data : []))
-      .catch(() => setPacijenti([]))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    const ucitajPacijente = async () => {
+      setLoading(true);
+      setGreska(null);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleExpiredSession();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${apiUrl}/api/pacijenti`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+
+        if (res.status === 401) {
+          handleExpiredSession();
+          return;
+        }
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(data?.poruka ?? "Greška pri učitavanju pacijenata.");
+        }
+
+        if (mounted) {
+          setPacijenti(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (mounted) {
+          setPacijenti([]);
+          setGreska(err instanceof Error ? err.message : "Greška pri učitavanju pacijenata.");
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    ucitajPacijente();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filtrirani = pacijenti.filter(p =>
@@ -100,6 +141,8 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
           <div className="overflow-y-auto space-y-1.5 max-h-72">
             {loading ? (
               <div className="text-center py-10 text-sm text-gray-400">Učitavanje pacijenata...</div>
+            ) : greska ? (
+              <div className="text-center py-10 text-sm text-red-500">{greska}</div>
             ) : filtrirani.length === 0 ? (
               <div className="text-center py-10 text-sm text-gray-400">Nije pronađen nijedan pacijent</div>
             ) : filtrirani.map(p => (
