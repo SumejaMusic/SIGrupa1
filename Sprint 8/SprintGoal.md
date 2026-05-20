@@ -4,11 +4,9 @@
 
 Cilj Sprinta 8 je završiti personalizovane panele za sve korisničke uloge u sistemu te osigurati da prijavljivanje u sistem bude u potpunosti vezano za dodijeljenu ulogu korisnika. Sprint obuhvata dovršetak doktor panela sa kompletnim tokom rada uključujući dijagnoze i pregled pacijenata, implementaciju panela medicinskog osoblja sa mogućnošću označavanja hitnosti termina, te osnovnu funkcionalnost admin panela za dodjelu i upravljanje ulogama korisnika.
 
-Na kraju sprinta, svaki korisnik sistema — pacijent, doktor, medicinsko osoblje i admin — prijavom dobija pristup isključivo funkcijama koje odgovaraju njegovoj ulozi (NFR-06, NFR-07). Admin može dodijeliti i promijeniti korisničke uloge putem admin panela, čime se zatvara krug koji je otvoren uvođenjem RBAC mehanizma u Sprintu 7. Doktor vidi dnevni i sedmični raspored te komentare uz termine, dok medicinsko osoblje upravlja aktivnim terminima i označava hitne slučajeve. Dashboard sistema se učitava u roku od 3 sekunde (NFR-15), a sve promjene rasporeda vidljive su u realnom vremenu (NFR-16). Uz razvoj novih funkcionalnosti, sprint obuhvata i rješavanje aktivnih bugova te integraciono testiranje svih implementiranih komponenti.
+Na kraju sprinta, svaki korisnik sistema — pacijent, doktor i  medicinsko osoblje  — prijavom dobija pristup isključivo funkcijama koje odgovaraju njegovoj ulozi (NFR-06, NFR-07). Doktor vidi dnevni i sedmični raspored te komentare uz termine, dok medicinsko osoblje upravlja aktivnim terminima i označava hitne slučajeve. Dashboard sistema se učitava u roku od 3 sekunde (NFR-15), a sve promjene rasporeda vidljive su u realnom vremenu (NFR-16). Uz razvoj novih funkcionalnosti, sprint obuhvata i rješavanje aktivnih bugova te integraciono testiranje svih implementiranih komponenti.
 
 Sprint se smatra uspješnim kada je kompletan tok — **login → prepoznavanje uloge → pristup odgovarajućem panelu** — funkcionalan za sve četiri uloge bez neautorizovanog pristupa i bez kritičnih grešaka u sistemu.
-
-> **Napomena o promjeni plana:** Osnovna funkcionalnost admin panela za dodjelu korisničkih uloga, prvobitno planirana kao dio Sprinta 10 (Release 4 — Autentikacija i sigurnost), premještena je u Sprint 8 kako bi RBAC mehanizam implementiran u Sprintu 7 bio u potpunosti operativan. Bez mogućnosti dodjele uloga korisnicima, role-based prijavljivanje i personalizovani paneli ne mogu biti validirani u integraciji. Ova odluka omogućava da Release 3 bude isporučen kao funkcionalno zaokružen inkrement.
 
 ---
 
@@ -21,10 +19,6 @@ Sprint se smatra uspješnim kada je kompletan tok — **login → prepoznavanje 
 | US-17 | Rezervacija termina kod specijaliste putem doktora porodične medicine |
 | US-24 | Panel medicinskog osoblja |
 | US-28 | Označavanje hitnosti prijavljenog termina |
-| US-02 | Admin panel — korisnički interfejs za administraciju (dodjela uloga) |
-| US-33 | Admin panel — backend funkcionalnosti (dodjela uloga) |
-
-> **Napomena:** US-01 (Historija pregleda korisnika), US-32 (Upload laboratorijskih nalaza od strane medicinskog osoblja) i US-23 (Vodič za korištenje stranice), koji su dio Release 3, planiraju se za Sprint 9. U ovom sprintu fokus je na funkcionalnostima koje su direktna zavisnost za validaciju role-based toka. Bugfixing i integraciono testiranje provode se kao prateće aktivnosti uz razvoj.
 
 ---
 
@@ -45,7 +39,6 @@ Sprint se smatra uspješnim kada je kompletan tok — **login → prepoznavanje 
 
 | ID | Opis |
 |----|------|
-| RR-11 | Neautorizovan pristup admin panelu ako RBAC nije ispravno implementiran |
 | RR-08 | Neovlašten pristup podacima usljed nepotpunog role-based routinga |
 | RR-17 | Doktor kasni ili nije dostupan — potrebno dinamičko ažuriranje rasporeda |
 | RR-19 | Hitni slučajevi prekidaju zakazane termine |
@@ -57,7 +50,6 @@ Sprint se smatra uspješnim kada je kompletan tok — **login → prepoznavanje 
 
 - [ ] Doktor panel je funkcionalan — pregled dnevnog i sedmičnog rasporeda, komentari uz termine i rezervacija kod specijaliste rade ispravno (US-11, US-21, US-17)
 - [ ] Panel medicinskog osoblja je implementiran sa mogućnošću upravljanja aktivnim terminima i označavanja hitnosti (US-24, US-28)
-- [ ] Admin može dodijeliti ili promijeniti ulogu korisnika (pacijent, doktor, medicinsko osoblje, admin) putem admin panela (US-02, US-33)
 - [ ] Nakon prijave, korisnik je automatski preusmjeren na panel koji odgovara njegovoj ulozi (NFR-06, NFR-07)
 - [ ] Samo ovlaštene uloge mogu pristupiti podacima pacijenta (NFR-01)
 - [ ] Dashboard se učitava u roku od maksimalno 3 sekunde (NFR-15)
