@@ -11,31 +11,28 @@ import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientCo
 import authRoutes from "./authRoutes.js";
 
 import osobljeRoutes from "./osobljeRoutes.js";
- 
-// Unutar router.use() bloka, pored ostalih ruta:
 
 import { autentifikuj } from "../middleware/authMiddleware.js";
-import { autorizuj } from "../middleware/autorizacija.js";
-import pregledRoutes from "./pregledRoutes.js";
+import { autorizacija } from "../middleware/autorizacija.js";
 
 
 const router = Router();
 
 router.use("/termini", terminRoutes);
-router.use("/osoblje",     osobljeRoutes);  
+router.use("/osoblje",     osobljeRoutes);
 router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
 router.use("/odjeli", odjelRoutes);
 router.use("/auth", authRoutes);
-router.use("/pregledi", pregledRoutes); 
+router.use("/pregledi", pregledRoutes);
 
-router.get("/nalazi/pacijent/:pacijentId", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getNalaziZaPacijenta);
-router.get("/nalazi/rezervacija/:rezervacijaId", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getNalaziZaRezervaciju);
-router.get("/nalazi/:id/pdf", autentifikuj, autorizuj("PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"), getNalazPDF);
+router.get("/nalazi/pacijent/:pacijentId", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), getNalaziZaPacijenta);
+router.get("/nalazi/rezervacija/:rezervacijaId", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), getNalaziZaRezervaciju);
+router.get("/nalazi/:id/pdf", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), getNalazPDF);
 
 // Pacijent rute
-router.get("/pacijenti", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"), getSviPacijenti);
-router.get("/historija/pacijent/:pacijentId", autentifikuj, autorizuj("DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"), getHistorijaPacijenta); // ← za historiju dolazaka
+router.get("/pacijenti", autentifikuj, autorizacija(["DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"]), getSviPacijenti);
+router.get("/historija/pacijent/:pacijentId", autentifikuj, autorizacija(["DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"]), getHistorijaPacijenta);
 
 export default router;

@@ -5,7 +5,7 @@ export default defineConfig({
     // Putanje do tvojih setup fajlova
     globalSetup: "./src/__integration_tests__/setup/globalSetup.ts",
     setupFiles: ["./src/__integration_tests__/setup/setupFiles.ts"],
-    include: ["./src/__integration_tests__/**/*.test.ts"],
+    include: ["src/__integration_tests__/**/*.ts"],
 
     // RJEŠENJE ZA GREŠKU:
     // Umjesto 'threads', koristi 'pool' za izolaciju procesa

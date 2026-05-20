@@ -8,10 +8,12 @@ const prisma = new PrismaClient({
   },
 });
 
-const redis = new Redis(process.env.REDIS_URL!, {
-  lazyConnect: false,
-  maxRetriesPerRequest: 3,
-});
+const redis = process.env.REDIS_URL
+  ? new Redis(process.env.REDIS_URL, {
+      lazyConnect: false,
+      maxRetriesPerRequest: 3,
+    })
+  : null;
 
 beforeEach(async () => {
   // Brisanje u ispravnom redoslijedu — djeca prije roditelja (FK constraints)
@@ -163,11 +165,13 @@ beforeEach(async () => {
   });
 
   // ── Redis: Očisti sve lockove ────────────────────────────────
-  const keys = await redis.keys("termin:lock:*");
-  if (keys.length > 0) await redis.del(...keys);
+  if (redis) {
+    const keys = await redis.keys("termin:lock:*");
+    if (keys.length > 0) await redis.del(...keys);
+  }
 });
 
 afterAll(async () => {
   await prisma.$disconnect();
-  await redis.quit();
+  if (redis) await redis.quit();
 });
