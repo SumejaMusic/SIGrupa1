@@ -32,6 +32,7 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | US-42 | Anonimna ocjena i komentar na rad doktora | Nova User Story |  | 5 |
 | US-43 | Profil korisnika – frontend + mapa | Nova User Story |  | 3 |
 |  |Admin panela - osonovne funkcionalnsoti  | || ||1|
+|/|Testiranje| | || |
 
 ---
 
