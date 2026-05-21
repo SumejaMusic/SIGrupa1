@@ -20,7 +20,6 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | US-28 | Označavanje hitnosti termina | User Story |  | 2 |
 | US-01 | Historija pregleda korisnika | User Story |  | 3 |
 | US-31-EXT | Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik | Proširenje US-31 |  | 3 |
-| US-36 | Role-based prijavljivanje na sistem | User Story |  | 5 |
 | BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
 | BUG-01 | Server | Bug fix |  | 2 |
 | BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix |  | 2 |
