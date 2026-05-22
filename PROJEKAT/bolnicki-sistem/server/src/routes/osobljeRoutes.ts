@@ -22,6 +22,7 @@ import {
   getAllTermini,
   getSlobodniTerminiDoktora,
   getSlobodniDatumiDoktora,   // ← NOVO
+  pomjeriTermin,
 } from "../controllers/OsobljeController.js";
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizacija } from "../middleware/autorizacija.js";
@@ -49,6 +50,7 @@ router.get("/termini/:id", osobljeMW, getDetaljiTermina);
 
 router.post("/termini",              osobljeMW, kreirajTerminZaPacijenta);
 router.patch("/termini/:id/otkazi",  osobljeMW, otkaziTermin);
+router.patch("/termini/:id/pomjeri", osobljeMW, pomjeriTermin);
 router.patch("/termini/:id/hitnost", osobljeMW, postaviHitnost);
 
 // ─── Dropdown liste ───────────────────────────────────────────────────────────

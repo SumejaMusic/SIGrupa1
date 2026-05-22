@@ -44,6 +44,22 @@ export const zavrsiPregled = async (
       return;
     }
 
+    const korisnikPayload = (req as any).korisnik;
+    if (rezervacija.idDoktor !== korisnikPayload.doktorId) {
+      res.status(403).json({ poruka: "Nemate dozvolu za završavanje ovog pregleda." });
+      return;
+    }
+
+    if (rezervacija.zavrseno) {
+      res.status(400).json({ poruka: "Pregled je već završen." });
+      return;
+    }
+
+    if (rezervacija.datumOtkazivanja) {
+      res.status(400).json({ poruka: "Nije moguće završiti otkazanu rezervaciju." });
+      return;
+    }
+
     const rezultat = await prisma.$transaction(async (tx) => {
       let historija;
 

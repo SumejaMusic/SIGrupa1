@@ -551,7 +551,7 @@ describe("otkaziRezervacijuOsoblje", () => {
     id: 1,
     idTermina: 5,
     idDoktor: 2,
-    termin: { id: 5, datum: new Date("2025-06-01") },
+    termin: { id: 5, datum: new Date("2027-06-01") },
     pacijent: { korisnik: { email: "test@test.com" } },
   };
 

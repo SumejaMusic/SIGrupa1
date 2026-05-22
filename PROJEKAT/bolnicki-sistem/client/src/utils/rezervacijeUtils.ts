@@ -117,5 +117,6 @@ export function mapirajRezervaciju(r: any): Termin {
     status,
     komentari,
     nalazi: [],
+    doktorId: r.idDoktor,
   };
 }
