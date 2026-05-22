@@ -430,15 +430,7 @@ export const otkaziRezervacijuPacijent = async (req: Request, res: Response, nex
     const sada = new Date();
     const vrijemeTermina = izracunajVrijemeTermina(rezervacija.termin);
 
-    if (vrijemeTermina.getTime() <= Date.now()) {
-      res.status(400).json({
-        poruka: "Nije moguće otkazati termin koji je već prošao."
-      });
-      return;
-    }
-
-    const razlikaSati =
-      (vrijemeTermina.getTime() - sada.getTime()) / (1000 * 60 * 60);
+    const razlikaSati = (vrijemeTermina.getTime() - sada.getTime()) / (1000 * 60 * 60);
 
     if (razlikaSati < 24) {
       res.status(400).json({
