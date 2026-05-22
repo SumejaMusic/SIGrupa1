@@ -23,7 +23,7 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
 | BUG-01 | Server | Bug fix |  | 2 |
 | BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix |  | 2 |
-| BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix |  | 1 |
+| BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix | Lamija Halilović  | 1 |
 | US-38 | Lista čekanja za termine | Nova User Story |  | 5 |
 | US-39 | Grafički prikaz zauzetosti specijalističkih kabineta | Nova User Story |  | 3 |
 | US-40 | Zahtjev za deaktivaciju i anonimizaciju profila | Nova User Story |  | 5 |
