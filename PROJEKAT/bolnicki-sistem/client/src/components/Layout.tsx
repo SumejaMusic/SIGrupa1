@@ -88,7 +88,7 @@ useEffect(() => {
     { icon: Home, label: "Naslovna", href: "/" },
     { icon: Calendar, label: "Moje Rezervacije", href: "/moje-rezervacije" },
     { icon: Stethoscope, label: "Odjeli", href: "/step1-odjeli" },
-    { icon: User, label: "Profil", href: "#" },
+    { icon: User, label: "Profil", href: "/profil" },
   ];
 
   return (

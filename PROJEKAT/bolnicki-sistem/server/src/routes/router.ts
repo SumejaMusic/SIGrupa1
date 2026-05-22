@@ -10,6 +10,7 @@ import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientCo
 import authRoutes from "./authRoutes.js";
 import pregledRoutes from "./pregledRoutes.js";
 import osobljeRoutes from "./osobljeRoutes.js";
+import userRoutes from "./userRoutes.js";
  
 // Unutar router.use() bloka, pored ostalih ruta:
 
@@ -24,8 +25,9 @@ router.use("/osoblje",     osobljeRoutes);
 router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
-router.use("/odjeli", odjelRoutes);autorizacija
+router.use("/odjeli", odjelRoutes);
 router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
 router.use("/pregledi", pregledRoutes); 
 
 router.get("/nalazi/pacijent/:pacijentId", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), getNalaziZaPacijenta);
