@@ -142,24 +142,27 @@ export default function StaffPanel() {
     setTimeout(() => setNotification(null), 3500);
   };
 
-  useEffect(() => {
-    async function fetchTermini() {
-      try {
-        const res = await fetch('/api/osoblje/termini/svi', {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        });
-        if (!res.ok) throw new Error('Greška na serveru');
-        const data = await res.json();
-        setAppointments(data);
-      } catch (err) {
-        console.error(err);
-        showNotif('Neuspješno učitavanje termina s backenda.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTermini();
-  }, []);
+  const fetchTermini = async () => {
+  try {
+    const res = await fetch('/api/osoblje/termini/svi', {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    if (!res.ok) throw new Error('Greška na serveru');
+
+    const data = await res.json();
+    setAppointments(data);
+  } catch (err) {
+    console.error(err);
+    showNotif('Neuspješno učitavanje termina s backenda.');
+  } finally {
+    setLoading(false);
+  }
+}; 
+
+useEffect(() => {
+  fetchTermini();
+}, []);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${getToken()}` };
@@ -456,7 +459,11 @@ export default function StaffPanel() {
       {cancelTarget && (
         <CancelModal
           appointment={cancelTarget}
-          onConfirm={confirmCancel}
+          onConfirm={async () => {
+            await fetchTermini();
+            setCancelTarget(null);
+          }}
+          onCancelConfirm={confirmCancel}
           onClose={() => setCancelTarget(null)}
         />
       )}

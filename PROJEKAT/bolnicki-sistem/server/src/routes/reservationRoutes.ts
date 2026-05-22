@@ -11,7 +11,8 @@ import {
   dodajKomentar,
   promijeniTrajanje,
   getKomentari,
-  kreirajRezervacijuDoktor
+  kreirajRezervacijuDoktor,
+  pomjeriRezervaciju
 } from "../controllers/reservationController.js";
 
 const router = Router();
@@ -25,5 +26,6 @@ router.patch("/:id/otkazi/pacijent", autentifikuj, autorizacija(["PACIJENT", "AD
 router.patch("/:id/otkazi/osoblje", autentifikuj, autorizacija(["DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"]), otkaziRezervacijuOsoblje);
 router.patch("/:id/komentar", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), dodajKomentar);
 router.patch("/:id/trajanje", autentifikuj, autorizacija(["DOKTOR", "ADMINISTRATOR"]), promijeniTrajanje);
+router.post("/doktor/pomjeri", autentifikuj, autorizacija(["DOKTOR"]), pomjeriRezervaciju);
 
 export default router;

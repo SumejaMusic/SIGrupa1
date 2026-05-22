@@ -79,6 +79,98 @@ export const getDoktorById = async (
 };
 
 // ─────────────────────────────────────────────
+// POST /api/doktori/rezervacije/:id/komentar
+// Doktor dodaje komentar na rezervaciju
+// ─────────────────────────────────────────────
+export const dodajKomentarDoktor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    if (korisnikPayload.uloga !== "DOKTOR") {
+      res.status(403).json({ poruka: "Samo doktori mogu koristiti ovu rutu." });
+      return;
+    }
+
+    const tekst = typeof req.body.komentar === "string" ? req.body.komentar.trim() : "";
+    if (!tekst) {
+      res.status(400).json({ poruka: "Komentar ne može biti prazan." });
+      return;
+    }
+
+    const idRezervacije = Number(req.params.id);
+    if (!Number.isInteger(idRezervacije) || idRezervacije <= 0) {
+      res.status(400).json({ poruka: "Nevažeći ID rezervacije." });
+      return;
+    }
+
+    const rezervacija = await prisma.rezervacije.findUnique({
+      where: { id: idRezervacije },
+      select: {
+        id: true,
+        idDoktor: true,
+        datumOtkazivanja: true,
+        zavrseno: true,
+        doktor: { select: { idKorisnik: true } },
+        pacijent: { select: { idKorisnik: true } },
+      },
+    });
+
+    if (!rezervacija) {
+      res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    if (rezervacija.datumOtkazivanja) {
+      res.status(400).json({ poruka: "Nije moguće komentarisati otkazanu rezervaciju." });
+      return;
+    }
+
+    if (rezervacija.zavrseno) {
+      res.status(400).json({ poruka: "Nije moguće komentarisati završenu rezervaciju." });
+      return;
+    }
+
+    if (rezervacija.doktor?.idKorisnik !== korisnikPayload.id) {
+      res.status(403).json({ poruka: "Nemate dozvolu za komentarisanje ove rezervacije." });
+      return;
+    }
+
+    const komentar = await prisma.komentar.create({
+      data: {
+        idRezervacije: rezervacija.id,
+        idKorisnik: korisnikPayload.id,
+        tekst,
+        jeDoktor: true,
+        datumKreiranja: new Date(),
+      },
+      include: {
+        korisnik: { select: { ime: true, prezime: true } },
+      },
+    });
+
+    res.status(201).json({
+      id: komentar.id,
+      tekst: komentar.tekst,
+      autor: komentar.korisnik
+        ? `${komentar.korisnik.ime} ${komentar.korisnik.prezime}`
+        : "Doktor",
+      datum: komentar.datumKreiranja.toISOString().split("T")[0],
+      jeDoktor: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─────────────────────────────────────────────
 // GET /api/doktori/:id/raspored
 // US-05, US-06 — Raspored doktora po danima
 // Pravilo 5.11: samo aktivni rasporedi

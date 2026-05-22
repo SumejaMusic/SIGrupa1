@@ -36,4 +36,5 @@ export interface Termin {
   status: StatusTermina;
   komentari: Komentar[];
   nalazi: Nalaz[];
+  doktorId?: number;
 }
