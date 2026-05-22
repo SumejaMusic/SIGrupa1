@@ -16,6 +16,18 @@ export const danasUTC = (): string => {
   return `${y}-${m}-${dan}`;
 };
 
+/**
+ * Formatira datum za prikaz korisniku u dd/mm/yyyy formatu.
+ * Prihvata ISO string (yyyy-mm-dd) ili puni ISO 8601 string.
+ */
+export const formatDatumPrikaz = (datumStr: string): string => {
+  if (!datumStr) return '';
+  // Ako je već u formatu yyyy-mm-dd, jednostavno presloži
+  const isoDate = datumStr.length > 10 ? isoUTCdatum(datumStr) : datumStr;
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}/${y}`;
+};
+
 export const formatV = (v: number) => {
   const h = Math.floor(v / 60);
   const m = v % 60;

@@ -41,6 +41,14 @@ const isoUTCdatum = (isoStr: string): string => {
   return `${y}-${m}-${dan}`;
 };
 
+// ✅ Formatira datum za prikaz korisniku u dd/mm/yyyy formatu
+const formatDatumPrikaz = (datumStr: string): string => {
+  if (!datumStr) return '';
+  const isoDate = datumStr.length > 10 ? isoUTCdatum(datumStr) : datumStr;
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}/${y}`;
+};
+
 // ✅ Danas u UTC formatu
 const danasUTC = (): string => {
   const d = new Date();
@@ -220,7 +228,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-gray-900">Detalji rezervacije</h3>
-            <p className="text-xs text-gray-500">{rez.datum} · {formatV(rez.vrijeme)}</p>
+            <p className="text-xs text-gray-500">{formatDatumPrikaz(rez.datum)} · {formatV(rez.vrijeme)}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
             <X size={18} className="text-gray-500" />
@@ -253,7 +261,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3">
                   <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><CalendarIcon size={11} /> Datum</div>
-                  <div className="text-sm font-bold text-gray-900">{rez.datum}</div>
+                  <div className="text-sm font-bold text-gray-900">{formatDatumPrikaz(rez.datum)}</div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3">
                   <div className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><User size={11} /> Doktor</div>
@@ -294,7 +302,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
                       <span className={`text-xs font-semibold ${k.jeDoktor ? "text-blue-700" : "text-gray-700"}`}>
                         {k.jeDoktor ? "🩺 " : "👤 "}{k.autor}
                       </span>
-                      <span className="text-xs text-gray-400">{k.datum}</span>
+                      <span className="text-xs text-gray-400">{formatDatumPrikaz(k.datum)}</span>
                     </div>
                     <p className="text-sm text-gray-700 leading-relaxed">{k.tekst}</p>
                   </div>
@@ -343,7 +351,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl }: {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-gray-800 truncate">{n.naziv}</div>
-                      <div className="text-xs text-gray-400">{n.datum}</div>
+                      <div className="text-xs text-gray-400">{formatDatumPrikaz(n.datum)}</div>
                     </div>
                     <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
                   </a>

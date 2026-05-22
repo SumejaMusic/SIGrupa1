@@ -82,7 +82,7 @@ const formatToBOSDate = (dateString: string): string => {
   const month = String(d.getUTCMonth() + 1).padStart(2, '0');
   const year = d.getUTCFullYear();
   
-  return `${day}.${month}.${year}.`;
+  return `${day}/${month}/${year}`;
 };
 interface Props {
   appointment: Appointment;
@@ -250,7 +250,7 @@ const formattedDob = formatToBOSDate(apt.pacijent.korisnik.datumRodjenja);
             {nalaz.naziv}
           </p>
           <p className="text-xs text-gray-500">
-            Učitan: {nalaz.vrijemeNalaza.split('T')[0]}
+            Učitan: {formatToBOSDate(nalaz.vrijemeNalaza)}
             {nalaz.opis ? ` · ${nalaz.opis}` : ''}
           </p>
         </div>
