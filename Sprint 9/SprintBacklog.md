@@ -16,13 +16,13 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 |:---|:------|:----|:----------|:-------------|
 | US-24 | Panel medicinskog osoblja | User Story |  | 5 |
 | US-32 | Upload i evidencija laboratorijskih nalaza | User Story |  | 3 |
-| US-11 | Dashboard za doktora – kompletna logika | User Story |  | 5 |
+| US-11 | Dashboard za doktora – kompletna logika | User Story | Merjem Milišić | 5 |
 | US-28 | Označavanje hitnosti termina | User Story |  | 2 |
 | US-01 | Historija pregleda korisnika | User Story |  | 3 |
 | US-31-EXT | Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik | Proširenje US-31 |  | 3 |
 | BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
 | BUG-01 | Server | Bug fix |  | 2 |
-| BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix |  | 2 |
+| BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix | Merjem Milišić | 2 |
 | BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix | Lamija Halilović  | 1 |
 | US-38 | Lista čekanja za termine | Nova User Story |  | 5 |
 | US-39 | Grafički prikaz zauzetosti specijalističkih kabineta | Nova User Story |  | 3 |
