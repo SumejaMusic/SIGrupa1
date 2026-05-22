@@ -6,8 +6,10 @@
     "@vitejs/plugin-react": "^6.0.1"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "lucide-react": "^1.16.0",
     "nodemailer": "^8.0.7",
+    "prisma": "^5.22.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",

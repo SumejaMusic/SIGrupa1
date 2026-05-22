@@ -35,6 +35,7 @@ import type {
 import {
   danasUTC,
   formatV,
+  formatDatumPrikaz,
   tipConfig,
   getAge,
   mapirajRezervaciju
@@ -218,7 +219,7 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
               <div className="bg-orange-50 rounded-xl border border-orange-100 p-3">
                 <div className="text-xs text-orange-600 font-semibold mb-1">Termin</div>
                 <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
-                <div className="text-xs text-gray-500">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
+                <div className="text-xs text-gray-500">{formatDatumPrikaz(termin.datum)} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <span className="text-xs text-gray-500">Trenutna dužina:</span>
                   <span className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">{trenutnaDuzina} min</span>
@@ -293,7 +294,7 @@ function ModalOtkaziTermin({ termin, onClose, onConfirm }: {
           <p className="text-sm text-gray-500 mb-4">Da li ste sigurni da želite otkazati ovaj termin?</p>
           <div className={`w-full rounded-xl p-3 mb-5 border ${tc.border} ${tc.bg}`}>
             <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
+            <div className="text-xs text-gray-500 mt-0.5">{formatDatumPrikaz(termin.datum)} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1.5 inline-block ${tc.badge}`}>{tc.label}</span>
           </div>
           <p className="text-xs text-gray-400 mb-5">Pacijent će biti automatski obaviješten putem emaila.</p>
@@ -391,7 +392,7 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
             <div>
               <h2 className="text-base font-bold text-white">Završi pregled</h2>
               <p className="text-xs text-green-100">
-                {termin.pacijent.ime} {termin.pacijent.prezime} · {termin.datum}
+                {termin.pacijent.ime} {termin.pacijent.prezime} · {formatDatumPrikaz(termin.datum)}
               </p>
             </div>
           </div>
@@ -709,7 +710,7 @@ export default function DoktorRezervacije() {
 
   const navLabel = () => {
     if (prikaz === "dnevni") return formatDatum(selectedDatum);
-    if (prikaz === "sedmicni") return `Sedmica: ${weekDays[0]} – ${weekDays[6]}`;
+    if (prikaz === "sedmicni") return `Sedmica: ${formatDatumPrikaz(weekDays[0])} – ${formatDatumPrikaz(weekDays[6])}`;
     return new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
   };
 

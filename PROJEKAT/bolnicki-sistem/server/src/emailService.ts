@@ -21,6 +21,16 @@ function formatVrijeme(v: number): string {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
+/**
+ * Formatira datum za email obavijesti u dd/mm/yyyy formatu.
+ */
+function formatDatumEmail(datum: Date): string {
+  const d = String(datum.getUTCDate()).padStart(2, '0');
+  const m = String(datum.getUTCMonth() + 1).padStart(2, '0');
+  const y = datum.getUTCFullYear();
+  return `${d}/${m}/${y}`;
+}
+
 function getResend(): Resend {
   if (!process.env.RESEND_API_KEY) {
     throw new Error('Missing API key. Pass it to the constructor `new Resend("re_123")`');
@@ -39,9 +49,7 @@ export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Prom
     tipPregleda, komentar, hitnost,
   } = podaci;
 
-  const formatiraniDatum = datum.toLocaleDateString('bs-BA', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const formatiraniDatum = formatDatumEmail(datum);
 
   const result = await getResend().emails.send({
     from: FROM_EMAIL,
@@ -236,9 +244,7 @@ export async function posaljiOtkazivanjeRezerv(podaci: OtkazivanjeEmailPodaci): 
     datum, vrijeme, rezervacijaId,
   } = podaci;
 
-  const formatiraniDatum = datum.toLocaleDateString('bs-BA', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const formatiraniDatum = formatDatumEmail(datum);
 
   const result = await getResend().emails.send({
     from: FROM_EMAIL,

@@ -20,6 +20,7 @@ import type { Termin, Nalaz } from "../types";
 import {
   isoUTCdatum,
   formatV,
+  formatDatumPrikaz,
   getAge,
   tipConfig,
   statusConfig
@@ -123,7 +124,7 @@ export function TerminDetalji({
               <Clock size={13} />
               <span>{formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</span>
               <span>·</span>
-              <span>{termin.datum}</span>
+              <span>{formatDatumPrikaz(termin.datum)}</span>
             </div>
           </div>
 
@@ -228,7 +229,7 @@ export function TerminDetalji({
                       {k.jeDoktor ? "🩺 " : "👤 "}
                       {k.autor}
                     </span>
-                    <span className="text-xs text-gray-400">{k.datum}</span>
+                    <span className="text-xs text-gray-400">{formatDatumPrikaz(k.datum)}</span>
                   </div>
                   <p className="text-sm text-gray-700 leading-relaxed">{k.tekst}</p>
                 </div>
@@ -291,7 +292,7 @@ export function TerminDetalji({
 
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-800 truncate">{n.naziv}</div>
-                    <div className="text-xs text-gray-400">{n.datum}</div>
+                    <div className="text-xs text-gray-400">{formatDatumPrikaz(n.datum)}</div>
                   </div>
 
                   <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
@@ -323,7 +324,7 @@ export function TerminDetalji({
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-700">
-                      {new Date(isoUTCdatum(h.datumPregleda) + "T12:00:00Z").toLocaleDateString("bs-BA")}
+                      {formatDatumPrikaz(h.datumPregleda)}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400">
@@ -364,7 +365,7 @@ export function TerminDetalji({
                       <div>
                         <h2 className="text-base font-bold text-white">Detalji pregleda</h2>
                         <p className="text-xs text-blue-200">
-                          {new Date(isoUTCdatum(selectedHistorija.datumPregleda) + "T12:00:00Z").toLocaleDateString("bs-BA")}
+                          {formatDatumPrikaz(selectedHistorija.datumPregleda)}
                           {" · "}
                           {formatV(selectedHistorija.rezervacija?.termin?.vrijeme)}
                         </p>
