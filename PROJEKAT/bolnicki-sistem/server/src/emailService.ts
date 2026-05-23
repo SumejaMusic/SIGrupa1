@@ -38,7 +38,7 @@ function getResend(): Resend {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const TO_EMAIL = 'musicsumeja98@gmail.com';
+const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'musicsumeja98@gmail.com';
 const FROM_EMAIL = 'onboarding@resend.dev';
 
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
@@ -321,7 +321,7 @@ export async function posaljiPozivZaOcjenu(podaci: PozivZaOcjenuEmailPodaci): Pr
   } = podaci;
 
   const frontendUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
-  const reviewLink = `${frontendUrl}/moje-rezervacije`;
+  const reviewLink = `${frontendUrl}/moje-rezervacije?review=${rezervacijaId}`;
   const formatiraniDatum = formatDatumEmail(datum);
 
   const result = await getResend().emails.send({

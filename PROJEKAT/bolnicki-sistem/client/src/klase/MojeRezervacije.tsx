@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, User, Calendar, MapPin, X, FileText, MessageSquare, ExternalLink, Star, CheckCircle } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { handleExpiredSession } from "../utils/auth";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
 
@@ -269,12 +269,14 @@ function ModalOcjenaDoktora({ rez, onClose, onSubmit }: {
 }
 
 // ─── Modal Detalji ─────────────────────────────────────────────────────────
-function DetaljiModal({ rez, onClose, onCancel, apiUrl, onReviewSubmit }: {
+function DetaljiModal({ rez, onClose, onCancel, apiUrl, onReviewSubmit, initialReviewOpen, onAutoReviewHandled }: {
   rez: Rezervacija;
   onClose: () => void;
   onCancel: (id: number) => void;
   apiUrl: string;
   onReviewSubmit: (id: number, rating: number, comment: string) => Promise<OcjenaDoktora | null>;
+  initialReviewOpen?: boolean;
+  onAutoReviewHandled?: () => void;
 }) {
   const [tab, setTab] = useState<"info" | "komentari" | "nalazi">("info");
   const [nalazi, setNalazi] = useState<Nalaz[]>([]);
@@ -372,6 +374,12 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl, onReviewSubmit }: {
 
   const borderColor = rez.tip === "hitni" ? "border-red-500" : rez.tip === "preventivni" ? "border-green-500" : "border-blue-500";
   const mozeOcijeniti = rez.zavrseno && !review;
+
+  useEffect(() => {
+    if (!initialReviewOpen) return;
+    if (mozeOcijeniti) setShowReviewModal(true);
+    onAutoReviewHandled?.();
+  }, [initialReviewOpen, mozeOcijeniti, onAutoReviewHandled]);
 
   const handleSubmitReview = async (rating: number, comment: string) => {
     const novaOcjena = await onReviewSubmit(rez.id, rating, comment);
@@ -588,9 +596,12 @@ const MojeRezervacije = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(danasUTC());
   const [detaljiRez, setDetaljiRez] = useState<Rezervacija | null>(null);
+  const [reviewTargetId, setReviewTargetId] = useState<number | null>(null);
   const [rezervacije, setRezervacije] = useState<Rezervacija[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const apiUrl = import.meta.env.VITE_API_URL;
+  const reviewParam = searchParams.get("review");
 
   useEffect(() => {
     setLoading(true);
@@ -643,6 +654,30 @@ const MojeRezervacije = () => {
       .catch(() => setRezervacije([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading || rezervacije.length === 0 || !reviewParam) return;
+
+    const rezervacijaId = Number(reviewParam);
+    if (!Number.isInteger(rezervacijaId) || rezervacijaId <= 0) return;
+
+    const rezervacija = rezervacije.find(r => r.id === rezervacijaId);
+    if (!rezervacija) return;
+
+    const [year, month] = rezervacija.datum.split("-").map(Number);
+    setCurrentDate(new Date(year, month - 1, 1));
+    setSelectedDate(rezervacija.datum);
+    setReviewTargetId(rezervacija.id);
+    setDetaljiRez(rezervacija);
+  }, [loading, rezervacije, reviewParam]);
+
+  const clearReviewTarget = () => {
+    setReviewTargetId(null);
+    if (!searchParams.has("review")) return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("review");
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const tipStyle = {
     hitni: { dot: "bg-red-500", text: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "Hitni", badge: "bg-red-100 text-red-700" },
@@ -891,7 +926,7 @@ const MojeRezervacije = () => {
                                 </button>
                               )}
                               {res.zavrseno && !res.review && (
-                                <button onClick={() => setDetaljiRez(res)} className="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 transition-all flex items-center justify-center gap-2">
+                                <button onClick={() => { setReviewTargetId(res.id); setDetaljiRez(res); }} className="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 transition-all flex items-center justify-center gap-2">
                                   <Star size={15} /> Ocijeni
                                 </button>
                               )}
@@ -924,6 +959,8 @@ const MojeRezervacije = () => {
           onCancel={handleCancel}
           apiUrl={apiUrl}
           onReviewSubmit={handleReviewSubmit}
+          initialReviewOpen={reviewTargetId === detaljiRez.id}
+          onAutoReviewHandled={clearReviewTarget}
         />
       )}
     </div>
