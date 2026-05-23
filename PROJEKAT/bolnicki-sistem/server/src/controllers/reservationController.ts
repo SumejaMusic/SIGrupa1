@@ -4,7 +4,7 @@ import { redis } from "../lib/redis.js";
 import { posaljiPotvrdurezerv, posaljiOtkazivanjeRezerv } from "../emailService.js";
 import { io } from "../app.js";
 import multer from "multer";
-
+import { obradiOtkazivanje } from "../listaCekanjaService.js";
 export const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -444,8 +444,11 @@ export const otkaziRezervacijuPacijent = async (req: Request, res: Response, nex
       await tx.termin.update({ where: { id: rezervacija.idTermina }, data: { status: "SLOBODAN" } });
     });
 
-    io.emit("termin-azuriran", { doktorId: rezervacija.idDoktor, terminId: rezervacija.idTermina });
+    console.log("🔄 Pozivam obradiOtkazivanje za termin:", rezervacija.idTermina);
+await obradiOtkazivanje(rezervacija.idTermina);
+console.log("✅ obradiOtkazivanje završena");
     res.json({ poruka: "Rezervacija uspješno otkazana." });
+    
   } catch (err) {
     next(err);
   }
@@ -498,8 +501,11 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
     } catch (emailErr) {
       console.error("❌ Email otkazivanja NIJE poslan:", emailErr);
     }
-
-    res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
+    console.log("🔄 Pozivam obradiOtkazivanje za termin:", rezervacija.idTermina);
+await obradiOtkazivanje(rezervacija.idTermina);
+console.log("✅ obradiOtkazivanje završena");
+    res.json({ poruka: "Rezervacija uspješno otkazana." });
+   
   } catch (err) {
     next(err);
   }

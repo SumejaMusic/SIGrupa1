@@ -43,7 +43,6 @@ function Step4Termini() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
 
-  // Doctor mode — detektuje se iz JWT tokena, ne iz localStorage
   const [isDoctorMode, setIsDoctorMode] = useState(false);
   const [pacijenti, setPacijenti] = useState<Pacijent[]>([]);
   const [odabraniPacijentId, setOdabraniPacijentId] = useState<number | null>(null);
@@ -58,6 +57,47 @@ function Step4Termini() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1));
   const [charCount, setCharCount] = useState(0);
+
+  const [zauzetiDani, setZauzetiDani] = useState<Set<string>>(new Set());
+  const [waitlistDatum, setWaitlistDatum] = useState<Date | null>(null);
+  const [waitlistUspjeh, setWaitlistUspjeh] = useState(false);
+
+  // year i month na nivou komponente — mora biti prije svih useEffect-ova i handlera
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const handleWaitlist = async (dan: number) => {
+    const doktorId = localStorage.getItem("selectedDoktor");
+    const token = localStorage.getItem("token");
+
+    const datum = new Date(Date.UTC(year, month, dan));
+    const datumISO = datum.toISOString().split("T")[0];
+
+    try {
+      const res = await fetch(`${apiUrl}/api/lista-cekanja`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          doktorId: Number(doktorId),
+          zeleniDatum: datumISO,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.poruka || "Greška pri prijavi na listu čekanja.");
+        return;
+      }
+
+      setWaitlistDatum(datum);
+      setWaitlistUspjeh(true);
+    } catch {
+      alert("Greška pri prijavi na listu čekanja.");
+    }
+  };
 
   // Detektuj da li je doktor prijavljen iz tokena
   useEffect(() => {
@@ -77,7 +117,6 @@ function Step4Termini() {
           } catch {}
         }
 
-        // Učitaj listu pacijenata za dropdown
         fetch(`${apiUrl}/api/pacijenti`, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -88,7 +127,7 @@ function Step4Termini() {
     } catch {}
   }, []);
 
-  // Fetch termina + WebSocket
+  // Fetch termina + zauzeti dani + WebSocket
   useEffect(() => {
     const doktorId = localStorage.getItem("selectedDoktor");
     if (!doktorId) {
@@ -103,19 +142,30 @@ function Step4Termini() {
         .catch(() => {});
     };
 
+    const fetchZauzetiDani = () => {
+      fetch(
+        `${apiUrl}/api/termini/zauzeti-dani?doktorId=${doktorId}&mjesec=${month + 1}&godina=${year}`
+      )
+        .then((res) => res.json())
+        .then((data: { zauzetiDani: string[] }) =>
+          setZauzetiDani(new Set(data.zauzetiDani))
+        )
+        .catch(() => {});
+    };
+
     fetchTermini();
+    fetchZauzetiDani();
 
     const socket = socketIO(apiUrl);
     socket.on("termin-azuriran", (data) => {
       if (String(data.doktorId) === doktorId) {
         fetchTermini();
+        fetchZauzetiDani();
       }
     });
 
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+    return () => { socket.disconnect(); };
+  }, [year, month]);
 
   // Countdown timer
   useEffect(() => {
@@ -249,7 +299,6 @@ function Step4Termini() {
         return;
       }
 
-      // Pronađi podatke odabranog pacijenta za step5
       const storedDoctorPatient = (() => {
         try {
           const stored = localStorage.getItem("doctorPatient");
@@ -287,8 +336,6 @@ function Step4Termini() {
     setSelectedTermin(null);
   };
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -297,30 +344,30 @@ function Step4Termini() {
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
   const getTerminiForDay = (day: number): Termin[] => {
-  const sada = new Date();
-  
-  return termini
-    .filter((t) => {
-      const d = new Date(t.datum);
-      if (
-        d.getUTCFullYear() !== year ||
-        d.getUTCMonth() !== month ||
-        d.getUTCDate() !== day ||
-        t.status !== "SLOBODAN"
-      ) return false;
-      
-      const vrijemeTermina = new Date(Date.UTC(
-        d.getUTCFullYear(),
-        d.getUTCMonth(),
-        d.getUTCDate(),
-        Math.floor(t.vrijeme / 60),
-        t.vrijeme % 60
-      ));
+    const sada = new Date();
 
-      return vrijemeTermina.getTime() > sada.getTime();
-    })
-    .sort((a, b) => a.vrijeme - b.vrijeme);
-};
+    return termini
+      .filter((t) => {
+        const d = new Date(t.datum);
+        if (
+          d.getUTCFullYear() !== year ||
+          d.getUTCMonth() !== month ||
+          d.getUTCDate() !== day ||
+          t.status !== "SLOBODAN"
+        ) return false;
+
+        const vrijemeTermina = new Date(Date.UTC(
+          d.getUTCFullYear(),
+          d.getUTCMonth(),
+          d.getUTCDate(),
+          Math.floor(t.vrijeme / 60),
+          t.vrijeme % 60
+        ));
+
+        return vrijemeTermina.getTime() > sada.getTime();
+      })
+      .sort((a, b) => a.vrijeme - b.vrijeme);
+  };
 
   const monthNames = ["Januar", "Februar", "Mart", "April", "Maj", "Juni", "Juli", "August", "Septembar", "Oktobar", "Novembar", "Decembar"];
   const dayNames = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
@@ -365,10 +412,35 @@ function Step4Termini() {
               <div className="grid grid-cols-7 gap-px p-3 bg-gray-100">
                 {calendarDays.map((day, i) => {
                   if (!day) return <div key={i} className="bg-white" />;
+
                   const dayTermini = getTerminiForDay(day);
                   const hasTermini = dayTermini.length > 0;
+
+                  const danas = new Date();
+                  const ovajDan = new Date(Date.UTC(year, month, day));
+                  const jeProsao = ovajDan < new Date(Date.UTC(danas.getFullYear(), danas.getMonth(), danas.getDate()));
+
+                  const dayKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                  const jePotpunoPopunjen = !jeProsao && zauzetiDani.has(dayKey);
+
+                  const naListiCekanja =
+                    waitlistUspjeh &&
+                    waitlistDatum &&
+                    waitlistDatum.getUTCFullYear() === year &&
+                    waitlistDatum.getUTCMonth() === month &&
+                    waitlistDatum.getUTCDate() === day;
+
                   return (
-                    <div key={i} className={`min-h-24 p-2 rounded-lg ${hasTermini ? "bg-blue-50 border-2 border-blue-300" : "bg-white border border-gray-200"}`}>
+                    <div
+                      key={i}
+                      className={`min-h-24 p-2 rounded-lg ${
+                        hasTermini
+                          ? "bg-blue-50 border-2 border-blue-300"
+                          : jePotpunoPopunjen
+                          ? "bg-orange-50 border-2 border-orange-300"
+                          : "bg-white border border-gray-200"
+                      }`}
+                    >
                       <div className="text-sm font-bold text-gray-900 mb-2">{day}</div>
                       <div className="space-y-1 text-xs">
                         {dayTermini.map((termin) => {
@@ -400,6 +472,22 @@ function Step4Termini() {
                             </button>
                           );
                         })}
+
+                        {jePotpunoPopunjen && !isDoctorMode && (
+                          naListiCekanja ? (
+                            <div className="mt-1 text-center px-2 py-1 rounded bg-green-100 text-green-700 font-semibold text-xs">
+                              ✓ Na listi
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleWaitlist(day)}
+                              className="mt-1 block w-full text-center px-2 py-1 rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors font-semibold"
+                              title="Svi termini su zauzeti. Prijavite se na listu čekanja."
+                            >
+                              Lista čekanja
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                   );
@@ -417,14 +505,14 @@ function Step4Termini() {
                   <p className="text-2xl font-bold text-gray-900">{formatVrijeme(selectedTermin.vrijeme)}</p>
                   <p className="text-sm text-gray-600">
                     {(() => {
-                    const datumStr = selectedTermin.datum.includes("T") 
-                      ? selectedTermin.datum 
-                      : selectedTermin.datum + "T12:00:00Z";
-                    const d = new Date(datumStr);
-                    const dani = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
-                    const mjeseci = ["januar", "februar", "mart", "april", "maj", "juni", "juli", "august", "septembar", "oktobar", "novembar", "decembar"];
-                    return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
-                  })()}
+                      const datumStr = selectedTermin.datum.includes("T")
+                        ? selectedTermin.datum
+                        : selectedTermin.datum + "T12:00:00Z";
+                      const d = new Date(datumStr);
+                      const dani = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
+                      const mjeseci = ["januar", "februar", "mart", "april", "maj", "juni", "juli", "august", "septembar", "oktobar", "novembar", "decembar"];
+                      return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
+                    })()}
                   </p>
                 </div>
 
@@ -441,7 +529,6 @@ function Step4Termini() {
                   <h3 className="font-bold text-gray-900 mb-4">Podaci pacijenta</h3>
 
                   {isDoctorMode ? (
-                    // DOKTOR — dropdown za izbor pacijenta
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Odaberite pacijenta</label>
                       <select
@@ -462,7 +549,6 @@ function Step4Termini() {
                       {errors.ime && <p className="text-red-500 text-xs mt-1">{errors.ime}</p>}
                     </div>
                   ) : (
-                    // PACIJENT — normalna forma
                     <>
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Ime</label>
