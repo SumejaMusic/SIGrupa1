@@ -22,7 +22,7 @@ router.get("/:id", getDoktorById);
 // GET /api/doktori/:id/raspored
 // US-05, US-06 — Raspored doktora po danima (samo aktivni)
 router.get("/:id/raspored", getRasporedDoktora);
-router.get("/:id/reviews", autentifikuj, autorizacija(["DOKTOR", "ADMINISTRATOR", "VLASNIK"]), getRecenzijeZaDoktora);
+router.get("/:id/reviews", autentifikuj, autorizacija(["DOKTOR", "ADMINISTRATOR", "VLASNIK", "PACIJENT"]), getRecenzijeZaDoktora);
 router.post("/rezervacije/:id/komentar", autentifikuj, autorizacija(["DOKTOR"]), dodajKomentarDoktor);
 
 export default router;

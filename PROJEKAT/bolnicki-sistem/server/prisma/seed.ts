@@ -907,7 +907,31 @@ for (let i = 21; i < 25; i++) {
   console.log("Termini kreirani za datum:", sutra.toISOString().split('T')[0]);
   console.log("Dodatni doktori kreirani:", doktor4.id, doktor5.id, doktor6.id);
   console.log("Ukupno seedovanih termina najmanje:", terminId - 1);
+// Testna završena rezervacija za ocjenjivanje
+const terminZavrsen = await prisma.termin.upsert({
+  where: { id: 200 },
+  update: {},
+  create: {
+    id: 200,
+    idDoktor: doktor.id,
+    datum: new Date("2026-05-01"),
+    vrijeme: 540,
+    status: "ZAKAZAN",
+  },
+});
 
+await prisma.rezervacije.upsert({
+  where: { id: 200 },
+  update: {},
+  create: {
+    id: 200,
+    idTermina: terminZavrsen.id,
+    idPacijent: pacijent.id,
+    idDoktor: doktor.id,
+    zavrseno: true,
+  },
+});
+console.log("Testna završena rezervacija kreirana (ID: 200)");
   console.log("\nSeed završen uspješno!");
   console.log("─────────────────────────────────");
   console.log("Test podaci:");
