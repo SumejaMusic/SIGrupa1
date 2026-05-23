@@ -46,7 +46,7 @@ function getDefaultRoute(uloga: string | null): string {
   switch (uloga) {
     case "DOKTOR": return "/doktor-rezervacije";
     case "PACIJENT": return "/moje-rezervacije";
-    case "MEDICINSKO_OSOBLJE": return "/";
+    case "MEDICINSKO_OSOBLJE": return "/osoblje-panel";
     case "ADMINISTRATOR": return "/";
     case "VLASNIK": return "/";
     default: return "/prijava";
