@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
         // Proxy radi SAMO u lokalu (npm run dev)
         // Ako u .env fajlu nemaš VITE_API_TARGET, koristit će http://localhost:5000
         '/api': {
-          target: env.VITE_API_TARGET || 'http://localhost:5000',
+          target: env.VITE_API_URL || 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
         },

@@ -57,6 +57,12 @@ if (process.env.NODE_ENV === "test") {
 // TODO: kad implementiraš JWT, dodaj ovdje:
 // app.use(jwtMiddleware);
 
+// Produžen timeout za chat rutu — queue može čekati do 35s
+app.use("/api/chat", (_req, res, next) => {
+  res.setTimeout(60_000);
+  next();
+});
+
 app.use("/api", routes);
 
 app.get("/", (req, res) => {

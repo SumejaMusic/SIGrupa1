@@ -15,6 +15,7 @@ import osobljeRoutes from "./osobljeRoutes.js";
 
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizacija } from "../middleware/autorizacija.js";
+import chatRoutes from "./chat.js";
 
 
 const router = Router();
@@ -26,7 +27,8 @@ router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
 router.use("/odjeli", odjelRoutes);autorizacija
 router.use("/auth", authRoutes);
-router.use("/pregledi", pregledRoutes); 
+router.use("/pregledi", pregledRoutes);
+router.use("/chat", chatRoutes);
 
 router.get("/nalazi/pacijent/:pacijentId", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), getNalaziZaPacijenta);
 router.get("/nalazi/rezervacija/:rezervacijaId", autentifikuj, autorizacija(["PACIJENT", "DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR"]), getNalaziZaRezervaciju);
