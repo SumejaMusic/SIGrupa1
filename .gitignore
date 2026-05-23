@@ -1,0 +1,14 @@
+node_modules/
+coverage/
+dist/
+.env
+.env.local
+.env.*.local
+
+PROJEKAT/bolnicki-sistem/client/node_modules/
+PROJEKAT/bolnicki-sistem/client/coverage/
+PROJEKAT/bolnicki-sistem/client/dist/
+
+PROJEKAT/bolnicki-sistem/server/node_modules/
+PROJEKAT/bolnicki-sistem/server/coverage/
+PROJEKAT/bolnicki-sistem/server/dist/
