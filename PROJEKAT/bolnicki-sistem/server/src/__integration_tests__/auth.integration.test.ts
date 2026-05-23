@@ -125,7 +125,8 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    expect(res.body).toHaveProperty("uloga", "PACIJENT");
+    expect(res.body).toHaveProperty("korisnik");
+    expect(res.body.korisnik).toHaveProperty("uloga", "PACIJENT");
 
     const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
     expect(decoded).toHaveProperty("id");
@@ -141,7 +142,8 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    expect(res.body).toHaveProperty("uloga", "DOKTOR");
+    expect(res.body).toHaveProperty("korisnik");
+    expect(res.body.korisnik).toHaveProperty("uloga", "DOKTOR");
   });
 
   it("uspješna prijava administratora vraća JWT token i ulogu ADMINISTRATOR", async () => {
@@ -153,7 +155,8 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    expect(res.body).toHaveProperty("uloga", "ADMINISTRATOR");
+    expect(res.body).toHaveProperty("korisnik");
+    expect(res.body.korisnik).toHaveProperty("uloga", "ADMINISTRATOR");
   });
 
   // AC-04-03: Poruka ne smije otkrivati KOJI podatak je pogrešan.
