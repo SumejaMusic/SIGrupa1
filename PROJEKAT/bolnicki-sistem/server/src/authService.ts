@@ -376,54 +376,46 @@ export const registracijaService = async (podaci: {
     const enkriptovanBrojKnjizice = enkriptuj(brojKnjizice);
 
     const noviKorisnik = await prisma.$transaction(async (tx) => {
-    const korisnik = await tx.korisnik.create({
-        data: {
-            jmbg: enkriptovanJmbg,
-            jmbgHash,
-            ime,
-            prezime,
-            datumRodjenja: datum,
-            email,
-            pristupnaSifra: hashovanaSifra,
-            brojTelefona,
-            emailVerifikovan: false,
-        }
-    });
-
-    await tx.pacijent.create({
-        data: {
-            idKorisnik: korisnik.id,
-            brojKnjizice: enkriptovanBrojKnjizice,
-            brojKnjiziceHash: brojKnjiziceHash,
-        }
-    });
-
-    return korisnik;
-});
-
-        // Generisi kod i spremi u Redis
-        const verifikacioniKod = crypto.randomInt(100000, 999999).toString();
-        const kodHash = crypto.createHash("sha256").update(verifikacioniKod).digest("hex");
-
-        const redisKey = `email-verifikacija:${noviKorisnik.id}`;
-        const redisPodaci = JSON.stringify({
-            kodHash,
-            pokusaji: 0,
-            email: noviKorisnik.email,
+        const korisnik = await tx.korisnik.create({
+            data: {
+                jmbg: enkriptovanJmbg,
+                jmbgHash,
+                ime,
+                prezime,
+                datumRodjenja: datum,
+                email,
+                pristupnaSifra: hashovanaSifra,
+                brojTelefona,
+                emailVerifikovan: false,
+            }
         });
 
-        await redis.setex(redisKey, VERIFIKACIJA_TTL_SEKUNDI, redisPodaci);
+        await tx.pacijent.create({
+            data: {
+                idKorisnik: korisnik.id,
+                brojKnjizice: enkriptovanBrojKnjizice,
+                brojKnjiziceHash: brojKnjiziceHash,
+            }
+        });
 
-        // pokusj slanja emaila, ako ne uspije, obrisi korisnika iz baze
-        try {
-            await posaljiVerifikacioniKod(noviKorisnik.email, noviKorisnik.ime, verifikacioniKod);
-        } catch (emailErr) {
-            // rollback: obrisi redis kljuc i korisnika iz baze
-            await redis.del(redisKey);
-            await prisma.pacijent.delete({ where: { idKorisnik: noviKorisnik.id } }).catch(() => {});
-            await prisma.korisnik.delete({ where: { id: noviKorisnik.id } }).catch(() => {});
-            throw { status: 503, poruka: "Nije moguće poslati verifikacioni email. Pokušajte ponovo." };
-        }
+        return korisnik;
+    });
+
+    // Generiši verifikacioni kod i pošalji na email
+    // ═══════════════════════════════════════════════════════════
+    const verifikacioniKod = crypto.randomInt(100000, 999999).toString();
+    const kodHash = crypto.createHash("sha256").update(verifikacioniKod).digest("hex");
+ 
+    const redisKey = `email-verifikacija:${noviKorisnik.id}`;
+    const redisPodaci = JSON.stringify({
+        kodHash,
+        pokusaji: 0,
+        email: noviKorisnik.email,
+    });
+ 
+    await redis.setex(redisKey, VERIFIKACIJA_TTL_SEKUNDI, redisPodaci);
+ 
+    await posaljiVerifikacioniKod(noviKorisnik.email, noviKorisnik.ime, verifikacioniKod);
  
     // Maskiraj email za prikaz
     const [localPart, domain] = noviKorisnik.email.split("@");
