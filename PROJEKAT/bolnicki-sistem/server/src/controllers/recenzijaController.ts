@@ -1,13 +1,20 @@
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.js";
 
 const MAX_COMMENT_LENGTH = 500;
+const REVIEW_TOKEN_PURPOSE = "appointment-review";
 
 type RecenzijaZaDoktora = {
   id: number;
   ocjena: number;
   komentar: string | null;
   kreiranoAt: Date;
+};
+
+type ReviewTokenPayload = {
+  appointmentId: number;
+  purpose: typeof REVIEW_TOKEN_PURPOSE;
 };
 
 const parseRating = (value: unknown) => {
@@ -29,6 +36,21 @@ const mapirajRecenzijuZaPacijenta = (recenzija: RecenzijaZaDoktora) => ({
   createdAt: recenzija.kreiranoAt,
 });
 
+const getReviewTokenSecret = () => process.env.REVIEW_TOKEN_SECRET || process.env.JWT_SECRET;
+
+const procitajReviewToken = (token: string): number | null => {
+  const secret = getReviewTokenSecret();
+  if (!secret) {
+    throw new Error("Nedostaje REVIEW_TOKEN_SECRET ili JWT_SECRET za javne ocjene.");
+  }
+
+  const payload = jwt.verify(token, secret) as Partial<ReviewTokenPayload>;
+  if (payload.purpose !== REVIEW_TOKEN_PURPOSE) return null;
+  if (!Number.isInteger(payload.appointmentId) || Number(payload.appointmentId) <= 0) return null;
+
+  return Number(payload.appointmentId);
+};
+
 const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
   let brojac = 0;
   return recenzije
@@ -37,12 +59,77 @@ const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
       brojac += 1;
       return {
         id: recenzija.id,
-        author: `Anonymous Pacijent ${brojac}`,
+        author: `Anonymous Patient ${brojac}`,
         rating: recenzija.ocjena,
         comment: recenzija.komentar,
         createdAt: recenzija.kreiranoAt,
       };
     });
+};
+
+const validirajOcjenuIzBodyja = (body: any, res: Response) => {
+  const rating = parseRating(body.rating ?? body.ocjena);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    res.status(400).json({ poruka: "Ocjena je obavezna i mora biti broj od 1 do 5." });
+    return null;
+  }
+
+  const comment = pripremiKomentar(body.comment ?? body.komentar);
+  if (comment && comment.length > MAX_COMMENT_LENGTH) {
+    res.status(400).json({ poruka: "Komentar ne smije imati više od 500 znakova." });
+    return null;
+  }
+
+  return { rating, comment };
+};
+
+const kreirajRecenzijuZaTermin = async (appointmentId: number, rating: number, comment: string | null) => {
+  const recenzija = await prisma.recenzija.create({
+    data: {
+      idRezervacije: appointmentId,
+      ocjena: rating,
+      komentar: comment,
+    },
+    select: {
+      id: true,
+      ocjena: true,
+      komentar: true,
+      kreiranoAt: true,
+    },
+  });
+
+  return mapirajRecenzijuZaPacijenta(recenzija);
+};
+
+const provjeriDaLiTerminMozeBitiOcijenjen = async (appointmentId: number) => {
+  const rezervacija = await prisma.rezervacije.findUnique({
+    where: { id: appointmentId },
+    select: {
+      id: true,
+      idPacijent: true,
+      zavrseno: true,
+      datumOtkazivanja: true,
+      recenzija: { select: { id: true } },
+    },
+  });
+
+  if (!rezervacija) {
+    return { status: 404, poruka: "Termin nije pronađen." } as const;
+  }
+
+  if (rezervacija.datumOtkazivanja) {
+    return { status: 400, poruka: "Nije moguće ocijeniti otkazani termin." } as const;
+  }
+
+  if (!rezervacija.zavrseno) {
+    return { status: 400, poruka: "Ocjenu možete ostaviti tek nakon završenog pregleda." } as const;
+  }
+
+  if (rezervacija.recenzija) {
+    return { status: 409, poruka: "Ovaj termin je već ocijenjen." } as const;
+  }
+
+  return { status: 200, rezervacija } as const;
 };
 
 // POST /api/appointments/:id/review
@@ -60,17 +147,8 @@ export const kreirajRecenziju = async (req: Request, res: Response, next: NextFu
       return;
     }
 
-    const rating = parseRating(req.body.rating ?? req.body.ocjena);
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      res.status(400).json({ poruka: "Ocjena je obavezna i mora biti broj od 1 do 5." });
-      return;
-    }
-
-    const comment = pripremiKomentar(req.body.comment ?? req.body.komentar);
-    if (comment && comment.length > MAX_COMMENT_LENGTH) {
-      res.status(400).json({ poruka: "Komentar ne smije imati više od 500 znakova." });
-      return;
-    }
+    const validiranaOcjena = validirajOcjenuIzBodyja(req.body, res);
+    if (!validiranaOcjena) return;
 
     const pacijent = await prisma.pacijent.findFirst({
       where: { idKorisnik: korisnikPayload.id },
@@ -82,14 +160,74 @@ export const kreirajRecenziju = async (req: Request, res: Response, next: NextFu
       return;
     }
 
+    const provjera = await provjeriDaLiTerminMozeBitiOcijenjen(appointmentId);
+    if (provjera.status !== 200) {
+      res.status(provjera.status).json({ poruka: provjera.poruka });
+      return;
+    }
+
+    if (provjera.rezervacija.idPacijent !== pacijent.id) {
+      res.status(403).json({ poruka: "Možete ocijeniti samo svoj termin." });
+      return;
+    }
+
+    try {
+      const review = await kreirajRecenzijuZaTermin(
+        provjera.rezervacija.id,
+        validiranaOcjena.rating,
+        validiranaOcjena.comment
+      );
+
+      res.status(201).json({
+        poruka: "Hvala na anonimnoj ocjeni.",
+        review,
+      });
+    } catch (err: any) {
+      if (err?.code === "P2002") {
+        res.status(409).json({ poruka: "Ovaj termin je već ocijenjen." });
+        return;
+      }
+      throw err;
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/appointments/review/:token
+export const getJavniPozivZaRecenziju = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = String(req.params.token ?? "");
+    if (!token) {
+      res.status(400).json({ poruka: "Nedostaje token za ocjenu." });
+      return;
+    }
+
+    let appointmentId: number | null = null;
+    try {
+      appointmentId = procitajReviewToken(token);
+    } catch (err: any) {
+      if (err?.name === "JsonWebTokenError" || err?.name === "TokenExpiredError") {
+        res.status(401).json({ poruka: "Link za ocjenu nije validan ili je istekao." });
+        return;
+      }
+      throw err;
+    }
+
+    if (!appointmentId) {
+      res.status(401).json({ poruka: "Link za ocjenu nije validan." });
+      return;
+    }
+
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: appointmentId },
       select: {
         id: true,
-        idPacijent: true,
         zavrseno: true,
         datumOtkazivanja: true,
-        recenzija: { select: { id: true } },
+        recenzija: { select: { id: true, ocjena: true, komentar: true, kreiranoAt: true } },
+        termin: { select: { datum: true, vrijeme: true } },
+        doktor: { select: { korisnik: { select: { ime: true, prezime: true } } } },
       },
     });
 
@@ -98,44 +236,69 @@ export const kreirajRecenziju = async (req: Request, res: Response, next: NextFu
       return;
     }
 
-    if (rezervacija.idPacijent !== pacijent.id) {
-      res.status(403).json({ poruka: "Možete ocijeniti samo svoj termin." });
+    const mozeOcijeniti = Boolean(rezervacija.zavrseno && !rezervacija.datumOtkazivanja && !rezervacija.recenzija);
+
+    res.json({
+      appointment: {
+        id: rezervacija.id,
+        doctorName: `Dr. ${rezervacija.doktor.korisnik.ime} ${rezervacija.doktor.korisnik.prezime}`,
+        date: rezervacija.termin.datum,
+        time: rezervacija.termin.vrijeme,
+        completed: rezervacija.zavrseno,
+        canceled: Boolean(rezervacija.datumOtkazivanja),
+        canReview: mozeOcijeniti,
+        review: rezervacija.recenzija ? mapirajRecenzijuZaPacijenta(rezervacija.recenzija) : null,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/appointments/review/:token
+export const kreirajJavnuRecenziju = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = String(req.params.token ?? "");
+    if (!token) {
+      res.status(400).json({ poruka: "Nedostaje token za ocjenu." });
       return;
     }
 
-    if (rezervacija.datumOtkazivanja) {
-      res.status(400).json({ poruka: "Nije moguće ocijeniti otkazani termin." });
+    let appointmentId: number | null = null;
+    try {
+      appointmentId = procitajReviewToken(token);
+    } catch (err: any) {
+      if (err?.name === "JsonWebTokenError" || err?.name === "TokenExpiredError") {
+        res.status(401).json({ poruka: "Link za ocjenu nije validan ili je istekao." });
+        return;
+      }
+      throw err;
+    }
+
+    if (!appointmentId) {
+      res.status(401).json({ poruka: "Link za ocjenu nije validan." });
       return;
     }
 
-    if (!rezervacija.zavrseno) {
-      res.status(400).json({ poruka: "Ocjenu možete ostaviti tek nakon završenog pregleda." });
-      return;
-    }
+    const validiranaOcjena = validirajOcjenuIzBodyja(req.body, res);
+    if (!validiranaOcjena) return;
 
-    if (rezervacija.recenzija) {
-      res.status(409).json({ poruka: "Ovaj termin je već ocijenjen." });
+    const provjera = await provjeriDaLiTerminMozeBitiOcijenjen(appointmentId);
+    if (provjera.status !== 200) {
+      res.status(provjera.status).json({ poruka: provjera.poruka });
       return;
     }
 
     try {
-      const recenzija = await prisma.recenzija.create({
-        data: {
-          idRezervacije: rezervacija.id,
-          ocjena: rating,
-          komentar: comment,
-        },
-        select: {
-          id: true,
-          ocjena: true,
-          komentar: true,
-          kreiranoAt: true,
-        },
-      });
+      const review = await kreirajRecenzijuZaTermin(
+        provjera.rezervacija.id,
+        validiranaOcjena.rating,
+        validiranaOcjena.comment
+      );
 
       res.status(201).json({
         poruka: "Hvala na anonimnoj ocjeni.",
-        review: mapirajRecenzijuZaPacijenta(recenzija),
+        review,
       });
     } catch (err: any) {
       if (err?.code === "P2002") {

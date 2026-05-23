@@ -19,6 +19,7 @@ import PrijavaPage from './Stranice/PrijavaPage';
 
 import ForgotPasswordPage from './Stranice/ForgotPasswordPage';
 import ResetPasswordPage from './Stranice/ResetPasswordPage';
+import AnonimnaOcjenaPage from './Stranice/AnonimnaOcjenaPage';
 
 
 import { useAutoLogout } from './hooks/useAutoLogout';
@@ -112,6 +113,7 @@ function AppContent() {
   <Route path="/prijava"         element={<PrijavaPage />} />
   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
   <Route path="/reset-password"  element={<ResetPasswordPage />} />
+  <Route path="/anonimna-ocjena" element={<AnonimnaOcjenaPage />} />
 
   {/* Stara ruta */}
   <Route path="/doctor-view" element={<Navigate to="/doktor-rezervacije" replace />} />

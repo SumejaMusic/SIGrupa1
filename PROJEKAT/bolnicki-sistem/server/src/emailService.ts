@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import jwt from 'jsonwebtoken';
 
 interface RezervacijaEmailPodaci {
   pacijentEmail: string;
@@ -40,6 +41,20 @@ function getResend(): Resend {
 
 const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'musicsumeja98@gmail.com';
 const FROM_EMAIL = 'onboarding@resend.dev';
+const REVIEW_TOKEN_PURPOSE = 'appointment-review';
+
+function kreirajTokenZaOcjenu(rezervacijaId: number): string {
+  const secret = process.env.REVIEW_TOKEN_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('Nedostaje REVIEW_TOKEN_SECRET ili JWT_SECRET za link za anonimnu ocjenu.');
+  }
+
+  return jwt.sign(
+    { appointmentId: rezervacijaId, purpose: REVIEW_TOKEN_PURPOSE },
+    secret,
+    { expiresIn: '30d' }
+  );
+}
 
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {
   const {
@@ -321,7 +336,8 @@ export async function posaljiPozivZaOcjenu(podaci: PozivZaOcjenuEmailPodaci): Pr
   } = podaci;
 
   const frontendUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
-  const reviewLink = `${frontendUrl}/moje-rezervacije?review=${rezervacijaId}`;
+  const reviewToken = kreirajTokenZaOcjenu(rezervacijaId);
+  const reviewLink = `${frontendUrl}/anonimna-ocjena?token=${encodeURIComponent(reviewToken)}`;
   const formatiraniDatum = formatDatumEmail(datum);
 
   const result = await getResend().emails.send({

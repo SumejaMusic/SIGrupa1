@@ -1,7 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import jwt from "jsonwebtoken";
 import { prismaMock } from "../lib/__mocks__/prisma.js";
 import {
+  getJavniPozivZaRecenziju,
   kreirajRecenziju,
+  kreirajJavnuRecenziju,
   getRecenzijeZaDoktora,
   sakrijRecenziju,
 } from "../controllers/recenzijaController.js";
@@ -23,6 +26,7 @@ const mockReqRes = (
 
 beforeEach(() => {
   vi.clearAllMocks();
+  process.env.JWT_SECRET = "test-secret";
 });
 
 describe("kreirajRecenziju", () => {
@@ -130,6 +134,82 @@ describe("kreirajRecenziju", () => {
   });
 });
 
+describe("javna anonimna recenzija iz email linka", () => {
+  const token = () => jwt.sign(
+    { appointmentId: 42, purpose: "appointment-review" },
+    process.env.JWT_SECRET!
+  );
+
+  it("vraća podatke potrebne za javnu formu bez podataka o pacijentu", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      id: 42,
+      zavrseno: true,
+      datumOtkazivanja: null,
+      recenzija: null,
+      termin: {
+        datum: new Date("2026-05-23T00:00:00.000Z"),
+        vrijeme: 600,
+      },
+      doktor: {
+        korisnik: { ime: "Amina", prezime: "Hadzic" },
+      },
+    } as any);
+
+    const { req, res, next } = mockReqRes({ token: token() });
+
+    await getJavniPozivZaRecenziju(req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith({
+      appointment: expect.objectContaining({
+        id: 42,
+        doctorName: "Dr. Amina Hadzic",
+        canReview: true,
+        review: null,
+      }),
+    });
+    expect(JSON.stringify(vi.mocked(res.json).mock.calls[0][0])).not.toMatch(/idPacijent|idKorisnik|pacijent|email/i);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("kreira recenziju preko tokena bez login sesije", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      id: 42,
+      idPacijent: 10,
+      zavrseno: true,
+      datumOtkazivanja: null,
+      recenzija: null,
+    } as any);
+    vi.mocked(prismaMock.recenzija.create).mockResolvedValue({
+      id: 8,
+      ocjena: 4,
+      komentar: "Vrlo korektan pregled.",
+      kreiranoAt: new Date("2026-05-23T09:00:00.000Z"),
+    } as any);
+
+    const { req, res, next } = mockReqRes(
+      { token: token() },
+      { rating: 4, comment: "Vrlo korektan pregled." },
+      undefined
+    );
+
+    await kreirajJavnuRecenziju(req, res, next);
+
+    expect(prismaMock.recenzija.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        idRezervacije: 42,
+        ocjena: 4,
+        komentar: "Vrlo korektan pregled.",
+      },
+    }));
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      poruka: "Hvala na anonimnoj ocjeni.",
+      review: expect.objectContaining({ rating: 4, comment: "Vrlo korektan pregled." }),
+    }));
+    expect(next).not.toHaveBeenCalled();
+  });
+});
+
 describe("getRecenzijeZaDoktora", () => {
   it("vraća prosjek i anonimne komentare bez podataka o pacijentu", async () => {
     vi.mocked(prismaMock.recenzija.findMany).mockResolvedValue([
@@ -157,8 +237,8 @@ describe("getRecenzijeZaDoktora", () => {
       averageRating: 3.33,
       reviewCount: 3,
       comments: [
-        expect.objectContaining({ author: "Anonymous Pacijent 1", rating: 1, comment: "Loša komunikacija." }),
-        expect.objectContaining({ author: "Anonymous Pacijent 2", rating: 5, comment: "Odlično iskustvo." }),
+        expect.objectContaining({ author: "Anonymous Patient 1", rating: 1, comment: "Loša komunikacija." }),
+        expect.objectContaining({ author: "Anonymous Patient 2", rating: 5, comment: "Odlično iskustvo." }),
       ],
     });
     expect(JSON.stringify(vi.mocked(res.json).mock.calls[0][0])).not.toMatch(/idPacijent|idKorisnik|ime|prezime/i);
