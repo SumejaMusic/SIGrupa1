@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { apiUrl } from '../lib/api';
-import { formatDateDDMMYYYY, toYMD } from '../utils/dateUtils';
+import { formatDatumPrikaz, isoUTCdatum } from '../utils/rezervacijeUtils';
 import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle } from 'lucide-react';
+import DatePicker from 'react-datepicker';
 
 interface UserProfile {
   id: number;
@@ -18,14 +19,14 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   const [editForm, setEditForm] = useState({
     ime: '',
     prezime: '',
     brojTelefona: '',
     datumRodjenja: ''
   });
-  
+
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
@@ -36,16 +37,16 @@ export default function ProfilePage() {
     try {
       const korisnikStr = localStorage.getItem('korisnik');
       if (!korisnikStr) return;
-      
+
       const korisnik = JSON.parse(korisnikStr);
       const token = localStorage.getItem('token');
-      
+
       const res = await fetch(apiUrl(`/api/users/${korisnik.id}/profile`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
@@ -53,7 +54,7 @@ export default function ProfilePage() {
           ime: data.ime,
           prezime: data.prezime,
           brojTelefona: data.brojTelefona || '',
-          datumRodjenja: toYMD(data.datumRodjenja)
+          datumRodjenja: data.datumRodjenja ? isoUTCdatum(data.datumRodjenja) : ''
         });
       }
     } catch (err) {
@@ -83,13 +84,13 @@ export default function ProfilePage() {
         },
         body: JSON.stringify(editForm)
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setProfile(data.korisnik);
         setMessage({ text: 'Profil uspješno ažuriran', type: 'success' });
         setIsEditing(false);
-        
+
         // Update local storage name
         const korisnikStr = localStorage.getItem('korisnik');
         if (korisnikStr) {
@@ -145,7 +146,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               {!isEditing ? (
-                <button 
+                <button
                   onClick={() => setIsEditing(true)}
                   className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg transition-colors border border-white/30 font-medium"
                 >
@@ -153,7 +154,7 @@ export default function ProfilePage() {
                   <span>Uredi profil</span>
                 </button>
               ) : (
-                <button 
+                <button
                   onClick={() => setIsEditing(false)}
                   className="flex items-center gap-2 bg-red-500/80 hover:bg-red-500 backdrop-blur-sm px-4 py-2 rounded-lg transition-colors text-white border border-red-400/50 font-medium"
                 >
@@ -163,12 +164,11 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-          
+
           <div className="p-8">
             {message && (
-              <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-                message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
-              }`}>
+              <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+                }`}>
                 {message.type === 'success' && <CheckCircle size={20} className="text-green-600" />}
                 <span>{message.text}</span>
               </div>
@@ -183,10 +183,10 @@ export default function ProfilePage() {
                     Ime
                   </label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="ime" 
-                      value={editForm.ime} 
+                    <input
+                      type="text"
+                      name="ime"
+                      value={editForm.ime}
                       onChange={handleEditChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
@@ -202,10 +202,10 @@ export default function ProfilePage() {
                     Prezime
                   </label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="prezime" 
-                      value={editForm.prezime} 
+                    <input
+                      type="text"
+                      name="prezime"
+                      value={editForm.prezime}
                       onChange={handleEditChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
@@ -213,17 +213,16 @@ export default function ProfilePage() {
                     <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{profile.prezime}</p>
                   )}
                 </div>
-                
+
                 {/* Email (Always disabled) */}
                 <div className="md:col-span-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Mail size={16} className="text-gray-400" />
                     Email adresa
-                    {isEditing && <span className="text-xs text-gray-500 ml-2">(Za promjenu emaila potreban je poseban verifikacijski flow)</span>}
                   </label>
-                  <input 
-                    type="email" 
-                    value={profile.email} 
+                  <input
+                    type="email"
+                    value={profile.email}
                     disabled
                     className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 cursor-not-allowed"
                   />
@@ -236,10 +235,10 @@ export default function ProfilePage() {
                     Telefon
                   </label>
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      name="brojTelefona" 
-                      value={editForm.brojTelefona} 
+                    <input
+                      type="text"
+                      name="brojTelefona"
+                      value={editForm.brojTelefona}
                       onChange={handleEditChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
@@ -255,16 +254,31 @@ export default function ProfilePage() {
                     Datum rođenja
                   </label>
                   {isEditing ? (
-                    <input 
-                      type="date" 
-                      name="datumRodjenja" 
-                      value={editForm.datumRodjenja} 
-                      onChange={handleEditChange}
+                    <DatePicker
+                      selected={editForm.datumRodjenja ? new Date(editForm.datumRodjenja + 'T12:00:00') : null}
+                      onChange={(date: Date | null) => {
+                        if (date) {
+                          const y = date.getFullYear();
+                          const m = String(date.getMonth() + 1).padStart(2, '0');
+                          const d = String(date.getDate()).padStart(2, '0');
+                          setEditForm({ ...editForm, datumRodjenja: `${y}-${m}-${d}` });
+                        } else {
+                          setEditForm({ ...editForm, datumRodjenja: '' });
+                        }
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      maxDate={new Date()}
+                      showYearDropdown
+                      showMonthDropdown
+                      dropdownMode="select"
+                      placeholderText="dd/mm/yyyy"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      wrapperClassName="w-full"
+                      autoComplete="off"
                     />
                   ) : (
                     <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">
-                      {formatDateDDMMYYYY(profile.datumRodjenja)}
+                      {formatDatumPrikaz(profile.datumRodjenja)}
                     </p>
                   )}
                 </div>
@@ -272,7 +286,7 @@ export default function ProfilePage() {
 
               {isEditing && (
                 <div className="pt-6 mt-6 border-t border-gray-100 flex justify-end">
-                  <button 
+                  <button
                     onClick={handleSave}
                     disabled={saving}
                     className="flex items-center gap-2 px-6 py-2.5 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-800 transition-colors shadow-sm disabled:opacity-70"

@@ -235,13 +235,13 @@ export default function Navbar() {
 
             <>
 
-              <div className={`flex items-center gap-2 text-sm font-medium ${scrolled ? 'text-gray-700' : 'text-white'}`}>
-
+              <button
+                onClick={() => navigate('/profil')}
+                className={`flex items-center gap-2 text-sm font-medium cursor-pointer hover:opacity-80 transition-opacity ${scrolled ? 'text-gray-700' : 'text-white'}`}
+              >
                 <User className="w-4 h-4" />
-
                 {korisnik.ime} {korisnik.prezime}
-
-              </div>
+              </button>
 
               {/* Navigacija prema ulozi */}
               {korisnik.uloga === 'PACIJENT' && (

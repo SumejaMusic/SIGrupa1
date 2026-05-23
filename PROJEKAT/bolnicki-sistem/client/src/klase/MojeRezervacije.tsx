@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, User, Calendar, MapPin, X, FileText, MessageSquare, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { handleExpiredSession } from "../utils/auth";
+import { handleExpiredSession, odjava } from "../utils/auth";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
 
 interface Komentar {
@@ -75,7 +75,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
     { icon: Home, label: "Naslovna", href: "/" },
     { icon: CalendarIcon, label: "Moje Rezervacije", href: "/moje-rezervacije" },
     { icon: Stethoscope, label: "Odjeli", href: "/step1-odjeli" },
-    { icon: User, label: "Profil", href: "#" },
+    { icon: User, label: "Profil", href: "/profil" },
   ];
 
   return (
@@ -106,7 +106,7 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
         </nav>
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <button className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium whitespace-nowrap">
+          <button onClick={odjava} className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium whitespace-nowrap">
             <LogOut size={18} className="flex-shrink-0" />
             Odjava
           </button>
