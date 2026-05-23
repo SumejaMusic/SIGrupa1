@@ -107,6 +107,8 @@ if (socket && socket.connected) {
           navigate("/moje-rezervacije");
           break;
         case "MEDICINSKO_OSOBLJE":
+          navigate("/osoblje-panel");
+          break;
         case "ADMINISTRATOR":
         case "VLASNIK":
         default:
