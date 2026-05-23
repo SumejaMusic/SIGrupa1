@@ -302,7 +302,7 @@ function KarticaSobe({ room, onAssign }: { room: ZauzetostSobe; onAssign: () => 
         if (isAssignable) onAssign();
       }}
       disabled={!isAssignable}
-      className={`text-left rounded-2xl border p-4 min-h-[230px] flex flex-col gap-3 transition-all ${config.block} ${
+      className={`text-left rounded-2xl border p-4 min-h-[265px] flex flex-col gap-3 transition-all ${config.block} ${
         isAssignable ? "cursor-pointer hover:shadow-md" : "cursor-default"
       }`}
       title={isAssignable ? "Dodijeli hitni slučaj" : config.label}
@@ -343,10 +343,12 @@ function KarticaSobe({ room, onAssign }: { room: ZauzetostSobe; onAssign: () => 
       />
 
       <LinijaTerminaSobe
-        label="Sljedeći termin"
+        label="Sljedeća rezervacija danas"
         appointment={room.nextAppointment}
-        emptyLabel="Nema sljedećeg termina"
+        emptyLabel="Nema naredne rezervacije danas"
       />
+
+      <LinijaSlobodnogTerminaSobe term={room.availableTerms[0] ?? null} />
 
       <div className="mt-auto pt-1">
         {isAssignable ? (
@@ -361,6 +363,27 @@ function KarticaSobe({ room, onAssign }: { room: ZauzetostSobe; onAssign: () => 
         )}
       </div>
     </button>
+  );
+}
+
+function LinijaSlobodnogTerminaSobe({ term }: { term: SlobodanTermin | null }) {
+  return (
+    <div className="text-xs">
+      <p className="font-semibold text-gray-500">Prvi slobodan termin</p>
+      {term ? (
+        <div className="mt-1 text-gray-800">
+          <p className="font-bold">
+            {term.datumTekst ? `${term.datumTekst} · ` : ""}
+            {term.vrijemeTekst}
+          </p>
+          <p className="truncate text-gray-500">
+            Dr. {term.doktor.ime} {term.doktor.prezime}
+          </p>
+        </div>
+      ) : (
+        <p className="mt-1 text-gray-400">Nema slobodnih termina u narednih 7 dana</p>
+      )}
+    </div>
   );
 }
 
