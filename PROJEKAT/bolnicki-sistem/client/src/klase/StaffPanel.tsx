@@ -9,7 +9,7 @@ import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import CancelModal from '../components/CancelModal';
 import UploadPdfModal from '../components/UploadPdfModal';
 import NewAppointmentModal from '../components/NewAppointmentModal';
-import RoomOccupancySection from '../components/RoomOccupancySection';
+import SekcijaZauzetostiKabineta from '../components/SekcijaZauzetostiKabineta';
 
 type ViewMode = 'week' | 'day' | 'list';
 
@@ -425,7 +425,7 @@ useEffect(() => {
 
       {/* Main content */}
       <main className="flex-1 w-full overflow-auto">
-        <RoomOccupancySection
+        <SekcijaZauzetostiKabineta
           allPatients={allPatients}
           tipoviPregleda={tipoviPregleda}
           onEmergencyAssigned={fetchTermini}

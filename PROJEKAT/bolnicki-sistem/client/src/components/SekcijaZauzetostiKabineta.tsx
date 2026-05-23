@@ -31,7 +31,7 @@ interface TipPregleda {
   naziv: string;
 }
 
-interface DoctorSummary {
+interface SazetakDoktora {
   id: number;
   ime: string;
   prezime: string;
@@ -42,10 +42,10 @@ interface DoctorSummary {
   } | null;
 }
 
-interface AppointmentSummary {
+interface SazetakTermina {
   id: number;
   terminId: number;
-  doktor: DoctorSummary;
+  doktor: SazetakDoktora;
   pacijent: {
     ime: string;
     prezime: string;
@@ -58,34 +58,34 @@ interface AppointmentSummary {
   krajVrijemeTekst: string;
 }
 
-interface AvailableTerm {
+interface SlobodanTermin {
   id: number;
   doktorId: number;
-  doktor: DoctorSummary;
+  doktor: SazetakDoktora;
   vrijeme: number;
   vrijemeTekst: string;
 }
 
-type RoomStatus = "SLOBODAN" | "ZAUZET" | "USKORO_ZAUZET";
+type StatusPrikazaSobe = "SLOBODAN" | "ZAUZET" | "USKORO_ZAUZET";
 
-interface RoomOccupancy {
+interface ZauzetostSobe {
   id: number;
   naziv: string;
   tip: string;
   sprat: number;
-  status: RoomStatus;
-  activeDoctor: DoctorSummary | null;
-  currentAppointment: AppointmentSummary | null;
-  nextAppointment: AppointmentSummary | null;
-  availableTerms: AvailableTerm[];
+  status: StatusPrikazaSobe;
+  activeDoctor: SazetakDoktora | null;
+  currentAppointment: SazetakTermina | null;
+  nextAppointment: SazetakTermina | null;
+  availableTerms: SlobodanTermin[];
   canAssignEmergency: boolean;
 }
 
-interface OccupancyResponse {
+interface OdgovorZauzetosti {
   date: string;
   generatedAt: string;
   refreshIntervalSeconds: number;
-  rooms: RoomOccupancy[];
+  rooms: ZauzetostSobe[];
 }
 
 interface Props {
@@ -95,7 +95,7 @@ interface Props {
   onNotify: (message: string) => void;
 }
 
-const statusConfig: Record<RoomStatus, {
+const statusConfig: Record<StatusPrikazaSobe, {
   label: string;
   badge: string;
   block: string;
@@ -132,16 +132,26 @@ const formatDate = (value: string) => {
 
 const getToken = () => localStorage.getItem("token") ?? "";
 
-export default function RoomOccupancySection({
+const prikazIdentifikatoraPacijenta = (patient: Pacijent) => {
+  const brojKnjizice = patient.brojKnjizice?.trim();
+
+  if (brojKnjizice && brojKnjizice.length <= 20 && !brojKnjizice.includes(":")) {
+    return `Knjižica: ${brojKnjizice}`;
+  }
+
+  return `ID pacijenta: ${patient.id}`;
+};
+
+export default function SekcijaZauzetostiKabineta({
   allPatients,
   tipoviPregleda,
   onEmergencyAssigned,
   onNotify,
 }: Props) {
-  const [occupancy, setOccupancy] = useState<OccupancyResponse | null>(null);
+  const [occupancy, setOccupancy] = useState<OdgovorZauzetosti | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<RoomOccupancy | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<ZauzetostSobe | null>(null);
 
   const fetchOccupancy = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -206,10 +216,10 @@ export default function RoomOccupancySection({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <OccupancyStat label="Ukupno" value={stats.total} className="text-gray-700 bg-gray-100" />
-            <OccupancyStat label="Slobodno" value={stats.free} className="text-emerald-700 bg-emerald-100" />
-            <OccupancyStat label="Zauzeto" value={stats.occupied} className="text-red-700 bg-red-100" />
-            <OccupancyStat label="Uskoro" value={stats.soon} className="text-amber-700 bg-amber-100" />
+            <StatistikaZauzetosti label="Ukupno" value={stats.total} className="text-gray-700 bg-gray-100" />
+            <StatistikaZauzetosti label="Slobodno" value={stats.free} className="text-emerald-700 bg-emerald-100" />
+            <StatistikaZauzetosti label="Zauzeto" value={stats.occupied} className="text-red-700 bg-red-100" />
+            <StatistikaZauzetosti label="Uskoro" value={stats.soon} className="text-amber-700 bg-amber-100" />
             <button
               type="button"
               onClick={() => fetchOccupancy(true)}
@@ -233,7 +243,7 @@ export default function RoomOccupancySection({
         ) : (
           <div className="p-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {occupancy?.rooms.map((room) => (
-              <RoomCard
+              <KarticaSobe
                 key={room.id}
                 room={room}
                 onAssign={() => setSelectedRoom(room)}
@@ -244,7 +254,7 @@ export default function RoomOccupancySection({
       </div>
 
       {selectedRoom && (
-        <EmergencyAssignmentModal
+        <ModalDodjeleHitnogSlucaja
           room={selectedRoom}
           allPatients={allPatients}
           tipoviPregleda={tipoviPregleda}
@@ -260,7 +270,7 @@ export default function RoomOccupancySection({
   );
 }
 
-function OccupancyStat({ label, value, className }: { label: string; value: number; className: string }) {
+function StatistikaZauzetosti({ label, value, className }: { label: string; value: number; className: string }) {
   return (
     <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${className}`}>
       {label}: {value}
@@ -268,7 +278,7 @@ function OccupancyStat({ label, value, className }: { label: string; value: numb
   );
 }
 
-function RoomCard({ room, onAssign }: { room: RoomOccupancy; onAssign: () => void }) {
+function KarticaSobe({ room, onAssign }: { room: ZauzetostSobe; onAssign: () => void }) {
   const config = statusConfig[room.status];
   const StatusIcon = config.icon;
   const isAssignable = room.canAssignEmergency;
@@ -314,13 +324,13 @@ function RoomCard({ room, onAssign }: { room: RoomOccupancy; onAssign: () => voi
         )}
       </div>
 
-      <RoomAppointmentLine
+      <LinijaTerminaSobe
         label="Termin u toku"
         appointment={room.currentAppointment}
         emptyLabel="Nema termina u toku"
       />
 
-      <RoomAppointmentLine
+      <LinijaTerminaSobe
         label="Sljedeći termin"
         appointment={room.nextAppointment}
         emptyLabel="Nema sljedećeg termina"
@@ -342,13 +352,13 @@ function RoomCard({ room, onAssign }: { room: RoomOccupancy; onAssign: () => voi
   );
 }
 
-function RoomAppointmentLine({
+function LinijaTerminaSobe({
   label,
   appointment,
   emptyLabel,
 }: {
   label: string;
-  appointment: AppointmentSummary | null;
+  appointment: SazetakTermina | null;
   emptyLabel: string;
 }) {
   return (
@@ -373,14 +383,14 @@ function RoomAppointmentLine({
   );
 }
 
-function EmergencyAssignmentModal({
+function ModalDodjeleHitnogSlucaja({
   room,
   allPatients,
   tipoviPregleda,
   onClose,
   onAssigned,
 }: {
-  room: RoomOccupancy;
+  room: ZauzetostSobe;
   allPatients: Pacijent[];
   tipoviPregleda: TipPregleda[];
   onClose: () => void;
@@ -470,7 +480,7 @@ function EmergencyAssignmentModal({
                     <p className="text-sm font-bold text-emerald-900 truncate">
                       {selectedPatient.korisnik.ime} {selectedPatient.korisnik.prezime}
                     </p>
-                    <p className="text-xs text-emerald-700 truncate">Knjižica: {selectedPatient.brojKnjizice}</p>
+                    <p className="text-xs text-emerald-700 truncate">{prikazIdentifikatoraPacijenta(selectedPatient)}</p>
                   </div>
                   <button
                     type="button"
@@ -509,7 +519,7 @@ function EmergencyAssignmentModal({
                             <p className="text-sm font-semibold text-gray-800">
                               {patient.korisnik.ime} {patient.korisnik.prezime}
                             </p>
-                            <p className="text-xs text-gray-500">Knjižica: {patient.brojKnjizice}</p>
+                            <p className="text-xs text-gray-500">{prikazIdentifikatoraPacijenta(patient)}</p>
                           </button>
                         ))
                       )}

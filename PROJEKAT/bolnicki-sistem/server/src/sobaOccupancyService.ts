@@ -5,7 +5,7 @@ const SOON_THRESHOLD_MINUTES = 30;
 
 export type StatusZauzetostiSobe = "SLOBODAN" | "ZAUZET" | "USKORO_ZAUZET";
 
-type DoctorSummary = {
+type SazetakDoktora = {
   id: number;
   ime: string;
   prezime: string;
@@ -16,10 +16,10 @@ type DoctorSummary = {
   } | null;
 };
 
-type AppointmentSummary = {
+type SazetakTermina = {
   id: number;
   terminId: number;
-  doktor: DoctorSummary;
+  doktor: SazetakDoktora;
   pacijent: {
     ime: string;
     prezime: string;
@@ -32,10 +32,10 @@ type AppointmentSummary = {
   krajVrijemeTekst: string;
 };
 
-type AvailableTermSummary = {
+type SazetakSlobodnogTermina = {
   id: number;
   doktorId: number;
-  doktor: DoctorSummary;
+  doktor: SazetakDoktora;
   vrijeme: number;
   vrijemeTekst: string;
 };
@@ -80,7 +80,7 @@ const createDayRange = (dateKey: string) => ({
   end: new Date(`${dateKey}T23:59:59.999Z`),
 });
 
-const summarizeDoctor = (doktor: any): DoctorSummary => ({
+const summarizeDoctor = (doktor: any): SazetakDoktora => ({
   id: doktor.id,
   ime: doktor.korisnik?.ime ?? "",
   prezime: doktor.korisnik?.prezime ?? "",
@@ -101,7 +101,7 @@ const getTermRoomId = (termin: any): number | null => {
   return termin.doktor?.idSobe ?? termin.doktor?.soba?.id ?? null;
 };
 
-const summarizeAppointment = (rezervacija: any): AppointmentSummary => {
+const summarizeAppointment = (rezervacija: any): SazetakTermina => {
   const duration =
     rezervacija.tipPregleda?.trajanjeMinuta ??
     rezervacija.doktor?.trajanjePregleda ??
@@ -128,7 +128,7 @@ const summarizeAppointment = (rezervacija: any): AppointmentSummary => {
   };
 };
 
-const summarizeAvailableTerm = (termin: any): AvailableTermSummary => ({
+const summarizeAvailableTerm = (termin: any): SazetakSlobodnogTermina => ({
   id: termin.id,
   doktorId: termin.idDoktor,
   doktor: summarizeDoctor(termin.doktor),
@@ -137,8 +137,8 @@ const summarizeAvailableTerm = (termin: any): AvailableTermSummary => ({
 });
 
 export function odrediStatusZauzetostiSobe(
-  currentAppointment: AppointmentSummary | null,
-  nextAppointment: AppointmentSummary | null,
+  currentAppointment: SazetakTermina | null,
+  nextAppointment: SazetakTermina | null,
   referenceMinute: number,
   isToday: boolean,
 ): StatusZauzetostiSobe {
@@ -226,7 +226,7 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
     }),
   ]);
 
-  const appointmentsByRoom = new Map<number, AppointmentSummary[]>();
+  const appointmentsByRoom = new Map<number, SazetakTermina[]>();
   for (const reservation of reservations) {
     const roomId = getReservationRoomId(reservation);
     if (!roomId) continue;
@@ -237,7 +237,7 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
     appointmentsByRoom.set(roomId, current);
   }
 
-  const freeTermsByRoom = new Map<number, AvailableTermSummary[]>();
+  const freeTermsByRoom = new Map<number, SazetakSlobodnogTermina[]>();
   for (const term of freeTerms) {
     const roomId = getTermRoomId(term);
     if (!roomId) continue;
