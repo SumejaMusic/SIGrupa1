@@ -19,7 +19,7 @@ interface Nalaz {
   url: string;
 }
 
-interface Review {
+interface OcjenaDoktora {
   id: number;
   rating: number;
   comment: string | null;
@@ -38,7 +38,7 @@ interface Rezervacija {
   komentari: Komentar[];
   nalazi: Nalaz[];
   zavrseno: boolean;
-  review?: Review | null;
+  review?: OcjenaDoktora | null;
 }
 
 // ✅ Parsira ISO datum string kao čisti UTC YYYY-MM-DD
@@ -145,10 +145,10 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-function ReviewModal({ rez, onClose, onSubmit }: {
+function ModalOcjenaDoktora({ rez, onClose, onSubmit }: {
   rez: Rezervacija;
   onClose: () => void;
-  onSubmit: (rating: number, comment: string) => Promise<Review | null>;
+  onSubmit: (rating: number, comment: string) => Promise<OcjenaDoktora | null>;
 }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -274,7 +274,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl, onReviewSubmit }: {
   onClose: () => void;
   onCancel: (id: number) => void;
   apiUrl: string;
-  onReviewSubmit: (id: number, rating: number, comment: string) => Promise<Review | null>;
+  onReviewSubmit: (id: number, rating: number, comment: string) => Promise<OcjenaDoktora | null>;
 }) {
   const [tab, setTab] = useState<"info" | "komentari" | "nalazi">("info");
   const [nalazi, setNalazi] = useState<Nalaz[]>([]);
@@ -282,7 +282,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl, onReviewSubmit }: {
   const [loadingNalazi, setLoadingNalazi] = useState(false);
   const [noviKomentar, setNoviKomentar] = useState("");
   const [saljemo, setSaljemo] = useState(false);
-  const [review, setReview] = useState<Review | null>(rez.review ?? null);
+  const [review, setReview] = useState<OcjenaDoktora | null>(rez.review ?? null);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
   const getToken = () => localStorage.getItem("token");
@@ -572,7 +572,7 @@ function DetaljiModal({ rez, onClose, onCancel, apiUrl, onReviewSubmit }: {
         </div>
       </div>
       {showReviewModal && (
-        <ReviewModal
+        <ModalOcjenaDoktora
           rez={rez}
           onClose={() => setShowReviewModal(false)}
           onSubmit={handleSubmitReview}
@@ -708,7 +708,7 @@ const MojeRezervacije = () => {
     }
   };
 
-  const handleReviewSubmit = async (id: number, rating: number, comment: string): Promise<Review | null> => {
+  const handleReviewSubmit = async (id: number, rating: number, comment: string): Promise<OcjenaDoktora | null> => {
     try {
       const res = await fetch(`${apiUrl}/api/appointments/${id}/review`, {
         method: "POST",
@@ -726,7 +726,7 @@ const MojeRezervacije = () => {
         return null;
       }
 
-      const review: Review = {
+      const review: OcjenaDoktora = {
         id: data.review.id,
         rating: data.review.rating,
         comment: data.review.comment ?? null,

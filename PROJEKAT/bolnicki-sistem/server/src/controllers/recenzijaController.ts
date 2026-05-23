@@ -3,11 +3,11 @@ import { prisma } from "../lib/prisma.js";
 
 const MAX_COMMENT_LENGTH = 500;
 
-type ReviewZaDoktora = {
+type RecenzijaZaDoktora = {
   id: number;
-  rating: number;
-  comment: string | null;
-  createdAt: Date;
+  ocjena: number;
+  komentar: string | null;
+  kreiranoAt: Date;
 };
 
 const parseRating = (value: unknown) => {
@@ -22,31 +22,31 @@ const pripremiKomentar = (value: unknown) => {
   return comment.length > 0 ? comment : null;
 };
 
-const mapirajReviewZaPacijenta = (review: ReviewZaDoktora) => ({
-  id: review.id,
-  rating: review.rating,
-  comment: review.comment,
-  createdAt: review.createdAt,
+const mapirajRecenzijuZaPacijenta = (recenzija: RecenzijaZaDoktora) => ({
+  id: recenzija.id,
+  rating: recenzija.ocjena,
+  comment: recenzija.komentar,
+  createdAt: recenzija.kreiranoAt,
 });
 
-const mapirajAnonimneKomentare = (reviews: ReviewZaDoktora[]) => {
+const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
   let brojac = 0;
-  return reviews
-    .filter((review) => review.comment && review.comment.trim().length > 0)
-    .map((review) => {
+  return recenzije
+    .filter((recenzija) => recenzija.komentar && recenzija.komentar.trim().length > 0)
+    .map((recenzija) => {
       brojac += 1;
       return {
-        id: review.id,
+        id: recenzija.id,
         author: `Anonymous Pacijent ${brojac}`,
-        rating: review.rating,
-        comment: review.comment,
-        createdAt: review.createdAt,
+        rating: recenzija.ocjena,
+        comment: recenzija.komentar,
+        createdAt: recenzija.kreiranoAt,
       };
     });
 };
 
 // POST /api/appointments/:id/review
-export const kreirajReview = async (req: Request, res: Response, next: NextFunction) => {
+export const kreirajRecenziju = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const appointmentId = Number(req.params.id);
     if (!Number.isInteger(appointmentId) || appointmentId <= 0) {
@@ -89,7 +89,7 @@ export const kreirajReview = async (req: Request, res: Response, next: NextFunct
         idPacijent: true,
         zavrseno: true,
         datumOtkazivanja: true,
-        review: { select: { id: true } },
+        recenzija: { select: { id: true } },
       },
     });
 
@@ -113,29 +113,29 @@ export const kreirajReview = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    if (rezervacija.review) {
+    if (rezervacija.recenzija) {
       res.status(409).json({ poruka: "Ovaj termin je već ocijenjen." });
       return;
     }
 
     try {
-      const review = await prisma.review.create({
+      const recenzija = await prisma.recenzija.create({
         data: {
-          appointmentId: rezervacija.id,
-          rating,
-          comment,
+          idRezervacije: rezervacija.id,
+          ocjena: rating,
+          komentar: comment,
         },
         select: {
           id: true,
-          rating: true,
-          comment: true,
-          createdAt: true,
+          ocjena: true,
+          komentar: true,
+          kreiranoAt: true,
         },
       });
 
       res.status(201).json({
         poruka: "Hvala na anonimnoj ocjeni.",
-        review: mapirajReviewZaPacijenta(review),
+        review: mapirajRecenzijuZaPacijenta(recenzija),
       });
     } catch (err: any) {
       if (err?.code === "P2002") {
@@ -150,7 +150,7 @@ export const kreirajReview = async (req: Request, res: Response, next: NextFunct
 };
 
 // GET /api/doktori/:id/reviews
-export const getReviewsZaDoktora = async (req: Request, res: Response, next: NextFunction) => {
+export const getRecenzijeZaDoktora = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const doktorId = Number(req.params.id);
     if (!Number.isInteger(doktorId) || doktorId <= 0) {
@@ -164,31 +164,31 @@ export const getReviewsZaDoktora = async (req: Request, res: Response, next: Nex
       return;
     }
 
-    const reviews = await prisma.review.findMany({
+    const recenzije = await prisma.recenzija.findMany({
       where: {
-        hidden: false,
-        appointment: { idDoktor: doktorId },
+        sakriven: false,
+        rezervacija: { idDoktor: doktorId },
       },
       select: {
         id: true,
-        rating: true,
-        comment: true,
-        createdAt: true,
+        ocjena: true,
+        komentar: true,
+        kreiranoAt: true,
       },
       orderBy: [
-        { createdAt: "asc" },
+        { kreiranoAt: "asc" },
         { id: "asc" },
       ],
     });
 
-    const suma = reviews.reduce((acc, review) => acc + review.rating, 0);
-    const averageRating = reviews.length > 0 ? Number((suma / reviews.length).toFixed(2)) : null;
+    const suma = recenzije.reduce((acc, recenzija) => acc + recenzija.ocjena, 0);
+    const averageRating = recenzije.length > 0 ? Number((suma / recenzije.length).toFixed(2)) : null;
 
     res.json({
       doctorId: doktorId,
       averageRating,
-      reviewCount: reviews.length,
-      comments: mapirajAnonimneKomentare(reviews),
+      reviewCount: recenzije.length,
+      comments: mapirajAnonimneKomentare(recenzije),
     });
   } catch (err) {
     next(err);
@@ -196,7 +196,7 @@ export const getReviewsZaDoktora = async (req: Request, res: Response, next: Nex
 };
 
 // PATCH /api/reviews/:id/hide
-export const sakrijReview = async (req: Request, res: Response, next: NextFunction) => {
+export const sakrijRecenziju = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const reviewId = Number(req.params.id);
     if (!Number.isInteger(reviewId) || reviewId <= 0) {
@@ -206,7 +206,7 @@ export const sakrijReview = async (req: Request, res: Response, next: NextFuncti
 
     const hidden = req.body.hidden === undefined ? true : Boolean(req.body.hidden);
 
-    const postoji = await prisma.review.findUnique({
+    const postoji = await prisma.recenzija.findUnique({
       where: { id: reviewId },
       select: { id: true },
     });
@@ -216,25 +216,32 @@ export const sakrijReview = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const review = await prisma.review.update({
+    const recenzija = await prisma.recenzija.update({
       where: { id: reviewId },
       data: {
-        hidden,
-        hiddenAt: hidden ? new Date() : null,
+        sakriven: hidden,
+        sakrivenAt: hidden ? new Date() : null,
       },
       select: {
         id: true,
-        rating: true,
-        comment: true,
-        hidden: true,
-        hiddenAt: true,
-        createdAt: true,
+        ocjena: true,
+        komentar: true,
+        sakriven: true,
+        sakrivenAt: true,
+        kreiranoAt: true,
       },
     });
 
     res.json({
       poruka: hidden ? "Komentar je sakriven." : "Komentar je ponovo vidljiv.",
-      review,
+      review: {
+        id: recenzija.id,
+        rating: recenzija.ocjena,
+        comment: recenzija.komentar,
+        hidden: recenzija.sakriven,
+        hiddenAt: recenzija.sakrivenAt,
+        createdAt: recenzija.kreiranoAt,
+      },
     });
   } catch (err) {
     next(err);

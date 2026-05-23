@@ -4,8 +4,8 @@ import doctorRoutes from "./doctorRoutes.js";
 import tipPregledaRoutes from "./tipPregledaRoutes.js";
 import reservationRoutes from "./reservationRoutes.js";
 import odjelRoutes from "./odjelRoutes.js";
-import appointmentRoutes from "./appointmentRoutes.js";
-import reviewRoutes from "./reviewRoutes.js";
+import terminRecenzijaRoutes from "./terminRecenzijaRoutes.js";
+import recenzijaRoutes from "./recenzijaRoutes.js";
 import { getNalaziZaPacijenta, getNalazPDF, getNalaziZaRezervaciju } from "../controllers/nalazController.js";
 import { getKomentari } from "../controllers/reservationController.js"; // ← dodaj
 import { getSviPacijenti, getHistorijaPacijenta } from "../controllers/patientController.js";
@@ -26,8 +26,8 @@ router.use("/osoblje",     osobljeRoutes);
 router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
-router.use("/appointments", appointmentRoutes);
-router.use("/reviews", reviewRoutes);
+router.use("/appointments", terminRecenzijaRoutes);
+router.use("/reviews", recenzijaRoutes);
 router.use("/odjeli", odjelRoutes);autorizacija
 router.use("/auth", authRoutes);
 router.use("/pregledi", pregledRoutes); 

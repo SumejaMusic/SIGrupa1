@@ -9,7 +9,7 @@ export interface Komentar {
   jeDoktor: boolean;
 }
 
-export interface Review {
+export interface OcjenaDoktora {
   id: number;
   rating: number;
   comment: string | null;
@@ -44,6 +44,6 @@ export interface Termin {
   status: StatusTermina;
   komentari: Komentar[];
   nalazi: Nalaz[];
-  review?: Review | null;
+  review?: OcjenaDoktora | null;
   doktorId?: number;
 }

@@ -1,10 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { prismaMock } from "../lib/__mocks__/prisma.js";
 import {
-  kreirajReview,
-  getReviewsZaDoktora,
-  sakrijReview,
-} from "../controllers/reviewController.js";
+  kreirajRecenziju,
+  getRecenzijeZaDoktora,
+  sakrijRecenziju,
+} from "../controllers/recenzijaController.js";
 
 vi.mock("../lib/prisma.js");
 
@@ -25,7 +25,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("kreirajReview", () => {
+describe("kreirajRecenziju", () => {
   it("kreira anonimnu ocjenu bez spremanja pacijent FK-a", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue({ id: 10 } as any);
     vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
@@ -33,13 +33,13 @@ describe("kreirajReview", () => {
       idPacijent: 10,
       zavrseno: true,
       datumOtkazivanja: null,
-      review: null,
+      recenzija: null,
     } as any);
-    vi.mocked(prismaMock.review.create).mockResolvedValue({
+    vi.mocked(prismaMock.recenzija.create).mockResolvedValue({
       id: 7,
-      rating: 5,
-      comment: "Odličan pristup.",
-      createdAt: new Date("2026-05-23T09:00:00.000Z"),
+      ocjena: 5,
+      komentar: "Odličan pristup.",
+      kreiranoAt: new Date("2026-05-23T09:00:00.000Z"),
     } as any);
 
     const { req, res, next } = mockReqRes(
@@ -48,25 +48,26 @@ describe("kreirajReview", () => {
       { id: 1, uloga: "PACIJENT", doktorId: null }
     );
 
-    await kreirajReview(req, res, next);
+    await kreirajRecenziju(req, res, next);
 
-    expect(prismaMock.review.create).toHaveBeenCalledWith({
+    expect(prismaMock.recenzija.create).toHaveBeenCalledWith({
       data: {
-        appointmentId: 42,
-        rating: 5,
-        comment: "Odličan pristup.",
+        idRezervacije: 42,
+        ocjena: 5,
+        komentar: "Odličan pristup.",
       },
       select: {
         id: true,
-        rating: true,
-        comment: true,
-        createdAt: true,
+        ocjena: true,
+        komentar: true,
+        kreiranoAt: true,
       },
     });
 
-    const dataArg = vi.mocked(prismaMock.review.create).mock.calls[0][0].data as any;
+    const dataArg = vi.mocked(prismaMock.recenzija.create).mock.calls[0][0].data as any;
     expect(dataArg.idPacijent).toBeUndefined();
     expect(dataArg.patientId).toBeUndefined();
+    expect(dataArg.idKorisnik).toBeUndefined();
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
@@ -80,11 +81,11 @@ describe("kreirajReview", () => {
   it("ne dozvoljava ocjenu izvan raspona 1-5", async () => {
     const { req, res, next } = mockReqRes({ id: "42" }, { rating: 6 });
 
-    await kreirajReview(req, res, next);
+    await kreirajRecenziju(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ poruka: "Ocjena je obavezna i mora biti broj od 1 do 5." });
-    expect(prismaMock.review.create).not.toHaveBeenCalled();
+    expect(prismaMock.recenzija.create).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -95,16 +96,16 @@ describe("kreirajReview", () => {
       idPacijent: 10,
       zavrseno: true,
       datumOtkazivanja: null,
-      review: { id: 3 },
+      recenzija: { id: 3 },
     } as any);
 
     const { req, res, next } = mockReqRes({ id: "42" }, { rating: 4 });
 
-    await kreirajReview(req, res, next);
+    await kreirajRecenziju(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({ poruka: "Ovaj termin je već ocijenjen." });
-    expect(prismaMock.review.create).not.toHaveBeenCalled();
+    expect(prismaMock.recenzija.create).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -115,26 +116,26 @@ describe("kreirajReview", () => {
       idPacijent: 10,
       zavrseno: false,
       datumOtkazivanja: null,
-      review: null,
+      recenzija: null,
     } as any);
 
     const { req, res, next } = mockReqRes({ id: "42" }, { rating: 4 });
 
-    await kreirajReview(req, res, next);
+    await kreirajRecenziju(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ poruka: "Ocjenu možete ostaviti tek nakon završenog pregleda." });
-    expect(prismaMock.review.create).not.toHaveBeenCalled();
+    expect(prismaMock.recenzija.create).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 });
 
-describe("getReviewsZaDoktora", () => {
+describe("getRecenzijeZaDoktora", () => {
   it("vraća prosjek i anonimne komentare bez podataka o pacijentu", async () => {
-    vi.mocked(prismaMock.review.findMany).mockResolvedValue([
-      { id: 1, rating: 1, comment: "Loša komunikacija.", createdAt: new Date("2026-05-20") },
-      { id: 2, rating: 5, comment: "Odlično iskustvo.", createdAt: new Date("2026-05-21") },
-      { id: 3, rating: 4, comment: null, createdAt: new Date("2026-05-22") },
+    vi.mocked(prismaMock.recenzija.findMany).mockResolvedValue([
+      { id: 1, ocjena: 1, komentar: "Loša komunikacija.", kreiranoAt: new Date("2026-05-20") },
+      { id: 2, ocjena: 5, komentar: "Odlično iskustvo.", kreiranoAt: new Date("2026-05-21") },
+      { id: 3, ocjena: 4, komentar: null, kreiranoAt: new Date("2026-05-22") },
     ] as any);
 
     const { req, res, next } = mockReqRes(
@@ -143,12 +144,12 @@ describe("getReviewsZaDoktora", () => {
       { id: 8, uloga: "DOKTOR", doktorId: 2 }
     );
 
-    await getReviewsZaDoktora(req, res, next);
+    await getRecenzijeZaDoktora(req, res, next);
 
-    expect(prismaMock.review.findMany).toHaveBeenCalledWith(expect.objectContaining({
+    expect(prismaMock.recenzija.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: {
-        hidden: false,
-        appointment: { idDoktor: 2 },
+        sakriven: false,
+        rezervacija: { idDoktor: 2 },
       },
     }));
     expect(res.json).toHaveBeenCalledWith({
@@ -165,16 +166,16 @@ describe("getReviewsZaDoktora", () => {
   });
 });
 
-describe("sakrijReview", () => {
+describe("sakrijRecenziju", () => {
   it("administrator može sakriti komentar koji krši pravila", async () => {
-    vi.mocked(prismaMock.review.findUnique).mockResolvedValue({ id: 9 } as any);
-    vi.mocked(prismaMock.review.update).mockResolvedValue({
+    vi.mocked(prismaMock.recenzija.findUnique).mockResolvedValue({ id: 9 } as any);
+    vi.mocked(prismaMock.recenzija.update).mockResolvedValue({
       id: 9,
-      rating: 2,
-      comment: "Neprimjeren komentar",
-      hidden: true,
-      hiddenAt: new Date("2026-05-23T10:00:00.000Z"),
-      createdAt: new Date("2026-05-22T10:00:00.000Z"),
+      ocjena: 2,
+      komentar: "Neprimjeren komentar",
+      sakriven: true,
+      sakrivenAt: new Date("2026-05-23T10:00:00.000Z"),
+      kreiranoAt: new Date("2026-05-22T10:00:00.000Z"),
     } as any);
 
     const { req, res, next } = mockReqRes(
@@ -183,11 +184,11 @@ describe("sakrijReview", () => {
       { id: 1, uloga: "ADMINISTRATOR", doktorId: null }
     );
 
-    await sakrijReview(req, res, next);
+    await sakrijRecenziju(req, res, next);
 
-    expect(prismaMock.review.update).toHaveBeenCalledWith(expect.objectContaining({
+    expect(prismaMock.recenzija.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 9 },
-      data: expect.objectContaining({ hidden: true }),
+      data: expect.objectContaining({ sakriven: true }),
     }));
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
       poruka: "Komentar je sakriven.",

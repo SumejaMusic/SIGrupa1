@@ -51,7 +51,7 @@ beforeEach(async () => {
   await prisma.recept.deleteMany();
   await prisma.historijaPregleda.deleteMany();
   await prisma.rezervacijaSpecijalista.deleteMany();
-  await prisma.review.deleteMany();
+  await prisma.recenzija.deleteMany();
   await prisma.rezervacije.deleteMany();
   await prisma.listaCekanja.deleteMany();
   await prisma.termin.deleteMany();
