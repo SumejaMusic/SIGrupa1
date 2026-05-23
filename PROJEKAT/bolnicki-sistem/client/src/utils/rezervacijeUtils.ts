@@ -117,6 +117,13 @@ export function mapirajRezervaciju(r: any): Termin {
     status,
     komentari,
     nalazi: [],
+    review: r.review ? {
+      id: r.review.id,
+      rating: r.review.rating,
+      comment: r.review.comment ?? null,
+      createdAt: r.review.createdAt,
+      hidden: r.review.hidden,
+    } : null,
     doktorId: r.idDoktor,
   };
 }

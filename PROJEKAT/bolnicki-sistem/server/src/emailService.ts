@@ -301,3 +301,69 @@ export async function posaljiOtkazivanjeRezerv(podaci: OtkazivanjeEmailPodaci): 
 
   console.log(`✅ Email otkazivanja rezervacije #${rezervacijaId} poslan.`);
 }
+
+interface PozivZaOcjenuEmailPodaci {
+  pacijentEmail: string;
+  pacijentIme: string;
+  pacijentPrezime: string;
+  doktorIme: string;
+  doktorPrezime: string;
+  datum: Date;
+  vrijeme: number;
+  rezervacijaId: number;
+}
+
+export async function posaljiPozivZaOcjenu(podaci: PozivZaOcjenuEmailPodaci): Promise<void> {
+  const {
+    pacijentIme, pacijentPrezime,
+    doktorIme, doktorPrezime,
+    datum, vrijeme, rezervacijaId,
+  } = podaci;
+
+  const frontendUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
+  const reviewLink = `${frontendUrl}/moje-rezervacije`;
+  const formatiraniDatum = formatDatumEmail(datum);
+
+  const result = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to: TO_EMAIL,
+    subject: `Poziv za anonimnu ocjenu pregleda #${rezervacijaId}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #15803d; padding: 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 22px;">Anonimna ocjena pregleda</h1>
+          <p style="color: #dcfce7; margin: 6px 0 0;">Rezervacija #${rezervacijaId}</p>
+        </div>
+        <div style="padding: 30px;">
+          <p style="font-size: 16px;">Poštovani/a <strong>${pacijentIme} ${pacijentPrezime}</strong>,</p>
+          <p style="color: #555;">Vaš pregled kod Dr. ${doktorIme} ${doktorPrezime} je završen. Možete ostaviti anonimnu ocjenu rada doktora.</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background-color: #f8f9fa;">
+              <td style="padding: 12px 16px; border: 1px solid #dee2e6; font-weight: bold; width: 45%; color: #495057;">Datum</td>
+              <td style="padding: 12px 16px; border: 1px solid #dee2e6;">${formatiraniDatum}</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 16px; border: 1px solid #dee2e6; font-weight: bold; color: #495057;">Vrijeme</td>
+              <td style="padding: 12px 16px; border: 1px solid #dee2e6;">${formatVrijeme(vrijeme)} h</td>
+            </tr>
+          </table>
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${reviewLink}" style="background-color: #15803d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">Ocijeni pregled</a>
+          </div>
+          <p style="color: #555;">Doktor neće vidjeti Vaše ime niti bilo koji identifikacioni podatak uz ocjenu.</p>
+        </div>
+        <div style="background-color: #f8f9fa; padding: 16px; text-align: center; border-top: 1px solid #dee2e6;">
+          <p style="margin: 0; color: #888; font-size: 13px;">
+            © ${new Date().getFullYear()} Bolnički Sistem — Automatska obavijest, ne odgovarajte na ovaj email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+
+  if (result.error) {
+    throw new Error(`Resend nije poslao poziv za ocjenu: ${result.error.message}`);
+  }
+
+  console.log(`✅ Poziv za anonimnu ocjenu rezervacije #${rezervacijaId} poslan.`);
+}

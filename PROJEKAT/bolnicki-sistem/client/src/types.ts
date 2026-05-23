@@ -9,6 +9,14 @@ export interface Komentar {
   jeDoktor: boolean;
 }
 
+export interface Review {
+  id: number;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  hidden?: boolean;
+}
+
 export interface Nalaz {
   id: number;
   naziv: string;
@@ -36,5 +44,6 @@ export interface Termin {
   status: StatusTermina;
   komentari: Komentar[];
   nalazi: Nalaz[];
+  review?: Review | null;
   doktorId?: number;
 }

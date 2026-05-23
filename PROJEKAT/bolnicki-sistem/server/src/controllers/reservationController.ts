@@ -361,6 +361,15 @@ export const getRezervacijeZaPacijenta = async (req: Request, res: Response, nex
           include: { korisnik: { select: { ime: true, prezime: true } } },
           orderBy: { datumKreiranja: "asc" },
         },
+        review: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            hidden: true,
+            createdAt: true,
+          },
+        },
       },
       orderBy: { datumKreiranja: "desc" },
     });
