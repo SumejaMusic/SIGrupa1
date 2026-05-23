@@ -62,6 +62,8 @@ interface SlobodanTermin {
   id: number;
   doktorId: number;
   doktor: SazetakDoktora;
+  datum?: string;
+  datumTekst?: string;
   vrijeme: number;
   vrijemeTekst: string;
 }
@@ -141,6 +143,16 @@ const prikazIdentifikatoraPacijenta = (patient: Pacijent) => {
 
   return `ID pacijenta: ${patient.id}`;
 };
+
+const normalizeSearchText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[čćČĆ]/g, "c")
+    .replace(/[šŠ]/g, "s")
+    .replace(/[žŽ]/g, "z");
 
 export default function SekcijaZauzetostiKabineta({
   allPatients,
@@ -281,7 +293,7 @@ function StatistikaZauzetosti({ label, value, className }: { label: string; valu
 function KarticaSobe({ room, onAssign }: { room: ZauzetostSobe; onAssign: () => void }) {
   const config = statusConfig[room.status];
   const StatusIcon = config.icon;
-  const isAssignable = room.canAssignEmergency;
+  const isAssignable = room.status === "SLOBODAN";
 
   return (
     <button
@@ -407,10 +419,18 @@ function ModalDodjeleHitnogSlucaja({
   const hitniPregled = tipoviPregleda.find((tip) => tip.naziv.toLowerCase().includes("hitni"));
 
   const filteredPatients = allPatients.filter((patient) => {
-    const query = search.trim().toLowerCase();
+    const query = normalizeSearchText(search.trim());
     if (query.length < 2) return false;
 
-    return `${patient.korisnik.ime} ${patient.korisnik.prezime}`.toLowerCase().includes(query);
+    const searchable = normalizeSearchText([
+      patient.korisnik.ime,
+      patient.korisnik.prezime,
+      patient.korisnik.email,
+      patient.korisnik.brojTelefona ?? "",
+      patient.brojKnjizice ?? "",
+    ].join(" "));
+
+    return searchable.includes(query);
   });
 
   const handleAssign = async () => {
@@ -457,7 +477,7 @@ function ModalDodjeleHitnogSlucaja({
             <h3 className="text-base font-bold text-gray-900">Dodjela hitnog slučaja</h3>
             <p className="text-xs text-gray-500 mt-1 truncate">
               {room.naziv}
-              {selectedTerm ? ` · ${selectedTerm.vrijemeTekst} · Dr. ${selectedTerm.doktor.ime} ${selectedTerm.doktor.prezime}` : ""}
+              {selectedTerm ? ` · ${selectedTerm.datumTekst ? `${selectedTerm.datumTekst} ` : ""}${selectedTerm.vrijemeTekst} · Dr. ${selectedTerm.doktor.ime} ${selectedTerm.doktor.prezime}` : ""}
             </p>
           </div>
           <button
@@ -541,7 +561,7 @@ function ModalDodjeleHitnogSlucaja({
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Slobodni termini danas</label>
+            <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Prvi slobodni termini</label>
             {room.availableTerms.length === 0 ? (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 Nema slobodnih termina za brzu dodjelu.
@@ -563,7 +583,10 @@ function ModalDodjeleHitnogSlucaja({
                       }`}
                     >
                       <p className="text-sm font-bold">{term.vrijemeTekst}</p>
-                      <p className="text-xs truncate">Dr. {term.doktor.ime} {term.doktor.prezime}</p>
+                      <p className="text-xs truncate">
+                        {term.datumTekst ? `${term.datumTekst} · ` : ""}
+                        Dr. {term.doktor.ime} {term.doktor.prezime}
+                      </p>
                     </button>
                   );
                 })}

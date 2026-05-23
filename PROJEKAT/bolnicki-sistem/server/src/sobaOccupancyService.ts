@@ -36,6 +36,8 @@ type SazetakSlobodnogTermina = {
   id: number;
   doktorId: number;
   doktor: SazetakDoktora;
+  datum: string;
+  datumTekst: string;
   vrijeme: number;
   vrijemeTekst: string;
 };
@@ -79,6 +81,20 @@ const createDayRange = (dateKey: string) => ({
   start: new Date(`${dateKey}T00:00:00.000Z`),
   end: new Date(`${dateKey}T23:59:59.999Z`),
 });
+
+const addDays = (date: Date, days: number) => {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+};
+
+const isoDateKey = (date: Date): string => date.toISOString().substring(0, 10);
+
+const formatDateText = (date: Date): string => {
+  const dateKey = isoDateKey(date);
+  const [year, month, day] = dateKey.split("-");
+  return `${day}.${month}.${year}.`;
+};
 
 const summarizeDoctor = (doktor: any): SazetakDoktora => ({
   id: doktor.id,
@@ -132,6 +148,8 @@ const summarizeAvailableTerm = (termin: any): SazetakSlobodnogTermina => ({
   id: termin.id,
   doktorId: termin.idDoktor,
   doktor: summarizeDoctor(termin.doktor),
+  datum: isoDateKey(termin.datum),
+  datumTekst: formatDateText(termin.datum),
   vrijeme: termin.vrijeme,
   vrijemeTekst: minutesToTime(termin.vrijeme),
 });
@@ -163,6 +181,8 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
       ? -1
       : 24 * 60;
   const { start, end } = createDayRange(date);
+  const includeUpcomingFreeTerms = date >= today;
+  const freeTermsEnd = includeUpcomingFreeTerms ? addDays(end, 7) : end;
 
   const [rooms, reservations, freeTerms] = await Promise.all([
     prisma.soba.findMany({
@@ -211,7 +231,7 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
     prisma.termin.findMany({
       where: {
         status: StatusTermina.SLOBODAN,
-        datum: { gte: start, lte: end },
+        datum: { gte: start, lte: freeTermsEnd },
       },
       include: {
         doktor: {
@@ -241,7 +261,7 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
   for (const term of freeTerms) {
     const roomId = getTermRoomId(term);
     if (!roomId) continue;
-    if (isToday && term.vrijeme <= referenceMinute) continue;
+    if (isToday && isoDateKey(term.datum) === today && term.vrijeme <= referenceMinute) continue;
 
     const current = freeTermsByRoom.get(roomId) ?? [];
     current.push(summarizeAvailableTerm(term));
@@ -254,7 +274,8 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
     refreshIntervalSeconds: 60,
     rooms: rooms.map((room) => {
       const roomAppointments = (appointmentsByRoom.get(room.id) ?? []).sort((a, b) => a.vrijeme - b.vrijeme);
-      const availableTerms = (freeTermsByRoom.get(room.id) ?? []).sort((a, b) => a.vrijeme - b.vrijeme);
+      const availableTerms = (freeTermsByRoom.get(room.id) ?? [])
+        .sort((a, b) => a.datum.localeCompare(b.datum) || a.vrijeme - b.vrijeme);
       const currentAppointment = isToday
         ? roomAppointments.find((appointment) => (
             appointment.vrijeme <= referenceMinute &&
@@ -279,7 +300,7 @@ export async function getZauzetostSobaService(dateParam?: string, now = new Date
         currentAppointment,
         nextAppointment,
         availableTerms: availableTerms.slice(0, 8),
-        canAssignEmergency: status === "SLOBODAN" && availableTerms.length > 0,
+        canAssignEmergency: status === "SLOBODAN" && (availableTerms.length > 0 || (isToday && activeDoctor !== null)),
       };
     }),
   };
