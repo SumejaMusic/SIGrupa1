@@ -17,6 +17,8 @@ export interface Nalaz {
 }
 
 export interface Pacijent {
+  reviewPeriodDays: number;
+  hronicniBolesnik: boolean;
   id: number;
   ime: string;
   prezime: string;
