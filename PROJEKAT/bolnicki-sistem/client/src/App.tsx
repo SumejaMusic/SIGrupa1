@@ -23,6 +23,7 @@ import ResetPasswordPage from './Stranice/ResetPasswordPage';
 
 import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
+import Chatbot from './components/Chatbot/Chatbot';
 
 import './App.css';
 import Layout from './components/Layout';
@@ -173,10 +174,13 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      <Router>
+        <AppContent />
+      </Router>
+      <Chatbot />
+    </>
   );
-} 
+}
 
 export default App;

@@ -41,7 +41,11 @@ export const getSviDoktori = async (
     }));
 
     res.json(doktoriMapirani);
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === "P1001") {
+      res.status(503).json({ poruka: "Baza podataka trenutno nije dostupna. Pokušajte ponovo za trenutak." });
+      return;
+    }
     next(err);
   }
 };
@@ -73,7 +77,11 @@ export const getDoktorById = async (
     }
 
     res.json(doktor);
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === "P1001") {
+      res.status(503).json({ poruka: "Baza podataka trenutno nije dostupna. Pokušajte ponovo za trenutak." });
+      return;
+    }
     next(err);
   }
 };
