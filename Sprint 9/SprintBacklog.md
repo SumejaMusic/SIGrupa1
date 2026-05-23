@@ -14,23 +14,21 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 
 | ID | Naziv | Tip | Član tima | Procjena (SP) |
 |:---|:------|:----|:----------|:-------------|
-| US-24 | Panel medicinskog osoblja | User Story |  | 5 |
 | US-32 | Upload i evidencija laboratorijskih nalaza | User Story |  | 3 |
-| US-11 | Dashboard za doktora – kompletna logika | User Story |  | 5 |
-| US-28 | Označavanje hitnosti termina | User Story |  | 2 |
+| US-11 | Dashboard za doktora – kompletna logika | User Story | Merjem Milišić | 5 |
 | US-01 | Historija pregleda korisnika | User Story |  | 3 |
-| US-31-EXT | Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik | Proširenje US-31 |  | 3 |
+| US-31-EXT | Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik | Proširenje US-31 |  Kenan Hatibović | 3 |
 | BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
-| BUG-01 | Server | Bug fix |  | 2 |
-| BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix |  | 2 |
+| BUG-01 | Server | Bug fix |  Sumeja Mušić| 2 |
+| BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix | Merjem Milišić | 2 |
 | BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix | Lamija Halilović  | 1 |
-| US-38 | Lista čekanja za termine | Nova User Story |  | 5 |
-| US-39 | Grafički prikaz zauzetosti specijalističkih kabineta | Nova User Story |  | 3 |
-| US-40 | Zahtjev za deaktivaciju i anonimizaciju profila | Nova User Story |  | 5 |
-| US-41 | Obavijest pacijentu o otkazanom/pomjerenom terminu | Nova User Story |  | 3 |
-| US-42 | Anonimna ocjena i komentar na rad doktora | Nova User Story |  | 5 |
-| US-43 | Profil korisnika – frontend + mapa | Nova User Story |  | 3 |
-|  |Admin panela - osonovne funkcionalnsoti  | || ||1|
+| US-38 | Lista čekanja za termine | Nova User Story | Amina Alispahić  | 5 |
+| US-39 | Grafički prikaz zauzetosti specijalističkih kabineta | Nova User Story | Hamza Husović  | 3 |
+| US-40 | Zahtjev za deaktivaciju i anonimizaciju profila | Nova User Story | Lamija Halilović | 5 |
+| US-41 | Obavijest pacijentu o otkazanom/pomjerenom terminu | Nova User Story | Merjem Milišić | 3 |
+| US-42 | Anonimna ocjena i komentar na rad doktora | Nova User Story | Almedin šehić | 5 |
+| US-43 | Profil korisnika – frontend + mapa | Nova User Story |  Lamija Halilović| 3 |
+|  |Admin panela - osonovne funkcionalnsoti  | |Hana Mahmutović| ||1|
 |/|Testiranje| | || |
 
 ---

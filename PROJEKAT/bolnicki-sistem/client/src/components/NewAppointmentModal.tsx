@@ -655,7 +655,7 @@ const handleSubmit = () => {
                     { icon: Clock, label:'Termin', value: (() => {
   if (!date) return '—';
   const [god, mjes, dan] = date.split('-');
-  return `${dan}.${mjes}.${god}. u ${selectedTermin ? fmtVrijeme(selectedTermin.vrijeme) : '—'}`;
+  return `${dan}/${mjes}/${god} u ${selectedTermin ? fmtVrijeme(selectedTermin.vrijeme) : '—'}`;
 })() },
                     ...(selectedDoctor?.soba ? [{ icon: MapPin, label:'Soba', value:`${selectedDoctor.soba.naziv} (Sprat ${selectedDoctor.soba.sprat})` }] : []),
                   ].map(({ icon: Icon, label, value }) => (

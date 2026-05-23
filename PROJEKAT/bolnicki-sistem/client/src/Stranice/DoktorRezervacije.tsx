@@ -35,6 +35,7 @@ import type {
 import {
   danasUTC,
   formatV,
+  formatDatumPrikaz,
   tipConfig,
   getAge,
   mapirajRezervaciju
@@ -93,9 +94,7 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
 
     ucitajPacijente();
 
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   const filtrirani = pacijenti.filter(p =>
@@ -111,16 +110,16 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="px-6 py-4 border-b border-blue-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Plus size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Plus size={17} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Nova rezervacija</h2>
-              <p className="text-xs text-blue-200">Odaberite pacijenta za kojeg rezervišete</p>
+              <h2 className="text-base font-bold text-white leading-tight">Nova rezervacija</h2>
+              <p className="text-xs text-blue-200 mt-0.5">Odaberite pacijenta za kojeg rezervišete</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
@@ -128,37 +127,37 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="p-5">
-          <div className="relative mb-3">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative mb-4">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={pretraga}
               onChange={e => setPretraga(e.target.value)}
-              placeholder="Pretraži pacijenta po imenu ili emailu..."
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400 bg-gray-50"
+              placeholder="Pretraži po imenu ili emailu..."
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-gray-50 transition-all"
               autoFocus
             />
           </div>
           <div className="overflow-y-auto space-y-1.5 max-h-72">
             {loading ? (
-              <div className="text-center py-10 text-sm text-gray-400">Učitavanje pacijenata...</div>
+              <div className="text-center py-12 text-sm text-gray-400">Učitavanje pacijenata...</div>
             ) : greska ? (
-              <div className="text-center py-10 text-sm text-red-500">{greska}</div>
+              <div className="text-center py-12 text-sm text-red-500">{greska}</div>
             ) : filtrirani.length === 0 ? (
-              <div className="text-center py-10 text-sm text-gray-400">Nije pronađen nijedan pacijent</div>
+              <div className="text-center py-12 text-sm text-gray-400">Nije pronađen nijedan pacijent</div>
             ) : filtrirani.map(p => (
               <button
                 key={p.id}
                 onClick={() => handleOdaberiPacijenta(p)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-white transition-all text-left hover:border-blue-300 hover:bg-blue-50"
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-white transition-all text-left hover:border-blue-300 hover:bg-blue-50 group"
               >
                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-blue-700">
                   {p.ime[0]}{p.prezime[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-gray-900">{p.ime} {p.prezime}</div>
-                  <div className="text-xs text-gray-500">{p.email} · {getAge(p.godisteRodjenja)} god.</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{p.email} · {getAge(p.godisteRodjenja)} god.</div>
                 </div>
-                <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
+                <ChevronRight size={14} className="text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
               </button>
             ))}
           </div>
@@ -188,16 +187,16 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600">
+        <div className="px-6 py-4 border-b border-orange-600 flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Timer size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Timer size={17} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Upit za promjenu dužine</h2>
-              <p className="text-xs text-orange-100">Zahtjev šalje administrator na odobrenje</p>
+              <h2 className="text-base font-bold text-white leading-tight">Upit za promjenu dužine</h2>
+              <p className="text-xs text-orange-100 mt-0.5">Zahtjev šalje administrator na odobrenje</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
@@ -206,8 +205,8 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
         </div>
         <div className="p-5">
           {poslano ? (
-            <div className="flex flex-col items-center justify-center text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-3">
+            <div className="flex flex-col items-center justify-center text-center py-10">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-4">
                 <CheckCircle size={32} className="text-orange-500" />
               </div>
               <h3 className="text-base font-bold text-gray-900 mb-1">Upit uspješno poslan!</h3>
@@ -215,17 +214,17 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <div className="bg-orange-50 rounded-xl border border-orange-100 p-3">
-                <div className="text-xs text-orange-600 font-semibold mb-1">Termin</div>
+              <div className="bg-orange-50 rounded-xl border border-orange-100 p-3.5">
+                <div className="text-xs text-orange-600 font-semibold mb-1.5 uppercase tracking-wide" style={{ fontSize: "10px" }}>Termin</div>
                 <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
-                <div className="text-xs text-gray-500">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
-                <div className="mt-1.5 flex items-center gap-1.5">
+                <div className="text-xs text-gray-500 mt-0.5">{formatDatumPrikaz(termin.datum)} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
+                <div className="mt-2 flex items-center gap-2">
                   <span className="text-xs text-gray-500">Trenutna dužina:</span>
                   <span className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">{trenutnaDuzina} min</span>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-2 block">Željena dužina termina (min)</label>
+                <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase tracking-wide" style={{ fontSize: "10px" }}>Željena dužina termina</label>
                 <div className="grid grid-cols-3 gap-2">
                   {opcijeDuzina.map(d => (
                     <button
@@ -233,25 +232,27 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                       onClick={() => setZeljenaDuzina(d)}
                       disabled={d === trenutnaDuzina}
                       className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                        d === zeljenaDuzina ? "bg-orange-500 text-white border-orange-500"
-                        : d === trenutnaDuzina ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        d === zeljenaDuzina ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                        : d === trenutnaDuzina ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                         : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
                       }`}
                     >
                       {d} min
-                      {d === trenutnaDuzina && <span className="block text-xs font-normal">(trenutno)</span>}
+                      {d === trenutnaDuzina && <span className="block text-xs font-normal text-gray-400">(trenutno)</span>}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-2 block">Razlog promjene <span className="text-red-500">*</span></label>
+                <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Razlog promjene <span className="text-red-500 normal-case">*</span>
+                </label>
                 <textarea
                   value={razlog}
                   onChange={e => setRazlog(e.target.value)}
                   placeholder="Npr. Kompleksni pacijent, zahtijeva detaljniji pregled..."
                   rows={3}
-                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-orange-400 bg-gray-50"
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-gray-50 transition-all"
                 />
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-400">Obavezno polje</span>
@@ -263,7 +264,7 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                 disabled={!razlog.trim() || zeljenaDuzina === trenutnaDuzina}
                 className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
                   razlog.trim() && zeljenaDuzina !== trenutnaDuzina
-                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    ? "bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
               >
@@ -278,38 +279,164 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
 }
 
 // ─── Modal: Potvrda otkazivanja ────────────────────────────────────────────
-function ModalOtkaziTermin({ termin, onClose, onConfirm }: {
-  termin: Termin; onClose: () => void; onConfirm: () => void;
+function ModalOtkaziTermin({ termin, onClose, onConfirm, onPomjeri }: {
+  termin: Termin; 
+  onClose: () => void; 
+  onConfirm: () => void;
+  onPomjeri: () => void;
 }) {
   const tc = tipConfig[termin.tip];
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div className="px-6 py-5 flex flex-col items-center text-center">
+        <div className="px-6 pt-7 pb-6 flex flex-col items-center text-center">
           <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
             <XCircle size={28} className="text-red-500" />
           </div>
           <h2 className="text-base font-bold text-gray-900 mb-1">Otkazivanje termina</h2>
-          <p className="text-sm text-gray-500 mb-4">Da li ste sigurni da želite otkazati ovaj termin?</p>
-          <div className={`w-full rounded-xl p-3 mb-5 border ${tc.border} ${tc.bg}`}>
+          <p className="text-sm text-gray-500 mb-4">Šta želite učiniti s ovim terminom?</p>
+          <div className={`w-full rounded-xl p-3.5 mb-4 border ${tc.border} ${tc.bg}`}>
             <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1.5 inline-block ${tc.badge}`}>{tc.label}</span>
+            <div className="text-xs text-gray-500 mt-0.5">{formatDatumPrikaz(termin.datum)} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
           </div>
-          <p className="text-xs text-gray-400 mb-5">Pacijent će biti automatski obaviješten putem emaila.</p>
-          <div className="flex gap-3 w-full">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+          <div className="flex flex-col gap-2 w-full">
+            <button 
+              onClick={onPomjeri}
+              className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+            >
+              <Calendar size={15} /> Pomjeri na drugi termin
+            </button>
+            <button 
+              onClick={onConfirm}
+              className="w-full py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm"
+            >
+              Otkaži bez pomjeranja
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+            >
               Odustani
             </button>
-            <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors">
-              Da, otkaži termin
-            </button>
           </div>
+          <p className="text-xs text-gray-400 mt-3 flex items-center gap-1.5">
+            <span>📧</span> Pacijent će biti obaviješten emailom u oba slučaja.
+          </p>
         </div>
       </div>
     </div>
   );
 }
+
+function ModalPomjeriTermin({ termin, onClose, onConfirm }: {
+  termin: Termin;
+  onClose: () => void;
+  onConfirm: (noviTerminId: number) => void;
+}) {
+  const [termini, setTermini] = useState<any[]>([]);
+  const [selectedTerminId, setSelectedTerminId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const sada = new Date();
+    fetch(`${apiUrl}/api/termini?doktorId=${termin.doktorId ?? ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const slobodni = data.filter(t => {
+            if (t.status !== "SLOBODAN") return false;
+            const vrijemeTermina = new Date(Date.UTC(
+              new Date(t.datum).getUTCFullYear(),
+              new Date(t.datum).getUTCMonth(),
+              new Date(t.datum).getUTCDate(),
+              Math.floor(t.vrijeme / 60),
+              t.vrijeme % 60
+            ));
+            return vrijemeTermina.getTime() > sada.getTime();
+          });
+          setTermini(slobodni);
+        }
+      })
+      .catch(() => setTermini([])  )
+      .finally(() => setLoading(false));
+  }, []);
+
+  const formatirajDatum = (datum: string) => {
+    const d = new Date(datum.includes("T") ? datum : datum + "T12:00:00Z");
+    const dani = ["ned", "pon", "uto", "sri", "čet", "pet", "sub"];
+    const mjeseci = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+    return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-blue-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Calendar size={17} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Pomjeri termin</h2>
+              <p className="text-xs text-blue-200">{termin.pacijent.ime} {termin.pacijent.prezime}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+            <X size={16} className="text-white" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-4">
+          {loading ? (
+            <div className="text-center py-10 text-sm text-gray-400">Učitavanje slobodnih termina...</div>
+          ) : termini.length === 0 ? (
+            <div className="text-center py-10 text-sm text-gray-400">Nema slobodnih termina.</div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500 mb-3">Odaberite novi termin:</p>
+              {termini.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setSelectedTerminId(t.id)}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
+                    selectedTerminId === t.id
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="text-sm font-semibold text-gray-800">{formatirajDatum(t.datum)}</span>
+                  <span className="text-sm font-bold text-blue-600 tabular-nums">
+                    {String(Math.floor(t.vrijeme / 60)).padStart(2, "0")}:{String(t.vrijeme % 60).padStart(2, "0")}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="px-4 pb-4 pt-3 flex gap-3 border-t border-gray-100 flex-shrink-0">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+            Odustani
+          </button>
+          <button
+            onClick={() => selectedTerminId && onConfirm(selectedTerminId)}
+            disabled={!selectedTerminId}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              selectedTerminId
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            Potvrdi pomjeranje
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── Modal: Završi pregled ─────────────────────────────────────────────────
 function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
@@ -381,17 +508,17 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-green-600 to-green-700 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-green-700 flex items-center justify-between bg-gradient-to-r from-green-600 to-green-700 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Stethoscope size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Stethoscope size={17} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Završi pregled</h2>
-              <p className="text-xs text-green-100">
-                {termin.pacijent.ime} {termin.pacijent.prezime} · {termin.datum}
+              <h2 className="text-base font-bold text-white leading-tight">Završi pregled</h2>
+              <p className="text-xs text-green-100 mt-0.5">
+                {termin.pacijent.ime} {termin.pacijent.prezime} · {formatDatumPrikaz(termin.datum)}
               </p>
             </div>
           </div>
@@ -402,8 +529,8 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
 
         <div className="overflow-y-auto flex-1 p-5">
           {uspjesno ? (
-            <div className="flex flex-col items-center justify-center text-center py-10">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-3">
+            <div className="flex flex-col items-center justify-center text-center py-12">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
                 <CheckCircle size={32} className="text-green-500" />
               </div>
               <h3 className="text-base font-bold text-gray-900 mb-1">Pregled uspješno završen!</h3>
@@ -412,107 +539,108 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
           ) : (
             <div className="space-y-4">
               {greska && (
-                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center gap-2">
+                  <XCircle size={15} className="flex-shrink-0" />
                   {greska}
                 </div>
               )}
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Dijagnoza <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Dijagnoza <span className="text-red-500 normal-case">*</span>
                 </label>
                 <textarea
                   value={dijagnoza}
                   onChange={e => setDijagnoza(e.target.value)}
                   placeholder="Unesite dijagnozu..."
                   rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 bg-gray-50"
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Terapija <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Terapija <span className="text-red-500 normal-case">*</span>
                 </label>
                 <textarea
                   value={terapija}
                   onChange={e => setTerapija(e.target.value)}
                   placeholder="Unesite preporučenu terapiju..."
                   rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 bg-gray-50"
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Bilješke <span className="text-gray-400 font-normal">(opcionalno)</span>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Bilješke <span className="text-gray-400 font-normal normal-case">(opcionalno)</span>
                 </label>
                 <textarea
                   value={biljeske}
                   onChange={e => setBiljeske(e.target.value)}
                   placeholder="Dodatne napomene..."
                   rows={2}
-                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 bg-gray-50"
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                 />
               </div>
               <div className="border border-gray-200 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setDodajRecept(p => !p)}
                   className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${
-                    dodajRecept ? "bg-green-50 text-green-700" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    dodajRecept ? "bg-green-50 text-green-700 border-b border-green-100" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Pill size={15} />
                     Dodaj recept
                     {dodajRecept && (
-                      <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-medium">uključeno</span>
+                      <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-semibold">uključeno</span>
                     )}
                   </div>
                   {dodajRecept ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                 </button>
                 {dodajRecept && (
-                  <div className="p-4 space-y-3 border-t border-gray-200 bg-white">
+                  <div className="p-4 space-y-3 bg-white">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="col-span-2">
-                        <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                          Naziv lijeka <span className="text-red-500">*</span>
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Naziv lijeka <span className="text-red-500 normal-case">*</span>
                         </label>
                         <input
                           value={nazivLijeka}
                           onChange={e => setNazivLijeka(e.target.value)}
                           placeholder="Npr. Brufen 400mg"
-                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                          Doza <span className="text-red-500">*</span>
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Doza <span className="text-red-500 normal-case">*</span>
                         </label>
                         <input
                           value={doza}
                           onChange={e => setDoza(e.target.value)}
                           placeholder="Npr. 1×1 tableta"
-                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                          Trajanje (dana) <span className="text-red-500">*</span>
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Trajanje (dana) <span className="text-red-500 normal-case">*</span>
                         </label>
                         <input
                           value={trajanje}
                           onChange={e => setTrajanje(e.target.value.replace(/\D/g, ""))}
                           placeholder="Npr. 7"
-                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                          Napomena <span className="text-gray-400 font-normal">(opcionalno)</span>
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Napomena <span className="text-gray-400 font-normal normal-case">(opcionalno)</span>
                         </label>
                         <input
                           value={napomena}
                           onChange={e => setNapomena(e.target.value)}
                           placeholder="Npr. Uzimati uz obrok"
-                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 bg-gray-50"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
                         />
                       </div>
                     </div>
@@ -524,11 +652,11 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
         </div>
 
         {!uspjesno && (
-          <div className="px-5 pb-5 pt-3 flex gap-3 flex-shrink-0 border-t border-gray-100">
+          <div className="px-5 pb-5 pt-3 flex gap-3 flex-shrink-0 border-t border-gray-100 bg-gray-50/50">
             <button
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-white transition-colors disabled:opacity-50"
             >
               Odustani
             </button>
@@ -537,7 +665,7 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
               disabled={!formaValidna || loading}
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
                 formaValidna && !loading
-                  ? "bg-green-600 text-white hover:bg-green-700"
+                  ? "bg-green-600 text-white hover:bg-green-700 shadow-sm"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
             >
@@ -563,14 +691,67 @@ export default function DoktorRezervacije() {
   const [terminZaOtkazivanje, setTerminZaOtkazivanje] = useState<Termin | null>(null);
   const [terminZaZavrsavanje, setTerminZaZavrsavanje] = useState<Termin | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-
   const [doktorIme, setDoktorIme] = useState("Dr.");
+  const [terminZaPomjeranje, setTerminZaPomjeranje] = useState<Termin | null>(null);
+
+  const handlePomjeriTermin = async (stariTermin: Termin, noviTerminId: number) => {
+  try {
+    const resLock = await fetch(`${apiUrl}/api/termini/${noviTerminId}/zakljucaj`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    });
+    if (!resLock.ok) {
+      showToast("❌ Odabrani termin je u međuvremenu zauzet.");
+      return;
+    }
+
+    const res = await fetch(`${apiUrl}/api/rezervacije/doktor/pomjeri`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({
+        idStareRezervacije: stariTermin.id,
+        idNovogTermina: noviTerminId,
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(`❌ ${err.poruka ?? "Greška pri pomjeranju."}`);
+      return;
+    }
+
+    if (doktorId) {
+      const resRezervacije = await fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (resRezervacije.ok) {
+        const data = await resRezervacije.json();
+        const novaLista = Array.isArray(data) ? data.map(mapirajRezervaciju) : [];
+        setListaTermina(novaLista);
+        const noviTermin = novaLista.find(t =>
+          t.pacijent.id === stariTermin.pacijent.id && t.status === "zakazan"
+        );
+        if (noviTermin) setSelectedDatum(noviTermin.datum);
+      }
+    }
+
+    setTerminZaPomjeranje(null);
+    setTerminZaOtkazivanje(null);
+    setSelectedTermin(null);
+    showToast("Termin uspješno pomjeren. Pacijent je obaviješten emailom.");
+  } catch (err) {
+    console.error("Greška:", err);
+    showToast("Greška pri pomjeranju termina.");
+  }
+};
 
   useEffect(() => {
     setDoktorIme(getDoktorIme());
   }, []);
 
-  // ── Novi state: "zakazani" | "zavrseni" | "otkazani" ──────────────────────
   const [filterStatus, setFilterStatus] = useState<"zakazani" | "zavrseni" | "otkazani">("zakazani");
 
   const doktorId = getDoktorId();
@@ -598,7 +779,6 @@ export default function DoktorRezervacije() {
       .finally(() => setLoading(false));
   }, [doktorId]);
 
-  // ── Filtriranje po novom state-u ──────────────────────────────────────────
   const filterTermini = (termini: Termin[]) => {
     if (filterStatus === "otkazani") return termini.filter(t => t.status === "otkazan");
     if (filterStatus === "zavrseni") return termini.filter(t => t.status === "zavrsen");
@@ -648,34 +828,42 @@ export default function DoktorRezervacije() {
     setSelectedTermin(null);
   };
 
-  const formatDatum = (ds: string) =>
-    new Date(ds + "T12:00:00Z").toLocaleDateString("bs-BA", { weekday: "long", day: "numeric", month: "long" });
+  const formatDatum = (ds: string) => {
+  const d = new Date(ds + "T12:00:00Z");
+  const dani = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
+  const mjeseci = ["januar", "februar", "mart", "april", "maj", "juni", "juli", "august", "septembar", "oktobar", "novembar", "decembar"];
+  return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
+};
 
   const handleAddKomentar = async (terminId: number, tekst: string) => {
-    try {
-      const res = await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ komentar: tekst }),
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      const noviK: Komentar = {
-        id: data.id ?? Date.now(),
-        tekst: data.tekst ?? tekst,
-        autor: data.autor ?? "Doktor",
-        datum: data.datum ?? danasUTC(),
-        jeDoktor: data.jeDoktor ?? true,
-      };
-      setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
-      setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
-    } catch {
-      showToast("❌ Greška pri slanju komentara.");
+  try {
+    const res = await fetch(`${apiUrl}/api/doktori/rezervacije/${terminId}/komentar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ komentar: tekst }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showToast(`❌ ${data.poruka ?? "Greška pri slanju komentara."}`);
+      return;
     }
-  };
+    const data = await res.json();
+    const noviK: Komentar = {
+      id: data.id ?? Date.now(),
+      tekst: data.tekst ?? tekst,
+      autor: data.autor ?? "Doktor",
+      datum: data.datum ?? danasUTC(),
+      jeDoktor: data.jeDoktor ?? true,
+    };
+    setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
+    setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
+  } catch {
+    showToast("Greška pri slanju komentara.");
+  }
+};
 
   const handlePromjenaDuzine = (_terminId: number, _zeljenaDuzina: number, _razlog: string) => {
     showToast("✓ Vaš upit je uspješno poslan administratoru.");
@@ -689,7 +877,7 @@ export default function DoktorRezervacije() {
       });
       if (!res.ok) throw new Error();
       setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
-      setSelectedTermin(prev => prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev);
+      setSelectedTermin(null);
       setTerminZaOtkazivanje(null);
       showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
     } catch {
@@ -709,11 +897,10 @@ export default function DoktorRezervacije() {
 
   const navLabel = () => {
     if (prikaz === "dnevni") return formatDatum(selectedDatum);
-    if (prikaz === "sedmicni") return `Sedmica: ${weekDays[0]} – ${weekDays[6]}`;
+    if (prikaz === "sedmicni") return `Sedmica: ${formatDatumPrikaz(weekDays[0])} – ${formatDatumPrikaz(weekDays[6])}`;
     return new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
   };
 
-  // ── Label za prazno stanje i brojač ──────────────────────────────────────
   const filterLabel = filterStatus === "otkazani" ? "otkazanih" : filterStatus === "zavrseni" ? "završenih" : "zakazanih";
   const filterLabelJed = filterStatus === "otkazani" ? "otkazan" : filterStatus === "zavrseni" ? "završen" : "zakazan";
   const praznoLabel =
@@ -728,9 +915,10 @@ export default function DoktorRezervacije() {
     <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+      {/* Toast */}
       {toastMsg && (
-        <div className="fixed top-5 right-5 z-[100] bg-gray-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-xl flex items-center gap-2">
-          <CheckCircle size={16} className="text-green-400 flex-shrink-0" />
+        <div className="fixed top-5 right-5 z-[100] bg-gray-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5 animate-fade-in">
+          <CheckCircle size={15} className="text-green-400 flex-shrink-0" />
           {toastMsg}
         </div>
       )}
@@ -750,6 +938,15 @@ export default function DoktorRezervacije() {
           termin={terminZaOtkazivanje}
           onClose={() => setTerminZaOtkazivanje(null)}
           onConfirm={() => handleOtkaziTermin(terminZaOtkazivanje)}
+          onPomjeri={() => setTerminZaPomjeranje(terminZaOtkazivanje)}
+        />
+      )}
+
+      {terminZaPomjeranje && (
+        <ModalPomjeriTermin
+          termin={terminZaPomjeranje}
+          onClose={() => setTerminZaPomjeranje(null)}
+          onConfirm={(noviTerminId) => handlePomjeriTermin(terminZaPomjeranje, noviTerminId)}
         />
       )}
 
@@ -765,27 +962,30 @@ export default function DoktorRezervacije() {
       )}
 
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
-        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
+
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
-              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
                 <Menu size={18} className="text-gray-600" />
               </button>
             )}
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Moje rezervacije</h1>
-              <p className="text-xs text-gray-500">{doktorIme}</p>
+              <h1 className="text-base font-bold text-gray-900 leading-tight">Moje rezervacije</h1>
+              <p className="text-xs text-gray-400 mt-0.5">{doktorIme}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Nova rezervacija */}
             <button
               onClick={() => setShowNovaRezervacija(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm"
             >
-              <Plus size={15} /> Nova rezervacija
+              <Plus size={14} /> Nova rezervacija
             </button>
 
-            {/* ── Tri dugmeta za filter statusa ─────────────────────────── */}
+            {/* Filter statusa */}
             <div className="flex bg-gray-100 rounded-xl p-0.5 gap-0.5">
               <button
                 onClick={() => { setFilterStatus("zakazani"); setSelectedTermin(null); }}
@@ -793,7 +993,7 @@ export default function DoktorRezervacije() {
                   filterStatus === "zakazani" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <Calendar size={13} /> Zakazani
+                <Calendar size={12} /> Zakazani
               </button>
               <button
                 onClick={() => { setFilterStatus("zavrseni"); setSelectedTermin(null); }}
@@ -801,7 +1001,7 @@ export default function DoktorRezervacije() {
                   filterStatus === "zavrseni" ? "bg-white text-green-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <CheckCircle size={13} /> Završeni
+                <CheckCircle size={12} /> Završeni
               </button>
               <button
                 onClick={() => { setFilterStatus("otkazani"); setSelectedTermin(null); }}
@@ -809,16 +1009,19 @@ export default function DoktorRezervacije() {
                   filterStatus === "otkazani" ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                <XCircle size={13} /> Otkazani
+                <XCircle size={12} /> Otkazani
               </button>
             </div>
 
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
+            {/* Prikaz */}
+            <div className="flex bg-gray-100 rounded-xl p-0.5">
               {(["dnevni", "sedmicni", "mjesecni"] as const).map(p => (
                 <button
                   key={p}
                   onClick={() => { setPrikaz(p); setSelectedTermin(null); }}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${prikaz === p ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    prikaz === p ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  }`}
                 >
                   {p === "dnevni" ? "Dnevni" : p === "sedmicni" ? "Sedmični" : "Mjesečni"}
                 </button>
@@ -827,20 +1030,28 @@ export default function DoktorRezervacije() {
           </div>
         </header>
 
+        {/* Sadržaj */}
         <div className="flex-1 p-5">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-24">
               <div className="text-sm text-gray-400">Učitavanje termina...</div>
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3 mb-5">
-                <button onClick={() => goDay(-navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
-                  <ChevronLeft size={16} className="text-gray-600" />
+              {/* Nav traka */}
+              <div className="flex items-center gap-2.5 mb-5">
+                <button
+                  onClick={() => goDay(-navDelta)}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronLeft size={15} className="text-gray-600" />
                 </button>
                 <span className="text-sm font-semibold text-gray-700 capitalize">{navLabel()}</span>
-                <button onClick={() => goDay(navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
-                  <ChevronRight size={16} className="text-gray-600" />
+                <button
+                  onClick={() => goDay(navDelta)}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronRight size={15} className="text-gray-600" />
                 </button>
                 <div className="ml-auto flex items-center gap-3">
                   {Object.entries(tipConfig).map(([tip, cfg]) => (
@@ -852,6 +1063,7 @@ export default function DoktorRezervacije() {
                 </div>
               </div>
 
+              {/* Dnevni prikaz */}
               {prikaz === "dnevni" && (
                 <div className={`grid gap-5 ${selectedTermin ? "grid-cols-5" : "grid-cols-1 max-w-2xl"}`}>
                   <div className={selectedTermin ? "col-span-2" : "col-span-1"}>
@@ -864,14 +1076,20 @@ export default function DoktorRezervacije() {
                           {Object.entries(tipConfig).map(([tip, cfg]) => {
                             const count = dnevniTermini.filter(t => t.tip === tip as TipPregleda).length;
                             if (!count) return null;
-                            return <span key={tip} className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>{count} {cfg.label.toLowerCase()}</span>;
+                            return (
+                              <span key={tip} className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.badge}`}>
+                                {count} {cfg.label.toLowerCase()}
+                              </span>
+                            );
                           })}
                         </div>
                       </div>
                       <div className="p-3 space-y-2">
                         {dnevniTermini.length === 0 ? (
-                          <div className="text-center py-12">
-                            <Calendar size={32} className="text-gray-200 mx-auto mb-2" />
+                          <div className="text-center py-14">
+                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                              <Calendar size={22} className="text-gray-300" />
+                            </div>
                             <p className="text-sm text-gray-400">{praznoLabel}</p>
                           </div>
                         ) : (
@@ -903,16 +1121,23 @@ export default function DoktorRezervacije() {
                 </div>
               )}
 
+              {/* Sedmični prikaz */}
               {prikaz === "sedmicni" && (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="grid grid-cols-7 border-b border-gray-100">
                     {weekDays.map((ds, i) => {
                       const isToday = ds === todayStr;
                       return (
-                        <button key={ds} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }} className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}>
-                          <div className="text-xs text-gray-400 mb-1">{dayNames[i]}</div>
-                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T12:00:00Z").getUTCDate()}</div>
-                          <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
+                        <button
+                          key={ds}
+                          onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }}
+                          className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}
+                        >
+                          <div className="text-xs text-gray-400 mb-1 font-medium">{dayNames[i]}</div>
+                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>
+                            {new Date(ds + "T12:00:00Z").getUTCDate()}
+                          </div>
+                          <div className="mt-1.5 flex justify-center gap-0.5 flex-wrap">
                             {filterTermini(listaTermina.filter(t => t.datum === ds)).map(t => (
                               <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
                             ))}
@@ -932,9 +1157,9 @@ export default function DoktorRezervacije() {
                               <div
                                 key={t.id}
                                 onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }}
-                                className={`rounded p-1.5 cursor-pointer hover:shadow-sm transition-all ${tc.bg} border ${tc.border}`}
+                                className={`rounded-lg p-1.5 cursor-pointer hover:shadow-sm transition-all ${tc.bg} border ${tc.border}`}
                               >
-                                <div className="text-xs font-bold text-gray-800">{formatV(t.vrijemeOd)}</div>
+                                <div className="text-xs font-bold text-gray-800 tabular-nums">{formatV(t.vrijemeOd)}</div>
                                 <div className="text-xs text-gray-600 truncate">{t.pacijent.ime} {t.pacijent.prezime[0]}.</div>
                                 {t.tip === "hitni" && <div className="text-xs font-bold text-red-600">⚡ HITNO</div>}
                               </div>
@@ -947,14 +1172,15 @@ export default function DoktorRezervacije() {
                 </div>
               )}
 
+              {/* Mjesečni prikaz */}
               {prikaz === "mjesecni" && (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-semibold text-gray-700 capitalize">
                       {new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
                     </span>
-                    <span className="text-xs text-gray-400">
-                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {filterLabel} termina u ovom mjesecu
+                    <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {filterLabel} termina
                     </span>
                   </div>
                   <div className="grid grid-cols-7 border-b border-gray-100">
@@ -975,7 +1201,7 @@ export default function DoktorRezervacije() {
                         >
                           {ds && (
                             <>
-                              <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-700"}`}>
+                              <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-600"}`}>
                                 {new Date(ds + "T12:00:00Z").getUTCDate()}
                               </div>
                               <div className="space-y-0.5">
@@ -985,7 +1211,7 @@ export default function DoktorRezervacije() {
                                     <div
                                       key={t.id}
                                       onClick={e => { e.stopPropagation(); setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }}
-                                      className={`text-xs rounded px-1 py-0.5 truncate font-medium ${tc.badge} flex items-center gap-1 cursor-pointer`}
+                                      className={`text-xs rounded-md px-1 py-0.5 truncate font-medium ${tc.badge} flex items-center gap-1 cursor-pointer`}
                                     >
                                       {t.tip === "hitni" && <span>⚡</span>}
                                       {formatV(t.vrijemeOd)} {t.pacijent.ime[0]}. {t.pacijent.prezime}
@@ -993,7 +1219,7 @@ export default function DoktorRezervacije() {
                                   );
                                 })}
                                 {dayTermini.length > 3 && (
-                                  <div className="text-xs text-gray-400 pl-1">+{dayTermini.length - 3} više</div>
+                                  <div className="text-xs text-gray-400 pl-1 font-medium">+{dayTermini.length - 3} više</div>
                                 )}
                               </div>
                             </>

@@ -428,11 +428,14 @@ export const otkaziRezervacijuPacijent = async (req: Request, res: Response, nex
     }
 
     const sada = new Date();
-    const vrijemeTermina = new Date(rezervacija.termin.datum);
+    const vrijemeTermina = izracunajVrijemeTermina(rezervacija.termin);
+
     const razlikaSati = (vrijemeTermina.getTime() - sada.getTime()) / (1000 * 60 * 60);
 
     if (razlikaSati < 24) {
-      res.status(400).json({ poruka: "Nije moguće otkazati termin manje od 24 sata unaprijed." });
+      res.status(400).json({
+        poruka: "Nije moguće otkazati termin manje od 24 sata unaprijed."
+      });
       return;
     }
 
@@ -462,6 +465,15 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
 
     if (!rezervacija) {
       res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    const vrijemeTermina = izracunajVrijemeTermina(rezervacija.termin);
+
+    if (vrijemeTermina.getTime() <= Date.now()) {
+      res.status(400).json({
+        poruka: "Nije moguće otkazati termin koji je već prošao."
+      });
       return;
     }
 
@@ -546,6 +558,99 @@ export const dodajKomentar = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+// ─────────────────────────────────────────────
+// POST /api/doktori/rezervacije/:id/komentar
+// Doktor dodaje komentar na rezervaciju
+// ─────────────────────────────────────────────
+export const dodajKomentarDoktor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    if (korisnikPayload.uloga !== "DOKTOR") {
+      res.status(403).json({ poruka: "Samo doktori mogu koristiti ovu rutu." });
+      return;
+    }
+
+    const tekst = typeof req.body.komentar === "string" ? req.body.komentar.trim() : "";
+    if (!tekst) {
+      res.status(400).json({ poruka: "Komentar ne može biti prazan." });
+      return;
+    }
+
+    const idRezervacije = Number(req.params.id);
+    if (!Number.isInteger(idRezervacije) || idRezervacije <= 0) {
+      res.status(400).json({ poruka: "Nevažeći ID rezervacije." });
+      return;
+    }
+
+    const rezervacija = await prisma.rezervacije.findUnique({
+      where: { id: idRezervacije },
+      select: {
+        id: true,
+        idDoktor: true,
+        datumOtkazivanja: true,
+        zavrseno: true,
+        doktor: { select: { idKorisnik: true } },
+        pacijent: { select: { idKorisnik: true } },
+      },
+    });
+
+    if (!rezervacija) {
+      res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    if (rezervacija.datumOtkazivanja) {
+      res.status(400).json({ poruka: "Nije moguće komentarisati otkazanu rezervaciju." });
+      return;
+    }
+
+    if (rezervacija.zavrseno) {
+      res.status(400).json({ poruka: "Nije moguće komentarisati završenu rezervaciju." });
+      return;
+    }
+
+    // Doktor smije komentarisati samo svoje rezervacije
+    if (rezervacija.doktor?.idKorisnik !== korisnikPayload.id) {
+      res.status(403).json({ poruka: "Nemate dozvolu za komentarisanje ove rezervacije." });
+      return;
+    }
+
+    const komentar = await prisma.komentar.create({
+      data: {
+        idRezervacije: rezervacija.id,
+        idKorisnik: korisnikPayload.id,
+        tekst,
+        jeDoktor: true,
+        datumKreiranja: new Date(),
+      },
+      include: {
+        korisnik: { select: { ime: true, prezime: true } },
+      },
+    });
+
+    res.status(201).json({
+      id: komentar.id,
+      tekst: komentar.tekst,
+      autor: komentar.korisnik
+        ? `${komentar.korisnik.ime} ${komentar.korisnik.prezime}`
+        : "Doktor",
+      datum: komentar.datumKreiranja.toISOString().split("T")[0],
+      jeDoktor: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // PATCH /api/rezervacije/:id/trajanje
 export const promijeniTrajanje = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -601,6 +706,118 @@ export const getKomentari = async (req: Request, res: Response, next: NextFuncti
     }] : [];
 
     res.json(komentari);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/rezervacije/doktor/pomjeri
+export const pomjeriRezervaciju = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const korisnikPayload = (req as any).korisnik;
+    if (!korisnikPayload) {
+      res.status(401).json({ poruka: "Niste prijavljeni." });
+      return;
+    }
+
+    const idDoktor = korisnikPayload.doktorId;
+    if (!idDoktor) {
+      res.status(403).json({ poruka: "Nemate dozvolu." });
+      return;
+    }
+
+    const idStareRezervacije = Number(req.body.idStareRezervacije);
+    const idNovogTermina = Number(req.body.idNovogTermina);
+    const korisnikId = korisnikPayload.id;
+
+    const staraRezervacija = await prisma.rezervacije.findUnique({
+      where: { id: idStareRezervacije },
+      include: { termin: true, pacijent: { include: { korisnik: true } }, doktor: { include: { korisnik: true } } },
+    });
+
+    if (!staraRezervacija) {
+      res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    if (staraRezervacija.idDoktor !== idDoktor) {
+      res.status(403).json({ poruka: "Nemate dozvolu za ovu rezervaciju." });
+      return;
+    }
+
+    const noviTermin = await prisma.termin.findUnique({ where: { id: idNovogTermina } });
+
+    if (!noviTermin) {
+      res.status(404).json({ poruka: "Novi termin nije pronađen." });
+      return;
+    }
+
+    if (noviTermin.status !== "SLOBODAN") {
+      res.status(409).json({ poruka: "Novi termin više nije slobodan." });
+      return;
+    }
+
+    const lockKey = `termin:lock:${idNovogTermina}`;
+    const lock = await redis.get(lockKey);
+    if (!lock || lock !== String(korisnikId)) {
+      res.status(409).json({ poruka: "Termin nije zaključan." });
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Otkaži staru rezervaciju i oslobodi stari termin
+      await tx.rezervacije.update({
+        where: { id: idStareRezervacije },
+        data: { doktorOtkazao: true, datumOtkazivanja: new Date() },
+      });
+      await tx.termin.update({
+        where: { id: staraRezervacija.idTermina },
+        data: { status: "SLOBODAN" },
+      });
+
+      // Kreiraj novu rezervaciju
+      await tx.rezervacije.create({
+        data: {
+          idTermina: idNovogTermina,
+          idPacijent: staraRezervacija.idPacijent,
+          idDoktor: idDoktor,
+          komentar: "Termin pomjeren od strane doktora.",
+          hitnost: false,
+          doktorRezervisao: true,
+          datumKreiranja: new Date(),
+        },
+      });
+
+      // Zauzmi novi termin
+      await tx.termin.update({
+        where: { id: idNovogTermina },
+        data: { status: "ZAKAZAN" },
+      });
+    });
+
+    await redis.del(lockKey);
+    io.emit("termin-azuriran", { doktorId: idDoktor, terminId: idNovogTermina });
+
+    // Pošalji email obavijest
+    try {
+      await posaljiPotvrdurezerv({
+        pacijentEmail: staraRezervacija.pacijent.korisnik.email,
+        pacijentIme: staraRezervacija.pacijent.korisnik.ime,
+        pacijentPrezime: staraRezervacija.pacijent.korisnik.prezime,
+        doktorIme: staraRezervacija.doktor.korisnik.ime,
+        doktorPrezime: staraRezervacija.doktor.korisnik.prezime,
+        doktorSpecijalizacija: staraRezervacija.doktor.specijalizacija,
+        datum: noviTermin.datum,
+        vrijeme: noviTermin.vrijeme ?? 0,
+        rezervacijaId: idStareRezervacije,
+        hitnost: false,
+        komentar: "Vaš termin je pomjeren na novi datum.",
+      });
+    } catch (emailErr) {
+      console.error("Email nije poslan:", emailErr);
+    }
+
+    res.status(200).json({ poruka: "Termin uspješno pomjeren." });
   } catch (err) {
     next(err);
   }

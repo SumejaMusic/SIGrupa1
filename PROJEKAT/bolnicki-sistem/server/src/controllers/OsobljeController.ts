@@ -28,6 +28,7 @@ import {
   getSlobodniTerminiDoktoraService,
   getTipoviPregledaService,
   getSlobodniDatumiDoktoraService,
+  pomjeriTerminService,
 } from "../osobljeService.js";
 import { redis } from "../lib/redis.js";
 import { io } from "../app.js";
@@ -342,6 +343,32 @@ export async function getZavrseniPregledi(req: Request, res: Response, next: Nex
     const pregledi = await getZavrseniPregledService(idPacijenta);
     res.status(200).json(pregledi);
   } catch (err) {
+    next(err);
+  }
+}
+
+export async function pomjeriTermin(req: Request, res: Response, next: NextFunction) {
+  try {
+    const idRezervacije = Number(req.params.id);
+    const noviTerminId = Number(req.body.noviTerminId);
+
+    if (!Number.isInteger(idRezervacije) || idRezervacije <= 0) {
+      res.status(400).json({ poruka: "Neispravan ID rezervacije." });
+      return;
+    }
+
+    if (!Number.isInteger(noviTerminId) || noviTerminId <= 0) {
+      res.status(400).json({ poruka: "Neispravan ID novog termina." });
+      return;
+    }
+
+    const rezultat = await pomjeriTerminService(idRezervacije, noviTerminId);
+    res.status(200).json(rezultat);
+  } catch (err: any) {
+    if (err.status) {
+      res.status(err.status).json({ poruka: err.poruka });
+      return;
+    }
     next(err);
   }
 }
