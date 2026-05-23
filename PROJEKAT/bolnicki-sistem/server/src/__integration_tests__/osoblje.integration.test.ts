@@ -31,10 +31,6 @@ beforeAll(async () => {
   );
 });
 
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
 async function obrisiTermin(id: number) {
   await prisma.historijaPregleda.deleteMany({
     where: { rezervacija: { idTermina: id } },
