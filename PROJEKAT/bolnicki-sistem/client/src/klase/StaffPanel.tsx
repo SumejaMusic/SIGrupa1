@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Calendar, List, Plus, Search, 
   Activity, Clock, AlertTriangle, CheckCircle, Filter, LayoutGrid
@@ -9,7 +9,6 @@ import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import CancelModal from '../components/CancelModal';
 import UploadPdfModal from '../components/UploadPdfModal';
 import NewAppointmentModal from '../components/NewAppointmentModal';
-import SekcijaZauzetostiKabineta from '../components/SekcijaZauzetostiKabineta';
 
 type ViewMode = 'week' | 'day' | 'list';
 
@@ -138,10 +137,10 @@ export default function StaffPanel() {
 
   const getToken = () => localStorage.getItem('token') ?? '';
 
-  const showNotif = useCallback((msg: string) => {
+  const showNotif = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3500);
-  }, []);
+  };
 
   const fetchTermini = async () => {
   try {
@@ -425,12 +424,6 @@ useEffect(() => {
 
       {/* Main content */}
       <main className="flex-1 w-full overflow-auto">
-        <SekcijaZauzetostiKabineta
-          allPatients={allPatients}
-          tipoviPregleda={tipoviPregleda}
-          onEmergencyAssigned={fetchTermini}
-          onNotify={showNotif}
-        />
         {viewMode === 'list' ? (
           <ListView appointments={filteredAppointments} onAppointmentClick={setSelectedApt} />
         ) : (
