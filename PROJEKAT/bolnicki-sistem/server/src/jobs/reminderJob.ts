@@ -4,7 +4,7 @@ import { sendSMS } from "../lib/smsService.js";
 import { Resend } from "resend";
 
 const prisma = new PrismaClient();
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.EMAIL_PASS);
 
 export const pokreniReminderJob = () => {
   // Kuca svake minute za testiranje
@@ -25,9 +25,16 @@ export const pokreniReminderJob = () => {
         },
       });
 
+      console.log(`[DIAG] Pronađeno pacijenata (hronicni + reviewPeriodDays): ${pacijenti.length}`);
+      for (const p of pacijenti) {
+        console.log(`[DIAG]   - ${p.korisnik?.ime} | reviewPeriodDays: ${p.reviewPeriodDays} | zadnjiRutinskiPregledAt: ${p.zadnjiRutinskiPregledAt}`);
+      }
+
       for (const pacijent of pacijenti) {
-        if (!pacijent.reviewPeriodDays || !pacijent.zadnjiRutinskiPregledAt)
+        if (!pacijent.reviewPeriodDays || !pacijent.zadnjiRutinskiPregledAt) {
+          console.log(`[DIAG] Skip ${pacijent.korisnik?.ime}: reviewPeriodDays=${pacijent.reviewPeriodDays}, zadnjiRutinskiPregledAt=${pacijent.zadnjiRutinskiPregledAt}`);
           continue;
+        }
 
         // Računanje datuma isteka u UTC-u
         const datumIsteka = new Date(pacijent.zadnjiRutinskiPregledAt);
