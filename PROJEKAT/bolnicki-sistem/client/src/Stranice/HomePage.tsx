@@ -4,6 +4,7 @@ import HowItWorksSection from '../components/HowItWorksSection';
 import BenefitsSection from '../components/BenefitsSection';
 import DoctorsSection from '../components/DoctorsSection';
 import CtaBanner from '../components/CtaBanner';
+import MapSection from '../components/MapSection';
 import Footer from '../components/Footer';
 
 export default function HomePage() {
@@ -15,6 +16,7 @@ export default function HomePage() {
       <BenefitsSection />
       <DoctorsSection />
       <CtaBanner />
+      <MapSection />
       <Footer />
     </div>
   );
