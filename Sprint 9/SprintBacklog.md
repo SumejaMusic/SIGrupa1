@@ -18,10 +18,6 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | US-11 | **Kao** doktor, **želim** pregled dnevnog i sedmičnog rasporeda te pristup historiji pacijenata, **kako bih** efikasno organizovao obaveze. | User Story | Merjem Milišić | 5 |
 | US-01 | **Kao** pacijent, **želim** pregledati historiju svojih pregleda, **kako bih** imao uvid u prethodne termine i zdravstvene nalaze. | User Story |  | 3 |
 | US-31-EXT | **Kao** doktor, **želim** označiti pacijenta atributom „hronični bolesnik" i definisati period rutinskog pregleda, **kako bi** sistem automatski slao podsjetnike putem emaila i SMS-a. | Proširenje US-31 |  Kenan Hatibović | 3 |
-| BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
-| BUG-01 | Server | Bug fix |  Sumeja Mušić| 2 |
-| BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix | Merjem Milišić | 2 |
-| BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix | Lamija Halilović  | 1 |
 | US-38 | Kao pacijent, želim da se prijavim na listu čekanja za određeni dan, kako bi me sistem obavijestio ako se neki termin oslobodi usljed otkazivanja. | Nova User Story | Amina Alispahić  | 5 |
 | US-39 | **Kao** medicinsko osoblje, **želim** vidjeti grafički prikaz zauzetosti specijalističkih kabineta, **kako bih** mogao ručno dodijeliti hitne slučajeve. | Nova User Story | Hamza Husović  | 3 |
 | US-40 | Kao pacijent, želim da podnesem zahtjev za deaktivaciju profila i anonimizaciju mojih ličnih podataka u skladu sa zakonom o zaštiti podataka. | Nova User Story | Lamija Halilović | 5 |
@@ -29,6 +25,10 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | US-42 | **Kao** pacijent, **želim** da nakon završenog pregleda ostavim anonimnu ocjenu i kratak komentar na rad doktora, **kako bi** se unaprijedio kvalitet usluge. | Nova User Story | Almedin šehić | 5 |
 | US-43 |**Kao** korisnik, **želim** imati pregledan profil s osnovnim podacima, **kako bih** mogao upravljati informacijama. | Nova User Story |  Lamija Halilović| 3 |
 |  |Admin panela - osonovne funkcionalnsoti  | |Hana Mahmutović| ||1|
+| BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
+| BUG-01 | Server | Bug fix |  Sumeja Mušić| 2 |
+| BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix | Merjem Milišić | 2 |
+| BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix | Lamija Halilović  | 1 |
 | BUG-01 | Komentar bug u bazi | Bug fix |  | 2 |
 | BUG-01 | Server | Bug fix |  Sumeja Mušić| 2 |
 | BUG-02 | Bug kod registracije – slanje verifikacijskog koda | Bug fix | Merjem Milišić | 2 |
