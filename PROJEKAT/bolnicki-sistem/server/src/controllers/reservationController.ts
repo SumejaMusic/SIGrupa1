@@ -361,11 +361,36 @@ export const getRezervacijeZaPacijenta = async (req: Request, res: Response, nex
           include: { korisnik: { select: { ime: true, prezime: true } } },
           orderBy: { datumKreiranja: "asc" },
         },
+        recenzija: {
+          select: {
+            id: true,
+            ocjena: true,
+            komentar: true,
+            sakriven: true,
+            kreiranoAt: true,
+          },
+        },
       },
       orderBy: { datumKreiranja: "desc" },
     });
 
-    res.json(rezervacije);
+    res.json(rezervacije.map((rezervacija) => {
+      if (!Object.prototype.hasOwnProperty.call(rezervacija, "recenzija")) {
+        return rezervacija;
+      }
+
+      const { recenzija, ...podaciRezervacije } = rezervacija;
+      return {
+        ...podaciRezervacije,
+        review: recenzija ? {
+          id: recenzija.id,
+          rating: recenzija.ocjena,
+          comment: recenzija.komentar,
+          hidden: recenzija.sakriven,
+          createdAt: recenzija.kreiranoAt,
+        } : null,
+      };
+    }));
   } catch (err) {
     next(err);
   }

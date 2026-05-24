@@ -1,6 +1,19 @@
+-- AlterEnum
+ALTER TYPE "StatusListeCekanja" ADD VALUE 'POTVRDJENO';
+ALTER TYPE "StatusListeCekanja" ADD VALUE 'ODBIJENO';
+ALTER TYPE "StatusListeCekanja" ADD VALUE 'ISTEKLO';
+ALTER TYPE "StatusListeCekanja" ADD VALUE 'OTKAZANO';
+
+-- AlterEnum
+ALTER TYPE "StatusTermina" ADD VALUE 'NA_CEKANJU';
+
 -- AlterTable
-ALTER TABLE "Pacijent" ADD COLUMN     "reviewPeriodDays" INTEGER,
-ADD COLUMN     "zadnjiRutinskiPregledAt" TIMESTAMP(3);
+ALTER TABLE "ListaCekanja" ADD COLUMN "obavijestioAt" TIMESTAMP(3),
+ADD COLUMN "zeleniDatum" DATE NOT NULL;
+
+-- AlterTable
+ALTER TABLE "Pacijent" ADD COLUMN "reviewPeriodDays" INTEGER,
+ADD COLUMN "zadnjiRutinskiPregledAt" TIMESTAMP(3);
 
 -- CreateTable
 CREATE TABLE "ReminderLog" (
@@ -13,6 +26,9 @@ CREATE TABLE "ReminderLog" (
 
     CONSTRAINT "ReminderLog_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ListaCekanja_idPacijent_idDoktor_zeleniDatum_key" ON "ListaCekanja"("idPacijent", "idDoktor", "zeleniDatum");
 
 -- CreateIndex
 CREATE INDEX "ReminderLog_idPacijent_idx" ON "ReminderLog"("idPacijent");
