@@ -15,7 +15,8 @@ import {
   Stethoscope,
   Pill,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Star
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -42,6 +43,36 @@ import {
 } from "../utils/rezervacijeUtils";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "";
+
+type DoctorReviewComment = {
+  id: number;
+  author: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+type DoctorReviewSummary = {
+  averageRating: number | null;
+  reviewCount: number;
+  comments: DoctorReviewComment[];
+};
+
+const ratingColor = (rating: number) => {
+  if (rating <= 1) return "text-red-600";
+  if (rating === 2) return "text-orange-500";
+  if (rating === 3) return "text-yellow-500";
+  if (rating === 4) return "text-lime-600";
+  return "text-green-600";
+};
+
+const ratingBadge = (rating: number) => {
+  if (rating <= 1) return "bg-red-50 border-red-200 text-red-700";
+  if (rating === 2) return "bg-orange-50 border-orange-200 text-orange-700";
+  if (rating === 3) return "bg-yellow-50 border-yellow-200 text-yellow-700";
+  if (rating === 4) return "bg-lime-50 border-lime-200 text-lime-700";
+  return "bg-green-50 border-green-200 text-green-700";
+};
 
 // ─── Modal: Nova rezervacija ───────────────────────────────────────────────
 function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
@@ -693,6 +724,11 @@ export default function DoktorRezervacije() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [doktorIme, setDoktorIme] = useState("Dr.");
   const [terminZaPomjeranje, setTerminZaPomjeranje] = useState<Termin | null>(null);
+  const [reviewSummary, setReviewSummary] = useState<DoctorReviewSummary>({
+    averageRating: null,
+    reviewCount: 0,
+    comments: [],
+  });
 
   const handlePomjeriTermin = async (stariTermin: Termin, noviTerminId: number) => {
   try {
@@ -777,6 +813,27 @@ export default function DoktorRezervacije() {
       })
       .catch(() => setListaTermina([]))
       .finally(() => setLoading(false));
+  }, [doktorId]);
+
+  useEffect(() => {
+    if (!doktorId) return;
+
+    fetch(`${apiUrl}/api/doktori/${doktorId}/reviews`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
+      .then(res => {
+        if (res.status === 401) { handleExpiredSession(); return null; }
+        return res.json();
+      })
+      .then(data => {
+        if (!data) return;
+        setReviewSummary({
+          averageRating: typeof data.averageRating === "number" ? data.averageRating : null,
+          reviewCount: Number(data.reviewCount ?? 0),
+          comments: Array.isArray(data.comments) ? data.comments : [],
+        });
+      })
+      .catch(() => setReviewSummary({ averageRating: null, reviewCount: 0, comments: [] }));
   }, [doktorId]);
 
   const filterTermini = (termini: Termin[]) => {
@@ -1038,6 +1095,60 @@ export default function DoktorRezervacije() {
             </div>
           ) : (
             <>
+              <section className="mb-5 grid gap-4 lg:grid-cols-5">
+                <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2" style={{ fontSize: "10px" }}>
+                    Prosječna anonimna ocjena
+                  </div>
+                  <div className="flex items-end gap-3">
+                    <div className={`text-4xl font-black leading-none ${reviewSummary.averageRating ? ratingColor(Math.round(reviewSummary.averageRating)) : "text-gray-300"}`}>
+                      {reviewSummary.averageRating ? reviewSummary.averageRating.toFixed(1) : "—"}
+                    </div>
+                    <div className="pb-1">
+                      <div className="flex items-center gap-0.5 mb-1">
+                        {[1, 2, 3, 4, 5].map(value => (
+                          <Star
+                            key={value}
+                            size={15}
+                            className={reviewSummary.averageRating && reviewSummary.averageRating >= value ? ratingColor(Math.round(reviewSummary.averageRating)) : "text-gray-300"}
+                            fill={reviewSummary.averageRating && reviewSummary.averageRating >= value ? "currentColor" : "none"}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {reviewSummary.reviewCount} anonimnih ocjena
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                      Anonimni komentari pacijenata
+                    </div>
+                    <span className="text-xs text-gray-400">{reviewSummary.comments.length}</span>
+                  </div>
+                  {reviewSummary.comments.length === 0 ? (
+                    <div className="text-sm text-gray-400 py-5 text-center">Još nema anonimnih komentara.</div>
+                  ) : (
+                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                      {reviewSummary.comments.map(comment => (
+                        <div key={comment.id} className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs font-bold text-gray-700">{comment.author}</span>
+                            <span className={`text-xs font-bold border rounded-full px-2 py-0.5 ${ratingBadge(comment.rating)}`}>
+                              {comment.rating}/5
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 leading-snug">{comment.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+
               {/* Nav traka */}
               <div className="flex items-center gap-2.5 mb-5">
                 <button

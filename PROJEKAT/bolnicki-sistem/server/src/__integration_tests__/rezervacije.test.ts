@@ -77,11 +77,12 @@ async function resetujTermin(terminId = TERMIN_ID) {
   await redis.del(`termin:lock:${terminId}`);
 }
 
+// kreirajRezervacijuHelper
 async function kreirajRezervacijuHelper(terminId = TERMIN_ID) {
   await resetujTermin(terminId);
   await redis.setex(`termin:lock:${terminId}`, 120, String(STVARNI_KORISNIK_ID));
   const res = await request(app)
-    .post("/api/rezervacija")
+    .post("/api/rezervacije")  // ← bilo /api/rezervacija
     .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
     .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
     .send({
@@ -446,4 +447,99 @@ describe("PATCH /api/rezervacija/:id/otkazi/osoblje", () => {
 
     expect(res.status).toBe(404);
   });
+
+});
+
+describe("PATCH /api/rezervacije/:id/komentar", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
+  it("pacijent uspješno dodaje komentar na rezervaciju", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    expect(kreacija.status).toBe(201);
+    const rezervacijaId = kreacija.body.id;
+
+    const res = await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/komentar`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "Imam alergiju na penicilin" });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty("id");
+    expect(res.body).toHaveProperty("tekst", "Imam alergiju na penicilin");
+    expect(res.body).toHaveProperty("autor");
+    expect(res.body).toHaveProperty("datum");
+    expect(res.body.jeDoktor).toBe(false);
+  });
+
+  it("vraća 400 za prazan komentar", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    const rezervacijaId = kreacija.body.id;
+
+    const res = await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/komentar`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.poruka).toContain("prazan");
+  });
+
+  it("vraća 404 za nepostojeću rezervaciju", async () => {
+    const res = await request(app)
+      .patch("/api/rezervacije/99999/komentar")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "Test" });
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/rezervacije/:id/komentari", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
+  it("vraća komentare rezervacije", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    const rezervacijaId = kreacija.body.id;
+
+    // Dodaj komentar
+    await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/komentar`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "Test komentar" });
+
+    const res = await request(app)
+      .get(`/api/rezervacije/${rezervacijaId}/komentari`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toHaveProperty("tekst");
+    expect(res.body[0]).toHaveProperty("autor");
+    expect(res.body[0]).toHaveProperty("datum");
+    expect(res.body[0]).toHaveProperty("jeDoktor");
+  });
+
+  it("vraća prazan niz za rezervaciju bez komentara", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    const rezervacijaId = kreacija.body.id;
+
+    const res = await request(app)
+      .get(`/api/rezervacije/${rezervacijaId}/komentari`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
 });

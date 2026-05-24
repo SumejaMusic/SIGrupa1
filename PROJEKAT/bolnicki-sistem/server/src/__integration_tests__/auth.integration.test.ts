@@ -33,11 +33,6 @@ let originalHashDoktor:   string | undefined;
 let originalHashAdmin:    string | undefined;
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
-// FIX: Dohvatamo POSTOJEĆE korisnike iz baze i privremeno postavljamo
-// poznatu lozinku. Nema CREATE — nema problema sa sekvencama.
-// Filter nalogZakljucan je uklonjen jer neke baze imaju null umjesto false.
-// Ako uloga nije pronađena, test koji je koristi vraća se tiho (early return).
-
 beforeAll(async () => {
   const noviHash = await bcrypt.hash(ISPRAVNA_LOZINKA, 4);
 
@@ -111,7 +106,6 @@ afterAll(async () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // US-03 — Login sistem: JWT tokeni i RBAC preusmjeravanje
-// NFR-03, NFR-04, NFR-06, NFR-07
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
@@ -125,13 +119,12 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    
-    // Obrisano: expect(res.body).toHaveProperty("uloga", "PACIJENT"); ❌
-    
-    // Umjesto toga provjeravamo ulogu UNUTAR tokena:
+    expect(res.body).toHaveProperty("korisnik");
+    expect(res.body.korisnik).toHaveProperty("uloga", "PACIJENT");
+
     const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
     expect(decoded).toHaveProperty("id");
-    expect(decoded).toHaveProperty("uloga", "PACIJENT"); // ✅ Ovo potvrđuje ulogu
+    expect(decoded).toHaveProperty("uloga", "PACIJENT");
   });
 
   it("uspješna prijava doktora vraća JWT token i ulogu DOKTOR", async () => {
@@ -143,10 +136,11 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
+    expect(res.body).toHaveProperty("korisnik");
+    expect(res.body.korisnik).toHaveProperty("uloga", "DOKTOR");
 
-    // Provjera unutar tokena
     const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
-    expect(decoded).toHaveProperty("uloga", "DOKTOR"); // ✅
+    expect(decoded).toHaveProperty("uloga", "DOKTOR");
   });
 
   it("uspješna prijava administratora vraća JWT token i ulogu ADMINISTRATOR", async () => {
@@ -158,14 +152,13 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
+    expect(res.body).toHaveProperty("korisnik");
+    expect(res.body.korisnik).toHaveProperty("uloga", "ADMINISTRATOR");
 
-    // Provjera unutar tokena
     const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
-    expect(decoded).toHaveProperty("uloga", "ADMINISTRATOR"); // ✅
+    expect(decoded).toHaveProperty("uloga", "ADMINISTRATOR");
   });
 
-  // AC-04-03: Poruka ne smije otkrivati KOJI podatak je pogrešan.
-  // Provjera: oba slučaja greške vraćaju identičnu poruku.
   it("pogrešna lozinka i pogrešan email vraćaju identičnu poruku — AC-04-03", async () => {
     const emailZaTest = emailPacijent ?? emailDoktor ?? emailAdmin;
     if (!emailZaTest) return console.warn("Skip: nijedan korisnik nije u bazi.");
@@ -216,7 +209,6 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
     expect(res.status).toBe(401);
   });
 
-  // TODO: Zamijeniti s tačnom admin rutom iz authController.ts i ukloni .todo
   it.todo("RBAC: pacijent ne može pristupiti admin ruti — 403 [TODO: potvrdi naziv admin rute]");
   it.todo("RBAC: doktor ne može pristupiti admin ruti — 403 [TODO: potvrdi naziv admin rute]");
 });
@@ -224,7 +216,6 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // US-19 — Automatska odjava: istekla sesija
-// NFR-13, NFR-14
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("Session timeout — US-19 Automatska odjava", () => {
@@ -267,8 +258,6 @@ describe("Session timeout — US-19 Automatska odjava", () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // US-16 — Reset lozinke putem emaila
-// DEC-004, AC-14-01 do AC-14-05
-// TODO: Potvrdi nazive ruta iz authController.ts i ukloni .skip.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("POST /api/auth/reset-lozinka — US-16 Reset lozinke", () => {
@@ -343,8 +332,6 @@ describe("POST /api/auth/reset-lozinka — US-16 Reset lozinke", () => {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // US-25 — Two-Factor Authentication (2FA)
-// NFR-23, AC-04-05
-// TODO: Potvrdi naziv rute iz authController.ts i ukloni .skip.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("POST /api/auth/2fa — US-25 Dvofaktorska autentifikacija", () => {

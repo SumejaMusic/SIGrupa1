@@ -7,7 +7,7 @@ declare const process: {
 
 export default defineConfig(({ mode }) => {
   // Učitavamo ekološke varijable na osnovu toga da li je 'development' ili 'production'
-  const env = loadEnv(mode, process.cwd(), '')
+  const env = loadEnv(mode, '.', '')
 
   return {
     plugins: [react()],
