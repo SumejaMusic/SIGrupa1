@@ -112,6 +112,8 @@ export function mapirajRezervaciju(r: any): Termin {
       pol: r.pacijent.korisnik.jmbg?.[6] < "5" ? "M" : "F",
       email: r.pacijent.korisnik.email,
       telefon: r.pacijent.korisnik.brojTelefona ?? "/",
+      reviewPeriodDays: r.pacijent.reviewPeriodDays ?? 0,
+      hronicniBolesnik: r.pacijent.hronicniBolesnik ?? false,
     },
     tip,
     status,
