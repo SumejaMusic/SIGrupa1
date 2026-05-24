@@ -318,4 +318,40 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | Postojao je rizik od nekonzistentnog prikaza datuma između backend i frontend dijela sistema, što je riješeno uvođenjem zajedničkog helpera za formatiranje datuma. |
 | **Ko je koristio alat** | Lamija Halilović |
 
+
+## Unos 019 — Admin panel: korisnički interfejs i backend funkcionalnosti
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 24.05.2026. |
+| **Sprint broj** | Sprint 9 |
+| **Alat koji je korišten** | Claude Code (claude-sonnet-4-6) |
+| **Svrha korištenja** | Implementacija admin panel funkcionalnosti — frontend interfejs i backend API |
+| **Kratak opis zadatka ili upita** | Implementirati kompletan admin panel s upravljanjem korisnicima i ulogama (US-02, US-33), rasporedom doktora i medicinskog osoblja s Kanban prikazom, upravljanjem odjelima i analitikom bukiranja. |
+| **Šta je AI predložio ili generisao** | **Frontend:** Tab "Korisnici" s paginacijom, filterima i color-coded ulogama; modal za promjenu uloge s dinamičkim poljima; Kanban prikaz rasporeda po danima sedmice i Klasifikacija po odjelima; CRUD modali za šablone i izuzetke rasporeda; tab Analitika sa sedmičnim i mjesečnim statistikama. **Backend:** Endpoint `PATCH /api/admin/korisnici/:id/uloga` s Prisma transakcijom (promjena uloge + kreiranje profila + audit log); CRUD za `RasporedDoktora` i `RasporedOsoblja` s unique constraintom po osobi i danu; generisanje `Termin` zapisa iz šablona; endpoint za analitiku (broj rezervacija, otkazivanja, prosječno čekanje za hitne termine, agregacija po doktoru). |
+| **Šta je tim prihvatio** | Kompletna implementacija frontenda i backenda kako je predložena |
+| **Šta je tim izmijenio** | — |
+| **Šta je tim odbacio** | — |
+| **Rizici, problemi ili greške** | Migracija `20260524120000_redesign_raspored` uklonila je `datumOd`/`datumDo` iz `RasporedDoktora`, ali ovo nije odmah sinhronizovano sa `seed.ts` i `setupFiles.ts`, što je uzrokovalo pad integracionih testova u narednoj sesiji. |
+| **Ko je koristio alat** | Hana Mahmutović |
+
+---
+
+## Unos 020 — Dijagnoza i ispravak integracionih testova
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 24.05.2026. |
+| **Sprint broj** | Sprint 9 |
+| **Alat koji je korišten** | Claude Code (claude-sonnet-4-6) |
+| **Svrha korištenja** | Dijagnoza grešaka u integracionim testovima i ispravak; dokumentovanje implementiranih funkcionalnosti |
+| **Kratak opis zadatka ili upita** | Utvrditi koji su integracioni testovi padali nakon izmjena u prethodnoj sesiji (dodavanje admin panel funkcionalnosti), pronaći uzroke i popraviti ih bez narušavanja logike. |
+| **Šta je AI predložio ili generisao** | Analiza git historije i diff-ova identificirala tri uzroka pada testova: (1) `setupFiles.ts` referencira `datumOd` polje koje je migracija `20260524120000_redesign_raspored` uklonila, (2) `seed.ts` sadrži iste referentne greške i uzrokuje pad `globalSetup`-a, (3) `rezervacije.test.ts` koristi hardkodirani `STVARNI_KORISNIK_ID = 2`, ali seed kreira pacijenta tek nakon 6 doktora pa on dobija ID ≈ 7. Predložen i implementiran fix u `beforeAll` — dinamički dohvat stvarnog korisnik ID-a iz baze putem `prisma.korisnik.findUnique({ email: "musicsumeja98@gmail.com" })` umjesto hardkodiranog ID-a. |
+| **Šta je tim prihvatio** | Fix u `rezervacije.test.ts` — dinamički lookup korisnik ID-a; analiza uzroka svih pada testova |
+| **Šta je tim izmijenio** | Opis user storija je skraćen i preformulisan prema preferenci tima (bullet point format, suženiji backend opis) |
+| **Šta je tim odbacio** | — |
+| **Rizici, problemi ili greške** | Primarna greška nastala jer je migracija uklonila kolonu `datumOd` iz `RasporedDoktora`, ali `setupFiles.ts` i `seed.ts` nisu ažurirani u istom commitu — što je uzrokovalo pad cijele integracione test suite. |
+| **Ko je koristio alat** | Hana Mahmutović |
+
+
 ```.
