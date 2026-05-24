@@ -302,4 +302,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške**  |
 | **Ko je koristio alat** | Amina Alispahić |
 
+## Unos 018 - Profil korisnika
+
+| Stavka | Opis |
+|:---|:---|
+| **Datum** | 24.05.2026. |
+| **Sprint broj** | Sprint 9 |
+| **Alat koji je korišten** | Claude (Opus) |
+| **Svrha korištenja** | Razvoj i implementacija funkcionalnosti korisničkog profila pacijenta na backendu i frontendu, uključujući uređivanje podataka i validaciju datuma. |
+| **Kratak opis zadatka ili upita** | Implementacija stranice profila pacijenta sa prikazom osnovnih podataka (ime, prezime, email, telefon, datum rođenja), mogućnošću uređivanja svih podataka osim emaila, primjenom jedinstvenog formata datuma dd/mm/yyyy i podrškom za ažuriranje podataka putem PATCH endpointa. |
+| **Šta je AI predložio ili generisao** | Kreiranje React komponente za profil sa edit modom i success/error state logikom, implementaciju PATCH /users/{id}/profile endpointa sa validacijom podataka, helper funkcije za formatiranje datuma prema BUG-03 zahtjevu, te prikaz notifikacije "Profil uspješno ažuriran" nakon uspješnog čuvanja izmjena. |
+| **Šta je tim prihvatio** | Kompletan pristup organizaciji profil stranice sa odvojenim view i edit modom, validaciju formata datuma na backendu i frontendu, centralizovani date-formatting helper, te success/error state handling za korisničke akcije. |
+| **Šta je tim izmijenio** | Prilagođena je validacija telefonskog broja kako bi podržavala različite formate unosa. |
+| **Šta je tim odbacio** | Prvobitni prijedlog da se email uređuje direktno unutar profil forme, jer je odlučeno da promjena email adrese zahtijeva poseban verifikacijski flow radi sigurnosti korisničkog računa. |
+| **Rizici, problemi ili greške** | Postojao je rizik od nekonzistentnog prikaza datuma između backend i frontend dijela sistema, što je riješeno uvođenjem zajedničkog helpera za formatiranje datuma. |
+| **Ko je koristio alat** | Lamija Halilović |
+
 ```.
