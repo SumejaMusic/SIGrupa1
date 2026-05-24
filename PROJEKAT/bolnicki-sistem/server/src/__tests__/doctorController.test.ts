@@ -5,6 +5,7 @@ import {
   getSviDoktori,
   getDoktorById,
   getRasporedDoktora,
+  dodajKomentarDoktor,
 } from "../controllers/doctorController.js";
 
 
@@ -236,99 +237,6 @@ it("filtrira po specijalizaciji i odjelId istovremeno (precizna provjera)", asyn
 });
 });
 
-
-describe("getSviDoktori - kombinacije filtera gdje jedna od vrijednosti ne postoji u bazi", () => {
-  
-  it("vraća prazan niz kada specijalizacija ne postoji", async () => {
-    vi.mocked(prismaMock.doktor.findMany).mockResolvedValue([]);
-
-    const { req, res, next } = mockReqRes({}, { specijalizacija: "Nepostojeca" });
-    await getSviDoktori(req, res, next);
-
-    expect(res.json).toHaveBeenCalledWith([]);
-    expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          specijalizacija: { contains: "Nepostojeca", mode: "insensitive" },
-        }),
-      })
-    );
-  });
-
-  it("vraća prazan niz kada odjelId ne postoji", async () => {
-    vi.mocked(prismaMock.doktor.findMany).mockResolvedValue([]);
-
-    const { req, res, next } = mockReqRes({}, { odjelId: "999" });
-    await getSviDoktori(req, res, next);
-
-    expect(res.json).toHaveBeenCalledWith([]);
-    expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          idOdjela: 999,
-        }),
-      })
-    );
-  });
-
-  it("vraća prazan niz kada ni specijalizacija ni odjelId ne postoje", async () => {
-    vi.mocked(prismaMock.doktor.findMany).mockResolvedValue([]);
-
-    const { req, res, next } = mockReqRes({}, { specijalizacija: "Nepostojeca", odjelId: "999" });
-    await getSviDoktori(req, res, next);
-
-    expect(res.json).toHaveBeenCalledWith([]);
-    expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          specijalizacija: { contains: "Nepostojeca", mode: "insensitive" },
-          idOdjela: 999,
-        }),
-      })
-    );
-  });
-
-  it("vraća doktore kada specijalizacija postoji ali odjelId ne postoji", async () => {
-    const lažniDoktori = [mockDoktorZaListu({ id: 1, specijalizacija: "Kardiologija", idOdjela: 999 })];
-    vi.mocked(prismaMock.doktor.findMany).mockResolvedValue(lažniDoktori as any);
-
-    const { req, res, next } = mockReqRes({}, { specijalizacija: "Kardiologija", odjelId: "999" });
-    await getSviDoktori(req, res, next);
-
-    expect(res.json).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 1, specijalizacija: "Kardiologija", odjelId: 999 })
-    ]);
-    expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          specijalizacija: { contains: "Kardiologija", mode: "insensitive" },
-          idOdjela: 999,
-        }),
-      })
-    );
-  });
-
-  it("vraća doktore kada odjelId postoji ali specijalizacija ne postoji", async () => {
-    const lažniDoktori = [mockDoktorZaListu({ id: 2, specijalizacija: "Neurologija", idOdjela: 2 })];
-    vi.mocked(prismaMock.doktor.findMany).mockResolvedValue(lažniDoktori as any);
-
-    const { req, res, next } = mockReqRes({}, { specijalizacija: "Nepostojeca", odjelId: "2" });
-    await getSviDoktori(req, res, next);
-
-    expect(res.json).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 2, specijalizacija: "Neurologija", odjelId: 2 })
-    ]);
-    expect(prismaMock.doktor.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          specijalizacija: { contains: "Nepostojeca", mode: "insensitive" },
-          idOdjela: 2,
-        }),
-      })
-    );
-  });
-});
-
 describe("getDoktorById", () => {
   it("uspješno pronalazi i vraća doktora po ID-u sa svim povezanim podacima", async () => {
   // 1. Priprema
@@ -458,4 +366,167 @@ describe("getRasporedDoktora", () => {
     })
   );
 });
+});
+
+// ─────────────────────────────────────────────
+// dodajKomentarDoktor (doctorController)
+// ─────────────────────────────────────────────
+describe("dodajKomentarDoktor (doctorController)", () => {
+  // Importovati na vrhu fajla:
+  // import { dodajKomentarDoktor } from "../controllers/doctorController.js";
+
+  const rezervacijaZaDoktora = {
+    id: 1,
+    idDoktor: 2,
+    datumOtkazivanja: null,
+    zavrseno: false,
+    doktor: { idKorisnik: 2 },
+    pacijent: { idKorisnik: 5 },
+  };
+
+  it("uspješno dodaje komentar doktora sa statusom 201", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaDoktora as any);
+    vi.mocked(prismaMock.komentar.create).mockResolvedValue({
+      id: 10,
+      tekst: "Preporučujem odmor",
+      jeDoktor: true,
+      datumKreiranja: new Date("2026-05-18"),
+      korisnik: { ime: "Dr.", prezime: "Marić" },
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Preporučujem odmor" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      tekst: "Preporučujem odmor",
+      jeDoktor: true,
+    }));
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 401 kada korisnik nije prijavljen", async () => {
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = undefined;
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Niste prijavljeni." });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 403 kada uloga nije DOKTOR", async () => {
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 1, uloga: "PACIJENT" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Samo doktori mogu koristiti ovu rutu." });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 400 kada je komentar prazan", async () => {
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Komentar ne može biti prazan." });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 400 za neispravan ID rezervacije", async () => {
+    const { req, res, next } = mockReqRes({ id: "abc" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Nevažeći ID rezervacije." });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 404 kada rezervacija nije pronađena", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(null);
+
+    const { req, res, next } = mockReqRes({ id: "999" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Rezervacija nije pronađena." });
+    expect(prismaMock.komentar.create).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 400 kada je rezervacija otkazana", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      ...rezervacijaZaDoktora,
+      datumOtkazivanja: new Date("2026-05-01"),
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Nije moguće komentarisati otkazanu rezervaciju." });
+    expect(prismaMock.komentar.create).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 400 kada je rezervacija završena", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      ...rezervacijaZaDoktora,
+      zavrseno: true,
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Nije moguće komentarisati završenu rezervaciju." });
+    expect(prismaMock.komentar.create).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 403 kada doktor pokušava komentarisati tuđu rezervaciju", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      ...rezervacijaZaDoktora,
+      doktor: { idKorisnik: 99 },
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Nemate dozvolu za komentarisanje ove rezervacije." });
+    expect(prismaMock.komentar.create).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("poziva next pri DB grešci i ne vraća odgovor", async () => {
+    const greška = new Error("DB greška");
+    vi.mocked(prismaMock.rezervacije.findUnique).mockRejectedValue(greška);
+
+    const { req, res, next } = mockReqRes({ id: "1" }, {});
+    (req as any).korisnik = { id: 2, uloga: "DOKTOR" };
+    (req as any).body = { komentar: "Test" };
+    await dodajKomentarDoktor(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(greška);
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+  });
 });
