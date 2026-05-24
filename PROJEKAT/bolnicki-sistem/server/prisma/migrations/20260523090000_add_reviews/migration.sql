@@ -19,4 +19,6 @@ CREATE UNIQUE INDEX "reviews_appointment_id_key" ON "reviews"("appointment_id");
 CREATE INDEX "reviews_hidden_idx" ON "reviews"("hidden");
 
 -- AddForeignKey
+
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_appointment_id_fkey" FOREIGN KEY ("appointment_id") REFERENCES "Rezervacije"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

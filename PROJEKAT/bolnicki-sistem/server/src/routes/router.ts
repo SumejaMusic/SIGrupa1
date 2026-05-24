@@ -11,6 +11,7 @@ import pregledRoutes from "./pregledRoutes.js";
 import osobljeRoutes from "./osobljeRoutes.js";
 import sobaRoutes from "./sobaRoutes.js";
 import chatRoutes from "./chat.js";
+import listaCekanjaRoutes from "./listaCekanjaRoutes.js";
 
 import {
   getNalaziZaPacijenta,
@@ -25,10 +26,10 @@ import {
   getHronicniPacijenti,
   updateHronicniStatusPacijenta,
 } from "../controllers/patientController.js";
+import { getReminderLogoviZaPacijenta } from "../controllers/reminderController.js";
 
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizacija } from "../middleware/autorizacija.js";
-import { getReminderLogoviZaPacijenta } from "../controllers/reminderController.js";
 
 const router = Router();
 
@@ -42,6 +43,7 @@ router.use("/reviews", recenzijaRoutes);
 router.use("/odjeli", odjelRoutes);autorizacija
 router.use("/auth", authRoutes);
 router.use("/pregledi", pregledRoutes);
+router.use("/lista-cekanja", listaCekanjaRoutes);
 router.use("/rooms", sobaRoutes);
 router.use("/chat", chatRoutes);
 
@@ -66,7 +68,6 @@ router.get(
   getNalazPDF
 );
 
-// Pacijent rute
 router.get(
   "/pacijenti",
   autentifikuj,
@@ -87,8 +88,6 @@ router.get(
   autorizacija(["DOKTOR", "MEDICINSKO_OSOBLJE", "ADMINISTRATOR", "VLASNIK"]),
   getHistorijaPacijenta
 );
-
-
 
 router.patch(
   "/pacijenti/:id/hronicni",

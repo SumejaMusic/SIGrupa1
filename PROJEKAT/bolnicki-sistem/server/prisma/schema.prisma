@@ -33,13 +33,15 @@ model Korisnik {
 }
 
 model PasswordResetToken {
-  id          Int      @id @default(autoincrement())
-  tokenHash   String   @unique
+
+  id          Int       @id @default(autoincrement())
+  tokenHash   String    @unique
   idKorisnika Int
   expiresAt   DateTime
   usedAt      DateTime?
-  createdAt   DateTime @default(now())
-  korisnik    Korisnik @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  korisnik    Korisnik  @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
+
 
   @@index([idKorisnika])
 }
@@ -59,21 +61,10 @@ model Pacijent {
   reminderLogs            ReminderLog[]
   rezervacije             Rezervacije[]
   termini                 Termin[]
+
 }
 
-model ReminderLog {
-  id         Int      @id @default(autoincrement())
-  idPacijent Int
-  sentAt     DateTime @default(now())
-  channel    String
-  status     String
-  message    String?
-  pacijent   Pacijent @relation(fields: [idPacijent], references: [id], onDelete: Cascade)
 
-  @@index([idPacijent])
-  @@index([sentAt])
-  @@index([idPacijent, sentAt])
-}
 
 model Doktor {
   id               Int                       @id @default(autoincrement())
@@ -272,11 +263,12 @@ model ListaCekanja {
   idPacijent    Int
   idDoktor      Int
   datumZahtjeva DateTime           @default(now())
+  zeleniDatum   DateTime           @db.Date
   status        StatusListeCekanja @default(CEKA)
   prioritet     Prioritet          @default(NORMALAN)
   napomena      String?
   obavijestioAt DateTime?
-  zeleniDatum   DateTime           @db.Date
+
   doktor        Doktor             @relation(fields: [idDoktor], references: [id])
   pacijent      Pacijent           @relation(fields: [idPacijent], references: [id])
 
@@ -304,6 +296,21 @@ model Komentar {
 
   @@index([idRezervacije])
   @@index([idKorisnik])
+}
+
+
+model ReminderLog {
+  id         Int      @id @default(autoincrement())
+  idPacijent Int
+  sentAt     DateTime @default(now())
+  channel    String
+  status     String
+  message    String?
+  pacijent   Pacijent @relation(fields: [idPacijent], references: [id])
+
+  @@index([idPacijent])
+  @@index([idPacijent, sentAt])
+  @@index([sentAt])
 }
 
 

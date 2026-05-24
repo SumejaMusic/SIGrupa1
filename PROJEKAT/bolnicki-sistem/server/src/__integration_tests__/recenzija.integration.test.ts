@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from "vitest";
 import request from "supertest";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
@@ -8,15 +8,25 @@ const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "test-secret";
 const DOKTOR_ID = 1;
-const PACIJENT_ID = 1;
+//const PACIJENT_ID = 1;
 const PACIJENT_KORISNIK_ID = 2;
 const TIP_PREGLEDA_ID = 1;
 const SOBA_ID = 1;
 
+
+let PACIJENT_ID: number;  // ← više nije const, i nije 1
+
+
 let PACIJENT_TOKEN: string;
 let DOKTOR_TOKEN: string;
 
-beforeAll(() => {
+beforeAll(async () => {  // ← dodaj async
+  // Dohvati pravi pacijent ID za korisnika 2
+  const pacijent = await prisma.pacijent.findFirstOrThrow({
+    where: { idKorisnik: PACIJENT_KORISNIK_ID },
+  });
+  PACIJENT_ID = pacijent.id;
+
   PACIJENT_TOKEN = jwt.sign(
     { id: PACIJENT_KORISNIK_ID, uloga: "PACIJENT" },
     JWT_SECRET,
@@ -28,6 +38,37 @@ beforeAll(() => {
     JWT_SECRET,
     { expiresIn: "1h" }
   );
+});
+
+afterEach(async () => {
+  terminCounter = 100;
+  // Briše sve recenzije i rezervacije kreirane u testovima (osim termina 1 i 2 koji su seed podaci)
+  await prisma.recenzija.deleteMany({
+    where: {
+      rezervacija: {
+        idTermina: { gt: 2 },
+      },
+    },
+  });
+  await prisma.recenzija.deleteMany({
+    where: {
+      rezervacija: {
+        idTermina: { in: [1, 2] },
+      },
+    },
+  });
+  await prisma.rezervacije.deleteMany({
+    where: { idTermina: { gt: 2 } },
+  });
+  await prisma.termin.deleteMany({
+    where: { id: { gt: 2 } },
+  });
+  // Reset termina 1 i 2 na ZAKAZAN
+  await prisma.rezervacije.deleteMany({ where: { idTermina: { in: [1, 2] } } });
+  await prisma.termin.updateMany({
+    where: { id: { in: [1, 2] } },
+    data: { status: "SLOBODAN" },
+  });
 });
 
 afterAll(async () => {
@@ -63,13 +104,16 @@ async function kreirajTermin(id: number, vrijeme = 600) {
   });
 }
 
+let terminCounter = 100;
+
 async function kreirajRezervaciju(options: {
   idTermina?: number;
   vrijeme?: number;
   zavrseno?: boolean;
   otkazano?: boolean;
 } = {}) {
-  const idTermina = options.idTermina ?? 1;
+  // Svaki poziv bez eksplicitnog idTermina dobija jedinstven ID
+  const idTermina = options.idTermina ?? terminCounter++;
 
   if (idTermina > 2) {
     await kreirajTermin(idTermina, options.vrijeme ?? 600);

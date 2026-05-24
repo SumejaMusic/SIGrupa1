@@ -1,5 +1,7 @@
 import { Resend } from 'resend';
+
 import jwt from 'jsonwebtoken';
+
 
 interface RezervacijaEmailPodaci {
   pacijentEmail: string;
@@ -38,8 +40,13 @@ function getResend(): Resend {
   }
   return new Resend(process.env.RESEND_API_KEY);
 }
+/*
 
+//const TO_EMAIL = 'musicsumeja98@gmail.com';
+const TO_EMAIL = 'aminaalispahic67@gmail.com';
+*/
 const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'musicsumeja98@gmail.com';
+
 const FROM_EMAIL = 'onboarding@resend.dev';
 const REVIEW_TOKEN_PURPOSE = 'appointment-review';
 
@@ -315,6 +322,46 @@ export async function posaljiOtkazivanjeRezerv(podaci: OtkazivanjeEmailPodaci): 
   }
 
   console.log(`✅ Email otkazivanja rezervacije #${rezervacijaId} poslan.`);
+}
+
+export async function posaljiWaitlistNotifikaciju(podaci: {
+  pacijentEmail: string;
+  pacijentIme: string;
+  pacijentPrezime: string;
+  doktorIme: string;
+  datum: Date;
+  vrijeme: number;
+  listaCekanjaId: number;
+  rokPotvrde: Date;
+}): Promise<void> {
+  const { pacijentIme, pacijentPrezime, datum, vrijeme, rokPotvrde } = podaci;
+
+  await getResend().emails.send({
+    from: FROM_EMAIL,
+    to: TO_EMAIL,
+    subject: `🔔 Slobodan termin — ${formatDatumEmail(datum)} u ${formatVrijeme(vrijeme)}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #1a73e8; padding: 24px; text-align: center;">
+          <h1 style="color: white; margin: 0;">🔔 Slobodan termin!</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p>Poštovani/a <strong>${pacijentIme} ${pacijentPrezime}</strong>,</p>
+          <p>Oslobodio se termin za koji ste bili na listi čekanja:</p>
+          <p style="font-size: 20px; text-align: center;">
+            <strong>${formatDatumEmail(datum)} u ${formatVrijeme(vrijeme)}h</strong>
+          </p>
+          <p>Imate do <strong>${rokPotvrde.toLocaleString('bs')}</strong> da potvrdite.</p>
+          <p style="color: #555;">Prijavite se u aplikaciju i potvrdite ili odbijte termin u sekciji <strong>Lista čekanja</strong>.</p>
+        </div>
+        <div style="background-color: #f8f9fa; padding: 16px; text-align: center; border-top: 1px solid #dee2e6;">
+          <p style="margin: 0; color: #888; font-size: 13px;">
+            © ${new Date().getFullYear()} Bolnički Sistem — Automatska obavijest, ne odgovarajte na ovaj email.
+          </p>
+        </div>
+      </div>
+    `
+  });
 }
 
 interface PozivZaOcjenuEmailPodaci {

@@ -116,6 +116,7 @@ function AppContent() {
   <Route path="/reset-password"  element={<ResetPasswordPage />} />
   <Route path="/anonimna-ocjena" element={<AnonimnaOcjenaPage />} />
 
+
   {/* Stara ruta */}
   <Route path="/doctor-view" element={<Navigate to="/doktor-rezervacije" replace />} />
 

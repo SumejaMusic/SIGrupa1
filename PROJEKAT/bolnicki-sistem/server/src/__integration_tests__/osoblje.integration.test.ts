@@ -269,3 +269,12 @@ describe("PATCH /api/osoblje/termini/:id/hitnost", () => {
     expect(res.status).toBe(404);
   });
 });
+// Dodaj na kraj fajla, ispred zadnjeg });
+afterAll(async () => {
+  await prisma.historijaPregleda.deleteMany({
+    where: { rezervacija: { idTermina: { in: [200, 201] } } },
+  });
+  await prisma.rezervacije.deleteMany({ where: { idTermina: { in: [200, 201] } } });
+  await prisma.termin.deleteMany({ where: { id: { in: [200, 201] } } });
+  await prisma.$disconnect();
+});

@@ -6,7 +6,7 @@ type LockRecord = {
 };
 
 const memoryLocks = new Map<string, LockRecord>();
-
+const memorySets = new Map<string, Set<string>>();
 const redisClient = process.env.REDIS_URL
   ? new Redis(process.env.REDIS_URL, {
       lazyConnect: true,
@@ -65,18 +65,56 @@ export const redis = {
       expiresAt: Date.now() + ttlSeconds * 1000,
     });
   },
+ async sadd(key: string, ...members: string[]) {
+    if (redisClient) {
+      try {
+        await redisClient.sadd(key, ...members);
+        return;
+      } catch {
+        const set = memorySets.get(key) ?? new Set();
+        members.forEach(m => set.add(m));
+        memorySets.set(key, set);
+        return;
+      }
+    }
+    const set = memorySets.get(key) ?? new Set();
+    members.forEach(m => set.add(m));
+    memorySets.set(key, set);
+  },
 
+  async smembers(key: string): Promise<string[]> {
+    if (redisClient) {
+      try {
+        return await redisClient.smembers(key);
+      } catch {
+        return Array.from(memorySets.get(key) ?? []);
+      }
+    }
+    return Array.from(memorySets.get(key) ?? []);
+  },
+
+  async expire(key: string, ttlSeconds: number) {
+    if (redisClient) {
+      try {
+        await redisClient.expire(key, ttlSeconds);
+        return;
+      } catch {}
+    }
+    // Za memory fallback expire nije kritičan — setovi se čiste kad se termin oslobodi
+  },
   async del(key: string) {
     if (redisClient) {
       try {
         await redisClient.del(key);
       } catch {
         memoryLocks.delete(key);
+        memorySets.delete(key); // ← dodaj i ovo
         return;
       }
     }
 
     memoryLocks.delete(key);
+    memorySets.delete(key);
   },
   async ttl(key: string): Promise<number> {
     if (redisClient) {
