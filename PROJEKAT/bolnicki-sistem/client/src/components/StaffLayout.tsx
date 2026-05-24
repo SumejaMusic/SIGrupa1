@@ -47,6 +47,7 @@ export default function StaffLayout({ children }: Props) {
     : "?";
 
   const menuItems = [
+    { icon: Calendar, label: "Panel osoblja", href: "/osoblje-panel" },
     { icon: Home, label: "Naslovna", href: "/" },
     
     //{ icon: Stethoscope, label: "Odjeli", href: "/step1-odjeli" }, ne znam treba li za medicinsko osoblje
@@ -89,9 +90,9 @@ export default function StaffLayout({ children }: Props) {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive =
-                item.href === "/osoblje"
-                  ? location.pathname === "/osoblje"
-                  : location.pathname.startsWith(item.href);
+                item.href === "/"
+                  ? location.pathname === "/"
+                  : location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
 
               return (
                 <Link

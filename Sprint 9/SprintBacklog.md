@@ -24,10 +24,10 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | BUG-03 | Profil korisnika – format datuma dd/mm/yyyy | Bug fix | Lamija Halilović  | 1 |
 | US-38 | Lista čekanja za termine | Nova User Story | Amina Alispahić  | 5 |
 | US-39 | Grafički prikaz zauzetosti specijalističkih kabineta | Nova User Story | Hamza Husović  | 3 |
-| US-40 | Zahtjev za deaktivaciju i anonimizaciju profila | Nova User Story | Lamija Halilović | 5 |
+| US-40 | Zahtjev za deaktivaciju i anonimizaciju a | Nova User Story | Lamija Halilović | 5 |
 | US-41 | Obavijest pacijentu o otkazanom/pomjerenom terminu | Nova User Story | Merjem Milišić | 3 |
 | US-42 | Anonimna ocjena i komentar na rad doktora | Nova User Story | Almedin šehić | 5 |
-| US-43 | Profil korisnika – frontend + mapa | Nova User Story |  Lamija Halilović| 3 |
+| US-43 | Profil korisnika | Nova User Story |  Lamija Halilović| 3 |
 |  |Admin panela - osonovne funkcionalnsoti  | |Hana Mahmutović| ||1|
 |/|Testiranje| | || |
 
@@ -357,21 +357,19 @@ Datumi (datum rođenja, datumi termina) prikazuju se u pogrešnom formatu (`yyyy
 
 ---
 
-### US-43 — Profil korisnika – frontend + mapa
+### US-43 — Profil korisnika 
 **Povezanost sa PB:** Nova stavka  
-**Kao** korisnik, **želim** imati pregledan profil s osnovnim podacima i opcionalnom lokacijom/mapom, **kako bih** mogao upravljati informacijama i lakše pronaći zdravstvenu ustanovu.
+**Kao** korisnik, **želim** imati pregledan profil s osnovnim podacima, **kako bih** mogao upravljati informacijama.
 
 #### Acceptance Criteria
 
-1. Stranica profila pacijenta prikazuje: ime, prezime, email, telefon, datum rođenja (format `dd/mm/yyyy`) i adresu.
+1. Stranica profila pacijenta prikazuje: ime, prezime, email, telefon i datum rođenja (format `dd/mm/yyyy`).
 2. Korisnik može urediti sve podatke osim emaila (za promjenu emaila potreban je poseban verifikacijski flow).
-3. Na profilu se prikazuje interaktivna mapa (OpenStreetMap / Google Maps embed) s lokacijom zdravstvene ustanove.
-4. Svi datumi na profilu prikazuju se u formatu `dd/mm/yyyy` (fix iz BUG-03).
-5. Po uspješnom čuvanju izmjena prikazuje se poruka: `"Profil uspješno ažuriran"`.
+3. Svi datumi na profilu prikazuju se u formatu `dd/mm/yyyy` (fix iz BUG-03).
+4. Po uspješnom čuvanju izmjena prikazuje se poruka: `"Profil uspješno ažuriran"`.
 
 #### Zadaci
 - [ ] Frontend: profil stranica s edit modom (React komponenta)
-- [ ] Integracija mapa embeda (OpenStreetMap iframe ili Leaflet.js)
 - [ ] Primjena date-formatting helpera (BUG-03)
 - [ ] Endpoint `PATCH /users/{id}/profile` s validacijom
 - [ ] Testovi: validacija formata datuma, success/error state
