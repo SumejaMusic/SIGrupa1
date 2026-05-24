@@ -7,16 +7,8 @@ import odjelRoutes from "./odjelRoutes.js";
 import authRoutes from "./authRoutes.js";
 import pregledRoutes from "./pregledRoutes.js";
 import osobljeRoutes from "./osobljeRoutes.js";
-<<<<<<< HEAD
 import sobaRoutes from "./sobaRoutes.js";
- 
-// Unutar router.use() bloka, pored ostalih ruta:
-
-import { autentifikuj } from "../middleware/authMiddleware.js";
-import { autorizacija } from "../middleware/autorizacija.js";
 import chatRoutes from "./chat.js";
-
-=======
 
 import {
   getNalaziZaPacijenta,
@@ -35,7 +27,6 @@ import {
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizacija } from "../middleware/autorizacija.js";
 import { getReminderLogoviZaPacijenta } from "../controllers/reminderController.js";
->>>>>>> origin/feature/hronicni-pacijenti-sms
 
 const router = Router();
 
@@ -46,13 +37,9 @@ router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
 router.use("/odjeli", odjelRoutes);
 router.use("/auth", authRoutes);
-<<<<<<< HEAD
-router.use("/pregledi", pregledRoutes); 
+router.use("/pregledi", pregledRoutes);
 router.use("/rooms", sobaRoutes);
 router.use("/chat", chatRoutes);
-=======
-router.use("/pregledi", pregledRoutes);
->>>>>>> origin/feature/hronicni-pacijenti-sms
 
 router.get(
   "/nalazi/pacijent/:pacijentId",
