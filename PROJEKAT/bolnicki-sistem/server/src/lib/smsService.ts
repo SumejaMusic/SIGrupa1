@@ -1,8 +1,8 @@
 import axios from "axios";
 
 // Podaci sa tvog Infobip Dashboarda
-const API_KEY = "078f57d51d74347b96548ee707aa2bd1-e687457f-a97d-4d23-89c3-6d2f722a62c9"; 
-const BASE_URL = "https://x1qpjq.api.infobip.com"; 
+const API_KEY = process.env.INFOBIP_API_KEY; 
+const BASE_URL = process.env.INFOBIP_BASE_URL;
 
 export const sendSMS = async (phoneNumber: string, message: string) => {
   try {

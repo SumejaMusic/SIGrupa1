@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export const pokreniReminderJob = () => {
   // Svaki dan u 08:00 (za testiranje možeš ostaviti * * * * *)
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("0 8 * * *", async () => {
     try {
       console.log("Pokrenut daily reminder job...");
       const danas = new Date();
