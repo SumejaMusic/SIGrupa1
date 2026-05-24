@@ -42,6 +42,14 @@
 | **US-35** | PB-8 | Kreiranje baze podataka | Kao sistem administrator, želim implementirati bazu podataka u stvarnom okruženju, kako bi sistem mogao pohranjivati sve podatke pacijenata, termina i korisnika. | Centralizovano čuvanje podataka omogućava da sve informacije budu na jednom mjestu, što olakšava pristup i upravljanje njima. Time se osigurava konzistentnost i integritet podataka, a sistem može nesmetano podržavati sve svoje funkcionalnosti, čineći rad pouzdanim i efikasnim. | Visok (High) | - ER model baze je definisan<br>- Sistemski zahtjevi su poznati | - Koji tip baze se koristi (SQL/NoSQL)?<br>- Da li je potrebna replikacija? |
 | **US-36** | PB-8 | Definisanje prava pristupa bazi podataka | Kao sistem administrator, želim implementirati autentifikaciju i autorizaciju za pristup podacima, kako bi se osigurala sigurnost i privatnost informacija. | Povećana zaštita osjetljivih podataka sprječava neovlašteni pristup i osigurava da informacije ostanu privatne. Sistem također omogućava kontrolu pristupa za različite tipove korisnika, čime se dodatno unapređuje sigurnost i organizacija rada. | Visok (High) | - Korisnici su registrovani<br>- Sistem podržava različite uloge | - Koje uloge korisnika će biti definisane?<br>- Da li postoji centralizovana kontrola pristupa? |
 | **US-37** | PB-8 | Testiranje baze podataka | Kao QA inženjer, želim testirati bazu podataka da provjerim validnost podataka, veze između tabela i prava pristupa, kako bi sistem radio pouzdano. | Ove funkcionalnosti garantuju da su podaci i veze u bazi ispravni, čime se smanjuje mogućnost grešaka u radu sistema. Kao rezultat, pouzdanost i kvalitet cijelog sistema značajno se povećavaju, što doprinosi sigurnijem i efikasnijem radu. | Visok (High) | - Baza podataka je kreirana i konfigurirana<br>- Prava pristupa su definisana | - Koje testove automatizirati, a koje ručno?<br>- Kako dokumentovati rezultate testiranja? |
+| **US-31-EXT** | PB-7 | Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik | Kao doktor, želim označiti pacijenta atributom „hronični bolesnik" i definisati period rutinskog pregleda, kako bi sistem automatski slao podsjetnike putem emaila i SMS-a. | Proširenje osnovnog sistema obavijesti osigurava kontinuitet zdravstvene zaštite za najranjivije grupe pacijenata. Automatizacijom podsjetnika kroz višekanalni pristup (SMS i email) predupjeđuje se rizik od propuštanja kontrolnih pregleda, što direktno poboljšava ishode liječenja i smanjuje stopu relapsa ili komplikacija. Za ustanovu ovo znači osiguravanje kontinuiteta posjeta i smanjenje ručnog rada. | Visok (High) | - Integrisan eksterni SMS gateway (Infobip API)<br>- Pacijent ima upisan validan broj telefona u profilu | - Koliko dana prije isteka perioda se šalje podsjetnik?<br>- Šta ako pacijent već ima zakazan termin u tom periodu? |
+| **US-38** | PB-2 | Lista čekanja za termine | Kao pacijent, želim da se prijavim na listu čekanja za određeni dan, kako bi me sistem obavijestio ako se neki termin oslobodi usljed otkazivanja. | Lista čekanja maksimizira iskoristivost vremenskih slotova ljekara i smanjuje gubitke nastale zbog iznenadnih otkazivanja termina u zadnji čas. Pacijentima pruža priliku da dobiju zdravstvenu uslugu znatno brže nego kroz standardni proces rezervacije, čime se direktno podiže nivo zadovoljstva korisnika i operativna efikasnost klinike. | Srednji (Medium) | - Svi redovni termini za odabrani dan su popunjeni<br>- Implementiran sistem in-app i email notifikacija | - Koliko vremena pacijent ima da prihvati oslobođeni termin?<br>- Može li se pacijent prijaviti više puta za isti dan? |
+| **US-39** | PB-11 | Grafički prikaz zauzetosti specijalističkih kabineta | Kao medicinsko osoblje, želim vidjeti grafički prikaz zauzetosti specijalističkih kabineta, kako bih mogao ručno dodijeliti hitne slučajeve. | Vizuelni prikaz prostornih resursa u realnom vremenu eliminiše administrativni šum i mogućnost kolizije pri raspoređivanju pacijenata. Omogućava koordinatorima i medicinskom osoblju da u kriznim i urgentnim situacijama reaguju trenutno, prepoznajući slobodne fizičke kapacitete, što direktno utiče na brzinu trijaže i efikasnost. | Srednji (Medium) | - Kabineti su mapirani kao resursi u bazi podataka<br>- Implementiran WebSocket ili polling servis za ažurnost | - Na koji period se osvježavaju podaci u grafičkom prikazu?<br>- Da li je omogućena direktna akcija iz samog prikaza? |
+| **US-40** | PB-6 | Zahtjev za deaktivaciju i anonimizaciju profila | Kao pacijent, želim podnijeti zahtjev za deaktivaciju profila i anonimizaciju mojih ličnih podataka u skladu sa zakonom o zaštiti podataka, kako bih mogao zahtijevati brisanje svojih informacija. | Implementacija ovog zahtjeva osigurava potpunu usklađenost zdravstvene ustanove sa zakonskim regulativama o zaštiti ličnih podataka (GDPR / Zakon o zaštiti ličnih podataka). Pacijentima daje potpunu kontrolu nad njihovim privatnim informacijama, čime se gradi visok nivo povjerenja u digitalnu platformu, dok se istovremeno zadržava medicinsko-pravni integritet kroz očuvanje anonimizirane historije bolesti. | Visok (High) | - Pacijent nema aktivnih i neizvršenih termina u sistemu<br>- Odobrenje zahtjeva zahtijeva administratorsku verifikaciju | - Šta se dešava sa istorijom bolesti i nalazima nakon anonimizacije?<br>- Koji je rok za obradu zahtjeva? |
+| **US-41** | PB-1 | Obavijest pacijentu o otkazanom/pomjerenom terminu | Kao pacijent, želim dobiti email/notifikaciju ako doktor otkaže ili pomjeri moj termin, kako bih mogao planirati svoje vrijeme. | Pravovremeno informisanje o izmjenama u rasporedu drastično smanjuje frustraciju pacijenata i eliminiše nepotreban dolazak u ustanovu. Pružanjem mogućnosti direktne interakcije (prihvatanje ili odbijanje novog slota) pacijent postaje aktivan učesnik u procesu planiranja, što poboljšava reputaciju bolnice i optimizuje radni kalendar ljekara. | Visok (High) | - Ljekar ili osoblje posjeduju permisije za modifikaciju termina<br>- Povezan servis za slanje email obavijesti | - Da li pacijent može odbiti predloženo pomjereno vrijeme?<br>- Da li se obavijest šalje isključivo putem emaila? |
+| **US-42** | PB-10 | Anonimna ocjena i komentar na rad doktora | Kao pacijent, želim da nakon završenog pregleda ostavim anonimnu ocjenu i kratak komentar na rad doktora, kako bi se unaprijedio kvalitet usluge. | Mehanizam povratnih informacija pruža menadžmentu ustanove dragocjen uvid u performanse osoblja i nivo pružene usluge. Anonimnost osigurava objektivnost i iskrenost u recenzijama, bez straha od pristrasnosti pri budućim pregledima, dok ljekarima daje konstruktivan uvid u aspekte komunikacije ili rada koje mogu unaprijediti. | Srednji (Medium) | - Termin u bazi posjeduje status 'ZAVRŠEN'<br>- Sistem garantuje nemogućnost povezivanja identiteta sa ocjenom | - Može li ljekar vidjeti ko je ostavio ocjenu?<br>- Da li postoji moderacija tekstualnih komentara? |
+| **US-43** | PB-4 | Profil korisnika | Kao korisnik, želim imati pregledan profil s osnovnim podacima, kako bih mogao upravljati informacijama. | Centralizovani profil omogućava korisnicima brz uvid u njihove lične i kontakt podatke, osiguravajući da su informacije u sistemu uvijek ažurne. Standardizacija prikaza i validacija unosa smanjuju mogućnost pogrešaka u komunikaciji (pogrešan format telefona ili datuma), što olakšava rad i pacijentima i administraciji. | Visok (High) | - Korisnik je uspješno autentifikovan na sistemu<br>- Implementirane helperske funkcije za lokalne formate | - Koja polja korisnik smije samostalno mijenjati?<br>- Koji format datuma se koristi za prikaz? |
+| **US-44** | PB-12 | Implementacija chatbota | Kao korisnik, želim imati pristup pametnom chatbotu na platformi, kako bih brzo dobio odgovore na česta pitanja i pomoć pri navigaciji. | Chatbot pruža trenutnu podršku korisnicima 24/7, rješavajući uobičajene nedoumice bez potrebe za angažovanjem telefonskih operatera ili administrativnog osoblja. Time se značajno rasterećuje korisnička podrška klinike, dok pacijenti dobijaju brze smjernice i informacije o uslugama, radnom vremenu i pripremi za preglede. | Nizak (Low) | - Kreirana baza znanja sa često postavljanim pitanjima<br>- Chatbot interfejs integrisan u javni dio aplikacije | - Da li chatbot ima pristup medicinskim podacima korisnika?<br>- Može li chatbot rezervisati termin u ime korisnika? |
 
 # Plan Sprintova
 
@@ -79,12 +87,19 @@
 - **US-25 & US-26** — 2FA i blokiranje naloga
 - **US-20** — Audit log
 
-## Sprint 9
-- **US-24** — Panel osoblja
-- **US-11** — Dashboard za doktora
-- **US-28** — Označavanje hitnosti
-- **US-01** — Historija pregleda
-- **US-32** — Upload nalaza
+## Sprint 9 — Proširenja, stabilizacija i automatizacija (Release 3)
+- **US-01** — Historija pregleda korisnika *(Završetak)*
+- **US-11** — Dashboard za doktora – pregled rasporeda *(Kompletna logika)*
+- **US-24** — Panel medicinskog osoblja *(Dopuna)*
+- **US-28** — Označavanje hitnosti prijavljenog termina
+- **US-32** — Upload i evidencija laboratorijskih nalaza
+- **US-31-EXT** — Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik
+- **US-38** — Lista čekanja za termine
+- **US-39** — Grafički prikaz zauzetosti specijalističkih kabineta
+- **US-40** — Zahtjev za deaktivaciju i anonimizaciju profila
+- **US-41** — Obavijest pacijentu o otkazanom/pomjerenom terminu
+- **US-42** — Anonimna ocjena i komentar na rad doktora
+- **US-43** — Profil korisnika
 
 ## Sprint 10
 - **US-12** — Oslobađanje zaključanih termina
@@ -771,4 +786,145 @@
 4. **Dokumentovanje rezultata (Odgovor na otvoreno pitanje):**
    - **Kada** je proces testiranja završen, **ako** su svi rezultati uredno upisani u QA izvještaj, **tada** je proces dokumentovanja rezultata završen.
 
+---
 
+### ID Storyja: US-31-EXT
+**Naziv:** Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik
+
+---
+
+1. **Konfiguracija statusa hroničnog bolesnika:**
+   - **Kada** je ljekar na profilu pacijenta, **ako** aktivira toggle prekidač "Hronični bolesnik", **tada** sistem mora omogućiti numeričko polje za unos periodu rutinskog pregleda u danima i spasiti izmjenu u bazu podataka.
+
+2. **Vremenski okvir i okidanje podsjetnika (Odgovor na otvoreno pitanje):**
+   - **Sistem mora pokrenuti** automatizovani pozadinski posao (cron job) svakog dana koji provjerava bazu, te **ako** utvrdi da je preostalo tačno 7 dana do isteka definisanog perioda od zadnjeg rutinskog pregleda, **tada** inicira slanje obavijesti.
+
+3. **Slanje višekanalnih obavijesti:**
+   - **Kada** se podsjetnik aktivira, **tada** sistem mora poslati strukturiranu email poruku na adresu pacijenta, a **ako** profil pacijenta sadrži unesen broj telefona, sistem istovremeno šalje SMS poruku preko integrisanog Infobip API gateway-a.
+
+4. **Izbjegavanje dupliranja (Odgovor na otvoreno pitanje):**
+   - **Kada** sistem vrši dnevnu provjeru, **ako** utvrdi da pacijent već ima zakazan i aktivan termin unutar preporučenog vremenskog okvira, **tada** se slanje podsjetnika automatski preskače.
+
+5. **Evidencija (Audit Trail):**
+   - **Sistem mora trajno zabilježiti** svaki uspješno poslani podsjetnik u tabelu `reminder_log`, sa podacima o identifikatoru pacijenta, tačnom vremenu slanja i kanalu obavještavanja (SMS/Email).
+
+---
+
+### ID Storyja: US-38
+**Naziv:** Lista čekanja za termine
+
+---
+
+1. **Ponuda prijave na listu:**
+   - **Kada** pacijent pokuša rezervisati termin kod određenog ljekara, **ako** su svi termini za taj dan popunjeni, **tada** sistem na interfejsu mora ponuditi jasno dugme "Prijavi se na listu čekanja".
+
+2. **Automatska alokacija i vremenski prozor (Odgovor na otvoreno pitanje):**
+   - **Kada** ljekar ili medicinsko osoblje otkažu neki termin, **tada** sistem identifikuje prvog pacijenta na listi čekanja za taj dan i šalje mu email sa linkom za potvrdu. Pacijent ima **tačno 30 minuta** da potvrdi termin.
+
+3. **Eskalacija na sljedećeg na listi:**
+   - **Ako** pacijent ne potvrdi termin unutar vremenskog prozora od 30 minuta, **tada** sistem mijenja njegov status u "ISTEKAO" i automatski prosljeđuje ponudu sljedećem pacijentu prema hronološkom redoslijedu prijave.
+
+4. **Jedinstvenost prijave (Odgovor na otvoreno pitanje):**
+   - **Sistem mora spriječiti** da se isti pacijent prijavi više od jednog puta na listu čekanja za istog ljekara unutar istog kalendarskog dana. Ako pokuša ponovo, prikazuje se poruka: "Već se nalazite na listi čekanja za ovaj dan".
+
+---
+
+### ID Storyja: US-39
+**Naziv:** Grafički prikaz zauzetosti specijalističkih kabineta
+
+---
+
+1. **Vizuelna organizacija i color-coding:**
+   - **Korisnik (medicinsko osoblje) treba dobiti** tabelarni ili mrežni (grid) prikaz svih kabineta klinike, gdje je svaki kabinet predstavljen karticom koja mijenja boju: zelena za potpuno slobodan kabinet, crvena za trenutno zauzet i žuta ukoliko termin počinje u narednih 15 minuta.
+
+2. **Automatsko osvježavanje (Odgovor na otvoreno pitanje):**
+   - **Sistem mora automatski osvježiti** grafički prikaz zauzetosti kabineta na ekranu svakih 60 sekundi (putem pollinga ili aktivne WebSocket veze), bez potrebe da korisnik ručno osvježava stranicu preglednika.
+
+3. **Brza akcija iz prikaza (Odgovor na otvoreno pitanje):**
+   - **Kada** medicinsko osoblje klikne na karticu kabineta koji je označen zelenom bojom (slobodan), **tada** sistem mora otvoriti modalni prozor koji omogućava instantnu ručnu dodjelu hitnog slučaja tom kabinetu.
+
+---
+
+### ID Storyja: US-40
+**Naziv:** Zahtjev za deaktivaciju i anonimizaciju profila
+
+---
+
+1. **Pokretanje zahtjeva:**
+   - **Kada** pacijent unutar postavki svog profila klikne na opciju "Zatraži deaktivaciju naloga", **tada** sistem mora prikazati upozorenje o trajnosti procesa i poslati zahtjev u statusu "NA ČEKANJU" prema admin panelu.
+
+2. **Očuvanje medicinskih podataka (Odgovor na otvoreno pitanje):**
+   - **Kada** administrator odobri zahtjev za deaktivaciju, **tada** sistem mora pokrenuti proceduru anonimizacije koja nepovratno briše ili mijenja lične podatke (ime, prezime, email, telefon, JMBG) sa generičkim tokenima (npr. `USER_ANON_123`), dok se **kompletna medicinska historija (nalazi, dijagnoze) zadržava** u bazi u anonimizovanoj formi radi zakonske obaveze čuvanja podataka.
+
+3. **Bezbjednosni rokovi (Odgovor na otvoreno pitanje):**
+   - **Sistem mora obavijestiti** pacijenta putem emaila odmah nakon podnošenja zahtjeva da je zakonski rok za izvršenje i potpunu anonimizaciju podataka **30 dana** od dana podnošenja.
+
+4. **Zabrana pristupa:**
+   - **Kada** je proces odobren i izvršen, **tada** se nalog proglašava neaktivnim i sistem mora trajno blokirati svaki budući pokušaj prijave sa tim kredencijalima.
+
+---
+
+### ID Storyja: US-41
+**Naziv:** Obavijest pacijentu o otkazanom/pomjerenom terminu
+
+---
+
+1. **Okidanje obavijesti pri otkazivanju:**
+   - **Kada** ljekar ili osoblje otkažu termin u sistemu, **tada** sistem automatski šalje email pacijentu koji sadrži datum i vrijeme otkazanog termina, razlog otkazivanja (ako je naveden) i kontakt podatke za podršku.
+
+2. **Upravljanje pomjerenim terminima (Odgovor na otvoreno pitanje):**
+   - **Kada** ljekar promijeni termin u drugi vremenski slot, **tada** pacijent dobija email koji vizuelno ističe staro i novo vrijeme, sa dva integrisana dugmeta: "Prihvati novi termin" i "Odbij i otkaži".
+
+3. **In-app ažurnost i interakcija (Odgovor na otvoreno pitanje):**
+   - **Kada** se pacijent sljedeći put prijavi na platformu, **ako** ima pomjeren termin koji još nije potvrdio, **tada** mu sistem mora prikazati modalnu in-app obavijest koja blokira ostatak interfejsa dok korisnik ne klikne na potvrdu ili odbijanje.
+
+---
+
+### ID Storyja: US-42
+**Naziv:** Anonimna ocjena i komentar na rad doktora
+
+---
+
+1. **Pravo na ocjenjivanje:**
+   - **Sistem mora omogućiti** pristup formi za ocjenjivanje isključivo pacijentima čiji je termin u bazi označen statusom `ZAVRŠEN`. Pacijent može ostaviti brojčanu ocjenu (1 do 5) i tekstualni komentar maksimalne dužine do 500 znakova.
+
+2. **Jednokratnost recenzije:**
+   - **Sistem mora garantovati** da se za jedan jedinstveni ID završenog termina može poslati samo jedna ocjena. Nakon što se ocjena spasi, opcija za taj termin postaje trajno onemogućena.
+
+3. **Stroga anonimnost (Odgovor na otvoreno pitanje):**
+   - **Kada** se podaci upisuju u tabelu `reviews`, **tada** sistem ne smije pohraniti nikakvu relaciju (strani ključ) prema pacijentu. Ljekar na svom dashboardu vidi isključivo agregiranu prosječnu ocjenu i hronološku listu tekstualnih komentara, **bez ikakve mogućnosti uvida u identitet pošiljaoca.**
+
+4. **Administrativna moderacija (Odgovor na otvoreno pitanje):**
+   - **Kada** admin uoči komentar koji sadrži vulgarnosti ili krši pravila privatnosti ustanove, **tada** unutar menadžment panela mora imati opciju "Sakrij komentar", koja uklanja tekstualni sadržaj iz prikaza na ljekarskom dashboardu, ali zadržava numeričku ocjenu u prosjeku.
+
+---
+
+### ID Storyja: US-43
+**Naziv:** Profil korisnika
+
+---
+
+1. **Pregled podataka i standardizacija:**
+   - **Kada** korisnik otvori stranicu svog profila, **tada** sistem prikazuje polja: Ime, Prezime, Email, Broj telefona i Datum rođenja. Svi datumi moraju biti formatirani i vidljivi isključivo u lokalnom formatu `dd/mm/yyyy` (u skladu sa popravkom iz BUG-03).
+
+2. **Restrikcije polja (Odgovor na otvoreno pitanje):**
+   - **Sistem mora onemogućiti** direktno ručno mijenjanje polja za Email adresu unutar osnovne forme profila. Sva ostala polja (Prezime, Telefon, itd.) su slobodna za uređivanje i ažuriranje.
+
+3. **Feedback i validacija:**
+   - **Kada** korisnik klikne na "Spasi izmjene", **ako** su sva polja prošla validaciju formata, **tada** sistem upisuje izmjene u bazu i na vrhu ekrana prikazuje zelenu notifikaciju: "Profil uspješno ažuriran".
+
+---
+
+### ID Storyja: US-44
+**Naziv:** Implementacija chatbota
+
+---
+
+1. **Dostupnost i interakcija:**
+   - **Kada** bilo koji posjetilac (gost ili prijavljeni korisnik) otvori aplikaciju, **tada** u donjem desnom uglu ekrana mora biti vidljiva plutajuća ikona chatbota koja klikom otvara prozor za razgovor.
+
+2. **Izolacija podataka i opseg pomoći (Odgovor na otvoreno pitanje):**
+   - **Chatbot must funkcionisati** isključivo kao informativni asistent zasnovan na predefinisanoj bazi znanja (najčešća pitanja, radno vrijeme, priprema za laboratoriju). Iz bezbjednosnih razloga, chatbot **nema pristup medicinskim kartonima niti bazi pacijenata**, te ne može vršiti radnje rezervacije ili otkazivanja termina u ime korisnika.
+
+3. **Eskalacija i fallback:**
+   - **Ako** chatbot ne uspije prepoznati namjeru korisnika nakon dva uzastopna pokušaja, **tada** mora ispisati poruku sa fiksnim kontakt informacijama klinike (broj telefona i email centrale) za dalju ljudsku podršku.
