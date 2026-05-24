@@ -124,3 +124,18 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | :--- | :--- | :--- |
 | US-02 | Admin panel — korisnički interfejs za administraciju (dodjela uloga) | Prebačeno u Sprint 9 |
 | US-33 | Admin panel — backend funkcionalnosti (dodjela uloga) | Prebačeno u Sprint 9 |
+---
+## DEC-008 — Uvođenje novih korisničkih priča u Sprint 9 radi proširenja funkcionalnosti sistema
+
+| Stavka | Opis |
+| :--- | :--- |
+| **ID odluke** | DEC-008 |
+| **Datum** | 24.5.2026 |
+| **Kratak naziv odluke** | Uvođenje novih korisničkih priča i proširenja (US-31-EXT do US-44) u Sprint 9 |
+| **Opis problema ili pitanja** | Sa razvojem bolničkog sistema ("SwiftMed") pojavila se potreba za proširenjem postojećih modula i uvođenjem naprednih funkcionalnosti koje direktno utiču na automatizaciju obavijesti, analitiku, privatnost pacijenata i poboljšanje korisničkog iskustva. Kako bi se osigurao kontinuitet razvoja i pravovremena integracija, potrebno je formalno uvrstiti nove User Story-je u predstojeći Sprint 9 i alocirati ih razvojnim inženjerima. |
+| **Razmatrane opcije** | 1. Odgoda implementacije novih funkcionalnosti za kasniju fazu (nakon isporuke osnovnih modula).<br>2. Paralelno uvođenje novih korisničkih priča direktno u opseg Sprinta 9 uz preraspodjelu razvojnih kapaciteta. |
+| **Odabrana opcija** | **Opcija 2:** Integracija novih korisničkih priča i proširenja u Sprint 9 |
+| **Razlog izbora** | Uvođenje ovih funkcionalnosti u Sprint 9 omogućava ranu validaciju ključnih sistema poput automatskih podsjetnika i integracije sa eksternim servisima (SMS/Resend), čime se izbjegava rizik integracije pred sam kraj projekta. Takođe, rješavaju se kritični zahtjevi privatnosti (anonimizacija i deaktivacija računa) te se podiže ukupni kvalitet sistema kroz uvođenje analitičkih prikaza i chatbota. |
+| **Posljedice odluke** | Sprint backlog za Sprint 9 se proširuje i ažurira sa sljedećim korisničkim pričama i dodijeljenim resursima:<br><br>• **US-31-EXT:** Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik (Proširenje US-31)<br>• **US-38:** Lista čekanja za termine• **US-39:** Grafički prikaz zauzetosti specijalističkih kabineta<br>• **US-40:** Zahtjev za deaktivaciju i anonimizaciju naloga*<br>• **US-41:** Obavijest pacijentu o otkazanom/pomjerenom terminu*<br>• **US-42:** Anonimna ocjena i komentar na rad doktora *<br>• **US-43:** Profil korisnika <br>• **US-44:** Implementacija pametnog chatbota<br><br>Potrebno je prilagoditi prioritetizaciju unutar tima. |
+| **Status odluke** | Aktivna |
+
