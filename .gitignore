@@ -5,5 +5,5 @@ dist/
 .env.local
 .env.*.local
 /package-lock.json
-.vscode/
-.vs/
+/.vscode/
+/.vs/
