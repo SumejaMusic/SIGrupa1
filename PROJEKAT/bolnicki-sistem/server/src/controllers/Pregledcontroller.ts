@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma.js";
 import { dekriptuj } from "../lib/encryption.js";
+import { posaljiPozivZaOcjenu } from "../emailService.js";
 
 function safeDecrypt(vrijednost: string): string {
   try {
@@ -36,11 +37,32 @@ export const zavrsiPregled = async (
 
     const rezervacija = await prisma.rezervacije.findUnique({
       where: { id: rezervacijaId },
-      include: { historija: true, termin: true },
+      include: {
+        historija: true,
+        termin: true,
+        pacijent: { include: { korisnik: true } },
+        doktor: { include: { korisnik: true } },
+      },
     });
 
     if (!rezervacija) {
       res.status(404).json({ poruka: "Rezervacija nije pronađena." });
+      return;
+    }
+
+    const korisnikPayload = (req as any).korisnik;
+    if (rezervacija.idDoktor !== korisnikPayload.doktorId) {
+      res.status(403).json({ poruka: "Nemate dozvolu za završavanje ovog pregleda." });
+      return;
+    }
+
+    if (rezervacija.zavrseno) {
+      res.status(400).json({ poruka: "Pregled je već završen." });
+      return;
+    }
+
+    if (rezervacija.datumOtkazivanja) {
+      res.status(400).json({ poruka: "Nije moguće završiti otkazanu rezervaciju." });
       return;
     }
 
@@ -92,8 +114,27 @@ export const zavrsiPregled = async (
       return { historija, recept: noviRecept };
     });
 
+    try {
+      await posaljiPozivZaOcjenu({
+        pacijentEmail: rezervacija.pacijent.korisnik.email,
+        pacijentIme: rezervacija.pacijent.korisnik.ime,
+        pacijentPrezime: rezervacija.pacijent.korisnik.prezime,
+        doktorIme: rezervacija.doktor.korisnik.ime,
+        doktorPrezime: rezervacija.doktor.korisnik.prezime,
+        datum: rezervacija.termin.datum,
+        vrijeme: rezervacija.termin.vrijeme,
+        rezervacijaId,
+      });
+    } catch (emailErr) {
+      console.error("Email poziva za ocjenu NIJE poslan:", emailErr);
+    }
+
     res.status(200).json({
       poruka: "Pregled uspješno završen.",
+      reviewPoziv: {
+        kanal: "in-app",
+        poruka: "Pacijent sada može anonimno ocijeniti završeni pregled.",
+      },
       ...rezultat,
     });
   } catch (err) {

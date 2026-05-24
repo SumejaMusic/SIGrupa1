@@ -112,10 +112,20 @@ export function mapirajRezervaciju(r: any): Termin {
       pol: r.pacijent.korisnik.jmbg?.[6] < "5" ? "M" : "F",
       email: r.pacijent.korisnik.email,
       telefon: r.pacijent.korisnik.brojTelefona ?? "/",
+      reviewPeriodDays: r.pacijent.reviewPeriodDays ?? 0,
+      hronicniBolesnik: r.pacijent.hronicniBolesnik ?? false,
     },
     tip,
     status,
     komentari,
     nalazi: [],
+    review: r.review ? {
+      id: r.review.id,
+      rating: r.review.rating,
+      comment: r.review.comment ?? null,
+      createdAt: r.review.createdAt,
+      hidden: r.review.hidden,
+    } : null,
+    doktorId: r.idDoktor,
   };
 }

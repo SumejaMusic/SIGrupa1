@@ -51,6 +51,7 @@ beforeEach(async () => {
   await prisma.recept.deleteMany();
   await prisma.historijaPregleda.deleteMany();
   await prisma.rezervacijaSpecijalista.deleteMany();
+  await prisma.recenzija.deleteMany();
   await prisma.rezervacije.deleteMany();
   await prisma.listaCekanja.deleteMany();
   await prisma.termin.deleteMany();
@@ -60,6 +61,7 @@ beforeEach(async () => {
   // Resetuj autoincrement sekvence da ID-evi budu predvidivi u testovima
   await prisma.$executeRaw`ALTER SEQUENCE "Termin_id_seq" RESTART WITH 1`;
   await prisma.$executeRaw`ALTER SEQUENCE "Rezervacije_id_seq" RESTART WITH 1`;
+  await prisma.$executeRaw`ALTER SEQUENCE "reviews_id_seq" RESTART WITH 1`;
   await prisma.$executeRaw`ALTER SEQUENCE "RasporedDoktora_id_seq" RESTART WITH 1`;
 
   // ── Seed: Odjel ──────────────────────────────────────────────

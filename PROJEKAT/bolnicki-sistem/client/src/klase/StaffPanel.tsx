@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Calendar, List, Plus, Search, 
   Activity, Clock, AlertTriangle, CheckCircle, Filter, LayoutGrid
@@ -9,6 +9,7 @@ import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import CancelModal from '../components/CancelModal';
 import UploadPdfModal from '../components/UploadPdfModal';
 import NewAppointmentModal from '../components/NewAppointmentModal';
+import SekcijaZauzetostiKabineta from '../components/SekcijaZauzetostiKabineta';
 
 type ViewMode = 'week' | 'day' | 'list';
 
@@ -137,29 +138,32 @@ export default function StaffPanel() {
 
   const getToken = () => localStorage.getItem('token') ?? '';
 
-  const showNotif = (msg: string) => {
+  const showNotif = useCallback((msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3500);
-  };
-
-  useEffect(() => {
-    async function fetchTermini() {
-      try {
-        const res = await fetch('/api/osoblje/termini/svi', {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        });
-        if (!res.ok) throw new Error('Greška na serveru');
-        const data = await res.json();
-        setAppointments(data);
-      } catch (err) {
-        console.error(err);
-        showNotif('Neuspješno učitavanje termina s backenda.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTermini();
   }, []);
+
+  const fetchTermini = async () => {
+  try {
+    const res = await fetch('/api/osoblje/termini/svi', {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    if (!res.ok) throw new Error('Greška na serveru');
+
+    const data = await res.json();
+    setAppointments(data);
+  } catch (err) {
+    console.error(err);
+    showNotif('Neuspješno učitavanje termina s backenda.');
+  } finally {
+    setLoading(false);
+  }
+}; 
+
+useEffect(() => {
+  fetchTermini();
+}, []);
 
   useEffect(() => {
     const headers = { Authorization: `Bearer ${getToken()}` };
@@ -421,6 +425,12 @@ export default function StaffPanel() {
 
       {/* Main content */}
       <main className="flex-1 w-full overflow-auto">
+        <SekcijaZauzetostiKabineta
+          allPatients={allPatients}
+          tipoviPregleda={tipoviPregleda}
+          onEmergencyAssigned={fetchTermini}
+          onNotify={showNotif}
+        />
         {viewMode === 'list' ? (
           <ListView appointments={filteredAppointments} onAppointmentClick={setSelectedApt} />
         ) : (
@@ -456,7 +466,11 @@ export default function StaffPanel() {
       {cancelTarget && (
         <CancelModal
           appointment={cancelTarget}
-          onConfirm={confirmCancel}
+          onConfirm={async () => {
+            await fetchTermini();
+            setCancelTarget(null);
+          }}
+          onCancelConfirm={confirmCancel}
           onClose={() => setCancelTarget(null)}
         />
       )}

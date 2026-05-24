@@ -158,14 +158,13 @@ const DoctorPanel: React.FC = () => {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {/* Ikona za otvaranje podešavanja */}
-                    <Settings 
-                      size={20} 
-                      className="settingsIcon" 
-                      onClick={() => openChronicModal(a)} 
-                      style={{cursor: 'pointer', color: '#888'}}
-                      title="Podešavanja hroničnog bolesnika"
-                    />
-
+<button
+  onClick={() => openChronicModal(a)}
+  title="Podešavanja hroničnog bolesnika"
+  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#888', display: 'flex', alignItems: 'center' }}
+>
+  <Settings size={20} className="settingsIcon" />
+</button>
                     <span
                       className={`badge ${(a.status || "ČEKA").toLowerCase()}`}
                       onClick={() => handleStatusChange(a.id)}
@@ -189,7 +188,12 @@ const DoctorPanel: React.FC = () => {
           <div className="modalContent" style={modalContentStyle}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px', borderBottom:'1px solid #eee', paddingBottom:'10px'}}>
               <h3 style={{margin:0}}>Status pacijenta</h3>
-              <X onClick={() => setSelectedApp(null)} style={{cursor:'pointer', color:'#666'}} />
+            <button
+  onClick={() => setSelectedApp(null)}
+  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#666', display: 'flex', alignItems: 'center' }}
+>
+  <X />
+</button>
             </div>
             
             <p style={{marginBottom: '20px'}}>

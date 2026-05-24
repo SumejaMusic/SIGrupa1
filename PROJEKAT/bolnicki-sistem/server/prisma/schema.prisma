@@ -145,12 +145,27 @@ model Rezervacije {
   historija        HistorijaPregleda?
   komentari        Komentar[]
   podsjetnik       Podsjetnik?
+  recenzija        Recenzija?
   specijalista     RezervacijaSpecijalista?
   doktor           Doktor                   @relation(fields: [idDoktor], references: [id])
   pacijent         Pacijent                 @relation(fields: [idPacijent], references: [id])
   soba             Soba?                    @relation(fields: [idSobe], references: [id])
   termin           Termin                   @relation(fields: [idTermina], references: [id])
   tipPregleda      TipPregleda?             @relation(fields: [idTipPregleda], references: [id])
+}
+
+model Recenzija {
+  id            Int         @id @default(autoincrement())
+  idRezervacije Int         @unique @map("appointment_id")
+  ocjena        Int         @map("rating")
+  komentar      String?     @map("comment") @db.VarChar(500)
+  sakriven      Boolean     @default(false) @map("hidden")
+  sakrivenAt    DateTime?   @map("hidden_at")
+  kreiranoAt    DateTime    @default(now()) @map("created_at")
+  rezervacija   Rezervacije @relation(fields: [idRezervacije], references: [id], onDelete: Cascade)
+
+  @@index([sakriven])
+  @@map("reviews")
 }
 
 model Podsjetnik {
@@ -260,8 +275,12 @@ model ListaCekanja {
   status        StatusListeCekanja @default(CEKA)
   prioritet     Prioritet          @default(NORMALAN)
   napomena      String?
+  obavijestioAt DateTime?
+  zeleniDatum   DateTime           @db.Date
   doktor        Doktor             @relation(fields: [idDoktor], references: [id])
   pacijent      Pacijent           @relation(fields: [idPacijent], references: [id])
+
+  @@unique([idPacijent, idDoktor, zeleniDatum])
 }
 
 model TipPregleda {
@@ -287,6 +306,7 @@ model Komentar {
   @@index([idKorisnik])
 }
 
+
 enum Uloga {
   ADMINISTRATOR
   PACIJENT
@@ -300,6 +320,7 @@ enum StatusTermina {
   ZAKAZAN
   POTVRDJEN
   OTKAZAN
+  NA_CEKANJU
 }
 
 enum TipSobe {
@@ -328,6 +349,10 @@ enum DanUSedmici {
 enum StatusListeCekanja {
   CEKA
   OBAVIJESTEN
+  POTVRDJENO
+  ODBIJENO
+  ISTEKLO
+  OTKAZANO
 }
 
 enum Prioritet {

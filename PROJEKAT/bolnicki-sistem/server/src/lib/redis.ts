@@ -14,6 +14,10 @@ const redisClient = process.env.REDIS_URL
     })
   : null;
 
+redisClient?.on("error", () => {
+  // Redis je opcionalan u lokalu; operacije ispod fallbackaju na in-memory lock.
+});
+
 const getMemoryLock = (key: string) => {
   const record = memoryLocks.get(key);
 

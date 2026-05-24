@@ -297,18 +297,30 @@ function Step4Termini() {
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(i);
 
   const getTerminiForDay = (day: number): Termin[] => {
-    return termini
-      .filter((t) => {
-        const d = new Date(t.datum);
-        return (
-          d.getUTCFullYear() === year &&
-          d.getUTCMonth() === month &&
-          d.getUTCDate() === day &&
-          t.status === "SLOBODAN"
-        );
-      })
-      .sort((a, b) => a.vrijeme - b.vrijeme);
-  };
+  const sada = new Date();
+  
+  return termini
+    .filter((t) => {
+      const d = new Date(t.datum);
+      if (
+        d.getUTCFullYear() !== year ||
+        d.getUTCMonth() !== month ||
+        d.getUTCDate() !== day ||
+        t.status !== "SLOBODAN"
+      ) return false;
+      
+      const vrijemeTermina = new Date(Date.UTC(
+        d.getUTCFullYear(),
+        d.getUTCMonth(),
+        d.getUTCDate(),
+        Math.floor(t.vrijeme / 60),
+        t.vrijeme % 60
+      ));
+
+      return vrijemeTermina.getTime() > sada.getTime();
+    })
+    .sort((a, b) => a.vrijeme - b.vrijeme);
+};
 
   const monthNames = ["Januar", "Februar", "Mart", "April", "Maj", "Juni", "Juli", "August", "Septembar", "Oktobar", "Novembar", "Decembar"];
   const dayNames = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
@@ -404,7 +416,15 @@ function Step4Termini() {
                   <p className="text-xs text-gray-500 font-semibold uppercase mb-2">Odabrani termin</p>
                   <p className="text-2xl font-bold text-gray-900">{formatVrijeme(selectedTermin.vrijeme)}</p>
                   <p className="text-sm text-gray-600">
-                    {new Date(selectedTermin.datum).toLocaleDateString("hr-HR", { weekday: "long", day: "numeric", month: "long" })}
+                    {(() => {
+                    const datumStr = selectedTermin.datum.includes("T") 
+                      ? selectedTermin.datum 
+                      : selectedTermin.datum + "T12:00:00Z";
+                    const d = new Date(datumStr);
+                    const dani = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
+                    const mjeseci = ["januar", "februar", "mart", "april", "maj", "juni", "juli", "august", "septembar", "oktobar", "novembar", "decembar"];
+                    return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
+                  })()}
                   </p>
                 </div>
 

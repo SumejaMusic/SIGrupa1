@@ -4,9 +4,13 @@ import doctorRoutes from "./doctorRoutes.js";
 import tipPregledaRoutes from "./tipPregledaRoutes.js";
 import reservationRoutes from "./reservationRoutes.js";
 import odjelRoutes from "./odjelRoutes.js";
+import terminRecenzijaRoutes from "./terminRecenzijaRoutes.js";
+import recenzijaRoutes from "./recenzijaRoutes.js";
 import authRoutes from "./authRoutes.js";
 import pregledRoutes from "./pregledRoutes.js";
 import osobljeRoutes from "./osobljeRoutes.js";
+import sobaRoutes from "./sobaRoutes.js";
+import chatRoutes from "./chat.js";
 
 import {
   getNalaziZaPacijenta,
@@ -33,9 +37,13 @@ router.use("/osoblje", osobljeRoutes);
 router.use("/doktori", doctorRoutes);
 router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
-router.use("/odjeli", odjelRoutes);
+router.use("/appointments", terminRecenzijaRoutes);
+router.use("/reviews", recenzijaRoutes);
+router.use("/odjeli", odjelRoutes);autorizacija
 router.use("/auth", authRoutes);
 router.use("/pregledi", pregledRoutes);
+router.use("/rooms", sobaRoutes);
+router.use("/chat", chatRoutes);
 
 router.get(
   "/nalazi/pacijent/:pacijentId",

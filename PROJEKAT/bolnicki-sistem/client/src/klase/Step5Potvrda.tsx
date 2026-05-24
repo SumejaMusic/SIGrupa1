@@ -40,14 +40,12 @@ function Step5Confirmation() {
 
   // ✅ "T12:00:00Z" — podne UTC, siguran prikaz u svim vremenskim zonama
   const formatDate = (datum: string) => {
-    const datumStr = datum.split("T")[0]; // odbaci time/timezone ako postoji
-    return new Date(datumStr + "T12:00:00Z").toLocaleDateString("hr-HR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
+  const datumStr = datum.includes("T") ? datum.split("T")[0] : datum;
+  const d = new Date(datumStr + "T12:00:00Z");
+  const dani = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
+  const mjeseci = ["januar", "februar", "mart", "april", "maj", "juni", "juli", "august", "septembar", "oktobar", "novembar", "decembar"];
+  return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]} ${d.getUTCFullYear()}.`;
+};
 
   const goToHome = () => {
     localStorage.removeItem("patientData");
