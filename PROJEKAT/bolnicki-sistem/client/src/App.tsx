@@ -19,6 +19,7 @@ import PrijavaPage from './Stranice/PrijavaPage';
 
 import ForgotPasswordPage from './Stranice/ForgotPasswordPage';
 import ResetPasswordPage from './Stranice/ResetPasswordPage';
+import ProfilePage from './Stranice/ProfilePage';
 import AnonimnaOcjenaPage from './Stranice/AnonimnaOcjenaPage';
 
 
@@ -119,6 +120,13 @@ function AppContent() {
 
   {/* Stara ruta */}
   <Route path="/doctor-view" element={<Navigate to="/doktor-rezervacije" replace />} />
+
+  {/* Profil */}
+  <Route path="/profil" element={
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
+  } />
 
   {/* Samo pacijent (+ admin može sve) */}
   <Route path="/moje-rezervacije" element={

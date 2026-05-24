@@ -13,6 +13,7 @@ interface Props {
 export default function StaffLayout({ children }: Props) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [korisnik, setKorisnik] = useState<{ ime: string; prezime: string; uloga: string } | null>(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function StaffLayout({ children }: Props) {
     { icon: Home, label: "Naslovna", href: "/" },
     
     //{ icon: Stethoscope, label: "Odjeli", href: "/step1-odjeli" }, ne znam treba li za medicinsko osoblje
-    { icon: User, label: "Profil", href: "#" },
+    { icon: User, label: "Profil", href: "/profil" },
   ];
 
   return (
@@ -153,8 +154,32 @@ export default function StaffLayout({ children }: Props) {
               <Bell size={20} className="text-gray-600" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
             </button>
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
-              {inicijali}
+            <div className="relative">
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
+                  {inicijali}
+                </div>
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200 z-50">
+                  <Link 
+                    to="/profil" 
+                    onClick={() => setIsDropdownOpen(false)} 
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Moj profil
+                  </Link>
+                  <button 
+                    onClick={handleOdjava} 
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
+                    Odjava
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

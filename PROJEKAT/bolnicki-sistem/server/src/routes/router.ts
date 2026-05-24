@@ -12,6 +12,7 @@ import osobljeRoutes from "./osobljeRoutes.js";
 import sobaRoutes from "./sobaRoutes.js";
 import chatRoutes from "./chat.js";
 import listaCekanjaRoutes from "./listaCekanjaRoutes.js";
+import userRoutes from "./userRoutes.js";
 
 import {
   getNalaziZaPacijenta,
@@ -40,8 +41,9 @@ router.use("/tippregleda", tipPregledaRoutes);
 router.use("/rezervacije", reservationRoutes);
 router.use("/appointments", terminRecenzijaRoutes);
 router.use("/reviews", recenzijaRoutes);
-router.use("/odjeli", odjelRoutes);autorizacija
+router.use("/odjeli", odjelRoutes);
 router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
 router.use("/pregledi", pregledRoutes);
 router.use("/lista-cekanja", listaCekanjaRoutes);
 router.use("/rooms", sobaRoutes);

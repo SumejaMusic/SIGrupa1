@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity, ShieldCheck, RefreshCw } from 'lucide-react';
 import { apiUrl } from '../lib/api';
+import DatePicker from 'react-datepicker';
 
 interface Greske {
   ime?: string;
@@ -458,15 +459,31 @@ export default function RegistracijaPage() {
  
               <div className="mb-4">
                 <label className="block text-xs text-gray-500 mb-1">Datum rođenja</label>
-                <input
-                  name="datumRodjenja"
-                  type="date"
-                  value={podaci.datumRodjenja}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  max={danasnji()}
-                  style={{ colorScheme: 'light' }}
+                <DatePicker
+                  selected={podaci.datumRodjenja ? new Date(podaci.datumRodjenja + 'T12:00:00') : null}
+                  onChange={(date: Date | null) => {
+                    if (date) {
+                      const y = date.getFullYear();
+                      const m = String(date.getMonth() + 1).padStart(2, '0');
+                      const d = String(date.getDate()).padStart(2, '0');
+                      const iso = `${y}-${m}-${d}`;
+                      setPodaci(prev => ({ ...prev, datumRodjenja: iso }));
+                      if (greske.datumRodjenja) {
+                        setGreske(prev => ({ ...prev, datumRodjenja: validirajPolje('datumRodjenja', iso) }));
+                      }
+                    } else {
+                      setPodaci(prev => ({ ...prev, datumRodjenja: '' }));
+                    }
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  maxDate={new Date()}
+                  showYearDropdown
+                  showMonthDropdown
+                  dropdownMode="select"
+                  placeholderText="dd/mm/yyyy"
                   className={inputKlasa('datumRodjenja')}
+                  wrapperClassName="w-full"
+                  autoComplete="off"
                 />
                 {greske.datumRodjenja && (
                   <p className="text-xs text-red-500 mt-1">{greske.datumRodjenja}</p>
