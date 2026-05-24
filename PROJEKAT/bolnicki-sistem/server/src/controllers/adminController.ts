@@ -1138,9 +1138,6 @@ export const getAnalitika = async (req: Request, res: Response) => {
   }
 };
 
-// ============================================================
-//  TERMINI — pregled svih termina
-// ============================================================
 
 // ============================================================
 //  RASPORED OSOBLJA — tjedni šabloni medicinskog osoblja
