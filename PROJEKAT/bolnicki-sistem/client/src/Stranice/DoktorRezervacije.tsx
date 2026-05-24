@@ -1,133 +1,48 @@
 import { useState, useEffect } from "react";
+
 import {
-  ChevronLeft, ChevronRight, Clock, User, FileText,
-  MessageSquare, AlertTriangle, Calendar, Activity,
-  Menu, Home, LogOut, Send, ExternalLink, X, History,
-  Plus, CheckCircle, XCircle, Timer, Search
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Menu,
+  Send,
+  X,
+  Plus,
+  CheckCircle,
+  XCircle,
+  Timer,
+  Search,
+  Stethoscope,
+  Pill,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { handleExpiredSession } from "../utils/auth";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+import { useNavigate } from "react-router-dom";
+import { Sidebar } from "../components/Sidebar";
+import { TerminRed } from "../components/TerminRed";
+import { TerminDetalji } from "../components/TerminDetalj";
+// ESLint upozorenje: 'odjava' je importana ali se nigdje ne koristi u ovoj komponenti — obriši je iz importa ili je pozovi negdje
+import { handleExpiredSession, getDoktorId, getDoktorIme, odjava } from "../utils/auth";
 
-type TipPregleda = "hitni" | "preventivni" | "kontrolni";
-type StatusTermina = "zakazan" | "zavrsen" | "otkazan";
+import type {
+  TipPregleda,
+  StatusTermina,
+  Komentar,
+  Pacijent,
+  Termin
+} from "../types";
 
-interface Komentar {
-  id: number; tekst: string; autor: string; datum: string; jeDoktor: boolean;
-}
-interface Nalaz {
-  id: number; naziv: string; datum: string; url: string;
-}
-interface Pacijent {
-  id: number; ime: string; prezime: string; godisteRodjenja: number; pol: "M" | "F"; email: string; telefon: string;
-}
-interface Termin {
-  id: number; datum: string; vrijemeOd: number; vrijemeDo: number;
-  pacijent: Pacijent; tip: TipPregleda; status: StatusTermina;
-  komentari: Komentar[]; nalazi: Nalaz[];
-}
+import {
+  danasUTC,
+  formatV,
+  formatDatumPrikaz,
+  tipConfig,
+  getAge,
+  mapirajRezervaciju
+} from "../utils/rezervacijeUtils";
 
-// ✅ Parsira ISO datum string kao čisti UTC → "YYYY-MM-DD"
-// Sprječava timezone bug gdje "2026-05-15y.000Z" postaje "2026-05-14" lokalno
-const isoUTCdatum = (isoStr: string): string => {
-  const d = new Date(isoStr);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dan = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${dan}`;
-};
-
-// ✅ Danas u UTC formatu "YYYY-MM-DD"
-const danasUTC = (): string => {
-  const d = new Date();
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dan = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${dan}`;
-};
-
-const formatV = (v: number) => {
-  const h = Math.floor(v / 60);
-  const m = v % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-};
-
-const tipConfig = {
-  hitni: { label: "Hitni", bg: "bg-red-50", border: "border-red-400", text: "text-red-700", badge: "bg-red-100 text-red-700", dot: "bg-red-500", row: "bg-red-50 border-l-4 border-l-red-500", trajanje: 15 },
-  preventivni: { label: "Preventivni", bg: "bg-green-50", border: "border-green-300", text: "text-green-700", badge: "bg-green-100 text-green-700", dot: "bg-green-500", row: "bg-white border-l-4 border-l-green-400", trajanje: 30 },
-  kontrolni: { label: "Kontrolni", bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-700", badge: "bg-blue-100 text-blue-700", dot: "bg-blue-500", row: "bg-white border-l-4 border-l-blue-400", trajanje: 30 },
-};
-
-const statusConfig = {
-  zakazan: { label: "Zakazan", cls: "bg-blue-100 text-blue-700" },
-  zavrsen: { label: "Završen", cls: "bg-gray-100 text-gray-600" },
-  otkazan: { label: "Otkazan", cls: "bg-red-100 text-red-600" },
-};
-
-// ✅ Godište iz datumRodjenja — UTC da ne sklizne na prethodnu godinu
-const getAge = (godiste: number) => new Date().getUTCFullYear() - godiste;
-
-function mapiriRezervaciju(r: any): Termin {
-  const vrijemeOd = r.termin.vrijeme;
-  const trajanje = r.tipPregleda?.trajanjeMinuta ?? r.doktor?.trajanjePregleda ?? 30;
-  const sati = Math.floor(vrijemeOd / 60);
-  const minute = vrijemeOd % 60;
-  const ukupnoMinuta = sati * 60 + minute + trajanje;
-  const vrijemeDo = ukupnoMinuta;
-
-  let tip: TipPregleda = "kontrolni";
-  if (r.hitnost) {
-    tip = "hitni";
-  } else {
-    switch (r.idTipPregleda) {
-      case 1: tip = "preventivni"; break;
-      case 2: tip = "kontrolni"; break;
-      case 3: tip = "hitni"; break;
-      default: {
-        const naziv = r.tipPregleda?.naziv?.toLowerCase().trim() ?? "";
-        if (naziv.includes("preventiv")) tip = "preventivni";
-        else if (naziv.includes("hitn")) tip = "hitni";
-        break;
-      }
-    }
-  }
-
-  let status: StatusTermina = "zakazan";
-  if (r.datumOtkazivanja) status = "otkazan";
-  else if (r.zavrseno) status = "zavrsen";
-
-  const komentari: Komentar[] = r.komentar ? [{
-    id: r.id * 1000,
-    tekst: r.komentar,
-    autor: `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`,
-    // ✅ UTC parsing datuma kreiranja komentara
-    datum: isoUTCdatum(r.datumKreiranja),
-    jeDoktor: r.doktorRezervisao,
-  }] : [];
-
-  return {
-    id: r.id,
-    // ✅ UTC parsing datuma termina
-    datum: isoUTCdatum(r.termin.datum),
-    vrijemeOd,
-    vrijemeDo,
-    pacijent: {
-      id: r.pacijent.id,
-      ime: r.pacijent.korisnik.ime,
-      prezime: r.pacijent.korisnik.prezime,
-      // ✅ UTC godina rođenja
-      godisteRodjenja: new Date(r.pacijent.korisnik.datumRodjenja).getUTCFullYear(),
-      pol: r.pacijent.korisnik.jmbg?.[6] < "5" ? "M" : "F",
-      email: r.pacijent.korisnik.email,
-      telefon: r.pacijent.korisnik.brojTelefona ?? "/",
-    },
-    tip,
-    status,
-    komentari,
-    nalazi: [],
-  };
-}
+const apiUrl = import.meta.env.VITE_API_URL ?? "";
 
 // ─── Modal: Nova rezervacija ───────────────────────────────────────────────
 function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
@@ -135,13 +50,52 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   const [pretraga, setPretraga] = useState("");
   const [pacijenti, setPacijenti] = useState<Pacijent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [greska, setGreska] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/pacijenti`)
-      .then(res => res.json())
-      .then(data => setPacijenti(Array.isArray(data) ? data : []))
-      .catch(() => setPacijenti([]))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    const ucitajPacijente = async () => {
+      setLoading(true);
+      setGreska(null);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleExpiredSession();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${apiUrl}/api/pacijenti`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+
+        if (res.status === 401) {
+          handleExpiredSession();
+          return;
+        }
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(data?.poruka ?? "Greška pri učitavanju pacijenata.");
+        }
+
+        if (mounted) {
+          setPacijenti(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (mounted) {
+          setPacijenti([]);
+          setGreska(err instanceof Error ? err.message : "Greška pri učitavanju pacijenata.");
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    ucitajPacijente();
+
+    return () => { mounted = false; };
   }, []);
 
   const filtrirani = pacijenti.filter(p =>
@@ -150,23 +104,23 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
   );
 
   const handleOdaberiPacijenta = (p: Pacijent) => {
-    localStorage.setItem("doctorPatient", JSON.stringify({ ime: p.ime, prezime: p.prezime, email: p.email }));
+    localStorage.setItem("doctorPatient", JSON.stringify({ id: p.id, ime: p.ime, prezime: p.prezime, email: p.email }));
     localStorage.setItem("doctorMode", "true");
     onClose();
     navigate("/step1-odjeli");
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="px-6 py-4 border-b border-blue-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Plus size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Plus size={17} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Nova rezervacija</h2>
-              <p className="text-xs text-blue-200">Odaberite pacijenta za kojeg rezervišete</p>
+              <h2 className="text-base font-bold text-white leading-tight">Nova rezervacija</h2>
+              <p className="text-xs text-blue-200 mt-0.5">Odaberite pacijenta za kojeg rezervišete</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
@@ -174,35 +128,37 @@ function ModalNovaRezervacija({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="p-5">
-          <div className="relative mb-3">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative mb-4">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={pretraga}
               onChange={e => setPretraga(e.target.value)}
-              placeholder="Pretraži pacijenta po imenu ili emailu..."
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400 bg-gray-50"
+              placeholder="Pretraži po imenu ili emailu..."
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-gray-50 transition-all"
               autoFocus
             />
           </div>
           <div className="overflow-y-auto space-y-1.5 max-h-72">
             {loading ? (
-              <div className="text-center py-10 text-sm text-gray-400">Učitavanje pacijenata...</div>
+              <div className="text-center py-12 text-sm text-gray-400">Učitavanje pacijenata...</div>
+            ) : greska ? (
+              <div className="text-center py-12 text-sm text-red-500">{greska}</div>
             ) : filtrirani.length === 0 ? (
-              <div className="text-center py-10 text-sm text-gray-400">Nije pronađen nijedan pacijent</div>
+              <div className="text-center py-12 text-sm text-gray-400">Nije pronađen nijedan pacijent</div>
             ) : filtrirani.map(p => (
               <button
                 key={p.id}
                 onClick={() => handleOdaberiPacijenta(p)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-white transition-all text-left hover:border-blue-300 hover:bg-blue-50"
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-white transition-all text-left hover:border-blue-300 hover:bg-blue-50 group"
               >
                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-blue-700">
                   {p.ime[0]}{p.prezime[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-gray-900">{p.ime} {p.prezime}</div>
-                  <div className="text-xs text-gray-500">{p.email} · {getAge(p.godisteRodjenja)} god.</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{p.email} · {getAge(p.godisteRodjenja)} god.</div>
                 </div>
-                <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />
+                <ChevronRight size={14} className="text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
               </button>
             ))}
           </div>
@@ -232,16 +188,16 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600">
+        <div className="px-6 py-4 border-b border-orange-600 flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <Timer size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Timer size={17} className="text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Upit za promjenu dužine</h2>
-              <p className="text-xs text-orange-100">Zahtjev šalje administrator na odobrenje</p>
+              <h2 className="text-base font-bold text-white leading-tight">Upit za promjenu dužine</h2>
+              <p className="text-xs text-orange-100 mt-0.5">Zahtjev šalje administrator na odobrenje</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
@@ -250,8 +206,8 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
         </div>
         <div className="p-5">
           {poslano ? (
-            <div className="flex flex-col items-center justify-center text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-3">
+            <div className="flex flex-col items-center justify-center text-center py-10">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-4">
                 <CheckCircle size={32} className="text-orange-500" />
               </div>
               <h3 className="text-base font-bold text-gray-900 mb-1">Upit uspješno poslan!</h3>
@@ -259,17 +215,17 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <div className="bg-orange-50 rounded-xl border border-orange-100 p-3">
-                <div className="text-xs text-orange-600 font-semibold mb-1">Termin</div>
+              <div className="bg-orange-50 rounded-xl border border-orange-100 p-3.5">
+                <div className="text-xs text-orange-600 font-semibold mb-1.5 uppercase tracking-wide" style={{ fontSize: "10px" }}>Termin</div>
                 <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
-                <div className="text-xs text-gray-500">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
-                <div className="mt-1.5 flex items-center gap-1.5">
+                <div className="text-xs text-gray-500 mt-0.5">{formatDatumPrikaz(termin.datum)} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
+                <div className="mt-2 flex items-center gap-2">
                   <span className="text-xs text-gray-500">Trenutna dužina:</span>
                   <span className="text-xs font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">{trenutnaDuzina} min</span>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-2 block">Željena dužina termina (min)</label>
+                <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase tracking-wide" style={{ fontSize: "10px" }}>Željena dužina termina</label>
                 <div className="grid grid-cols-3 gap-2">
                   {opcijeDuzina.map(d => (
                     <button
@@ -277,25 +233,27 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                       onClick={() => setZeljenaDuzina(d)}
                       disabled={d === trenutnaDuzina}
                       className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                        d === zeljenaDuzina ? "bg-orange-500 text-white border-orange-500"
-                        : d === trenutnaDuzina ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                        d === zeljenaDuzina ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                        : d === trenutnaDuzina ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                         : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
                       }`}
                     >
                       {d} min
-                      {d === trenutnaDuzina && <span className="block text-xs font-normal">(trenutno)</span>}
+                      {d === trenutnaDuzina && <span className="block text-xs font-normal text-gray-400">(trenutno)</span>}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-2 block">Razlog promjene <span className="text-red-500">*</span></label>
+                <label className="text-xs font-semibold text-gray-600 mb-2 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Razlog promjene <span className="text-red-500 normal-case">*</span>
+                </label>
                 <textarea
                   value={razlog}
                   onChange={e => setRazlog(e.target.value)}
                   placeholder="Npr. Kompleksni pacijent, zahtijeva detaljniji pregled..."
                   rows={3}
-                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-orange-400 bg-gray-50"
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 bg-gray-50 transition-all"
                 />
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-400">Obavezno polje</span>
@@ -307,7 +265,7 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
                 disabled={!razlog.trim() || zeljenaDuzina === trenutnaDuzina}
                 className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
                   razlog.trim() && zeljenaDuzina !== trenutnaDuzina
-                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    ? "bg-orange-500 text-white hover:bg-orange-600 shadow-sm"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
               >
@@ -322,335 +280,401 @@ function ModalPromjenaDuzine({ termin, onClose, onSubmit }: {
 }
 
 // ─── Modal: Potvrda otkazivanja ────────────────────────────────────────────
-function ModalOtkaziTermin({ termin, onClose, onConfirm }: {
-  termin: Termin; onClose: () => void; onConfirm: () => void;
+function ModalOtkaziTermin({ termin, onClose, onConfirm, onPomjeri }: {
+  termin: Termin; 
+  onClose: () => void; 
+  onConfirm: () => void;
+  onPomjeri: () => void;
 }) {
   const tc = tipConfig[termin.tip];
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-        <div className="px-6 py-5 flex flex-col items-center text-center">
+        <div className="px-6 pt-7 pb-6 flex flex-col items-center text-center">
           <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
             <XCircle size={28} className="text-red-500" />
           </div>
           <h2 className="text-base font-bold text-gray-900 mb-1">Otkazivanje termina</h2>
-          <p className="text-sm text-gray-500 mb-4">Da li ste sigurni da želite otkazati ovaj termin?</p>
-          <div className={`w-full rounded-xl p-3 mb-5 border ${tc.border} ${tc.bg}`}>
+          <p className="text-sm text-gray-500 mb-4">Šta želite učiniti s ovim terminom?</p>
+          <div className={`w-full rounded-xl p-3.5 mb-4 border ${tc.border} ${tc.bg}`}>
             <div className="text-sm font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{termin.datum} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-1.5 inline-block ${tc.badge}`}>{tc.label}</span>
+            <div className="text-xs text-gray-500 mt-0.5">{formatDatumPrikaz(termin.datum)} · {formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</div>
           </div>
-          <p className="text-xs text-gray-400 mb-5">Pacijent će biti automatski obaviješten putem emaila.</p>
-          <div className="flex gap-3 w-full">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+          <div className="flex flex-col gap-2 w-full">
+            <button 
+              onClick={onPomjeri}
+              className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+            >
+              <Calendar size={15} /> Pomjeri na drugi termin
+            </button>
+            <button 
+              onClick={onConfirm}
+              className="w-full py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm"
+            >
+              Otkaži bez pomjeranja
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+            >
               Odustani
             </button>
-            <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors">
-              Da, otkaži termin
-            </button>
           </div>
+          <p className="text-xs text-gray-400 mt-3 flex items-center gap-1.5">
+            <span>📧</span> Pacijent će biti obaviješten emailom u oba slučaja.
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Sidebar ────────────────────────────────────────────────────────────────
-function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const items = [
-    { icon: Home, label: "Naslovna", href: "/" },
-    { icon: Calendar, label: "Moje rezervacije", href: "/doktor-rezervacije", active: true },
-    { icon: User, label: "Profil", href: "#" },
-  ];
-  return (
-    <div className={`bg-white border-r border-gray-200 flex flex-col fixed h-screen z-50 transition-all duration-300 ${open ? "w-60" : "w-0 overflow-hidden"}`}>
-      <div className="p-5 flex flex-col h-full">
-        <Link to="/" className="flex items-center gap-2 mb-8 whitespace-nowrap">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-            <Activity size={16} color="#fff" />
-          </div>
-          <span className="font-bold text-lg text-blue-900">SwiftMed</span>
-        </Link>
-        <nav className="flex-1 space-y-1">
-          {items.map(item => (
-            <Link key={item.href} to={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm whitespace-nowrap transition-colors ${item.active ? "bg-blue-50 text-blue-700 font-semibold" : "text-gray-600 hover:bg-gray-50"}`}>
-              <item.icon size={17} className="flex-shrink-0" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <button className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg text-sm whitespace-nowrap">
-            <LogOut size={16} /> Odjava
-          </button>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400">
-            <ChevronLeft size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Termin red ────────────────────────────────────────────────────────────
-function TerminRed({ termin, onClick, selected }: { termin: Termin; onClick: () => void; selected: boolean }) {
-  const tc = tipConfig[termin.tip];
-  const sc = statusConfig[termin.status];
-  return (
-    <div onClick={onClick} className={`${tc.row} rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-sm ${selected ? "ring-2 ring-blue-400 ring-offset-1" : ""}`}>
-      <div className="flex items-center gap-3">
-        <div className="text-center min-w-[52px]">
-          <div className="text-sm font-bold text-gray-900">{formatV(termin.vrijemeOd)}</div>
-          <div className="text-xs text-gray-400">{formatV(termin.vrijemeDo)}</div>
-        </div>
-        <div className="w-px h-8 bg-gray-200 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-semibold text-gray-900 truncate">{termin.pacijent.ime} {termin.pacijent.prezime}</span>
-            {termin.tip === "hitni" && (
-              <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded animate-pulse">
-                <AlertTriangle size={10} /> HITNO
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tc.badge}`}>{tc.label}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${sc.cls}`}>{sc.label}</span>
-          </div>
-        </div>
-        <div className="text-xs text-gray-400 flex-shrink-0 flex items-center gap-1">
-          <Clock size={11} />{tipConfig[termin.tip].trajanje} min
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Detalji panel ─────────────────────────────────────────────────────────
-function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtkaziTermin }: {
+function ModalPomjeriTermin({ termin, onClose, onConfirm }: {
   termin: Termin;
   onClose: () => void;
-  onAddKomentar: (terminId: number, tekst: string) => void;
-  onPromjenaDuzine: (termin: Termin) => void;
-  onOtkaziTermin: (termin: Termin) => void;
+  onConfirm: (noviTerminId: number) => void;
 }) {
-  const [tab, setTab] = useState<"info" | "komentari" | "nalazi" | "historija">("info");
-  const [noviKomentar, setNoviKomentar] = useState("");
-  const [nalazi, setNalazi] = useState<Nalaz[]>([]);
-  const [loadingNalazi, setLoadingNalazi] = useState(false);
-  const [historija, setHistorija] = useState<any[]>([]);
-  const [loadingHistorija, setLoadingHistorija] = useState(false);
-  const tc = tipConfig[termin.tip];
-  const sc = statusConfig[termin.status];
+  // ESLint greška: 'any[]' nije dozvoljen — ESLint traži konkretan tip umjesto generičkog any (npr. definiraj interfejs za slobodni termin sa API-ja)
+  const [termini, setTermini] = useState<any[]>([]);
+  const [selectedTerminId, setSelectedTerminId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // ESLint upozorenje: 'termin.doktorId' se koristi unutar effecta ali nije naveden u dependency arrayu — effect se neće ponovo pokrenuti ako se doktorId promijeni
   useEffect(() => {
-    if (tab !== "nalazi") return;
-    setLoadingNalazi(true);
-    setNalazi([]);
-    fetch(`${apiUrl}/api/nalazi/pacijent/${termin.pacijent.id}`)
-      .then(res => res.json())
+    const sada = new Date();
+    fetch(`${apiUrl}/api/termini?doktorId=${termin.doktorId ?? ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
+      .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setNalazi(data.map((n: any) => ({
-            id: n.id,
-            naziv: n.naziv,
-            // ✅ UTC parsing datuma nalaza
-            datum: isoUTCdatum(n.vrijemeNalaza),
-            url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
-          })));
-        } else {
-          setNalazi([]);
+          const slobodni = data.filter(t => {
+            if (t.status !== "SLOBODAN") return false;
+            const vrijemeTermina = new Date(Date.UTC(
+              new Date(t.datum).getUTCFullYear(),
+              new Date(t.datum).getUTCMonth(),
+              new Date(t.datum).getUTCDate(),
+              Math.floor(t.vrijeme / 60),
+              t.vrijeme % 60
+            ));
+            return vrijemeTermina.getTime() > sada.getTime();
+          });
+          setTermini(slobodni);
         }
       })
-      .catch(() => setNalazi([]))
-      .finally(() => setLoadingNalazi(false));
-  }, [tab, termin.pacijent.id]);
+      .catch(() => setTermini([])  )
+      .finally(() => setLoading(false));
+  }, []);
 
-  useEffect(() => {
-    if (tab !== "historija") return;
-    setLoadingHistorija(true);
-    fetch(`${apiUrl}/api/historija/pacijent/${termin.pacijent.id}`)
-      .then(res => res.json())
-      .then(data => setHistorija(Array.isArray(data) ? data : []))
-      .catch(() => setHistorija([]))
-      .finally(() => setLoadingHistorija(false));
-  }, [tab, termin.pacijent.id]);
-
-  const handleSend = () => {
-    if (!noviKomentar.trim()) return;
-    onAddKomentar(termin.id, noviKomentar.trim());
-    setNoviKomentar("");
+  const formatirajDatum = (datum: string) => {
+    const d = new Date(datum.includes("T") ? datum : datum + "T12:00:00Z");
+    const dani = ["ned", "pon", "uto", "sri", "čet", "pet", "sub"];
+    const mjeseci = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"];
+    return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
   };
 
-  const tabs = [
-    { id: "info" as const, label: "Podaci", icon: User },
-    { id: "komentari" as const, label: "Komentari", icon: MessageSquare },
-    { id: "nalazi" as const, label: "Nalazi", icon: FileText },
-    { id: "historija" as const, label: "Historija", icon: History },
-  ];
-
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
-      <div className={`p-4 ${tc.bg} border-b ${tc.border}`}>
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg font-bold text-gray-900">{termin.pacijent.ime} {termin.pacijent.prezime}</span>
-              {termin.tip === "hitni" && (
-                <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 border border-red-300 px-2 py-0.5 rounded-full animate-pulse">
-                  <AlertTriangle size={11} /> HITNO
-                </span>
-              )}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-blue-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Calendar size={17} className="text-white" />
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Clock size={13} /><span>{formatV(termin.vrijemeOd)} – {formatV(termin.vrijemeDo)}</span><span>·</span><span>{termin.datum}</span>
+            <div>
+              <h2 className="text-base font-bold text-white">Pomjeri termin</h2>
+              <p className="text-xs text-blue-200">{termin.pacijent.ime} {termin.pacijent.prezime}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-white/60 rounded-lg transition-colors">
-            <X size={16} className="text-gray-500" />
+          <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+            <X size={16} className="text-white" />
           </button>
         </div>
-        <div className="flex gap-2 flex-wrap items-center">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${tc.badge}`}>{tc.label}</span>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sc.cls}`}>{sc.label}</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{tc.trajanje} min</span>
-          {termin.status === "zakazan" && (
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={() => onPromjenaDuzine(termin)}
-                className="flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 font-semibold transition-colors border border-orange-200"
-              >
-                <Timer size={10} /> Promijeni dužinu
-              </button>
-              <button
-                onClick={() => onOtkaziTermin(termin)}
-                className="flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 hover:bg-red-200 font-semibold transition-colors border border-red-200"
-              >
-                <XCircle size={10} /> Otkaži termin
-              </button>
+
+        <div className="overflow-y-auto flex-1 p-4">
+          {loading ? (
+            <div className="text-center py-10 text-sm text-gray-400">Učitavanje slobodnih termina...</div>
+          ) : termini.length === 0 ? (
+            <div className="text-center py-10 text-sm text-gray-400">Nema slobodnih termina.</div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500 mb-3">Odaberite novi termin:</p>
+              {termini.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setSelectedTerminId(t.id)}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
+                    selectedTerminId === t.id
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="text-sm font-semibold text-gray-800">{formatirajDatum(t.datum)}</span>
+                  <span className="text-sm font-bold text-blue-600 tabular-nums">
+                    {String(Math.floor(t.vrijeme / 60)).padStart(2, "0")}:{String(t.vrijeme % 60).padStart(2, "0")}
+                  </span>
+                </button>
+              ))}
             </div>
           )}
         </div>
-      </div>
 
-      <div className="flex border-b border-gray-100">
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${tab === t.id ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}>
-            <t.icon size={13} />{t.label}
+        <div className="px-4 pb-4 pt-3 flex gap-3 border-t border-gray-100 flex-shrink-0">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+            Odustani
           </button>
-        ))}
+          <button
+            onClick={() => selectedTerminId && onConfirm(selectedTerminId)}
+            disabled={!selectedTerminId}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              selectedTerminId
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            Potvrdi pomjeranje
+          </button>
+        </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="flex-1 overflow-y-auto p-4">
-        {tab === "info" && (
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Ime i prezime", value: `${termin.pacijent.ime} ${termin.pacijent.prezime}` },
-              { label: "Godište", value: termin.pacijent.godisteRodjenja.toString() },
-              { label: "Dob", value: `${getAge(termin.pacijent.godisteRodjenja)} god.` },
-              { label: "Pol", value: termin.pacijent.pol === "M" ? "Muški" : "Ženski" },
-              { label: "Email", value: termin.pacijent.email },
-              { label: "Telefon", value: termin.pacijent.telefon },
-            ].map(item => (
-              <div key={item.label} className="bg-gray-50 rounded-lg p-3">
-                <div className="text-xs text-gray-400 mb-0.5">{item.label}</div>
-                <div className="text-sm font-semibold text-gray-800">{item.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {tab === "komentari" && (
-          <div className="flex flex-col gap-3">
-            {termin.komentari.length === 0 ? (
-              <div className="text-center py-10">
-                <MessageSquare size={28} className="text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Nema komentara za ovaj termin</p>
-              </div>
-            ) : (
-              termin.komentari.map(k => (
-                <div key={k.id} className={`rounded-lg p-3 ${k.jeDoktor ? "bg-blue-50 border border-blue-100" : "bg-gray-50 border border-gray-100"}`}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className={`text-xs font-semibold ${k.jeDoktor ? "text-blue-700" : "text-gray-700"}`}>{k.jeDoktor ? "🩺 " : "👤 "}{k.autor}</span>
-                    <span className="text-xs text-gray-400">{k.datum}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 leading-relaxed">{k.tekst}</p>
-                </div>
-              ))
-            )}
-            <div className="border-t border-gray-100 pt-3 mt-1">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Dodaj komentar</p>
-              <textarea value={noviKomentar} onChange={e => setNoviKomentar(e.target.value)} placeholder="Unesite komentar..." rows={3} className="w-full text-sm border border-gray-200 rounded-lg p-2.5 resize-none outline-none focus:border-blue-400 bg-gray-50" />
-              <button onClick={handleSend} disabled={!noviKomentar.trim()} className={`mt-2 w-full py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${noviKomentar.trim() ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}>
-                <Send size={14} /> Pošalji
-              </button>
+// ─── Modal: Završi pregled ─────────────────────────────────────────────────
+function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
+  termin: Termin;
+  onClose: () => void;
+  onSuccess: (rezervacijaId: number) => void;
+}) {
+  const [dijagnoza, setDijagnoza] = useState("");
+  const [terapija, setTerapija] = useState("");
+  const [biljeske, setBiljeske] = useState("");
+  const [dodajRecept, setDodajRecept] = useState(false);
+  const [nazivLijeka, setNazivLijeka] = useState("");
+  const [doza, setDoza] = useState("");
+  const [trajanje, setTrajanje] = useState("");
+  const [napomena, setNapomena] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [greska, setGreska] = useState<string | null>(null);
+  const [uspjesno, setUspjesno] = useState(false);
+
+  const receptValidan = !dodajRecept || (nazivLijeka.trim() && doza.trim() && trajanje.trim() && Number(trajanje) > 0);
+  const formaValidna = dijagnoza.trim() && terapija.trim() && receptValidan;
+
+  const handleSubmit = async () => {
+    if (!formaValidna) return;
+    setLoading(true);
+    setGreska(null);
+
+    // ESLint greška: 'any' nije dozvoljen — definiši konkretan tip za body umjesto any (npr. interfejs sa dijagnoza, terapija, biljeske, recept)
+    const body: any = {
+      dijagnoza: dijagnoza.trim(),
+      terapija: terapija.trim(),
+      biljeske: biljeske.trim() || undefined,
+    };
+
+    if (dodajRecept && nazivLijeka.trim() && doza.trim() && trajanje.trim()) {
+      body.recept = {
+        nazivLijeka: nazivLijeka.trim(),
+        doza: doza.trim(),
+        trajanje: Number(trajanje),
+        napomena: napomena.trim() || undefined,
+      };
+    }
+
+    try {
+      const res = await fetch(`${apiUrl}/api/pregledi/${termin.id}/zavrsi`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setGreska(data.poruka ?? "Greška pri završavanju pregleda.");
+        return;
+      }
+
+      setUspjesno(true);
+      setTimeout(() => {
+        onSuccess(termin.id);
+        onClose();
+      }, 1800);
+    } catch {
+      setGreska("Greška pri slanju zahtjeva.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-green-700 flex items-center justify-between bg-gradient-to-r from-green-600 to-green-700 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+              <Stethoscope size={17} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white leading-tight">Završi pregled</h2>
+              <p className="text-xs text-green-100 mt-0.5">
+                {termin.pacijent.ime} {termin.pacijent.prezime} · {formatDatumPrikaz(termin.datum)}
+              </p>
             </div>
           </div>
-        )}
+          <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+            <X size={16} className="text-white" />
+          </button>
+        </div>
 
-        {tab === "nalazi" && (
-          <div className="space-y-2">
-            <p className="text-xs text-gray-500 mb-3">Svi nalazi — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            {loadingNalazi ? (
-              <div className="text-center py-10">
-                <div className="text-sm text-gray-400">Učitavanje nalaza...</div>
+        <div className="overflow-y-auto flex-1 p-5">
+          {uspjesno ? (
+            <div className="flex flex-col items-center justify-center text-center py-12">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <CheckCircle size={32} className="text-green-500" />
               </div>
-            ) : nalazi.length === 0 ? (
-              <div className="text-center py-10">
-                <FileText size={28} className="text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Nema uploadovanih nalaza</p>
-              </div>
-            ) : (
-              nalazi.map(n => (
-                <a
-                  key={n.id}
-                  href={n.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <FileText size={15} className="text-red-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-800 truncate">{n.naziv}</div>
-                    <div className="text-xs text-gray-400">{n.datum}</div>
-                  </div>
-                  <ExternalLink size={14} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
-                </a>
-              ))
-            )}
-          </div>
-        )}
-
-        {tab === "historija" && (
-          <div className="space-y-2">
-            <p className="text-xs text-gray-500 mb-3">Historija dolazaka — {termin.pacijent.ime} {termin.pacijent.prezime}</p>
-            {loadingHistorija ? (
-              <div className="text-center py-10 text-sm text-gray-400">Učitavanje historije...</div>
-            ) : historija.length === 0 ? (
-              <div className="text-center py-10">
-                <History size={28} className="text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Nema prethodnih posjeta</p>
-              </div>
-            ) : (
-              historija.map(h => (
-                <div key={h.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-700">
-                      {/* ✅ UTC prikaz datuma pregleda */}
-                      {new Date(isoUTCdatum(h.datumPregleda) + "T12:00:00Z").toLocaleDateString("bs-BA")}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {formatV(h.rezervacija?.termin?.vrijeme)}
-                    </span>
-                  </div>
-                  <div className="text-sm font-medium text-gray-800 mb-1">{h.dijagnoza}</div>
-                  <div className="text-xs text-gray-500">Terapija: {h.terapija}</div>
-                  {h.biljeske && <div className="text-xs text-gray-400 mt-1">Bilješke: {h.biljeske}</div>}
+              <h3 className="text-base font-bold text-gray-900 mb-1">Pregled uspješno završen!</h3>
+              <p className="text-sm text-gray-500">Podaci su sačuvani.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {greska && (
+                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center gap-2">
+                  <XCircle size={15} className="flex-shrink-0" />
+                  {greska}
                 </div>
-              ))
-            )}
+              )}
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Dijagnoza <span className="text-red-500 normal-case">*</span>
+                </label>
+                <textarea
+                  value={dijagnoza}
+                  onChange={e => setDijagnoza(e.target.value)}
+                  placeholder="Unesite dijagnozu..."
+                  rows={2}
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Terapija <span className="text-red-500 normal-case">*</span>
+                </label>
+                <textarea
+                  value={terapija}
+                  onChange={e => setTerapija(e.target.value)}
+                  placeholder="Unesite preporučenu terapiju..."
+                  rows={2}
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                  Bilješke <span className="text-gray-400 font-normal normal-case">(opcionalno)</span>
+                </label>
+                <textarea
+                  value={biljeske}
+                  onChange={e => setBiljeske(e.target.value)}
+                  placeholder="Dodatne napomene..."
+                  rows={2}
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 resize-none outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                />
+              </div>
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setDodajRecept(p => !p)}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${
+                    dodajRecept ? "bg-green-50 text-green-700 border-b border-green-100" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Pill size={15} />
+                    Dodaj recept
+                    {dodajRecept && (
+                      <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full font-semibold">uključeno</span>
+                    )}
+                  </div>
+                  {dodajRecept ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </button>
+                {dodajRecept && (
+                  <div className="p-4 space-y-3 bg-white">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Naziv lijeka <span className="text-red-500 normal-case">*</span>
+                        </label>
+                        <input
+                          value={nazivLijeka}
+                          onChange={e => setNazivLijeka(e.target.value)}
+                          placeholder="Npr. Brufen 400mg"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Doza <span className="text-red-500 normal-case">*</span>
+                        </label>
+                        <input
+                          value={doza}
+                          onChange={e => setDoza(e.target.value)}
+                          placeholder="Npr. 1×1 tableta"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Trajanje (dana) <span className="text-red-500 normal-case">*</span>
+                        </label>
+                        <input
+                          value={trajanje}
+                          onChange={e => setTrajanje(e.target.value.replace(/\D/g, ""))}
+                          placeholder="Npr. 7"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                          Napomena <span className="text-gray-400 font-normal normal-case">(opcionalno)</span>
+                        </label>
+                        <input
+                          value={napomena}
+                          onChange={e => setNapomena(e.target.value)}
+                          placeholder="Npr. Uzimati uz obrok"
+                          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 bg-gray-50 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!uspjesno && (
+          <div className="px-5 pb-5 pt-3 flex gap-3 flex-shrink-0 border-t border-gray-100 bg-gray-50/50">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-white transition-colors disabled:opacity-50"
+            >
+              Odustani
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!formaValidna || loading}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
+                formaValidna && !loading
+                  ? "bg-green-600 text-white hover:bg-green-700 shadow-sm"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {loading ? <span>Čuvanje...</span> : <><CheckCircle size={15} /> Završi pregled</>}
+            </button>
           </div>
         )}
       </div>
@@ -662,7 +686,6 @@ function TerminDetalji({ termin, onClose, onAddKomentar, onPromjenaDuzine, onOtk
 export default function DoktorRezervacije() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [prikaz, setPrikaz] = useState<"dnevni" | "sedmicni" | "mjesecni">("dnevni");
-  // ✅ UTC danas kao početni datum
   const [selectedDatum, setSelectedDatum] = useState(danasUTC());
   const [selectedTermin, setSelectedTermin] = useState<Termin | null>(null);
   const [listaTermina, setListaTermina] = useState<Termin[]>([]);
@@ -670,61 +693,111 @@ export default function DoktorRezervacije() {
   const [showNovaRezervacija, setShowNovaRezervacija] = useState(false);
   const [terminZaDuzinu, setTerminZaDuzinu] = useState<Termin | null>(null);
   const [terminZaOtkazivanje, setTerminZaOtkazivanje] = useState<Termin | null>(null);
+  const [terminZaZavrsavanje, setTerminZaZavrsavanje] = useState<Termin | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [prikaziOtkazane, setPrikaziOtkazane] = useState(false);
+  const [doktorIme, setDoktorIme] = useState("Dr.");
+  const [terminZaPomjeranje, setTerminZaPomjeranje] = useState<Termin | null>(null);
 
-  const doktorId = (() => {
+  const handlePomjeriTermin = async (stariTermin: Termin, noviTerminId: number) => {
   try {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.id?.toString() ?? null;
-  } catch {
-    return null;
+    const resLock = await fetch(`${apiUrl}/api/termini/${noviTerminId}/zakljucaj`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    });
+    if (!resLock.ok) {
+      showToast("❌ Odabrani termin je u međuvremenu zauzet.");
+      return;
+    }
+
+    const res = await fetch(`${apiUrl}/api/rezervacije/doktor/pomjeri`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({
+        idStareRezervacije: stariTermin.id,
+        idNovogTermina: noviTerminId,
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(`❌ ${err.poruka ?? "Greška pri pomjeranju."}`);
+      return;
+    }
+
+    if (doktorId) {
+      const resRezervacije = await fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (resRezervacije.ok) {
+        const data = await resRezervacije.json();
+        const novaLista = Array.isArray(data) ? data.map(mapirajRezervaciju) : [];
+        setListaTermina(novaLista);
+        const noviTermin = novaLista.find(t =>
+          t.pacijent.id === stariTermin.pacijent.id && t.status === "zakazan"
+        );
+        if (noviTermin) setSelectedDatum(noviTermin.datum);
+      }
+    }
+
+    setTerminZaPomjeranje(null);
+    setTerminZaOtkazivanje(null);
+    setSelectedTermin(null);
+    showToast("Termin uspješno pomjeren. Pacijent je obaviješten emailom.");
+  } catch (err) {
+    console.error("Greška:", err);
+    showToast("Greška pri pomjeranju termina.");
   }
-})();
+};
 
+  useEffect(() => {
+    setDoktorIme(getDoktorIme());
+  }, []);
 
+  const [filterStatus, setFilterStatus] = useState<"zakazani" | "zavrseni" | "otkazani">("zakazani");
+
+  const doktorId = getDoktorId();
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
   };
 
- useEffect(() => {
-  if (!doktorId) return;
-  setLoading(true);
-  fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
-    headers: {
-      "Authorization": `Bearer ${localStorage.getItem("token")}`
-    }
-  })
-    .then(res => {
-      if (res.status === 401) { handleExpiredSession(); return null; }
-      return res.json();
+  useEffect(() => {
+    if (!doktorId) return;
+    setLoading(true);
+    fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     })
-    .then(data => {
-      if (!data) return;
-      setListaTermina(Array.isArray(data) ? data.map(mapiriRezervaciju) : []);
-    })
-    .catch(() => setListaTermina([]))
-    .finally(() => setLoading(false));
-}, [doktorId]);
+      .then(res => {
+        if (res.status === 401) { handleExpiredSession(); return null; }
+        return res.json();
+      })
+      .then(data => {
+        if (!data) return;
+        setListaTermina(Array.isArray(data) ? data.map(mapirajRezervaciju) : []);
+      })
+      .catch(() => setListaTermina([]))
+      .finally(() => setLoading(false));
+  }, [doktorId]);
 
-  const filterTermini = (termini: Termin[]) =>
-    termini.filter(t => prikaziOtkazane ? t.status === "otkazan" : t.status !== "otkazan");
+  const filterTermini = (termini: Termin[]) => {
+    if (filterStatus === "otkazani") return termini.filter(t => t.status === "otkazan");
+    if (filterStatus === "zavrseni") return termini.filter(t => t.status === "zavrsen");
+    return termini.filter(t => t.status === "zakazan");
+  };
 
   const dnevniTermini = filterTermini(
     listaTermina.filter(t => t.datum === selectedDatum).sort((a, b) => a.vrijemeOd - b.vrijemeOd)
   );
 
-  // ✅ getWeekDays — radi s čistim YYYY-MM-DD stringovima, bez Date konverzije
   const getWeekDays = (dateStr: string): string[] => {
     const [y, m, d] = dateStr.split("-").map(Number);
-    // Dan u sedmici: 0=ned, 1=pon... Koristimo UTC da izbjegnemo timezone offset
     const temp = new Date(Date.UTC(y, m - 1, d));
     const dow = temp.getUTCDay();
-    const diff = dow === 0 ? -6 : 1 - dow; // pomak do ponedjeljka
+    const diff = dow === 0 ? -6 : 1 - dow;
     return Array.from({ length: 7 }, (_, i) => {
       const dd = new Date(Date.UTC(y, m - 1, d + diff + i));
       return `${dd.getUTCFullYear()}-${String(dd.getUTCMonth() + 1).padStart(2, "0")}-${String(dd.getUTCDate()).padStart(2, "0")}`;
@@ -759,122 +832,200 @@ export default function DoktorRezervacije() {
     setSelectedTermin(null);
   };
 
-  // ✅ T12:00:00Z za siguran prikaz naziva dana/datuma
-  const formatDatum = (ds: string) =>
-    new Date(ds + "T12:00:00Z").toLocaleDateString("bs-BA", { weekday: "long", day: "numeric", month: "long" });
+  const formatDatum = (ds: string) => {
+  const d = new Date(ds + "T12:00:00Z");
+  const dani = ["nedjelja", "ponedjeljak", "utorak", "srijeda", "četvrtak", "petak", "subota"];
+  const mjeseci = ["januar", "februar", "mart", "april", "maj", "juni", "juli", "august", "septembar", "oktobar", "novembar", "decembar"];
+  return `${dani[d.getUTCDay()]}, ${d.getUTCDate()}. ${mjeseci[d.getUTCMonth()]}`;
+};
 
   const handleAddKomentar = async (terminId: number, tekst: string) => {
   try {
-    await fetch(`${apiUrl}/api/rezervacije/${terminId}/komentar`, {
-      method: "PATCH",
+    const res = await fetch(`${apiUrl}/api/doktori/rezervacije/${terminId}/komentar`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem("token")}`
       },
       body: JSON.stringify({ komentar: tekst }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showToast(`❌ ${data.poruka ?? "Greška pri slanju komentara."}`);
+      return;
+    }
+    const data = await res.json();
     const noviK: Komentar = {
-      id: Date.now(), tekst, autor: "Dr.",
-      datum: danasUTC(), jeDoktor: true,
+      id: data.id ?? Date.now(),
+      tekst: data.tekst ?? tekst,
+      autor: data.autor ?? "Doktor",
+      datum: data.datum ?? danasUTC(),
+      jeDoktor: data.jeDoktor ?? true,
     };
     setListaTermina(prev => prev.map(t => t.id !== terminId ? t : { ...t, komentari: [...t.komentari, noviK] }));
     setSelectedTermin(prev => prev && prev.id === terminId ? { ...prev, komentari: [...prev.komentari, noviK] } : prev);
   } catch {
-    showToast("❌ Greška pri slanju komentara.");
+    showToast("Greška pri slanju komentara.");
   }
 };
+
   const handlePromjenaDuzine = (_terminId: number, _zeljenaDuzina: number, _razlog: string) => {
     showToast("✓ Vaš upit je uspješno poslan administratoru.");
   };
 
   const handleOtkaziTermin = async (termin: Termin) => {
-  try {
-    const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, {
-      method: "PATCH",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`
-      }
-    });
-    if (!res.ok) throw new Error();
-    setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
-    setSelectedTermin(prev => prev?.id === termin.id ? { ...prev, status: "otkazan" as StatusTermina } : prev);
-    setTerminZaOtkazivanje(null);
-    showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
-  } catch {
-    showToast("❌ Greška pri otkazivanju termina.");
-  }
-};
+    try {
+      const res = await fetch(`${apiUrl}/api/rezervacije/${termin.id}/otkazi/osoblje`, {
+        method: "PATCH",
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      });
+      if (!res.ok) throw new Error();
+      setListaTermina(prev => prev.map(t => t.id !== termin.id ? t : { ...t, status: "otkazan" as StatusTermina }));
+      setSelectedTermin(null);
+      setTerminZaOtkazivanje(null);
+      showToast(`✓ Termin za ${termin.pacijent.ime} ${termin.pacijent.prezime} je otkazan.`);
+    } catch {
+      showToast("❌ Greška pri otkazivanju termina.");
+    }
+  };
+
+  const handleZavrsiPregled = (rezervacijaId: number) => {
+    setListaTermina(prev =>
+      prev.map(t => t.id !== rezervacijaId ? t : { ...t, status: "zavrsen" as StatusTermina })
+    );
+    setSelectedTermin(prev =>
+      prev?.id === rezervacijaId ? { ...prev, status: "zavrsen" as StatusTermina } : prev
+    );
+    showToast("✓ Pregled je uspješno završen i sačuvan.");
+  };
 
   const navLabel = () => {
     if (prikaz === "dnevni") return formatDatum(selectedDatum);
-    if (prikaz === "sedmicni") return `Sedmica: ${weekDays[0]} – ${weekDays[6]}`;
-    // ✅ T12:00:00Z za naziv mjeseca
+    if (prikaz === "sedmicni") return `Sedmica: ${formatDatumPrikaz(weekDays[0])} – ${formatDatumPrikaz(weekDays[6])}`;
     return new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" });
   };
 
-  const navDelta = prikaz === "dnevni" ? 1 : prikaz === "sedmicni" ? 7 : 1;
+  const filterLabel = filterStatus === "otkazani" ? "otkazanih" : filterStatus === "zavrseni" ? "završenih" : "zakazanih";
+  const filterLabelJed = filterStatus === "otkazani" ? "otkazan" : filterStatus === "zavrseni" ? "završen" : "zakazan";
+  const praznoLabel =
+    filterStatus === "otkazani" ? "Nema otkazanih termina za ovaj dan" :
+    filterStatus === "zavrseni" ? "Nema završenih termina za ovaj dan" :
+    "Nema termina za ovaj dan";
 
-  // ✅ Danas u UTC za isToday provjere
+  const navDelta = prikaz === "dnevni" ? 1 : prikaz === "sedmicni" ? 7 : 1;
   const todayStr = danasUTC();
 
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+      {/* Toast */}
       {toastMsg && (
-        <div className="fixed top-5 right-5 z-[100] bg-gray-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-xl flex items-center gap-2">
-          <CheckCircle size={16} className="text-green-400 flex-shrink-0" />
+        <div className="fixed top-5 right-5 z-[100] bg-gray-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5 animate-fade-in">
+          <CheckCircle size={15} className="text-green-400 flex-shrink-0" />
           {toastMsg}
         </div>
       )}
 
       {showNovaRezervacija && <ModalNovaRezervacija onClose={() => setShowNovaRezervacija(false)} />}
+
       {terminZaDuzinu && (
-        <ModalPromjenaDuzine termin={terminZaDuzinu} onClose={() => setTerminZaDuzinu(null)} onSubmit={handlePromjenaDuzine} />
+        <ModalPromjenaDuzine
+          termin={terminZaDuzinu}
+          onClose={() => setTerminZaDuzinu(null)}
+          onSubmit={handlePromjenaDuzine}
+        />
       )}
+
       {terminZaOtkazivanje && (
         <ModalOtkaziTermin
           termin={terminZaOtkazivanje}
           onClose={() => setTerminZaOtkazivanje(null)}
           onConfirm={() => handleOtkaziTermin(terminZaOtkazivanje)}
+          onPomjeri={() => setTerminZaPomjeranje(terminZaOtkazivanje)}
+        />
+      )}
+
+      {terminZaPomjeranje && (
+        <ModalPomjeriTermin
+          termin={terminZaPomjeranje}
+          onClose={() => setTerminZaPomjeranje(null)}
+          onConfirm={(noviTerminId) => handlePomjeriTermin(terminZaPomjeranje, noviTerminId)}
+        />
+      )}
+
+      {terminZaZavrsavanje && (
+        <ModalZavrsiPregled
+          termin={terminZaZavrsavanje}
+          onClose={() => setTerminZaZavrsavanje(null)}
+          onSuccess={(rezervacijaId) => {
+            handleZavrsiPregled(rezervacijaId);
+            setTerminZaZavrsavanje(null);
+          }}
         />
       )}
 
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "ml-60" : "ml-0"}`}>
-        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
+
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
-              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
                 <Menu size={18} className="text-gray-600" />
               </button>
             )}
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Moje rezervacije</h1>
-              <p className="text-xs text-gray-500">Dr. Kardiologija</p>
+              <h1 className="text-base font-bold text-gray-900 leading-tight">Moje rezervacije</h1>
+              <p className="text-xs text-gray-400 mt-0.5">{doktorIme}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Nova rezervacija */}
             <button
               onClick={() => setShowNovaRezervacija(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors shadow-sm"
             >
-              <Plus size={15} /> Nova rezervacija
+              <Plus size={14} /> Nova rezervacija
             </button>
-            <button
-              onClick={() => { setPrikaziOtkazane(p => !p); setSelectedTermin(null); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                prikaziOtkazane ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <XCircle size={15} />
-              {prikaziOtkazane ? "Otkazani termini" : "Zakazani termini"}
-            </button>
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
+
+            {/* Filter statusa */}
+            <div className="flex bg-gray-100 rounded-xl p-0.5 gap-0.5">
+              <button
+                onClick={() => { setFilterStatus("zakazani"); setSelectedTermin(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterStatus === "zakazani" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <Calendar size={12} /> Zakazani
+              </button>
+              <button
+                onClick={() => { setFilterStatus("zavrseni"); setSelectedTermin(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterStatus === "zavrseni" ? "bg-white text-green-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <CheckCircle size={12} /> Završeni
+              </button>
+              <button
+                onClick={() => { setFilterStatus("otkazani"); setSelectedTermin(null); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filterStatus === "otkazani" ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <XCircle size={12} /> Otkazani
+              </button>
+            </div>
+
+            {/* Prikaz */}
+            <div className="flex bg-gray-100 rounded-xl p-0.5">
               {(["dnevni", "sedmicni", "mjesecni"] as const).map(p => (
                 <button
                   key={p}
                   onClick={() => { setPrikaz(p); setSelectedTermin(null); }}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${prikaz === p ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    prikaz === p ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  }`}
                 >
                   {p === "dnevni" ? "Dnevni" : p === "sedmicni" ? "Sedmični" : "Mjesečni"}
                 </button>
@@ -883,20 +1034,28 @@ export default function DoktorRezervacije() {
           </div>
         </header>
 
+        {/* Sadržaj */}
         <div className="flex-1 p-5">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-24">
               <div className="text-sm text-gray-400">Učitavanje termina...</div>
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3 mb-5">
-                <button onClick={() => goDay(-navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
-                  <ChevronLeft size={16} className="text-gray-600" />
+              {/* Nav traka */}
+              <div className="flex items-center gap-2.5 mb-5">
+                <button
+                  onClick={() => goDay(-navDelta)}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronLeft size={15} className="text-gray-600" />
                 </button>
                 <span className="text-sm font-semibold text-gray-700 capitalize">{navLabel()}</span>
-                <button onClick={() => goDay(navDelta)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100">
-                  <ChevronRight size={16} className="text-gray-600" />
+                <button
+                  onClick={() => goDay(navDelta)}
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronRight size={15} className="text-gray-600" />
                 </button>
                 <div className="ml-auto flex items-center gap-3">
                   {Object.entries(tipConfig).map(([tip, cfg]) => (
@@ -908,33 +1067,43 @@ export default function DoktorRezervacije() {
                 </div>
               </div>
 
+              {/* Dnevni prikaz */}
               {prikaz === "dnevni" && (
                 <div className={`grid gap-5 ${selectedTermin ? "grid-cols-5" : "grid-cols-1 max-w-2xl"}`}>
                   <div className={selectedTermin ? "col-span-2" : "col-span-1"}>
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                       <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                         <span className="text-sm font-semibold text-gray-700">
-                          {dnevniTermini.length} {prikaziOtkazane ? "otkazan" : "zakazan"}{dnevniTermini.length !== 1 ? "ih" : ""} termin{dnevniTermini.length !== 1 ? "a" : ""}
+                          {dnevniTermini.length} {filterLabelJed}{dnevniTermini.length !== 1 ? "ih" : ""} termin{dnevniTermini.length !== 1 ? "a" : ""}
                         </span>
                         <div className="flex gap-1.5">
                           {Object.entries(tipConfig).map(([tip, cfg]) => {
                             const count = dnevniTermini.filter(t => t.tip === tip as TipPregleda).length;
                             if (!count) return null;
-                            return <span key={tip} className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>{count} {cfg.label.toLowerCase()}</span>;
+                            return (
+                              <span key={tip} className={`text-xs px-2 py-0.5 rounded-full font-semibold ${cfg.badge}`}>
+                                {count} {cfg.label.toLowerCase()}
+                              </span>
+                            );
                           })}
                         </div>
                       </div>
                       <div className="p-3 space-y-2">
                         {dnevniTermini.length === 0 ? (
-                          <div className="text-center py-12">
-                            <Calendar size={32} className="text-gray-200 mx-auto mb-2" />
-                            <p className="text-sm text-gray-400">
-                              {prikaziOtkazane ? "Nema otkazanih termina za ovaj dan" : "Nema termina za ovaj dan"}
-                            </p>
+                          <div className="text-center py-14">
+                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                              <Calendar size={22} className="text-gray-300" />
+                            </div>
+                            <p className="text-sm text-gray-400">{praznoLabel}</p>
                           </div>
                         ) : (
                           dnevniTermini.map(t => (
-                            <TerminRed key={t.id} termin={t} onClick={() => setSelectedTermin(prev => prev?.id === t.id ? null : t)} selected={selectedTermin?.id === t.id} />
+                            <TerminRed
+                              key={t.id}
+                              termin={t}
+                              onClick={() => setSelectedTermin(prev => prev?.id === t.id ? null : t)}
+                              selected={selectedTermin?.id === t.id}
+                            />
                           ))
                         )}
                       </div>
@@ -948,23 +1117,30 @@ export default function DoktorRezervacije() {
                         onAddKomentar={handleAddKomentar}
                         onPromjenaDuzine={(t) => setTerminZaDuzinu(t)}
                         onOtkaziTermin={(t) => setTerminZaOtkazivanje(t)}
+                        onZavrsiPregled={(t) => setTerminZaZavrsavanje(t)}
                       />
                     </div>
                   )}
                 </div>
               )}
 
+              {/* Sedmični prikaz */}
               {prikaz === "sedmicni" && (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                   <div className="grid grid-cols-7 border-b border-gray-100">
                     {weekDays.map((ds, i) => {
                       const isToday = ds === todayStr;
                       return (
-                        <button key={ds} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }} className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}>
-                          <div className="text-xs text-gray-400 mb-1">{dayNames[i]}</div>
-                          {/* ✅ T12:00:00Z za dan u sedmičnom prikazu */}
-                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>{new Date(ds + "T12:00:00Z").getUTCDate()}</div>
-                          <div className="mt-1 flex justify-center gap-0.5 flex-wrap">
+                        <button
+                          key={ds}
+                          onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); }}
+                          className={`p-3 text-center transition-colors hover:bg-blue-50 ${isToday ? "bg-blue-50" : ""}`}
+                        >
+                          <div className="text-xs text-gray-400 mb-1 font-medium">{dayNames[i]}</div>
+                          <div className={`text-sm font-bold ${isToday ? "text-blue-600" : "text-gray-800"}`}>
+                            {new Date(ds + "T12:00:00Z").getUTCDate()}
+                          </div>
+                          <div className="mt-1.5 flex justify-center gap-0.5 flex-wrap">
                             {filterTermini(listaTermina.filter(t => t.datum === ds)).map(t => (
                               <div key={t.id} className={`w-1.5 h-1.5 rounded-full ${tipConfig[t.tip].dot}`} />
                             ))}
@@ -981,8 +1157,12 @@ export default function DoktorRezervacije() {
                           {dayTermini.map(t => {
                             const tc = tipConfig[t.tip];
                             return (
-                              <div key={t.id} onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }} className={`rounded p-1.5 cursor-pointer hover:shadow-sm transition-all ${tc.bg} border ${tc.border}`}>
-                                <div className="text-xs font-bold text-gray-800">{formatV(t.vrijemeOd)}</div>
+                              <div
+                                key={t.id}
+                                onClick={() => { setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }}
+                                className={`rounded-lg p-1.5 cursor-pointer hover:shadow-sm transition-all ${tc.bg} border ${tc.border}`}
+                              >
+                                <div className="text-xs font-bold text-gray-800 tabular-nums">{formatV(t.vrijemeOd)}</div>
                                 <div className="text-xs text-gray-600 truncate">{t.pacijent.ime} {t.pacijent.prezime[0]}.</div>
                                 {t.tip === "hitni" && <div className="text-xs font-bold text-red-600">⚡ HITNO</div>}
                               </div>
@@ -995,15 +1175,15 @@ export default function DoktorRezervacije() {
                 </div>
               )}
 
+              {/* Mjesečni prikaz */}
               {prikaz === "mjesecni" && (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                     <span className="text-sm font-semibold text-gray-700 capitalize">
-                      {/* ✅ T12:00:00Z za naziv mjeseca */}
                       {new Date(selectedDatum + "T12:00:00Z").toLocaleDateString("bs-BA", { month: "long", year: "numeric" })}
                     </span>
-                    <span className="text-xs text-gray-400">
-                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {prikaziOtkazane ? "otkazanih" : "zakazanih"} termina u ovom mjesecu
+                    <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                      {filterTermini(listaTermina.filter(t => t.datum.startsWith(selectedDatum.slice(0, 7)))).length} {filterLabel} termina
                     </span>
                   </div>
                   <div className="grid grid-cols-7 border-b border-gray-100">
@@ -1024,8 +1204,7 @@ export default function DoktorRezervacije() {
                         >
                           {ds && (
                             <>
-                              <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-700"}`}>
-                                {/* ✅ UTC datum broj za mjesečni prikaz */}
+                              <div className={`text-xs font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : "text-gray-600"}`}>
                                 {new Date(ds + "T12:00:00Z").getUTCDate()}
                               </div>
                               <div className="space-y-0.5">
@@ -1035,7 +1214,7 @@ export default function DoktorRezervacije() {
                                     <div
                                       key={t.id}
                                       onClick={e => { e.stopPropagation(); setSelectedDatum(ds); setPrikaz("dnevni"); setSelectedTermin(t); }}
-                                      className={`text-xs rounded px-1 py-0.5 truncate font-medium ${tc.badge} flex items-center gap-1 cursor-pointer`}
+                                      className={`text-xs rounded-md px-1 py-0.5 truncate font-medium ${tc.badge} flex items-center gap-1 cursor-pointer`}
                                     >
                                       {t.tip === "hitni" && <span>⚡</span>}
                                       {formatV(t.vrijemeOd)} {t.pacijent.ime[0]}. {t.pacijent.prezime}
@@ -1043,7 +1222,7 @@ export default function DoktorRezervacije() {
                                   );
                                 })}
                                 {dayTermini.length > 3 && (
-                                  <div className="text-xs text-gray-400 pl-1">+{dayTermini.length - 3} više</div>
+                                  <div className="text-xs text-gray-400 pl-1 font-medium">+{dayTermini.length - 3} više</div>
                                 )}
                               </div>
                             </>

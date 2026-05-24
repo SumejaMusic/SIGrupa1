@@ -2,14 +2,20 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import { redis } from "../lib/redis.js";
+import jwt from "jsonwebtoken";
 
 const PACIJENT_KORISNIK_ID = "2";
+const PACIJENT_TOKEN = jwt.sign(
+  { id: Number(PACIJENT_KORISNIK_ID), uloga: "PACIJENT" },
+  process.env.JWT_SECRET ?? "test-secret",
+  { expiresIn: "1h" }
+);
 
 describe("GET /api/termini", () => {
   it("vraća slobodne termine za doktora i datum", async () => {
     const res = await request(app)
       .get("/api/termini")
-      .query({ doktorId: 1, datum: "2026-04-13" });
+      .query({ doktorId: 1, datum: "2030-04-13" });
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -25,7 +31,7 @@ describe("GET /api/termini", () => {
   it("vraća praznu listu za doktora koji nema termine", async () => {
     const res = await request(app)
       .get("/api/termini")
-      .query({ doktorId: 999, datum: "2026-04-13" });
+      .query({ doktorId: 999, datum: "2030-04-13" });
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -38,7 +44,7 @@ describe("GET /api/termini", () => {
 
     const res = await request(app)
       .get("/api/termini")
-      .query({ doktorId: 1, datum: "2026-04-13" });
+      .query({ doktorId: 1, datum: "2030-04-13" });
 
     expect(res.status).toBe(200);
     const termin1 = res.body.find((t: any) => t.id === 1);
@@ -88,6 +94,7 @@ describe("POST /api/termini/:id/zakljucaj", () => {
   it("uspješno zaključava slobodan termin", async () => {
     const res = await request(app)
       .post("/api/termini/1/zakljucaj")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);
@@ -106,6 +113,7 @@ describe("POST /api/termini/:id/zakljucaj", () => {
 
     const res = await request(app)
       .post("/api/termini/1/zakljucaj")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(409);
@@ -120,6 +128,7 @@ describe("POST /api/termini/:id/zakljucaj", () => {
 
     const res = await request(app)
       .post("/api/termini/1/zakljucaj")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);
@@ -135,6 +144,7 @@ describe("POST /api/termini/:id/oslobodi", () => {
 
     const res = await request(app)
       .post("/api/termini/1/oslobodi")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);
@@ -147,6 +157,7 @@ describe("POST /api/termini/:id/oslobodi", () => {
   it("oslobađanje već slobodnog termina vraća 200 (idempotentno)", async () => {
     const res = await request(app)
       .post("/api/termini/1/oslobodi")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", PACIJENT_KORISNIK_ID);
 
     expect(res.status).toBe(200);

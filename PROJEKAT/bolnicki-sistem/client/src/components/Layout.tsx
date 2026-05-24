@@ -11,6 +11,7 @@ interface LayoutProps {
   step: number;
   totalSteps: number;
   breadcrumbs: string[];
+  
 }
 
 export default function Layout({ children, step, totalSteps, breadcrumbs }: LayoutProps) {

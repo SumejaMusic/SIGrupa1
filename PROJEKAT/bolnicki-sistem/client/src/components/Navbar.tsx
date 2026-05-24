@@ -268,6 +268,18 @@ export default function Navbar() {
                   Doktor Panel
                 </button>
               )}
+              {korisnik.uloga === 'MEDICINSKO_OSOBLJE' && (
+                <button
+                  onClick={() => navigate('/osoblje-panel')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    scrolled
+                      ? 'text-blue-700 border border-blue-200 hover:bg-blue-50'
+                      : 'text-white border border-white/30 hover:bg-white/10'
+                  }`}
+                >
+                  Panel osoblja
+                </button>
+              )}
               {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
                 <button
                   onClick={() => navigate('/admin')}
@@ -392,6 +404,11 @@ export default function Navbar() {
                 {korisnik.uloga === 'DOKTOR' && (
                   <button onClick={() => { navigate('/doktor-rezervacije'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-50">
                     Doktor Panel
+                  </button>
+                )}
+                {korisnik.uloga === 'MEDICINSKO_OSOBLJE' && (
+                  <button onClick={() => { navigate('/osoblje-panel'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-blue-700 border border-blue-200 hover:bg-blue-50">
+                    Panel osoblja
                   </button>
                 )}
                 {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (

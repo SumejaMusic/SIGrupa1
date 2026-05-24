@@ -1,29 +1,31 @@
+// src/middleware/autorizacija.ts
+//
+// Ovaj middleware se poziva NAKON autentifikuj() koji je već postavio
+// (req as any).korisnik = { id, uloga, ... } iz JWT payloada.
+//
+// Koristi se ovako u rutama:
+//   router.get("/termini", autentifikuj, autorizacija(["MEDICINSKO_OSOBLJE", "DOKTOR"]), handler)
+//
+// Zašto niz uloga umjesto jedne: osoblje, doktor i admin mogu koristiti isti panel,
+// pa je fleksibilnije proslijediti listu nego pisati više middlewarea.
+
 import { Request, Response, NextFunction } from "express";
 
-type Uloga = "ADMINISTRATOR" | "PACIJENT" | "DOKTOR" | "MEDICINSKO_OSOBLJE" | "VLASNIK";
-
-/**
- * Middleware za provjeru uloge korisnika (autorizacija).
- * Koristi se NAKON `autentifikuj` middleware-a koji postavlja `req.korisnik`.
- * 
- * @param dozvoljeneUloge - Uloge koje imaju pristup ruti
- * @returns Express middleware koji provjerava ulogu
- * 
- * @example
- * // Samo doktor i administrator mogu pristupiti
- * router.get("/ruta", autentifikuj, autorizuj("DOKTOR", "ADMINISTRATOR"), handler);
- */
-export const autorizuj = (...dozvoljeneUloge: Uloga[]) => {
+export const autorizacija = (dozvoljeneUloge: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const korisnik = (req as any).korisnik;
 
-    if (!korisnik || !korisnik.uloga) {
+    // autentifikuj() nije pozvao next() — to ne bi trebalo biti moguće,
+    // ali branimo se svejedno
+    if (!korisnik) {
       res.status(401).json({ poruka: "Niste prijavljeni." });
       return;
     }
 
     if (!dozvoljeneUloge.includes(korisnik.uloga)) {
-      res.status(403).json({ poruka: "Nemate dozvolu za ovu akciju." });
+      res.status(403).json({
+        poruka: "Nemate dozvolu za pristup ovom resursu.",
+      });
       return;
     }
 

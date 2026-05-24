@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import { enkriptuj } from "../src/lib/encryption.js";
+import bcrypt from "bcrypt";
 
 const hashJmbg = (jmbg: string) => crypto.createHash("sha256").update(jmbg).digest("hex");
 const hashBrojKnjizice = (broj: string) =>
@@ -159,7 +160,7 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
   // ─────────────────────────────────────────────
   const korisnikDoktor = await prisma.korisnik.upsert({
     where: { email: "doktor@test.com" },
-    update: {},
+    update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
     create: {
       jmbg: enkriptuj("1234567890123"),
       jmbgHash: hashJmbg("1234567890123"),
@@ -167,11 +168,12 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
       prezime: "Hodžić",
       datumRodjenja: new Date("1980-01-01"),
       email: "doktor@test.com",
-      pristupnaSifra: "hash_placeholder",
+      pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
       brojTelefona: "61111111",
       datumRegistracije: new Date(),
       brojNeuspjelihPrijava: 0,
       uloga: "DOKTOR",
+      emailVerifikovan: true
     },
   });
 
@@ -199,7 +201,7 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
   // ─────────────────────────────────────────────
   const korisnikDoktor2 = await prisma.korisnik.upsert({
     where: { email: "doktor2@test.com" },
-    update: {},
+    update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
     create: {
       jmbg: enkriptuj("1234567890124"),
       jmbgHash: hashJmbg("1234567890124"),
@@ -207,11 +209,12 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
       prezime: "Softić",
       datumRodjenja: new Date("1985-03-10"),
       email: "doktor2@test.com",
-      pristupnaSifra: "hash_placeholder",
+      pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
       brojTelefona: "61111112",
       datumRegistracije: new Date(),
       brojNeuspjelihPrijava: 0,
       uloga: "DOKTOR",
+      emailVerifikovan: true
     },
   });
 
@@ -236,7 +239,7 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
   // ─────────────────────────────────────────────
   const korisnikDoktor3 = await prisma.korisnik.upsert({
     where: { email: "doktor3@test.com" },
-    update: {},
+    update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
     create: {
       jmbg: enkriptuj("1234567890125"),
       jmbgHash: hashJmbg("1234567890125"),
@@ -244,11 +247,12 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
       prezime: "Beganović",
       datumRodjenja: new Date("1978-07-20"),
       email: "doktor3@test.com",
-      pristupnaSifra: "hash_placeholder",
+      pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
       brojTelefona: "61111113",
       datumRegistracije: new Date(),
       brojNeuspjelihPrijava: 0,
       uloga: "DOKTOR",
+      emailVerifikovan: true
     },
   });
 
@@ -277,7 +281,7 @@ console.log("Nove sobe:", soba4.naziv, ",", soba5.naziv);
 // ─────────────────────────────────────────────
 const korisnikDoktor7 = await prisma.korisnik.upsert({
   where: { email: "doktor7@test.com" },
-  update: {},
+  update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
   create: {
     jmbg: enkriptuj("1234567890129"),
     jmbgHash: hashJmbg("1234567890129"),
@@ -285,11 +289,12 @@ const korisnikDoktor7 = await prisma.korisnik.upsert({
     prezime: "Dizdarević",
     datumRodjenja: new Date("1983-04-22"),
     email: "doktor7@test.com",
-    pristupnaSifra: "hash_placeholder",
+    pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
     brojTelefona: "61111117",
     datumRegistracije: new Date(),
     brojNeuspjelihPrijava: 0,
     uloga: "DOKTOR",
+    emailVerifikovan: true
   },
 });
 
@@ -314,7 +319,7 @@ console.log("Doktor 7 kreiran: Dr.", korisnikDoktor7.prezime);
 // ─────────────────────────────────────────────
 const korisnikDoktor8 = await prisma.korisnik.upsert({
   where: { email: "doktor8@test.com" },
-  update: {},
+  update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
   create: {
     jmbg: enkriptuj("1234567890130"),
     jmbgHash: hashJmbg("1234567890130"),
@@ -322,11 +327,12 @@ const korisnikDoktor8 = await prisma.korisnik.upsert({
     prezime: "Čaušević",
     datumRodjenja: new Date("1986-08-14"),
     email: "doktor8@test.com",
-    pristupnaSifra: "hash_placeholder",
+    pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
     brojTelefona: "61111118",
     datumRegistracije: new Date(),
     brojNeuspjelihPrijava: 0,
     uloga: "DOKTOR",
+    emailVerifikovan: true
   },
 });
 
@@ -351,7 +357,7 @@ console.log("Doktor 8 kreiran: Dr.", korisnikDoktor8.prezime);
 // ─────────────────────────────────────────────
 const korisnikDoktor9 = await prisma.korisnik.upsert({
   where: { email: "doktor9@test.com" },
-  update: {},
+  update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
   create: {
     jmbg: enkriptuj("1234567890131"),
     jmbgHash: hashJmbg("1234567890131"),
@@ -359,11 +365,12 @@ const korisnikDoktor9 = await prisma.korisnik.upsert({
     prezime: "Mehmedović",
     datumRodjenja: new Date("1981-11-03"),
     email: "doktor9@test.com",
-    pristupnaSifra: "hash_placeholder",
+    pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
     brojTelefona: "61111119",
     datumRegistracije: new Date(),
     brojNeuspjelihPrijava: 0,
     uloga: "DOKTOR",
+    emailVerifikovan: true
   },
 });
 
@@ -709,7 +716,7 @@ for (let i = 21; i < 25; i++) {
 
   const korisnikDoktor4 = await prisma.korisnik.upsert({
     where: { email: "doktor4@test.com" },
-    update: {},
+    update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
     create: {
       jmbg: enkriptuj("1234567890126"),
       jmbgHash: hashJmbg("1234567890126"),
@@ -717,11 +724,12 @@ for (let i = 21; i < 25; i++) {
       prezime: "Kovacevic",
       datumRodjenja: new Date("1987-06-11"),
       email: "doktor4@test.com",
-      pristupnaSifra: "hash_placeholder",
+      pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
       brojTelefona: "61111114",
       datumRegistracije: new Date(),
       brojNeuspjelihPrijava: 0,
       uloga: "DOKTOR",
+      emailVerifikovan: true
     },
   });
 
@@ -742,7 +750,7 @@ for (let i = 21; i < 25; i++) {
 
   const korisnikDoktor5 = await prisma.korisnik.upsert({
     where: { email: "doktor5@test.com" },
-    update: {},
+    update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
     create: {
       jmbg: enkriptuj("1234567890127"),
       jmbgHash: hashJmbg("1234567890127"),
@@ -750,11 +758,12 @@ for (let i = 21; i < 25; i++) {
       prezime: "Hasanovic",
       datumRodjenja: new Date("1982-09-05"),
       email: "doktor5@test.com",
-      pristupnaSifra: "hash_placeholder",
+      pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
       brojTelefona: "61111115",
       datumRegistracije: new Date(),
       brojNeuspjelihPrijava: 0,
       uloga: "DOKTOR",
+      emailVerifikovan: true
     },
   });
 
@@ -775,7 +784,7 @@ for (let i = 21; i < 25; i++) {
 
   const korisnikDoktor6 = await prisma.korisnik.upsert({
     where: { email: "doktor6@test.com" },
-    update: {},
+    update: { pristupnaSifra: await bcrypt.hash("Doktor123!", 10), emailVerifikovan: true },
     create: {
       jmbg: enkriptuj("1234567890128"),
       jmbgHash: hashJmbg("1234567890128"),
@@ -783,11 +792,12 @@ for (let i = 21; i < 25; i++) {
       prezime: "Imamovic",
       datumRodjenja: new Date("1979-12-15"),
       email: "doktor6@test.com",
-      pristupnaSifra: "hash_placeholder",
+      pristupnaSifra: await bcrypt.hash("Doktor123!", 10),
       brojTelefona: "61111116",
       datumRegistracije: new Date(),
       brojNeuspjelihPrijava: 0,
       uloga: "DOKTOR",
+      emailVerifikovan: true
     },
   });
 

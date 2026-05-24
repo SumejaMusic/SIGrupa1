@@ -17,7 +17,13 @@ export default function HeroSection() {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const uloga = payload.uloga; // "DOKTOR" ili "PACIJENT"
-      navigate(uloga === "DOKTOR" ? "/doktor-rezervacije" : "/moje-rezervacije");
+      navigate(
+  uloga === "DOKTOR" 
+    ? "/doktor-rezervacije" 
+    : uloga === "MEDICINSKO_OSOBLJE" 
+      ? "/osoblje-panel" // ← Ovdje stavi tačnu rutu svog panela
+      : "/moje-rezervacije"
+);
     } catch {
       navigate("/moje-rezervacije");
     }
@@ -26,6 +32,19 @@ export default function HeroSection() {
 
   navigate(targetPath);
 };
+const [userRole, setUserRole] = useState<string | null>(null);
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setUserRole(payload.uloga); // Spasavamo ulogu ("DOKTOR", "MEDICINSKO_OSOBLJE", etc.)
+    } catch {
+      setUserRole(null);
+    }
+  }
+}, []);
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 5);
@@ -91,23 +110,30 @@ export default function HeroSection() {
 
            <div className="animate-fade-in delay-300 flex flex-wrap gap-4">
   {/* Glavno dugme za zakazivanje */}
-  <button 
-    onClick={() => handleProtectedNavigation("/step1-odjeli")}
-    className="cta-button flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg transition-all"
-  >
-    <CalendarCheck className="w-5 h-5" />
-    Zakažite pregled
-    <ArrowRight className="w-4 h-4" />
-  </button>
+ {userRole !== "MEDICINSKO_OSOBLJE" && (
+    <button 
+      onClick={() => handleProtectedNavigation("/step1-odjeli")}
+      className="cta-button flex items-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg transition-all"
+    >
+      <CalendarCheck className="w-5 h-5" />
+      Zakažite pregled
+      <ArrowRight className="w-4 h-4" />
+    </button>
+  )}
 
   {/* Dugme za moje rezervacije */}
-  <button 
-    onClick={() => handleProtectedNavigation("/moje-rezervacije")}
-    className="cta-button flex items-center gap-2.5 bg-white/10 hover:bg-white/18 backdrop-blur-sm border border-white/25 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200"
-  >
-    <ClipboardList className="w-5 h-5" />
-    Moje rezervacije
-  </button>
+ {/* Dugme za rezervacije / panel */}
+<button 
+  onClick={() => handleProtectedNavigation("/moje-rezervacije")}
+  className="cta-button flex items-center gap-2.5 bg-white/10 hover:bg-white/18 backdrop-blur-sm border border-white/25 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200"
+>
+  <ClipboardList className="w-5 h-5" />
+  {userRole === "MEDICINSKO_OSOBLJE" 
+    ? "Panel osoblja" 
+    : userRole === "DOKTOR" 
+      ? "Doktor panel" 
+      : "Moje rezervacije"}
+</button>
 </div>
           </div>
 

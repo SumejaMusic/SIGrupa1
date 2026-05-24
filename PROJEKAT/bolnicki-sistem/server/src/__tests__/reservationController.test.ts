@@ -8,6 +8,7 @@ import {
   otkaziRezervacijuPacijent,
   otkaziRezervacijuOsoblje,
   dodajKomentar,
+  getKomentari,
 } from "../controllers/reservationController.js";
 
 vi.mock("../app.js", () => ({
@@ -73,9 +74,17 @@ describe("kreirajRezervaciju", () => {
     komentar: null,
   };
 
+  const buduciTerminMock = () => ({
+    id: 5,
+    idDoktor: 2,
+    status: "SLOBODAN",
+    datum: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    vrijeme: 540,
+  });
+
   it("uspješno kreira rezervaciju i vraća je sa statusom 201 — US-06 AC1", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(prismaMock.$transaction).mockResolvedValue(lažnaRezervacija as any);
@@ -92,7 +101,7 @@ describe("kreirajRezervaciju", () => {
 
   it("briše Redis lock nakon uspješne rezervacije — NFR-22", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(prismaMock.$transaction).mockResolvedValue(lažnaRezervacija as any);
@@ -107,7 +116,7 @@ describe("kreirajRezervaciju", () => {
 
   it("kreira rezervaciju sa komentarom — US-22", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(prismaMock.$transaction).mockResolvedValue({ ...lažnaRezervacija, komentar: "Imam bolove u srcu" } as any);
@@ -123,7 +132,7 @@ describe("kreirajRezervaciju", () => {
 
   it("kreira rezervaciju bez komentara — US-22 AC1", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(prismaMock.$transaction).mockResolvedValue({ ...lažnaRezervacija, komentar: null } as any);
@@ -152,7 +161,7 @@ describe("kreirajRezervaciju", () => {
 
   it("vraća 409 za duplu rezervaciju — US-13 AC1", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue({ id: 1 } as any);
 
     const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1, uloga: "PACIJENT" });
@@ -165,6 +174,35 @@ describe("kreirajRezervaciju", () => {
     expect(res.json).toHaveBeenCalledWith({ poruka: "Rezervacija za ovaj termin već postoji." });
     expect(redisMock.get).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 400 kada je odabrani termin u prošlosti", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-18T12:00:00.000Z"));
+
+    try {
+      vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
+      vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({
+        id: 5,
+        idDoktor: 2,
+        status: "SLOBODAN",
+        datum: new Date("2026-05-18T00:00:00.000Z"),
+        vrijeme: 600,
+      } as any);
+
+      const { req, res, next } = mockReqRes({}, {}, { terminId: 5, doktorId: 2 }, { id: 1, uloga: "PACIJENT" });
+      await kreirajRezervaciju(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        poruka: "Nevalidna rezervacija: ne možete rezervisati termin u prošlosti.",
+      });
+      expect(prismaMock.rezervacije.findFirst).not.toHaveBeenCalled();
+      expect(redisMock.get).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   /*it("vraća 409 kada termin nije zaključan u Redisu — US-12, US-13 AC1", async () => {
@@ -213,7 +251,7 @@ describe("kreirajRezervaciju", () => {
   it("poziva next pri Redis grešci i ne vraća odgovor", async () => {
     const greška = new Error("Redis greška");
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockRejectedValue(greška);
 
@@ -227,7 +265,7 @@ describe("kreirajRezervaciju", () => {
 
   it("kreira rezervaciju sa hitnost: false kada hitnost nije poslana", async () => {
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(prismaMock.$transaction).mockResolvedValue({ ...lažnaRezervacija, hitnost: false } as any);
@@ -242,7 +280,7 @@ describe("kreirajRezervaciju", () => {
   it("ne briše Redis lock kada transakcija ne uspije", async () => {
     const greška = new Error("Transakcija pala");
     vi.mocked(prismaMock.pacijent.findFirst).mockResolvedValue(lažniPacijentMock as any);
-    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue({ id: 5, idDoktor: 2, status: "SLOBODAN" } as any);
+    vi.mocked(prismaMock.termin.findUnique).mockResolvedValue(buduciTerminMock() as any);
     vi.mocked(prismaMock.rezervacije.findFirst).mockResolvedValue(null);
     vi.mocked(redisMock.get).mockResolvedValue("1");
     vi.mocked(prismaMock.$transaction).mockRejectedValue(greška);
@@ -513,7 +551,7 @@ describe("otkaziRezervacijuOsoblje", () => {
     id: 1,
     idTermina: 5,
     idDoktor: 2,
-    termin: { id: 5, datum: new Date("2025-06-01") },
+    termin: { id: 5, datum: new Date("2027-06-01") },
     pacijent: { korisnik: { email: "test@test.com" } },
   };
 
@@ -562,53 +600,132 @@ describe("otkaziRezervacijuOsoblje", () => {
 // dodajKomentar
 // ─────────────────────────────────────────────
 describe("dodajKomentar", () => {
-  it("uspješno dodaje komentar i vraća ažuriranu rezervaciju — US-22 AC1", async () => {
-    const lažnaRezervacija = { id: 1, komentar: "Imam alergiju na penicilin" };
-    vi.mocked(prismaMock.rezervacije.update).mockResolvedValue(lažnaRezervacija as any);
+  const rezervacijaZaPacijenta = {
+    id: 1,
+    idDoktor: 2,
+    pacijent: { idKorisnik: 1 },
+    doktor: { idKorisnik: 2 },
+  };
+
+  it("uspješno dodaje novi komentar bez brisanja postojećih komentara — US-22 AC1", async () => {
+    const datumKreiranja = new Date("2026-05-18T10:00:00.000Z");
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaPacijenta as any);
+    vi.mocked(prismaMock.komentar.create).mockResolvedValue({
+      id: 7,
+      tekst: "Imam alergiju na penicilin",
+      jeDoktor: false,
+      datumKreiranja,
+      korisnik: { ime: "Ana", prezime: "Anić" },
+    } as any);
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, { komentar: "Imam alergiju na penicilin" });
     await dodajKomentar(req, res, next);
 
-    expect(prismaMock.rezervacije.update).toHaveBeenCalledWith({
+    expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { komentar: "Imam alergiju na penicilin" },
+      select: {
+        id: true,
+        idDoktor: true,
+        pacijent: { select: { idKorisnik: true } },
+        doktor: { select: { idKorisnik: true } },
+      },
     });
-    expect(res.json).toHaveBeenCalledWith(lažnaRezervacija);
-    expect(res.status).not.toHaveBeenCalled();
+    expect(prismaMock.komentar.create).toHaveBeenCalledWith({
+      data: {
+        idRezervacije: 1,
+        idKorisnik: 1,
+        tekst: "Imam alergiju na penicilin",
+        jeDoktor: false,
+      },
+      include: {
+        korisnik: { select: { ime: true, prezime: true } },
+      },
+    });
+    expect(prismaMock.rezervacije.update).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({
+      id: 7,
+      tekst: "Imam alergiju na penicilin",
+      autor: "Ana Anić",
+      datum: "2026-05-18",
+      jeDoktor: false,
+    });
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("uspješno briše komentar kada je prazan string — US-22 AC2", async () => {
-    const lažnaRezervacija = { id: 1, komentar: "" };
-    vi.mocked(prismaMock.rezervacije.update).mockResolvedValue(lažnaRezervacija as any);
-
+  it("vraća 400 kada je komentar prazan", async () => {
     const { req, res, next } = mockReqRes({ id: "1" }, {}, { komentar: "" });
     await dodajKomentar(req, res, next);
 
-    expect(prismaMock.rezervacije.update).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: { komentar: "" },
-    });
-    expect(res.json).toHaveBeenCalledWith(lažnaRezervacija);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Komentar ne može biti prazan." });
+    expect(prismaMock.rezervacije.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.komentar.create).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 
   it("konvertuje string ID u broj prije slanja Prismi", async () => {
-    vi.mocked(prismaMock.rezervacije.update).mockResolvedValue({ id: 42 } as any);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({ ...rezervacijaZaPacijenta, id: 42 } as any);
+    vi.mocked(prismaMock.komentar.create).mockResolvedValue({
+      id: 1,
+      tekst: "Test komentar",
+      jeDoktor: false,
+      datumKreiranja: new Date("2026-05-18"),
+      korisnik: null,
+    } as any);
 
     const { req, res, next } = mockReqRes({ id: "42" }, {}, { komentar: "Test komentar" });
     await dodajKomentar(req, res, next);
 
-    expect(prismaMock.rezervacije.update).toHaveBeenCalledWith({
+    expect(prismaMock.rezervacije.findUnique).toHaveBeenCalledWith({
       where: { id: 42 },
-      data: { komentar: "Test komentar" },
+      select: {
+        id: true,
+        idDoktor: true,
+        pacijent: { select: { idKorisnik: true } },
+        doktor: { select: { idKorisnik: true } },
+      },
     });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("označava komentar doktora sa jeDoktor=true", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaPacijenta as any);
+    vi.mocked(prismaMock.komentar.create).mockResolvedValue({
+      id: 3,
+      tekst: "Doktorska napomena",
+      jeDoktor: true,
+      datumKreiranja: new Date("2026-05-18"),
+      korisnik: { ime: "Dr.", prezime: "Marić" },
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" }, {}, { komentar: "Doktorska napomena" }, { id: 2, uloga: "DOKTOR" });
+    await dodajKomentar(req, res, next);
+
+    expect(prismaMock.komentar.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ jeDoktor: true, idKorisnik: 2 }),
+    }));
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ jeDoktor: true, autor: "Dr. Marić" }));
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 404 kada rezervacija nije pronađena", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(null);
+
+    const { req, res, next } = mockReqRes({ id: "999" }, {}, { komentar: "Test" });
+    await dodajKomentar(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Rezervacija nije pronađena." });
+    expect(prismaMock.komentar.create).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
 
   it("poziva next pri grešci i ne vraća odgovor", async () => {
     const greška = new Error("DB greška");
-    vi.mocked(prismaMock.rezervacije.update).mockRejectedValue(greška);
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue(rezervacijaZaPacijenta as any);
+    vi.mocked(prismaMock.komentar.create).mockRejectedValue(greška);
 
     const { req, res, next } = mockReqRes({ id: "1" }, {}, { komentar: "Test" });
     await dodajKomentar(req, res, next);
@@ -616,6 +733,69 @@ describe("dodajKomentar", () => {
     expect(next).toHaveBeenCalledWith(greška);
     expect(res.json).not.toHaveBeenCalled();
     expect(res.status).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────
+// getKomentari
+// ─────────────────────────────────────────────
+describe("getKomentari", () => {
+  it("vraća sve komentare rezervacije sa ispravnim autorima", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      id: 1,
+      komentar: "Legacy",
+      datumKreiranja: new Date("2026-05-18T08:00:00.000Z"),
+      pacijent: { idKorisnik: 1, korisnik: { ime: "Ana", prezime: "Anić" } },
+      doktor: { idKorisnik: 2 },
+      komentari: [
+        {
+          id: 11,
+          tekst: "Pacijent komentar",
+          jeDoktor: false,
+          datumKreiranja: new Date("2026-05-18T09:00:00.000Z"),
+          korisnik: { ime: "Ana", prezime: "Anić" },
+        },
+        {
+          id: 12,
+          tekst: "Doktor komentar",
+          jeDoktor: true,
+          datumKreiranja: new Date("2026-05-18T10:00:00.000Z"),
+          korisnik: { ime: "Dr.", prezime: "Marić" },
+        },
+      ],
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await getKomentari(req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith([
+      { id: 11, tekst: "Pacijent komentar", autor: "Ana Anić", datum: "2026-05-18", jeDoktor: false },
+      { id: 12, tekst: "Doktor komentar", autor: "Dr. Marić", datum: "2026-05-18", jeDoktor: true },
+    ]);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("koristi stari komentar kao fallback za rezervacije prije migracije", async () => {
+    vi.mocked(prismaMock.rezervacije.findUnique).mockResolvedValue({
+      id: 1,
+      komentar: "Stari komentar",
+      datumKreiranja: new Date("2026-05-18T08:00:00.000Z"),
+      pacijent: { idKorisnik: 1, korisnik: { ime: "Ana", prezime: "Anić" } },
+      doktor: { idKorisnik: 2 },
+      komentari: [],
+    } as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await getKomentari(req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith([{
+      id: 1000,
+      tekst: "Stari komentar",
+      autor: "Ana Anić",
+      datum: "2026-05-18",
+      jeDoktor: false,
+    }]);
+    expect(next).not.toHaveBeenCalled();
   });
 });
 

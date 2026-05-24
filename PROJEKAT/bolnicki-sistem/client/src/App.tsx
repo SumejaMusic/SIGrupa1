@@ -12,7 +12,7 @@ import Step2Doktori from './klase/Step2Doktori';
 import Step3TipPregleda from './klase/Step3TipPregleda';
 import Step4Termini from './klase/Step4Termini';
 import Step5Potvrda from './klase/Step5Potvrda';
-
+import StaffPanel from './klase/StaffPanel'
 import './App.css';
 import DoktorRezervacije from './Stranice/DoktorRezervacije';
 import RegistracijaPage from './Stranice/RegistracijaPage'
@@ -26,6 +26,8 @@ import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
 
 import './App.css';
+import Layout from './components/Layout';
+import StaffLayout from './components/StaffLayout';
 
 // ─── Helper: čita uloga iz JWT tokena ─────────────────────────────────────
 function getUloga(): string | null {
@@ -56,7 +58,9 @@ type Uloga = "ADMINISTRATOR" | "PACIJENT" | "DOKTOR" | "MEDICINSKO_OSOBLJE" | "V
 // ─── ProtectedRoute ────────────────────────────────────────────────────────
 function ProtectedRoute({ children, allowedUloge }: {
   children: React.ReactNode;
+
   allowedUloge?: Uloga[];
+
 }) {
   const token = localStorage.getItem("token");
 
@@ -103,7 +107,7 @@ function AppContent() {
     <>
       <Routes>
   <Route path="/" element={<HomePage />} />
-
+  
   {/* Javne rute — bez prijave */}
   <Route path="/registracija"    element={<RegistracijaPage />} />
   <Route path="/prijava"         element={<PrijavaPage />} />
@@ -120,7 +124,20 @@ function AppContent() {
     </ProtectedRoute>
   } />
 
-  {/* Samo doktor (+ admin može sve) */}
+
+{/* Samo medicinsko osoblje */}
+  <Route path="/osoblje-panel" element={
+    <ProtectedRoute allowedUloge={["MEDICINSKO_OSOBLJE"]}>
+    
+      <StaffLayout>
+      <StaffPanel />
+    </StaffLayout>
+    
+    </ProtectedRoute>
+  } />
+
+  {/* Samo doktor */}
+
   <Route path="/doktor-rezervacije" element={
     <ProtectedRoute allowedUloge={["DOKTOR", "ADMINISTRATOR"]}>
       <DoktorRezervacije />
@@ -167,6 +184,6 @@ function App() {
       <AppContent />
     </Router>
   );
-}
+} 
 
 export default App;
