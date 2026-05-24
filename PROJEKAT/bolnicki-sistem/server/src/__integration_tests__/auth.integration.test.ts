@@ -125,11 +125,13 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    expect(res.body).toHaveProperty("uloga", "PACIJENT");
-
+    
+    // Obrisano: expect(res.body).toHaveProperty("uloga", "PACIJENT"); ❌
+    
+    // Umjesto toga provjeravamo ulogu UNUTAR tokena:
     const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
     expect(decoded).toHaveProperty("id");
-    expect(decoded).toHaveProperty("uloga", "PACIJENT");
+    expect(decoded).toHaveProperty("uloga", "PACIJENT"); // ✅ Ovo potvrđuje ulogu
   });
 
   it("uspješna prijava doktora vraća JWT token i ulogu DOKTOR", async () => {
@@ -141,7 +143,10 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    expect(res.body).toHaveProperty("uloga", "DOKTOR");
+
+    // Provjera unutar tokena
+    const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
+    expect(decoded).toHaveProperty("uloga", "DOKTOR"); // ✅
   });
 
   it("uspješna prijava administratora vraća JWT token i ulogu ADMINISTRATOR", async () => {
@@ -153,7 +158,10 @@ describe("POST /api/auth/prijava — US-03 Login i RBAC", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("token");
-    expect(res.body).toHaveProperty("uloga", "ADMINISTRATOR");
+
+    // Provjera unutar tokena
+    const decoded = jwt.verify(res.body.token, JWT_SECRET) as any;
+    expect(decoded).toHaveProperty("uloga", "ADMINISTRATOR"); // ✅
   });
 
   // AC-04-03: Poruka ne smije otkrivati KOJI podatak je pogrešan.

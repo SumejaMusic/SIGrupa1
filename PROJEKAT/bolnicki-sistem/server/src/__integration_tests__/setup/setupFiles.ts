@@ -2,6 +2,7 @@ import { beforeEach, afterAll, vi } from "vitest";
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { Redis } from "ioredis";
+import jwt from "jsonwebtoken";
 
 (globalThis as any).pregledRoutes = Router();
 
@@ -31,6 +32,29 @@ vi.mock("../../middleware/autorizacija.js", () => {
   return {
     autorizacija: autorizuj,
     autorizuj,
+  };
+});
+
+vi.mock("../../middleware/authMiddleware.js", () => {
+  return {
+    autentifikuj: (req: any, res: any, next: any) => {
+      const authHeader = req.headers["authorization"];
+      if (!authHeader?.startsWith("Bearer ")) {
+        res.status(401).json({ poruka: "Niste prijavljeni." });
+        return;
+      }
+      try {
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET ?? "test-secret"
+        ) as any;
+        req.korisnik = decoded;
+        next();
+      } catch {
+        res.status(401).json({ poruka: "Nevažeći token." });
+      }
+    },
   };
 });
 
@@ -83,7 +107,7 @@ beforeEach(async () => {
     },
   });
 
-  // ── Seed: Korisnik doktora ───────────────────────────────────
+  // ── Seed: Korisnik doktora (id=1) ────────────────────────────
   const korisnikDoktor = await prisma.korisnik.upsert({
     where: { email: "doktor@test.com" },
     update: { emailVerifikovan: true },
@@ -128,11 +152,25 @@ beforeEach(async () => {
     },
   });
 
-  // ── Seed: Korisnik pacijenta ─────────────────────────────────
-  // ID=2 je fiksirani — PACIJENT_KORISNIK_ID u testovima ovisi o ovome
+  // ── Seed: Korisnik pacijenta (id=2) ──────────────────────────
+  // KRITIČNO: korisnik mora imati id=2 jer JWT token u testovima
+  // sadrži { id: 2, uloga: 'PACIJENT' }
+  // Resetujemo sekvencu da garantujemo id=2
+  await prisma.$executeRaw`
+    SELECT setval(
+      pg_get_serial_sequence('"Korisnik"', 'id'),
+      COALESCE((SELECT MAX(id) FROM "Korisnik"), 1)
+    )
+  `;
+
   const korisnikPacijent = await prisma.korisnik.upsert({
     where: { email: "musicsumeja98@gmail.com" },
-    update: { emailVerifikovan: true },
+    update: { 
+      emailVerifikovan: true,
+      ime: "Amra",
+      prezime: "Testić",
+      uloga: "PACIJENT",
+    },
     create: {
       id: 2,
       jmbg: "876543210987",
@@ -148,8 +186,10 @@ beforeEach(async () => {
   });
 
   // ── Seed: Pacijent ───────────────────────────────────────────
+  // Osiguraj da pacijent ima idKorisnik koji odgovara korisnikPacijent.id
+  // (može biti bilo koji broj, bitno je da se matchuje)
   await prisma.pacijent.upsert({
-    where: { id: 1 },
+    where: { idKorisnik: korisnikPacijent.id },
     update: {},
     create: {
       id: 1,
@@ -173,14 +213,13 @@ beforeEach(async () => {
   });
 
   // ── Seed: Termini ─────────────────────────────────────────────
-  // ID=1 i ID=2 su fiksirani — termin testovi ovise o njima
   await prisma.termin.createMany({
     data: [
       {
         id: 1,
         idDoktor: doktor.id,
         datum: new Date("2030-04-13"),
-        vrijeme: 540, // 9:00
+        vrijeme: 540,
         opis: "Jutarnji termin",
         status: "SLOBODAN",
       },
@@ -188,7 +227,7 @@ beforeEach(async () => {
         id: 2,
         idDoktor: doktor.id,
         datum: new Date("2030-04-13"),
-        vrijeme: 570, // 9:30
+        vrijeme: 570,
         opis: "Drugi jutarnji termin",
         status: "SLOBODAN",
       },

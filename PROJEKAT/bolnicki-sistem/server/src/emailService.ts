@@ -39,7 +39,7 @@ function getResend(): Resend {
 }
 
 //const TO_EMAIL = 'musicsumeja98@gmail.com';
-const TO_EMAIL = 'aalispahic1@etf.unsa.ba';
+const TO_EMAIL = 'aminaalispahic67@gmail.com';
 const FROM_EMAIL = 'onboarding@resend.dev';
 
 export async function posaljiPotvrdurezerv(podaci: RezervacijaEmailPodaci): Promise<void> {

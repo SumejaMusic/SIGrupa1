@@ -55,7 +55,7 @@ export async function prijaviSeNaListuCekanja(
 
 // ─── Poziva se kada pacijent otkaže termin ──────────────────
 // ─── Poziva se kada pacijent otkaže termin ──────────────────
-export async function obradiOtkazivanje(terminId: number) {
+export async function obradiOtkazivanje(terminId: number,uzrokovaoOtkazivanjePacijentId?: number) {
   console.log("📌 obradiOtkazivanje START, terminId:", terminId);
 
   const lockKey = `waitlist:processing:${terminId}`;
@@ -152,6 +152,9 @@ const sviCekaju = await prisma.listaCekanja.findMany({
     zeleniDatum,
     status: "CEKA",
     ...(vecPokusaliIds.length > 0 ? { id: { notIn: vecPokusaliIds } } : {}),
+    ...(uzrokovaoOtkazivanjePacijentId != null  // ← dodaj ovo
+      ? { idPacijent: { not: uzrokovaoOtkazivanjePacijentId } }
+      : {}),
   },
       orderBy: [
         { prioritet: "asc" },
@@ -267,7 +270,7 @@ await redis.expire(`waitlist:pokusali:${terminId}`, 86400); // 24 sata
     // provjeru nakon isteka vremena, tako da sistem ne stoji zaleđen!
     setTimeout(async () => {
       console.log(`🤖 Automatizacija: Provjeravam timeout za listu čekanja, termin: ${terminId}`);
-      await obradiOtkazivanje(terminId).catch((e) => console.error("Greška u timeoutu:", e));
+      await obradiOtkazivanje(terminId, uzrokovaoOtkazivanjePacijentId).catch((e) => console.error("Greška u timeoutu:", e));
     }, (WAITLIST_TTL_SECONDS + 2) * 1000);
 
   } finally {
@@ -400,7 +403,7 @@ for (const rez of rezervacijeIstogDana) {
   await redis.del(`waitlist:offer:${listaCekanjaId}`);
   await redis.del(`waitlist:pokusali:${terminId}`); // ← dodaj ovo
   for (const otkazaniTerminId of resultado.otkazaniTerminIds) {
-    await obradiOtkazivanje(otkazaniTerminId).catch((err) =>
+    await obradiOtkazivanje(otkazaniTerminId, pacijentId).catch((err) =>
       console.error("❌ obradiOtkazivanje greška za termin", otkazaniTerminId, err)
     );
   }
@@ -481,7 +484,7 @@ export async function otkaziCekanje(
       io.emit("termin-azuriran", { doktorId: zapis.idDoktor, terminId: Number(terminIdStr), status: "SLOBODAN" });
     } else {
       // Ima još nekoga — normalno obradi
-      await obradiOtkazivanje(Number(terminIdStr));
+      await obradiOtkazivanje(Number(terminIdStr), zapis.idPacijent);
     }
   }
 }

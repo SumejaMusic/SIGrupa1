@@ -458,7 +458,7 @@ export const otkaziRezervacijuPacijent = async (req: Request, res: Response, nex
     });
 
     console.log("🔄 Pozivam obradiOtkazivanje za termin:", rezervacija.idTermina);
-await obradiOtkazivanje(rezervacija.idTermina);
+await obradiOtkazivanje(rezervacija.idTermina, pacijent.id);
 console.log("✅ obradiOtkazivanje završena");
     res.json({ poruka: "Rezervacija uspješno otkazana." });
     
@@ -515,9 +515,9 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
       console.error("❌ Email otkazivanja NIJE poslan:", emailErr);
     }
     console.log("🔄 Pozivam obradiOtkazivanje za termin:", rezervacija.idTermina);
-await obradiOtkazivanje(rezervacija.idTermina);
+await obradiOtkazivanje(rezervacija.idTermina); // bez ID-a
 console.log("✅ obradiOtkazivanje završena");
-    res.json({ poruka: "Rezervacija uspješno otkazana." });
+    res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
    
   } catch (err) {
     next(err);
@@ -835,7 +835,8 @@ export const pomjeriRezervaciju = async (req: Request, res: Response, next: Next
     } catch (emailErr) {
       console.error("Email nije poslan:", emailErr);
     }
-
+    //da dode obavijest na waitlisti
+    await obradiOtkazivanje(staraRezervacija.idTermina, staraRezervacija.idPacijent);
     res.status(200).json({ poruka: "Termin uspješno pomjeren." });
   } catch (err) {
     next(err);

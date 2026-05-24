@@ -27,7 +27,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 dotenv.config();
-
+//dotenv.config({ override: false });
 const app = express();
 //app.use(cors());
 /*app.use(cors({
@@ -47,8 +47,11 @@ app.use(express.json());
 if (process.env.NODE_ENV === "test") {
   app.use((req: any, res, next) => {
     const testKorisnikId = req.headers["x-test-korisnik-id"];
-    if (testKorisnikId) {
-      req.korisnik = { id: Number(testKorisnikId) };
+    if (testKorisnikId && !req.korisnik) {
+      req.korisnik = { 
+        id: Number(testKorisnikId),
+        uloga: "PACIJENT"  // default za testove
+      };
     }
     next();
   });
