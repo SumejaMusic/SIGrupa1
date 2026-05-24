@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Layout from "../components/Layout";
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
+
 type TipPregleda = {
   id: number;
   naziv: string;
   opis: string;
   icona: string;
 };
-const apiUrl = import.meta.env.VITE_API_URL;
 function Step3TipPregleda() {
   const [tipoviPregleda, setTipoviPregleda] = useState<TipPregleda[]>([]);
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ function Step3TipPregleda() {
   }, [navigate]);
 
   useEffect(() => {
-  fetch(`${apiUrl}/api/tippregleda`)
+  fetch(`${BASE_URL}/api/tippregleda`)
     .then(res => res.json())
     .then(data => {
       const filtrirani = jeDoktor 

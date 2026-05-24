@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar";
 import { TerminRed } from "../components/TerminRed";
 import { TerminDetalji } from "../components/TerminDetalj";
+// ESLint upozorenje: 'odjava' je importana ali se nigdje ne koristi u ovoj komponenti — obriši je iz importa ili je pozovi negdje
 import { handleExpiredSession, getDoktorId, getDoktorIme, odjava } from "../utils/auth";
 
 import type {
@@ -364,10 +365,12 @@ function ModalPomjeriTermin({ termin, onClose, onConfirm }: {
   onClose: () => void;
   onConfirm: (noviTerminId: number) => void;
 }) {
+  // ESLint greška: 'any[]' nije dozvoljen — ESLint traži konkretan tip umjesto generičkog any (npr. definiraj interfejs za slobodni termin sa API-ja)
   const [termini, setTermini] = useState<any[]>([]);
   const [selectedTerminId, setSelectedTerminId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ESLint upozorenje: 'termin.doktorId' se koristi unutar effecta ali nije naveden u dependency arrayu — effect se neće ponovo pokrenuti ako se doktorId promijeni
   useEffect(() => {
     const sada = new Date();
     fetch(`${apiUrl}/api/termini?doktorId=${termin.doktorId ?? ""}`, {
@@ -495,6 +498,7 @@ function ModalZavrsiPregled({ termin, onClose, onSuccess }: {
     setLoading(true);
     setGreska(null);
 
+    // ESLint greška: 'any' nije dozvoljen — definiši konkretan tip za body umjesto any (npr. interfejs sa dijagnoza, terapija, biljeske, recept)
     const body: any = {
       dijagnoza: dijagnoza.trim(),
       terapija: terapija.trim(),
@@ -1216,7 +1220,6 @@ export default function DoktorRezervacije() {
                       </div>
                     </div>
                   </div>
-
                   {selectedTermin && (
                     <div className="col-span-3">
                       <TerminDetalji

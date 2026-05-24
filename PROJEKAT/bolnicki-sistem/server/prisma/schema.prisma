@@ -81,6 +81,7 @@ model Doktor {
   historija        HistorijaPregleda[]
   listaCekanja     ListaCekanja[]
   rasporedi        RasporedDoktora[]
+  izuzeci          IzuzetakRasporeda[]
   recepti          Recept[]
   uputioKaoOpsti   RezervacijaSpecijalista[] @relation("OpstiDoktor")
   primioKaoSpec    RezervacijaSpecijalista[] @relation("Specijalista")
@@ -89,13 +90,26 @@ model Doktor {
 }
 
 model MediciskoOsoblje {
-  id           Int      @id @default(autoincrement())
-  idKorisnik   Int      @unique
+  id           Int               @id @default(autoincrement())
+  idKorisnik   Int               @unique
   idOdjel      Int
   pozicija     String
   radnoVrijeme Int
-  korisnik     Korisnik @relation(fields: [idKorisnik], references: [id])
-  odjel        Odjel    @relation(fields: [idOdjel], references: [id])
+  korisnik     Korisnik          @relation(fields: [idKorisnik], references: [id])
+  odjel        Odjel             @relation(fields: [idOdjel], references: [id])
+  rasporedi    RasporedOsoblja[]
+}
+
+model RasporedOsoblja {
+  id          Int              @id @default(autoincrement())
+  idOsoblje   Int
+  danUSedmici DanUSedmici
+  vrijemeOd   DateTime         @db.Time(6)
+  vrijemeDo   DateTime         @db.Time(6)
+  aktivan     Boolean          @default(true)
+  osoblje     MediciskoOsoblje @relation(fields: [idOsoblje], references: [id])
+
+  @@unique([idOsoblje, danUSedmici])
 }
 
 model Odjel {
@@ -239,10 +253,30 @@ model RasporedDoktora {
   danUSedmici DanUSedmici
   vrijemeOd   DateTime    @db.Time(6)
   vrijemeDo   DateTime    @db.Time(6)
-  datumOd     DateTime
-  datumDo     DateTime?
   aktivan     Boolean     @default(true)
   doktor      Doktor      @relation(fields: [idDoktor], references: [id])
+
+  @@unique([idDoktor, danUSedmici])
+}
+
+enum RazlogIzuzetka {
+  BOLOVANJE
+  KONFERENCIJA
+  GODISNJI
+  ADMIN
+}
+
+model IzuzetakRasporeda {
+  id        Int            @id @default(autoincrement())
+  idDoktor  Int
+  datum     DateTime       @db.Date
+  vrijemeOd DateTime?      @db.Time(6)
+  vrijemeDo DateTime?      @db.Time(6)
+  razlog    RazlogIzuzetka
+  napomena  String?
+  doktor    Doktor         @relation(fields: [idDoktor], references: [id])
+
+  @@unique([idDoktor, datum])
 }
 
 model Recept {

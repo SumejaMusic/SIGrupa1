@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Search, Heart, Brain, Baby, Bone, ChevronRight, Star } from "lucide-react";
 import Layout from "../components/Layout";
 
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
+
 type Odjel = {
   id: number;
   naziv: string;
@@ -69,8 +71,6 @@ const defaultInfo: OdjelInfo = {
   specijalizacije: ["Opća specijalizacija", "Klinička praksa"],
   nagrade: ["Certifikat kvalitete 2023"],
 };
-const apiUrl = import.meta.env.VITE_API_URL;
-  //const apiUrl = "http://localhost:5000";
 
 function Step1Odjeli() {
   const navigate = useNavigate();
@@ -81,7 +81,7 @@ function Step1Odjeli() {
   const [odjeli, setOdjeli] = useState<Odjel[]>([]);
 
  useEffect(() => {
-  fetch(`${apiUrl}/api/odjeli`)
+  fetch(`${BASE_URL}/api/odjeli`)
     .then(res => res.json())
     .then(data => {
       if (Array.isArray(data)) setOdjeli(data);

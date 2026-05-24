@@ -282,7 +282,7 @@ export default function Navbar() {
               )}
               {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
                 <button
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/admin')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     scrolled
                       ? 'text-purple-700 border border-purple-200 hover:bg-purple-50'
@@ -412,7 +412,7 @@ export default function Navbar() {
                   </button>
                 )}
                 {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
-                  <button onClick={() => { navigate('/'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
+                  <button onClick={() => { navigate('/admin'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
                     Admin Panel
                   </button>
                 )}

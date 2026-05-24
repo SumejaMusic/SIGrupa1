@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect, useState, useCallback } from "react";  // dodaj useCallback
 import { isTokenValid, handleExpiredSession } from './utils/auth';
 import HomePage from './Stranice/HomePage';
+import AdminPanel from './Stranice/AdminPanel';
 //import RezervacijaPacijent from './klase/RezervacijaPacijent';
 
 import MojeRezervacije from './klase/MojeRezervacije';
@@ -48,9 +49,9 @@ function getDefaultRoute(uloga: string | null): string {
   switch (uloga) {
     case "DOKTOR": return "/doktor-rezervacije";
     case "PACIJENT": return "/moje-rezervacije";
-    case "MEDICINSKO_OSOBLJE": return "/osoblje-panel";
-    case "ADMINISTRATOR": return "/";
-    case "VLASNIK": return "/";
+    case "MEDICINSKO_OSOBLJE": return "/";
+    case "ADMINISTRATOR": return "/admin";
+    case "VLASNIK": return "/admin";
     default: return "/prijava";
   }
 }
@@ -152,6 +153,12 @@ function AppContent() {
   <Route path="/doktor-rezervacije" element={
     <ProtectedRoute allowedUloge={["DOKTOR", "ADMINISTRATOR"]}>
       <DoktorRezervacije />
+    </ProtectedRoute>
+  } />
+  {/* Admin panel */}
+  <Route path="/admin" element={
+    <ProtectedRoute allowedUloge={["ADMINISTRATOR"]}>
+      <AdminPanel />
     </ProtectedRoute>
   } />
 

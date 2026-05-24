@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 import Layout from "../components/Layout";
 import { ChevronLeft, ChevronRight, Stethoscope, Search } from "lucide-react";
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
+
 type Doktor = {
   id: number;
   ime: string;
@@ -40,7 +43,6 @@ const odjeliNazivi: { [key: number]: string } = {
   1: "Kardiologija", 2: "Neurologija", 3: "Pedijatrija", 4: "Ortopedija",
 };
 */
-const apiUrl = import.meta.env.VITE_API_URL;
 function Step2Doktori() {
   
   const navigate = useNavigate();
@@ -69,8 +71,7 @@ function Step2Doktori() {
   const odjelId = parseInt(stored);
   setSelectedOdjel(odjelId);
 
-  //const apiUrl = import.meta.env.VITE_API_URL;
-  fetch(`${apiUrl}/api/doktori?odjelId=${odjelId}`)
+  fetch(`${BASE_URL}/api/doktori?odjelId=${odjelId}`)
     .then(res => res.json())
     .then(data => {
       setDoktori(data);

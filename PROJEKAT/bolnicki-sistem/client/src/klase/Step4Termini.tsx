@@ -114,7 +114,9 @@ function Step4Termini() {
             if (typeof parsed.id === "number") {
               setOdabraniPacijentId(parsed.id);
             }
-          } catch {}
+          } catch {
+            // namjerno ignorisano — neispravni JSON u localStorage ne treba prekidati tok
+          }
         }
 
         fetch(`${apiUrl}/api/pacijenti`, {
@@ -124,7 +126,9 @@ function Step4Termini() {
           .then((data) => setPacijenti(Array.isArray(data) ? data : []))
           .catch(() => setPacijenti([]));
       }
-    } catch {}
+    } catch {
+      // namjerno ignorisano — neispravni JWT token ne treba prekidati tok
+    }
   }, []);
 
   // Fetch termina + zauzeti dani + WebSocket

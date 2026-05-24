@@ -7,6 +7,7 @@ import odjelRoutes from "./odjelRoutes.js";
 import terminRecenzijaRoutes from "./terminRecenzijaRoutes.js";
 import recenzijaRoutes from "./recenzijaRoutes.js";
 import authRoutes from "./authRoutes.js";
+import adminRoutes from "./adminRoutes.js";
 import pregledRoutes from "./pregledRoutes.js";
 import osobljeRoutes from "./osobljeRoutes.js";
 import sobaRoutes from "./sobaRoutes.js";
@@ -47,6 +48,7 @@ router.use("/users", userRoutes);
 router.use("/pregledi", pregledRoutes);
 router.use("/lista-cekanja", listaCekanjaRoutes);
 router.use("/rooms", sobaRoutes);
+router.use("/admin", adminRoutes);
 router.use("/chat", chatRoutes);
 
 router.get(
