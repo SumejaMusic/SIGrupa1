@@ -26,8 +26,8 @@ import {
   statusConfig
 } from "../utils/rezervacijeUtils";
 
-// Hardkodirana adresa jer ti .env varijabla vraća undefined
-const apiUrl = "http://localhost:5000"; 
+
+const apiUrl = import.meta.env.VITE_API_URL; 
 
 export function TerminDetalji({
   termin,
