@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-
 import {
   Clock,
   User,
@@ -12,7 +11,8 @@ import {
   History,
   Timer,
   XCircle,
-  CheckCircle
+  CheckCircle,
+  Activity
 } from "lucide-react";
 
 import type { Termin, Nalaz } from "../types";
@@ -74,12 +74,53 @@ export function TerminDetalji({
   const [loadingHistorija, setLoadingHistorija] = useState(false);
   const [selectedHistorija, setSelectedHistorija] = useState<any | null>(null);
 
+  // --- STATE ZA HRONIČNOG PACIJENTA ---
+  const [isChronic, setIsChronic] = useState(termin.pacijent.hronicniBolesnik || false);
+  const [period, setPeriod] = useState<number>(termin.pacijent.reviewPeriodDays || 30);
+  const [savingChronic, setSavingChronic] = useState(false);
+
   const tc = tipConfig[termin.tip];
   const sc = statusConfig[termin.status];
 
+  // Sinhronizacija state-a kada se promijeni pacijent
+  useEffect(() => {
+    setIsChronic(termin.pacijent.hronicniBolesnik || false);
+    setPeriod(termin.pacijent.reviewPeriodDays || 30);
+  }, [termin.pacijent.id]);
+
+  // FUNKCIJA ZA SPAŠAVANJE STATUSA (SA TOKENOM)
+  const handleUpdateChronicStatus = async () => {
+    setSavingChronic(true);
+    const token = localStorage.getItem("token"); // Dohvatanje tokena radi autentifikacije
+
+    try {
+      const response = await fetch(`${apiUrl}/api/pacijenti/${termin.pacijent.id}/hronicni`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Rješava grešku 401
+        },
+        body: JSON.stringify({
+          hronicniBolesnik: isChronic,
+          reviewPeriodDays: isChronic ? Number(period) : null
+        })
+      });
+
+      if (response.ok) {
+        alert("Status pacijenta uspješno ažuriran!");
+      } else {
+        const errorData = await response.json();
+        alert("Greška: " + (errorData.poruka || "Neuspješno spašavanje"));
+      }
+    } catch (err) {
+      alert("Nije moguće povezati se sa serverom.");
+    } finally {
+      setSavingChronic(false);
+    }
+  };
+
   useEffect(() => {
     if (tab !== "nalazi") return;
-
     setLoadingNalazi(true);
     setNalazi([]);
 
@@ -90,13 +131,10 @@ export function TerminDetalji({
       .then(data => {
         if (Array.isArray(data)) {
           setNalazi(data.map((n: any) => ({
-            id: n.id,
-            naziv: n.naziv,
+            id: n.id, naziv: n.naziv,
             datum: isoUTCdatum(n.vrijemeNalaza),
             url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
           })));
-        } else {
-          setNalazi([]);
         }
       })
       .catch(() => setNalazi([]))
@@ -105,7 +143,6 @@ export function TerminDetalji({
 
   useEffect(() => {
     if (tab !== "historija") return;
-
     setLoadingHistorija(true);
 
     fetch(`${apiUrl}/api/historija/pacijent/${termin.pacijent.id}`, {
@@ -141,11 +178,18 @@ export function TerminDetalji({
               <span className="text-base font-bold text-gray-900 leading-tight">
                 {termin.pacijent.ime} {termin.pacijent.prezime}
               </span>
-              {termin.tip === "hitni" && (
-                <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 border border-red-200 px-2 py-0.5 rounded-full animate-pulse">
-                  <AlertTriangle size={11} /> HITNO
-                </span>
-              )}
+
+             {isChronic && (
+  <span className="flex items-center gap-1 text-...">
+    <Activity size={10} /> HRONIČNI
+  </span>
+)}
+
+{termin.tip === "hitni" && (
+  <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 border border-red-300 px-2 py-0.5">
+    <AlertTriangle size={11} /> HITNO
+  </span>
+)}
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Clock size={12} />

@@ -8,22 +8,22 @@ datasource db {
 }
 
 model Korisnik {
-  id                     Int               @id @default(autoincrement())
+  id                     Int                  @id @default(autoincrement())
   jmbg                   String
-  jmbgHash               String            @unique
+  jmbgHash               String               @unique
   ime                    String
   prezime                String
   datumRodjenja          DateTime
-  email                  String            @unique
+  email                  String               @unique
   pristupnaSifra         String
   brojTelefona           String?
-  datumRegistracije      DateTime          @default(now())
-  emailVerifikovan       Boolean           @default(false) //novi atribut potreban za email verifikaciju
-  brojNeuspjelihPrijava  Int               @default(0)
-  nalogZakljucan         Boolean           @default(false)
+  datumRegistracije      DateTime             @default(now())
+  emailVerifikovan       Boolean              @default(false)
+  brojNeuspjelihPrijava  Int                  @default(0)
+  nalogZakljucan         Boolean              @default(false)
   vrijemeZakljucavanja   DateTime?
   zadnjiNeuspjeliPokusaj DateTime?
-  uloga                  Uloga             @default(PACIJENT)
+  uloga                  Uloga                @default(PACIJENT)
   auditLogs              AuditLog[]
   doktorProfile          Doktor?
   osobljeProfile         MediciskoOsoblje?
@@ -33,29 +33,46 @@ model Korisnik {
 }
 
 model PasswordResetToken {
-  id           Int       @id @default(autoincrement())
-  tokenHash    String    @unique
-  idKorisnika  Int
-  expiresAt    DateTime
-  usedAt       DateTime?
-  createdAt    DateTime  @default(now())
-  korisnik     Korisnik  @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+  tokenHash   String   @unique
+  idKorisnika Int
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime @default(now())
+  korisnik    Korisnik @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
 
   @@index([idKorisnika])
 }
 
 model Pacijent {
-  id               Int                 @id @default(autoincrement())
-  idKorisnik       Int                 @unique
-  brojKnjizice     String
-  brojKnjiziceHash String              @unique
-  hronicniBolesnik Boolean             @default(false)
-  historija        HistorijaPregleda[]
-  listaCekanja     ListaCekanja[]
-  korisnik         Korisnik            @relation(fields: [idKorisnik], references: [id])
-  podsjetnici      Podsjetnik[]
-  rezervacije      Rezervacije[]
-  termini          Termin[]
+  id                      Int                 @id @default(autoincrement())
+  idKorisnik              Int                 @unique
+  brojKnjizice            String
+  brojKnjiziceHash        String              @unique
+  hronicniBolesnik        Boolean             @default(false)
+  reviewPeriodDays        Int?
+  zadnjiRutinskiPregledAt DateTime?
+  historija               HistorijaPregleda[]
+  listaCekanja            ListaCekanja[]
+  korisnik                Korisnik            @relation(fields: [idKorisnik], references: [id])
+  podsjetnici             Podsjetnik[]
+  reminderLogs            ReminderLog[]
+  rezervacije             Rezervacije[]
+  termini                 Termin[]
+}
+
+model ReminderLog {
+  id         Int      @id @default(autoincrement())
+  idPacijent Int
+  sentAt     DateTime @default(now())
+  channel    String
+  status     String
+  message    String?
+  pacijent   Pacijent @relation(fields: [idPacijent], references: [id], onDelete: Cascade)
+
+  @@index([idPacijent])
+  @@index([sentAt])
+  @@index([idPacijent, sentAt])
 }
 
 model Doktor {
@@ -190,9 +207,9 @@ model RezervacijaSpecijalista {
 }
 
 model Nalaz {
-  id            Int                 @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   naziv         String
-  vrijemeNalaza DateTime            @default(now())
+  vrijemeNalaza DateTime @default(now())
   opis          String?
   dokumentPDF   Bytes?
   pregledi      HistorijaPregleda[]
@@ -257,14 +274,14 @@ model TipPregleda {
 }
 
 model Komentar {
-  id              Int         @id @default(autoincrement())
-  idRezervacije   Int
-  idKorisnik      Int?
-  tekst           String
-  jeDoktor        Boolean     @default(false)
-  datumKreiranja  DateTime    @default(now())
-  korisnik        Korisnik?   @relation(fields: [idKorisnik], references: [id], onDelete: SetNull)
-  rezervacija     Rezervacije @relation(fields: [idRezervacije], references: [id], onDelete: Cascade)
+  id             Int         @id @default(autoincrement())
+  idRezervacije  Int
+  idKorisnik     Int?
+  tekst          String
+  jeDoktor       Boolean     @default(false)
+  datumKreiranja DateTime    @default(now())
+  korisnik       Korisnik?   @relation(fields: [idKorisnik], references: [id], onDelete: SetNull)
+  rezervacija    Rezervacije @relation(fields: [idRezervacije], references: [id], onDelete: Cascade)
 
   @@index([idRezervacije])
   @@index([idKorisnik])
