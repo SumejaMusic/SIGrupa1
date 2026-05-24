@@ -17,6 +17,7 @@ interface LayoutProps {
 export default function Layout({ children, step, totalSteps, breadcrumbs }: LayoutProps) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // 1. Postavljamo korisnika kao STATE da bi React mogao osvježiti UI
   const [korisnik, setKorisnik] = useState<{ ime: string; prezime: string } | null>(null);
@@ -159,12 +160,34 @@ useEffect(() => {
                 <Bell size={20} className="text-gray-700" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {inicijali}
-                </div>
-                <ChevronDown size={16} className="text-gray-700" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    {inicijali}
+                  </div>
+                  <ChevronDown size={16} className="text-gray-700" />
+                </button>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200 z-50">
+                    <Link 
+                      to="/profil" 
+                      onClick={() => setIsDropdownOpen(false)} 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Moj profil
+                    </Link>
+                    <button 
+                      onClick={handleOdjava} 
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                    >
+                      Odjava
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

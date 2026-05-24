@@ -20,7 +20,7 @@ export function Sidebar({
   const items = [
     { icon: Home, label: "Naslovna", href: "/" },
     { icon: Calendar, label: "Moje rezervacije", href: "/doktor-rezervacije", active: true },
-    { icon: User, label: "Profil", href: "#" },
+    { icon: User, label: "Profil", href: "/profil" },
   ];
 
   return (
