@@ -4,7 +4,7 @@ import { sendSMS } from "../lib/smsService.js";
 import { Resend } from "resend";
 
 const prisma = new PrismaClient();
-const resend = new Resend(process.env.EMAIL_PASS);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const pokreniReminderJob = () => {
   // Kuca svake minute za testiranje
