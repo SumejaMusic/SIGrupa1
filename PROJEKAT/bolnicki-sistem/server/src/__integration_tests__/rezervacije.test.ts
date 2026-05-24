@@ -27,21 +27,26 @@ vi.mock("../emailService.js", () => ({
 }));
 
 beforeAll(async () => {
-  STVARNI_KORISNIK_ID = Number(process.env.TEST_KORISNIK_ID ?? "2");
-  STVARNI_PACIJENT_ID = 1;
+  // Dohvatamo stvarne ID-eve iz baze umjesto da koristimo hardkodirane vrijednosti.
+  // Global seed kreira korisnikPacijent nakon više doktora pa on ne dobija id=2.
+  const korisnikPacijent = await prisma.korisnik.findUnique({ where: { email: "musicsumeja98@gmail.com" } });
+  const korisnikDoktor = await prisma.korisnik.findUnique({ where: { email: "doktor@test.com" } });
+
+  STVARNI_KORISNIK_ID = korisnikPacijent!.id;
+  STVARNI_PACIJENT_ID = (await prisma.pacijent.findFirst({ where: { idKorisnik: STVARNI_KORISNIK_ID } }))!.id;
 
   const jwtSecret = process.env.JWT_SECRET ?? "test-secret";
-PACIJENT_TOKEN = jwt.sign(
-  { id: STVARNI_KORISNIK_ID, uloga: "PACIJENT" },
-  jwtSecret,
-  { expiresIn: "1h" }
-);
+  PACIJENT_TOKEN = jwt.sign(
+    { id: STVARNI_KORISNIK_ID, uloga: "PACIJENT" },
+    jwtSecret,
+    { expiresIn: "1h" }
+  );
 
-DOKTOR_TOKEN = jwt.sign(
-  { id: 1, uloga: "DOKTOR", doktorId: DOKTOR_ID },
-  jwtSecret,
-  { expiresIn: "1h" }
-);
+  DOKTOR_TOKEN = jwt.sign(
+    { id: korisnikDoktor!.id, uloga: "DOKTOR", doktorId: DOKTOR_ID },
+    jwtSecret,
+    { expiresIn: "1h" }
+  );
 });
 
 afterAll(async () => {

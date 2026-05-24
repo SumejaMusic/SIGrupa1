@@ -44,7 +44,7 @@ const redis = new Redis(process.env.REDIS_URL!, {
   lazyConnect: false,
   maxRetriesPerRequest: 3,
 });
-
+/*
 beforeEach(async () => {
   // Brisanje u ispravnom redoslijedu — djeca prije roditelja (FK constraints)
   await prisma.podsjetnik.deleteMany();
@@ -56,6 +56,9 @@ beforeEach(async () => {
   await prisma.termin.deleteMany();
   await prisma.rasporedDoktora.deleteMany();
   await prisma.nalaz.deleteMany();
+  await prisma.pacijent.deleteMany();
+  await prisma.doktor.deleteMany();
+  await prisma.korisnik.deleteMany();
 
   // Resetuj autoincrement sekvence da ID-evi budu predvidivi u testovima
   await prisma.$executeRaw`ALTER SEQUENCE "Termin_id_seq" RESTART WITH 1`;
@@ -123,7 +126,6 @@ beforeEach(async () => {
       danUSedmici: "PONEDJELJAK",
       vrijemeOd: new Date("2026-04-13T08:00:00"),
       vrijemeDo: new Date("2026-04-13T16:00:00"),
-      datumOd: new Date("2026-04-13"),
       aktivan: true,
     },
   });
@@ -199,6 +201,33 @@ beforeEach(async () => {
   // ── Redis: Očisti sve lockove ────────────────────────────────
   const keys = await redis.keys("termin:lock:*");
   if (keys.length > 0) await redis.del(...keys);
+});*/
+beforeEach(async () => {
+  // 1. BRIŠEMO SAMO TRANSAKCIJE (ono što testovi naprave tokom izvršavanja)
+  // NE brišemo korisnike, doktore i pacijente jer nam oni trebaju iz globalnog seeda!
+  await prisma.podsjetnik.deleteMany();
+  await prisma.recept.deleteMany();
+  await prisma.historijaPregleda.deleteMany();
+  await prisma.rezervacijaSpecijalista.deleteMany();
+  await prisma.rezervacije.deleteMany();
+  await prisma.listaCekanja.deleteMany();
+  await prisma.nalaz.deleteMany();
+
+  // 2. VRAĆAMO TERMINE U POČETNO STANJE
+  // Umjesto da ih brišemo i kreiramo, samo poništimo rezervacije iz prethodnog testa
+  await prisma.termin.updateMany({
+    data: { status: "SLOBODAN" }
+  });
+
+  // 3. RESETUJEMO AUTOINCREMENT SAMO ZA REZERVACIJE (kako bi ID-evi u testu bili 1, 2, 3...)
+  await prisma.$executeRaw`ALTER SEQUENCE "Rezervacije_id_seq" RESTART WITH 1`;
+
+  // 4. ČISTIMO REDIS LOCKOVE
+  const keys = await redis.keys("termin:lock:*");
+  if (keys.length > 0) await redis.del(...keys);
+
+  // NAPOMENA: Obrisali smo sav onaj upsert/create kod za Korisnike, Sobe i Odjele 
+  // jer globalni seed (prisma/seed.ts) to već radi ispravno sa pravim lozinkama!
 });
 
 afterAll(async () => {

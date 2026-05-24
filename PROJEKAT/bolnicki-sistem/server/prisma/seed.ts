@@ -402,8 +402,6 @@ await prisma.rasporedDoktora.upsert({
     danUSedmici: "PONEDJELJAK",
     vrijemeOd: new Date("2026-04-14T08:00:00"),
     vrijemeDo: new Date("2026-04-14T16:00:00"),
-    datumOd: sutra,
-    datumDo: null,
     aktivan: true,
   },
 });
@@ -417,8 +415,6 @@ await prisma.rasporedDoktora.upsert({
     danUSedmici: "UTORAK",
     vrijemeOd: new Date("2026-04-14T08:00:00"),
     vrijemeDo: new Date("2026-04-14T15:00:00"),
-    datumOd: sutra,
-    datumDo: null,
     aktivan: true,
   },
 });
@@ -432,8 +428,6 @@ await prisma.rasporedDoktora.upsert({
     danUSedmici: "SRIJEDA",
     vrijemeOd: new Date("2026-04-14T09:00:00"),
     vrijemeDo: new Date("2026-04-14T16:00:00"),
-    datumOd: sutra,
-    datumDo: null,
     aktivan: true,
   },
 });
@@ -451,8 +445,6 @@ console.log("Rasporedi novih doktora kreirani");
       danUSedmici: "UTORAK",
       vrijemeOd: new Date("2026-04-14T08:00:00"),
       vrijemeDo: new Date("2026-04-14T16:00:00"),
-      datumOd: sutra,
-      datumDo: null,
       aktivan: true,
     },
   });
@@ -466,8 +458,6 @@ console.log("Rasporedi novih doktora kreirani");
       danUSedmici: "UTORAK",
       vrijemeOd: new Date("2026-04-14T08:00:00"),
       vrijemeDo: new Date("2026-04-14T16:00:00"),
-      datumOd: sutra,
-      datumDo: null,
       aktivan: true,
     },
   });
@@ -481,8 +471,6 @@ console.log("Rasporedi novih doktora kreirani");
       danUSedmici: "UTORAK",
       vrijemeOd: new Date("2026-04-14T08:00:00"),
       vrijemeDo: new Date("2026-04-14T16:00:00"),
-      datumOd: sutra,
-      datumDo: null,
       aktivan: true,
     },
   });
@@ -825,8 +813,6 @@ for (let i = 21; i < 25; i++) {
       danUSedmici: "SRIJEDA",
       vrijemeOd: new Date("2026-04-14T08:00:00"),
       vrijemeDo: new Date("2026-04-14T14:00:00"),
-      datumOd: sutra,
-      datumDo: null,
       aktivan: true,
     },
   });
@@ -840,8 +826,6 @@ for (let i = 21; i < 25; i++) {
       danUSedmici: "CETVRTAK",
       vrijemeOd: new Date("2026-04-14T09:00:00"),
       vrijemeDo: new Date("2026-04-14T15:00:00"),
-      datumOd: sutra,
-      datumDo: null,
       aktivan: true,
     },
   });
@@ -855,8 +839,6 @@ for (let i = 21; i < 25; i++) {
       danUSedmici: "PETAK",
       vrijemeOd: new Date("2026-04-14T08:00:00"),
       vrijemeDo: new Date("2026-04-14T17:00:00"),
-      datumOd: sutra,
-      datumDo: null,
       aktivan: true,
     },
   });
