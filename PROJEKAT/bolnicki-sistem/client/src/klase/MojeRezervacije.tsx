@@ -7,7 +7,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { handleExpiredSession } from "../utils/auth";
 import { Home, Calendar as CalendarIcon, Stethoscope, LogOut, Menu } from "lucide-react";
-
+import { io as socketIO } from "socket.io-client";
 // ─── Tipovi ───────────────────────────────────────────────────────────────
 
 interface Komentar {
@@ -179,6 +179,27 @@ function WaitlistPonudaModal({
   const [loading, setLoading] = useState<"potvrdi" | "odbij" | null>(null);
   const [greska, setGreska] = useState<string | null>(null);
 
+const [loadingPregled, setLoadingPregled] = useState(true);
+const [kasnijiTermini, setKasnijiTermini] = useState<{
+  rezervacijaId: number;
+  terminId: number;
+  datum: string;
+  vrijeme: number;
+}[]>([]);
+const [odabraniZaBrisanje, setOdabraniZaBrisanje] = useState<number[]>([]);
+
+useEffect(() => {
+  fetch(`${apiUrl}/api/lista-cekanja/${zapis.id}/pregled-potvrde`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  })
+    .then(r => r.json())
+    .then(data => {
+  setKasnijiTermini(data.kasnijiTermini ?? []);
+  setOdabraniZaBrisanje(data.kasnijiTermini?.map((t: any) => t.terminId) ?? []);
+})
+    .catch(() => {})
+    .finally(() => setLoadingPregled(false));
+}, []);
   const akcija = async (tip: "potvrdi" | "odbij") => {
     setLoading(tip);
     setGreska(null);
@@ -188,9 +209,15 @@ function WaitlistPonudaModal({
           ? `${apiUrl}/api/lista-cekanja/${zapis.id}/potvrdi`
           : `${apiUrl}/api/lista-cekanja/${zapis.id}/odbij`;
       const res = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+    "Content-Type": "application/json",
+  },
+  body: tip === "potvrdi"
+    ? JSON.stringify({ terminIdsZaBrisanje: odabraniZaBrisanje })
+    : undefined,
+});
       const data = await res.json();
       if (!res.ok) {
         setGreska(data.poruka || "Greška. Pokušajte ponovo.");
@@ -240,6 +267,39 @@ function WaitlistPonudaModal({
             </div>
           </div>
 
+  
+{kasnijiTermini.length > 0 && (
+  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+    <div className="flex items-center gap-2">
+      <AlertCircle size={14} className="text-amber-500 flex-shrink-0" />
+      <p className="text-xs text-amber-700 font-semibold">
+        Kasniji termini kod istog doktora:
+      </p>
+    </div>
+    {kasnijiTermini.map(t => {
+      const h = Math.floor(t.vrijeme / 60);
+      const m = t.vrijeme % 60;
+      const checked = odabraniZaBrisanje.includes(t.terminId);
+      return (
+        <label key={t.terminId} className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={() => setOdabraniZaBrisanje(prev =>
+              checked ? prev.filter(id => id !== t.terminId) : [...prev, t.terminId]
+            )}
+            className="rounded"
+          />
+          <span className="text-xs text-amber-800">
+            {formatDatumPrikaz(t.datum)} u {String(h).padStart(2,"0")}:{String(m).padStart(2,"0")}
+          </span>
+        </label>
+      );
+    })}
+    <p className="text-xs text-amber-600">Označite termine koje ne želite zadržati.</p>
+  </div>
+)}
+  {/* Greška */}
           {greska && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-3">
               <p className="text-sm text-red-600 font-medium">{greska}</p>
@@ -441,6 +501,7 @@ function ListaCekanjaSekcija({
     Prijavljen: {formatDatumPrikaz(zapis.datumZahtjeva)}
   </div>
 </div>
+
                   </div>
 
                   {/* Akcije */}
@@ -831,11 +892,11 @@ const MojeRezervacije = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    setLoading(true);
-    const token = localStorage.getItem("token");
+ const fetchRezervacije = () => {
+  setLoading(true);
+  const token = localStorage.getItem("token");
 
-    fetch(`${apiUrl}/api/rezervacije/moje`, {
+  fetch(`${apiUrl}/api/rezervacije/moje`,  {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -882,8 +943,36 @@ const MojeRezervacije = () => {
       })
       .catch(() => setRezervacije([]))
       .finally(() => setLoading(false));
-  }, []);
+  };
+  useEffect(() => {
+  fetchRezervacije();
+}, []);
 
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  let pacijentId: number | null = null;
+
+  try {
+    const payload = JSON.parse(atob(token!.split(".")[1]));
+    pacijentId = payload.pacijentId ?? null;
+  } catch {}
+
+  const socket = socketIO(apiUrl);
+
+  socket.on("waitlist-ponuda", () => {
+    setWaitlistRefreshKey((k) => k + 1);
+  });
+
+  socket.on("termin-azuriran", () => {
+    fetchRezervacije();
+  });
+
+  if (pacijentId) {
+    socket.emit("join", `pacijent:${pacijentId}`);
+  }
+
+  return () => { socket.disconnect(); };
+}, []);
   const tipStyle = {
     hitni: {
       dot: "bg-red-500",
@@ -1219,7 +1308,9 @@ const MojeRezervacije = () => {
           onClose={() => setWaitlistPonuda(null)}
           onRefresh={() => {
             setWaitlistPonuda(null);
-            setWaitlistRefreshKey((k) => k + 1);
+          setWaitlistRefreshKey((k) => k + 1);
+          fetchRezervacije();
+
           }}
         />
       )}

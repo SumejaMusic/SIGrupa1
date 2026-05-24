@@ -88,10 +88,10 @@ export async function obradiOtkazivanje(terminId: number) {
 
     const zeleniDatum = new Date(termin.datum);
     zeleniDatum.setUTCHours(0, 0, 0, 0);
-
+let trenutnoObavijesteni: { id: number; idPacijent: number; idDoktor: number; zeleniDatum: Date } | null = null;
     // Lazy evaluacija: provjeri da li je prethodno obaviještenom pacijentu istekao rok
     if (termin.status === "NA_CEKANJU") {
-      const trenutnoObavijesteni = await prisma.listaCekanja.findFirst({
+      trenutnoObavijesteni = await prisma.listaCekanja.findFirst({
         where: {
           idDoktor: termin.idDoktor,
           zeleniDatum: zeleniDatum,
@@ -119,6 +119,21 @@ export async function obradiOtkazivanje(terminId: number) {
           });
 
           termin = { ...termin, status: "SLOBODAN" as any, pacijentId: null } as typeof termin;
+        const ostaliURedu = await prisma.listaCekanja.count({
+  where: {
+    idDoktor: termin.idDoktor,
+    zeleniDatum,
+    status: "CEKA",
+    id: { not: trenutnoObavijesteni.id } // ← isključi samog pacijenta
+  }
+});
+
+if (ostaliURedu === 0) {
+  console.log("⏸️ Nema drugih pacijenata u redu, termin ostaje slobodan.");
+  io.emit("termin-azuriran", { doktorId: termin.idDoktor, terminId, status: "SLOBODAN" });
+  await redis.del(`waitlist:pokusali:${terminId}`); // ← dodaj ovo
+  return; // ← ovo je ključno
+}
         } else {
           console.log(`⏳ Pacijent na listi ID: ${trenutnoObavijesteni.id} još uvijek ima vremena za odgovor.`);
           return;
@@ -128,13 +143,16 @@ export async function obradiOtkazivanje(terminId: number) {
 
     console.log("📌 Tražim sljedećeg pacijenta na listi za datum:", termin.datum);
 
-    // Uzimamo pacijente koji aktivno čekaju
-    const sviCekaju = await prisma.listaCekanja.findMany({
-      where: {
-        idDoktor: termin.idDoktor,
-        zeleniDatum,
-        status: "CEKA",
-      },
+    const vecPokusali = await redis.smembers(`waitlist:pokusali:${terminId}`);
+const vecPokusaliIds = vecPokusali.map(Number);
+
+const sviCekaju = await prisma.listaCekanja.findMany({
+  where: {
+    idDoktor: termin.idDoktor,
+    zeleniDatum,
+    status: "CEKA",
+    ...(vecPokusaliIds.length > 0 ? { id: { notIn: vecPokusaliIds } } : {}),
+  },
       orderBy: [
         { prioritet: "asc" },
         { datumZahtjeva: "asc" },
@@ -167,21 +185,37 @@ export async function obradiOtkazivanje(terminId: number) {
       });
 
       // 🔥 AKO NEMA NIKOG DA ČEKA I NIKO NIJE OBAVIJESTEN -> Lista je stvarno mrtva, gasi sve!
-      if (!imaLiAktivnihPonuda) {
-        const ocisceno = await prisma.listaCekanja.updateMany({
-          where: {
-            idDoktor: termin.idDoktor,
-            zeleniDatum,
-            status: { in: ["CEKA", "OBAVIJESTEN"] } as any
-          },
-          data: { status: "OTKAZANO" as any }
-        });
-        console.log(`🧹 Lista potpuno prazna i zatvorena. Otkazano preostalih zahtjeva: ${ocisceno.count}`);
-      } else {
-        console.log("⏳ Lista se ne zatvara jer još uvijek postoji pacijent koji razmatra ponudu za drugi termin.");
-      }
+     if (!imaLiAktivnihPonuda) {
+  const imaLiCekajucihUopste = await prisma.listaCekanja.count({
+    where: {
+      idDoktor: termin.idDoktor,
+      zeleniDatum,
+      status: "CEKA" as any
+    }
+  });
+
+  if (imaLiCekajucihUopste === 0) {
+    // Stvarno nema nikoga — zatvori listu
+    const ocisceno = await prisma.listaCekanja.updateMany({
+      where: {
+        idDoktor: termin.idDoktor,
+        zeleniDatum,
+        status: { in: ["CEKA", "OBAVIJESTEN"] } as any
+      },
+      data: { status: "OTKAZANO" as any }
+    });
+    console.log(`🧹 Lista potpuno prazna i zatvorena. Otkazano preostalih zahtjeva: ${ocisceno.count}`);
+  } else {
+    // Svi su pokušani za ovaj termin ali postoje u listi — samo oslobodi termin i resetuj
+    console.log(`♻️ Svi pacijenti su pokušani za termin ${terminId}, resetujem za sljedeći termin.`);
+    await redis.del(`waitlist:pokusali:${terminId}`);
+  }
+} else {
+  console.log("⏳ Lista se ne zatvara jer još uvijek postoji pacijent koji razmatra ponudu za drugi termin.");
+}
 
       io.emit("termin-azuriran", { doktorId: termin.idDoktor, terminId, status: "SLOBODAN" });
+      await redis.del(`waitlist:pokusali:${terminId}`);
       return;
     }
 
@@ -196,7 +230,9 @@ export async function obradiOtkazivanje(terminId: number) {
       WAITLIST_TTL_SECONDS,
       String(terminId)
     );
-
+// Zapamti da je ovaj pacijent već dobio šansu za ovaj termin
+await redis.sadd(`waitlist:pokusali:${terminId}`, String(sljedeciURedu.id));
+await redis.expire(`waitlist:pokusali:${terminId}`, 86400); // 24 sata
     await prisma.listaCekanja.update({
       where: { id: sljedeciURedu.id },
       data: { status: "OBAVIJESTEN" as any }
@@ -241,7 +277,8 @@ export async function obradiOtkazivanje(terminId: number) {
 // ─── Pacijent potvrđuje ponuđeni termin ────────────────────
 export async function potvrdiWaitlistTermin(
   listaCekanjaId: number,
-  pacijentId: number
+  pacijentId: number,
+  terminIdsZaBrisanje: number[] = [] // ← novo
 ) {
   const zapis = await prisma.listaCekanja.findFirst({
     where: { id: listaCekanjaId, idPacijent: pacijentId, status: "OBAVIJESTEN" }
@@ -258,24 +295,28 @@ export async function potvrdiWaitlistTermin(
 
   const terminId = Number(terminIdStr);
 
-  const resultado = await prisma.$transaction(async (tx) => {
-    const termin = await tx.termin.findUnique({ where: { id: terminId } });
-    if (!termin || termin.status !== ("NA_CEKANJU" as any)) {
-      throw { status: 409, poruka: "Termin više nije dostupan." };
-    }
+// Izvučeno van transakcije
+const terminInfo = await prisma.termin.findUnique({ where: { id: terminId } });
+if (!terminInfo || terminInfo.status !== ("NA_CEKANJU" as any)) {
+  throw { status: 409, poruka: "Termin više nije dostupan." };
+}
 
-    const kasnijiTermini = await tx.rezervacije.findMany({
-      where: {
-        idPacijent: pacijentId,
-        idDoktor: termin.idDoktor,
-        datumOtkazivanja: null,
-        zavrseno: false,
-        termin: {
-          datum: { gt: termin.datum }
-        }
-      },
-      include: { termin: true }
-    });
+const kasnijiTermini = await prisma.rezervacije.findMany({
+  where: {
+    idPacijent: pacijentId,
+    idDoktor: terminInfo.idDoktor,
+    datumOtkazivanja: null,
+    zavrseno: false,
+    idTermina: { in: terminIdsZaBrisanje } // ← samo odabrani
+  },
+  include: { termin: true }
+});
+
+const resultado = await prisma.$transaction(async (tx) => {
+  const termin = await tx.termin.findUnique({ where: { id: terminId } });
+  if (!termin || termin.status !== ("NA_CEKANJU" as any)) {
+    throw { status: 409, poruka: "Termin više nije dostupan." };
+  }
 
     await tx.termin.update({
       where: { id: terminId },
@@ -306,7 +347,35 @@ export async function potvrdiWaitlistTermin(
       },
       data: { status: "OTKAZANO" as any }
     });
+// Otkaži rezervacije za isti dan kod istog doktora
+const istiDanPocetak = new Date(zapis.zeleniDatum);
+istiDanPocetak.setUTCHours(0, 0, 0, 0);
+const istiDanKraj = new Date(zapis.zeleniDatum);
+istiDanKraj.setUTCHours(23, 59, 59, 999);
 
+const rezervacijeIstogDana = await tx.rezervacije.findMany({
+  where: {
+    idPacijent: pacijentId,
+    idDoktor: terminInfo.idDoktor,
+    datumOtkazivanja: null,
+    zavrseno: false,
+    idTermina: { not: terminId }, // ne otkazuj upravo potvrđeni
+    termin: {
+      datum: { gte: istiDanPocetak, lte: istiDanKraj }
+    }
+  }
+});
+
+for (const rez of rezervacijeIstogDana) {
+  await tx.rezervacije.update({
+    where: { id: rez.id },
+    data: { datumOtkazivanja: new Date() }
+  });
+  await tx.termin.update({
+    where: { id: rez.idTermina },
+    data: { status: "SLOBODAN", pacijent: { disconnect: true } }
+  });
+}
     for (const rez of kasnijiTermini) {
       await tx.rezervacije.update({
         where: { id: rez.id },
@@ -320,13 +389,16 @@ export async function potvrdiWaitlistTermin(
     }
 
     return {
-      rezervacija,
-      otkazaniTerminIds: kasnijiTermini.map((r) => r.idTermina),
-    };
-  });
+  rezervacija,
+  otkazaniTerminIds: [
+    ...kasnijiTermini.map((r) => r.idTermina),
+    ...rezervacijeIstogDana.map((r) => r.idTermina),
+  ],
+};
+  }, { timeout: 15000, maxWait: 10000 });
 
   await redis.del(`waitlist:offer:${listaCekanjaId}`);
-
+  await redis.del(`waitlist:pokusali:${terminId}`); // ← dodaj ovo
   for (const otkazaniTerminId of resultado.otkazaniTerminIds) {
     await obradiOtkazivanje(otkazaniTerminId).catch((err) =>
       console.error("❌ obradiOtkazivanje greška za termin", otkazaniTerminId, err)
@@ -387,24 +459,30 @@ export async function otkaziCekanje(
   });
 
   if (zapis.status === "OBAVIJESTEN") {
-    const terminIdStr = await redis.get(`waitlist:offer:${listaCekanjaId}`);
-    await redis.del(`waitlist:offer:${listaCekanjaId}`);
+  const terminIdStr = await redis.get(`waitlist:offer:${listaCekanjaId}`);
+  await redis.del(`waitlist:offer:${listaCekanjaId}`);
 
-    if (terminIdStr) {
+  if (terminIdStr) {
+    // Provjeri ima li još koga na listi
+    const ostaliURedu = await prisma.listaCekanja.count({
+      where: {
+        idDoktor: zapis.idDoktor,
+        zeleniDatum: zapis.zeleniDatum,
+        status: "CEKA",
+      }
+    });
+
+    if (ostaliURedu === 0) {
+      // Nema nikoga — oslobodi termin direktno
       await prisma.termin.update({
         where: { id: Number(terminIdStr) },
-        data: { status: "NA_CEKANJU" as any }
+        data: { status: "SLOBODAN", pacijent: { disconnect: true } }
       }).catch(() => {});
-
-      try {
-        await obradiOtkazivanje(Number(terminIdStr));
-      } catch (err) {
-        console.error("❌ obradiOtkazivanje greška:", err);
-        await prisma.termin.update({
-          where: { id: Number(terminIdStr) },
-          data: { status: "SLOBODAN", pacijent: { disconnect: true } }
-        }).catch(() => {});
-      }
+      io.emit("termin-azuriran", { doktorId: zapis.idDoktor, terminId: Number(terminIdStr), status: "SLOBODAN" });
+    } else {
+      // Ima još nekoga — normalno obradi
+      await obradiOtkazivanje(Number(terminIdStr));
     }
   }
+}
 }

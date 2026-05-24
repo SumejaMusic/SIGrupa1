@@ -7,6 +7,7 @@ import {
   odbijTermin,
   otkazivanjeIzListe,
   mojaListaCekanja,
+  pregledPotvrde,
 } from "../controllers/listaCekanjaController.js";
 
 
@@ -17,5 +18,5 @@ router.get("/moja", autentifikuj, autorizacija(["PACIJENT"]), mojaListaCekanja);
 router.post("/:id/potvrdi", autentifikuj, autorizacija(["PACIJENT"]), potvrdiTermin);
 router.post("/:id/odbij", autentifikuj, autorizacija(["PACIJENT"]), odbijTermin);
 router.delete("/:id", autentifikuj, autorizacija(["PACIJENT"]), otkazivanjeIzListe);
-
+router.get("/:id/pregled-potvrde", autentifikuj, autorizacija(["PACIJENT"]), pregledPotvrde);
 export default router;

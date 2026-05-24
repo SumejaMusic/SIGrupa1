@@ -301,6 +301,19 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
     }
 
     io.emit("termin-azuriran", { doktorId: idDoktor, terminId: idTermina });
+    // Ukloni s liste čekanja ako postoji
+const datumTermina = new Date(termin.datum);
+datumTermina.setUTCHours(0, 0, 0, 0);
+
+await prisma.listaCekanja.updateMany({
+  where: {
+    idPacijent: pacijent.id,
+    idDoktor: idDoktor,
+    zeleniDatum: datumTermina,
+    status: { in: ["CEKA", "OBAVIJESTEN"] }
+  },
+  data: { status: "OTKAZANO" as any }
+});
     await redis.del(`termin:lock:${idTermina}`);
 
     const doktorKorisnik = rezervacija.doktor.korisnik;

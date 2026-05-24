@@ -473,7 +473,7 @@ function Step4Termini() {
                           );
                         })}
 
-                        {jePotpunoPopunjen && !isDoctorMode && (
+                        {jePotpunoPopunjen && !hasTermini && !isDoctorMode &&  (
                           naListiCekanja ? (
                             <div className="mt-1 text-center px-2 py-1 rounded bg-green-100 text-green-700 font-semibold text-xs">
                               ✓ Na listi

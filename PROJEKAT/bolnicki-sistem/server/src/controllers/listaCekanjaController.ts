@@ -72,9 +72,10 @@ export const potvrdiTermin = async (req: Request, res: Response, next: NextFunct
     }
 
     const rezervacija = await potvrdiWaitlistTermin(
-      Number(req.params.id),
-      pacijent.id
-    );
+  Number(req.params.id),
+  pacijent.id,
+  req.body.terminIdsZaBrisanje ?? []  // ← ovo nedostaje
+);
 
     res.json({ poruka: "Termin uspješno zakazan!", rezervacija });
   } catch (err: any) {
@@ -178,6 +179,61 @@ export const mojaListaCekanja = async (req: Request, res: Response, next: NextFu
     );
 
     res.json(listaObogacena);
+  } catch (err) {
+    next(err);
+  }
+};
+export const pregledPotvrde = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const korisnikPayload = (req as any).korisnik;
+    const pacijent = await prisma.pacijent.findFirst({
+      where: { idKorisnik: korisnikPayload.id }
+    });
+
+    if (!pacijent) {
+      res.status(404).json({ poruka: "Pacijent nije pronađen." });
+      return;
+    }
+
+    const listaCekanjaId = Number(req.params.id);
+    const terminIdStr = await redis.get(`waitlist:offer:${listaCekanjaId}`);
+
+   if (!terminIdStr) {
+  res.json({ kasnijiTermini: [] });
+  return;
+}
+
+    const terminInfo = await prisma.termin.findUnique({
+      where: { id: Number(terminIdStr) },
+      include: { doktor: { include: { korisnik: true } } }
+    });
+
+    if (!terminInfo) {
+  res.json({ kasnijiTermini: [] });
+  return;
+}
+
+   // Novo
+const kasnijiTermini = await prisma.rezervacije.findMany({
+  where: {
+    idPacijent: pacijent.id,
+    idDoktor: terminInfo.idDoktor,
+    datumOtkazivanja: null,
+    zavrseno: false,
+    termin: { datum: { gt: terminInfo.datum } }
+  },
+  include: { termin: true }
+});
+
+res.json({
+  kasnijiTermini: kasnijiTermini.map(r => ({
+    rezervacijaId: r.id,
+    terminId: r.idTermina,
+    datum: r.termin.datum,
+    vrijeme: r.termin.vrijeme,
+  })),
+  doktorIme: `Dr. ${terminInfo.doktor.korisnik.ime} ${terminInfo.doktor.korisnik.prezime}`
+});
   } catch (err) {
     next(err);
   }
