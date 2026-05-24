@@ -27,7 +27,7 @@ Dovršiti panele za medicinsko osoblje i doktore u cijelosti, uvesti upravljanje
 | US-40 | Zahtjev za deaktivaciju i anonimizaciju a | Nova User Story | Lamija Halilović | 5 |
 | US-41 | Obavijest pacijentu o otkazanom/pomjerenom terminu | Nova User Story | Merjem Milišić | 3 |
 | US-42 | Anonimna ocjena i komentar na rad doktora | Nova User Story | Almedin šehić | 5 |
-| US-43 | Profil korisnika – frontend + mapa | Nova User Story |  Lamija Halilović| 3 |
+| US-43 | Profil korisnika | Nova User Story |  Lamija Halilović| 3 |
 |  |Admin panela - osonovne funkcionalnsoti  | |Hana Mahmutović| ||1|
 |/|Testiranje| | || |
 
