@@ -14,6 +14,7 @@ import {
   getTerminById,
   zaključajTermin,
   oslobodiTermin,
+  getZauzetiDani,
 } from "../controllers/terminController.js";
 import { autorizacija } from "../middleware/autorizacija.js";
 
@@ -22,7 +23,7 @@ const router = Router();
 // GET /api/termini?doktorId=&datum=
 // US-05 — Pregled slobodnih termina
 router.get("/", getSlobodniTermini);
- 
+router.get("/zauzeti-dani", getZauzetiDani);
 // GET /api/termini/:id
 // US-05 — Detalji jednog termina
 router.get("/:id", getTerminById);

@@ -4,9 +4,27 @@ import app from "../app.js";
 import { redis } from "../lib/redis.js";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-
-
-
+it("DEBUG - provjeri env i token", async () => {
+  console.log("JWT_SECRET u testu:", process.env.JWT_SECRET);
+  console.log("STVARNI_KORISNIK_ID:", STVARNI_KORISNIK_ID);
+  console.log("PACIJENT_TOKEN decoded:", jwt.decode(PACIJENT_TOKEN));
+  
+  // Pošalji request i vidi šta server vraća
+  await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
+  const res = await request(app)
+    .post("/api/rezervacija")
+    .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+    .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+    .send({
+      terminId: TERMIN_ID,
+      doktorId: DOKTOR_ID,
+      tipPregledaId: TIP_PREGLEDA_ID,
+      hitnost: false,
+    });
+    
+  console.log("Response status:", res.status);
+  console.log("Response body:", res.body);
+});
 const prisma = new PrismaClient();
 
 const DOKTOR_ID = 1;
@@ -18,7 +36,6 @@ let STVARNI_PACIJENT_ID: number;
 let PACIJENT_TOKEN: string;
 let DOKTOR_TOKEN: string;
 
-// rezervacije.test.ts — dodaj na vrh, nakon importa
 vi.mock("../emailService.js", () => ({
   posaljiPotvrdurezerv: vi.fn().mockResolvedValue(undefined),
   posaljiResetPasswordEmail: vi.fn().mockResolvedValue(undefined),
@@ -31,17 +48,17 @@ beforeAll(async () => {
   STVARNI_PACIJENT_ID = 1;
 
   const jwtSecret = process.env.JWT_SECRET ?? "test-secret";
-PACIJENT_TOKEN = jwt.sign(
-  { id: STVARNI_KORISNIK_ID, uloga: "PACIJENT" },
-  jwtSecret,
-  { expiresIn: "1h" }
-);
+  PACIJENT_TOKEN = jwt.sign(
+    { id: STVARNI_KORISNIK_ID, uloga: "PACIJENT" },
+    jwtSecret,
+    { expiresIn: "1h" }
+  );
 
-DOKTOR_TOKEN = jwt.sign(
-  { id: 1, uloga: "DOKTOR", doktorId: DOKTOR_ID },
-  jwtSecret,
-  { expiresIn: "1h" }
-);
+  DOKTOR_TOKEN = jwt.sign(
+    { id: 1, uloga: "DOKTOR", doktorId: DOKTOR_ID },
+    jwtSecret,
+    { expiresIn: "1h" }
+  );
 });
 
 afterAll(async () => {
@@ -60,11 +77,12 @@ async function resetujTermin(terminId = TERMIN_ID) {
   await redis.del(`termin:lock:${terminId}`);
 }
 
+// kreirajRezervacijuHelper
 async function kreirajRezervacijuHelper(terminId = TERMIN_ID) {
   await resetujTermin(terminId);
   await redis.setex(`termin:lock:${terminId}`, 120, String(STVARNI_KORISNIK_ID));
   const res = await request(app)
-    .post("/api/rezervacije")
+    .post("/api/rezervacije")  // ← bilo /api/rezervacija
     .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
     .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
     .send({
@@ -85,7 +103,7 @@ async function obrisiCustomTermin(id: number) {
   await redis.del(`termin:lock:${id}`);
 }
 
-describe("POST /api/rezervacije", () => {
+describe("POST /api/rezervacija", () => {
   beforeEach(async () => {
     await resetujTermin(TERMIN_ID);
   });
@@ -94,7 +112,7 @@ describe("POST /api/rezervacije", () => {
     await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
 
     const res = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
@@ -116,12 +134,9 @@ describe("POST /api/rezervacije", () => {
     expect(termin?.status).toBe("ZAKAZAN");
   });
 
-  // FIX 1: Lock provjera u kontroleru je uvijek false:
-  //   `if (!lock && lock === String(korisnikId))` — uslov je logički nemoguć.
-  // Bez ispravke kontrolera test ne može proći, pa ga preskačemo.
   it.skip("vraća 409 bez Redis locka", async () => {
     const res = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
@@ -145,7 +160,7 @@ describe("POST /api/rezervacije", () => {
 
     await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
     const res = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
@@ -162,7 +177,7 @@ describe("POST /api/rezervacije", () => {
 
     await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
     const res = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: TERMIN_ID, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
@@ -173,7 +188,7 @@ describe("POST /api/rezervacije", () => {
 
   it("vraća 400 za nedostajuće podatke", async () => {
     const res = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ doktorId: DOKTOR_ID });
@@ -186,7 +201,7 @@ describe("POST /api/rezervacije", () => {
     await redis.setex(`termin:lock:${TERMIN_ID}`, 120, String(STVARNI_KORISNIK_ID));
 
     const res = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({
@@ -200,7 +215,7 @@ describe("POST /api/rezervacije", () => {
   });
 });
 
-describe("GET /api/rezervacije/moje", () => {
+describe("GET /api/rezervacija/moje", () => {
   beforeEach(async () => {
     await resetujTermin(TERMIN_ID);
   });
@@ -210,7 +225,7 @@ describe("GET /api/rezervacije/moje", () => {
     expect(kreacija.status).toBe(201);
 
     const res = await request(app)
-      .get("/api/rezervacije/moje")
+      .get("/api/rezervacija/moje")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
@@ -223,7 +238,7 @@ describe("GET /api/rezervacije/moje", () => {
 
   it("vraća praznu listu za pacijenta bez aktivnih rezervacija", async () => {
     const res = await request(app)
-      .get("/api/rezervacije/moje")
+      .get("/api/rezervacija/moje")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
@@ -232,7 +247,7 @@ describe("GET /api/rezervacije/moje", () => {
   });
 });
 
-describe("GET /api/rezervacije/doktor/:doktorId", () => {
+describe("GET /api/rezervacija/doktor/:doktorId", () => {
   beforeEach(async () => {
     await resetujTermin(TERMIN_ID);
   });
@@ -241,9 +256,9 @@ describe("GET /api/rezervacije/doktor/:doktorId", () => {
     const kreacija = await kreirajRezervacijuHelper();
     expect(kreacija.status).toBe(201);
 
-    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`)
-    .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
-    .set("x-test-korisnik-id", "1");
+    const res = await request(app).get(`/api/rezervacija/doktor/${DOKTOR_ID}`)
+      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
+      .set("x-test-korisnik-id", "1");
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
@@ -252,26 +267,24 @@ describe("GET /api/rezervacije/doktor/:doktorId", () => {
   });
 
   it("vraća praznu listu za doktora bez rezervacija", async () => {
-    const res = await request(app).get("/api/rezervacije/doktor/99999")
-     .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
-    .set("x-test-korisnik-id", "1");
+    const res = await request(app).get("/api/rezervacija/doktor/99999")
+      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
+      .set("x-test-korisnik-id", "1");
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
 });
 
-describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
+describe("PATCH /api/rezervacija/:id/otkazi/pacijent", () => {
   beforeEach(async () => {
     await obrisiCustomTermin(100);
     await obrisiCustomTermin(101);
     await obrisiCustomTermin(102);
   });
 
-  // FIX 2: Koristimo datum koji je eksplicitno daleko u budućnosti relativno
-  // od trenutnog vremena kako bismo izbjegli timezone/clock edge-caseove.
   it("uspješno otkazuje rezervaciju > 24h unaprijed", async () => {
-    const buduciDatum = new Date(Date.now() + 72 * 60 * 60 * 1000); // 3 dana od sad
+    const buduciDatum = new Date(Date.now() + 72 * 60 * 60 * 1000);
 
     const buduciTermin = await prisma.termin.create({
       data: {
@@ -285,7 +298,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
 
     await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
@@ -294,7 +307,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
+      .patch(`/api/rezervacija/${rezervacijaId}/otkazi/pacijent`)
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
@@ -318,7 +331,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
 
     await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
@@ -327,7 +340,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
+      .patch(`/api/rezervacija/${rezervacijaId}/otkazi/pacijent`)
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
@@ -335,9 +348,6 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     expect(res.body.poruka).toContain("24 sata");
   });
 
-  // FIX 3: Otkazivanje tuđe rezervacije mora koristiti token ORIGINALNOG
-  // pacijenta (koji više nije vlasnik rezervacije). Slanje tokena drugog
-  // korisnika koji nema pacijent-profil vratiće 404 umjesto 403.
   it("vraća 403 ako pacijent pokušava otkazati tuđu rezervaciju", async () => {
     const buduciTermin = await prisma.termin.create({
       data: {
@@ -351,7 +361,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
 
     await redis.setex(`termin:lock:${buduciTermin.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: buduciTermin.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
@@ -364,15 +374,13 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
     });
 
     if (drugiPacijent) {
-      // Prenesemo vlasništvo rezervacije na drugog pacijenta
       await prisma.rezervacije.update({
         where: { id: rezervacijaId },
         data: { idPacijent: drugiPacijent.id },
       });
 
-      // Originalni pacijent pokušava otkazati — treba dobiti 403
       const res = await request(app)
-        .patch(`/api/rezervacije/${rezervacijaId}/otkazi/pacijent`)
+        .patch(`/api/rezervacija/${rezervacijaId}/otkazi/pacijent`)
         .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
         .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
@@ -385,7 +393,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
 
   it("vraća 404 za nepostojeću rezervaciju", async () => {
     const res = await request(app)
-      .patch("/api/rezervacije/99999/otkazi/pacijent")
+      .patch("/api/rezervacija/99999/otkazi/pacijent")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
 
@@ -393,9 +401,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/pacijent", () => {
   });
 });
 
-// FIX 4: Kontroler nema rutu /otkazi/doktor — postoji samo /otkazi/osoblje.
-// Describe naziv je ispravljen da odražava stvarnu rutu.
-describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
+describe("PATCH /api/rezervacija/:id/otkazi/osoblje", () => {
   beforeEach(async () => {
     await obrisiCustomTermin(103);
   });
@@ -413,7 +419,7 @@ describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
 
     await redis.setex(`termin:lock:${skorasnji.id}`, 120, String(STVARNI_KORISNIK_ID));
     const kreirajRes = await request(app)
-      .post("/api/rezervacije")
+      .post("/api/rezervacija")
       .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
       .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
       .send({ terminId: skorasnji.id, doktorId: DOKTOR_ID, tipPregledaId: TIP_PREGLEDA_ID });
@@ -422,9 +428,9 @@ describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
     const rezervacijaId = kreirajRes.body.id;
 
     const res = await request(app)
-      .patch(`/api/rezervacije/${rezervacijaId}/otkazi/osoblje`)
-       .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
-    .set("x-test-korisnik-id", "1");
+      .patch(`/api/rezervacija/${rezervacijaId}/otkazi/osoblje`)
+      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
+      .set("x-test-korisnik-id", "1");
 
     expect(res.status).toBe(200);
     expect(res.body.poruka).toContain("osoblja");
@@ -435,10 +441,105 @@ describe("PATCH /api/rezervacije/:id/otkazi/osoblje", () => {
 
   it("vraća 404 za nepostojeću rezervaciju", async () => {
     const res = await request(app)
-      .patch("/api/rezervacije/99999/otkazi/osoblje")
-       .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
-    .set("x-test-korisnik-id", "1");
+      .patch("/api/rezervacija/99999/otkazi/osoblje")
+      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
+      .set("x-test-korisnik-id", "1");
 
     expect(res.status).toBe(404);
   });
+
+});
+
+describe("PATCH /api/rezervacije/:id/komentar", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
+  it("pacijent uspješno dodaje komentar na rezervaciju", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    expect(kreacija.status).toBe(201);
+    const rezervacijaId = kreacija.body.id;
+
+    const res = await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/komentar`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "Imam alergiju na penicilin" });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveProperty("id");
+    expect(res.body).toHaveProperty("tekst", "Imam alergiju na penicilin");
+    expect(res.body).toHaveProperty("autor");
+    expect(res.body).toHaveProperty("datum");
+    expect(res.body.jeDoktor).toBe(false);
+  });
+
+  it("vraća 400 za prazan komentar", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    const rezervacijaId = kreacija.body.id;
+
+    const res = await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/komentar`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.poruka).toContain("prazan");
+  });
+
+  it("vraća 404 za nepostojeću rezervaciju", async () => {
+    const res = await request(app)
+      .patch("/api/rezervacije/99999/komentar")
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "Test" });
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/rezervacije/:id/komentari", () => {
+  beforeEach(async () => {
+    await resetujTermin(TERMIN_ID);
+  });
+
+  it("vraća komentare rezervacije", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    const rezervacijaId = kreacija.body.id;
+
+    // Dodaj komentar
+    await request(app)
+      .patch(`/api/rezervacije/${rezervacijaId}/komentar`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID))
+      .send({ komentar: "Test komentar" });
+
+    const res = await request(app)
+      .get(`/api/rezervacije/${rezervacijaId}/komentari`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toHaveProperty("tekst");
+    expect(res.body[0]).toHaveProperty("autor");
+    expect(res.body[0]).toHaveProperty("datum");
+    expect(res.body[0]).toHaveProperty("jeDoktor");
+  });
+
+  it("vraća prazan niz za rezervaciju bez komentara", async () => {
+    const kreacija = await kreirajRezervacijuHelper();
+    const rezervacijaId = kreacija.body.id;
+
+    const res = await request(app)
+      .get(`/api/rezervacije/${rezervacijaId}/komentari`)
+      .set("Authorization", `Bearer ${PACIJENT_TOKEN}`)
+      .set("x-test-korisnik-id", String(STVARNI_KORISNIK_ID));
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
 });

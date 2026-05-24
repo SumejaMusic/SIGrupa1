@@ -1,8 +1,7 @@
-process.on('uncaughtException', (err: any) => {
-    console.error('GREŠKA:', err?.message || err);
-    console.error('STACK:', err?.stack);
+process.on("uncaughtException", (err: any) => {
+  console.error("GREŠKA:", err?.message || err);
+  console.error("STACK:", err?.stack);
 });
-//glavni entry point cijele aplikacije
 
 
 import 'dotenv/config';
@@ -13,6 +12,8 @@ import dotenv from 'dotenv';
 
 import app, { httpServer } from "./app.js";
 import { prisma } from "./lib/prisma.js";
+import { pokreniReminderJob } from "./jobs/reminderJob.js";
+
 
 async function applyStartupMigrations() {
   await prisma.$executeRaw`
@@ -62,12 +63,13 @@ app.use("/api", routes);
 
 app.get('/', (req, res) => {
   res.send('Bolnički sistem API radi!');
+process.on("unhandledRejection", (reason: any) => {
+  console.error("UNHANDLED REJECTION:", reason);
 });
-*/
-// src/index.ts
-
 
 const PORT = Number(process.env.PORT) || 5000;
+
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`http://localhost:${PORT}`);
+  pokreniReminderJob();
 });

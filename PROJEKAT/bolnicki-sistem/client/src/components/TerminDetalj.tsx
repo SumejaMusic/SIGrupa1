@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-
 import {
   Clock,
   User,
@@ -12,7 +11,8 @@ import {
   History,
   Timer,
   XCircle,
-  CheckCircle
+  CheckCircle,
+  Activity
 } from "lucide-react";
 
 import type { Termin, Nalaz } from "../types";
@@ -74,12 +74,53 @@ export function TerminDetalji({
   const [loadingHistorija, setLoadingHistorija] = useState(false);
   const [selectedHistorija, setSelectedHistorija] = useState<any | null>(null);
 
+  // --- STATE ZA HRONIČNOG PACIJENTA ---
+  const [isChronic, setIsChronic] = useState(termin.pacijent.hronicniBolesnik || false);
+  const [period, setPeriod] = useState<number>(termin.pacijent.reviewPeriodDays || 30);
+  const [savingChronic, setSavingChronic] = useState(false);
+
   const tc = tipConfig[termin.tip];
   const sc = statusConfig[termin.status];
 
+  // Sinhronizacija state-a kada se promijeni pacijent
+  useEffect(() => {
+    setIsChronic(termin.pacijent.hronicniBolesnik || false);
+    setPeriod(termin.pacijent.reviewPeriodDays || 30);
+  }, [termin.pacijent.id, termin.pacijent.hronicniBolesnik, termin.pacijent.reviewPeriodDays]);
+
+  // FUNKCIJA ZA SPAŠAVANJE STATUSA (SA TOKENOM)
+  const handleUpdateChronicStatus = async () => {
+    setSavingChronic(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${apiUrl}/api/pacijenti/${termin.pacijent.id}/hronicni`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          hronicniBolesnik: isChronic,
+          reviewPeriodDays: isChronic ? Number(period) : null
+        })
+      });
+
+      if (response.ok) {
+        alert("Status pacijenta uspješno ažuriran!");
+      } else {
+        const errorData = await response.json();
+        alert("Greška: " + (errorData.poruka || "Neuspješno spašavanje"));
+      }
+    } catch (err) {
+      alert("Nije moguće povezati se sa serverom.");
+    } finally {
+      setSavingChronic(false);
+    }
+  };
+
   useEffect(() => {
     if (tab !== "nalazi") return;
-
     setLoadingNalazi(true);
     setNalazi([]);
 
@@ -90,13 +131,10 @@ export function TerminDetalji({
       .then(data => {
         if (Array.isArray(data)) {
           setNalazi(data.map((n: any) => ({
-            id: n.id,
-            naziv: n.naziv,
+            id: n.id, naziv: n.naziv,
             datum: isoUTCdatum(n.vrijemeNalaza),
             url: `${apiUrl}/api/nalazi/${n.id}/pdf`,
           })));
-        } else {
-          setNalazi([]);
         }
       })
       .catch(() => setNalazi([]))
@@ -105,7 +143,6 @@ export function TerminDetalji({
 
   useEffect(() => {
     if (tab !== "historija") return;
-
     setLoadingHistorija(true);
 
     fetch(`${apiUrl}/api/historija/pacijent/${termin.pacijent.id}`, {
@@ -141,8 +178,15 @@ export function TerminDetalji({
               <span className="text-base font-bold text-gray-900 leading-tight">
                 {termin.pacijent.ime} {termin.pacijent.prezime}
               </span>
+
+              {isChronic && (
+                <span className="flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full">
+                  <Activity size={10} /> HRONIČNI
+                </span>
+              )}
+
               {termin.tip === "hitni" && (
-                <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 border border-red-200 px-2 py-0.5 rounded-full animate-pulse">
+                <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 border border-red-300 px-2 py-0.5 rounded-full animate-pulse">
                   <AlertTriangle size={11} /> HITNO
                 </span>
               )}
@@ -229,22 +273,68 @@ export function TerminDetalji({
 
         {/* Info tab */}
         {tab === "info" && (
-          <div className="grid grid-cols-2 gap-2.5">
-            {[
-              { label: "Ime i prezime", value: `${termin.pacijent.ime} ${termin.pacijent.prezime}` },
-              { label: "Godište", value: termin.pacijent.godisteRodjenja.toString() },
-              { label: "Dob", value: `${getAge(termin.pacijent.godisteRodjenja)} god.` },
-              { label: "Pol", value: termin.pacijent.pol === "M" ? "Muški" : "Ženski" },
-              { label: "Email", value: termin.pacijent.email },
-              { label: "Telefon", value: termin.pacijent.telefon },
-            ].map(item => (
-              <div key={item.label} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                <div className="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide" style={{ fontSize: "10px" }}>
-                  {item.label}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { label: "Ime i prezime", value: `${termin.pacijent.ime} ${termin.pacijent.prezime}` },
+                { label: "Godište", value: termin.pacijent.godisteRodjenja.toString() },
+                { label: "Dob", value: `${getAge(termin.pacijent.godisteRodjenja)} god.` },
+                { label: "Pol", value: termin.pacijent.pol === "M" ? "Muški" : "Ženski" },
+                { label: "Email", value: termin.pacijent.email },
+                { label: "Telefon", value: termin.pacijent.telefon },
+              ].map(item => (
+                <div key={item.label} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                  <div className="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                    {item.label}
+                  </div>
+                  <div className="text-sm font-semibold text-gray-800 leading-snug">{item.value}</div>
                 </div>
-                <div className="text-sm font-semibold text-gray-800 leading-snug">{item.value}</div>
+              ))}
+            </div>
+
+            {/* SEKCIJA ZA HRONIČNOG PACIJENTA */}
+            <div className="mt-6 border-t border-dashed pt-4">
+              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                Postavke hroničnog bolesnika
+              </h4>
+              
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                <label className="flex items-center gap-3 cursor-pointer mb-4">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    checked={isChronic}
+                    onChange={(e) => setIsChronic(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium text-gray-700">Pacijent je hronični bolesnik</span>
+                </label>
+
+                {isChronic && (
+                  <div className="ml-7 mb-4 animate-in fade-in slide-in-from-top-1">
+                    <label className="block text-xs text-gray-500 mb-1">Period rutinskog pregleda (dani)</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      value={period}
+                      onChange={(e) => setPeriod(parseInt(e.target.value))}
+                      className="w-24 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-400"
+                    />
+                  </div>
+                )}
+
+                <button
+                  onClick={handleUpdateChronicStatus}
+                  disabled={savingChronic}
+                  className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${
+                    savingChronic 
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                    : "bg-white text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white shadow-sm"
+                  }`}
+                >
+                  {savingChronic ? "Spašavanje..." : "Ažuriraj hronični status"}
+                </button>
               </div>
-            ))}
+            </div>
           </div>
         )}
 

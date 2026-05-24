@@ -4,7 +4,7 @@ import { redis } from "../lib/redis.js";
 import { posaljiPotvrdurezerv, posaljiOtkazivanjeRezerv } from "../emailService.js";
 import { io } from "../app.js";
 import multer from "multer";
-
+import { obradiOtkazivanje } from "../listaCekanjaService.js";
 export const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -301,6 +301,19 @@ export const kreirajRezervaciju = async (req: Request, res: Response, next: Next
     }
 
     io.emit("termin-azuriran", { doktorId: idDoktor, terminId: idTermina });
+    // Ukloni s liste čekanja ako postoji
+const datumTermina = new Date(termin.datum);
+datumTermina.setUTCHours(0, 0, 0, 0);
+
+await prisma.listaCekanja.updateMany({
+  where: {
+    idPacijent: pacijent.id,
+    idDoktor: idDoktor,
+    zeleniDatum: datumTermina,
+    status: { in: ["CEKA", "OBAVIJESTEN"] }
+  },
+  data: { status: "OTKAZANO" as any }
+});
     await redis.del(`termin:lock:${idTermina}`);
 
     const doktorKorisnik = rezervacija.doktor.korisnik;
@@ -361,11 +374,36 @@ export const getRezervacijeZaPacijenta = async (req: Request, res: Response, nex
           include: { korisnik: { select: { ime: true, prezime: true } } },
           orderBy: { datumKreiranja: "asc" },
         },
+        recenzija: {
+          select: {
+            id: true,
+            ocjena: true,
+            komentar: true,
+            sakriven: true,
+            kreiranoAt: true,
+          },
+        },
       },
       orderBy: { datumKreiranja: "desc" },
     });
 
-    res.json(rezervacije);
+    res.json(rezervacije.map((rezervacija) => {
+      if (!Object.prototype.hasOwnProperty.call(rezervacija, "recenzija")) {
+        return rezervacija;
+      }
+
+      const { recenzija, ...podaciRezervacije } = rezervacija;
+      return {
+        ...podaciRezervacije,
+        review: recenzija ? {
+          id: recenzija.id,
+          rating: recenzija.ocjena,
+          comment: recenzija.komentar,
+          hidden: recenzija.sakriven,
+          createdAt: recenzija.kreiranoAt,
+        } : null,
+      };
+    }));
   } catch (err) {
     next(err);
   }
@@ -444,8 +482,11 @@ export const otkaziRezervacijuPacijent = async (req: Request, res: Response, nex
       await tx.termin.update({ where: { id: rezervacija.idTermina }, data: { status: "SLOBODAN" } });
     });
 
-    io.emit("termin-azuriran", { doktorId: rezervacija.idDoktor, terminId: rezervacija.idTermina });
+    console.log("🔄 Pozivam obradiOtkazivanje za termin:", rezervacija.idTermina);
+await obradiOtkazivanje(rezervacija.idTermina, pacijent.id);
+console.log("✅ obradiOtkazivanje završena");
     res.json({ poruka: "Rezervacija uspješno otkazana." });
+    
   } catch (err) {
     next(err);
   }
@@ -498,8 +539,11 @@ export const otkaziRezervacijuOsoblje = async (req: Request, res: Response, next
     } catch (emailErr) {
       console.error("❌ Email otkazivanja NIJE poslan:", emailErr);
     }
-
+    console.log("🔄 Pozivam obradiOtkazivanje za termin:", rezervacija.idTermina);
+await obradiOtkazivanje(rezervacija.idTermina); // bez ID-a
+console.log("✅ obradiOtkazivanje završena");
     res.json({ poruka: "Rezervacija otkazana od strane osoblja." });
+   
   } catch (err) {
     next(err);
   }
@@ -816,7 +860,8 @@ export const pomjeriRezervaciju = async (req: Request, res: Response, next: Next
     } catch (emailErr) {
       console.error("Email nije poslan:", emailErr);
     }
-
+    //da dode obavijest na waitlisti
+    await obradiOtkazivanje(staraRezervacija.idTermina, staraRezervacija.idPacijent);
     res.status(200).json({ poruka: "Termin uspješno pomjeren." });
   } catch (err) {
     next(err);

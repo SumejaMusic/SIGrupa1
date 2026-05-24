@@ -140,3 +140,43 @@ export const oslobodiTermin = async (
     next(err);
   }
 };
+// GET /api/termini/zauzeti-dani?doktorId=&mjesec=&godina=
+export const getZauzetiDani = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { doktorId, mjesec, godina } = req.query;
+
+    const pocetak = new Date(Number(godina), Number(mjesec) - 1, 1);
+    const kraj = new Date(Number(godina), Number(mjesec), 0, 23, 59, 59);
+
+    const sviTermini = await prisma.termin.groupBy({
+      by: ["datum"],
+      where: {
+        idDoktor: Number(doktorId),
+        datum: { gte: pocetak, lte: kraj }
+      },
+      _count: { id: true },
+    });
+
+    const slobodniDani = await prisma.termin.groupBy({
+      by: ["datum"],
+      where: {
+        idDoktor: Number(doktorId),
+        datum: { gte: pocetak, lte: kraj },
+        status: "SLOBODAN"
+      },
+      _count: { id: true },
+    });
+
+    const slobodniSet = new Set(
+      slobodniDani.map((t) => t.datum.toISOString().split("T")[0])
+    );
+
+    const zauzetiDani = sviTermini
+      .map((t) => t.datum.toISOString().split("T")[0])
+      .filter((datum) => !slobodniSet.has(datum));
+
+    res.json({ zauzetiDani });
+  } catch (err) {
+    next(err);
+  }
+};

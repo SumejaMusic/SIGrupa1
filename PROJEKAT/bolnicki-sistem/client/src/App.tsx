@@ -20,10 +20,12 @@ import PrijavaPage from './Stranice/PrijavaPage';
 
 import ForgotPasswordPage from './Stranice/ForgotPasswordPage';
 import ResetPasswordPage from './Stranice/ResetPasswordPage';
+import AnonimnaOcjenaPage from './Stranice/AnonimnaOcjenaPage';
 
 
 import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
+import Chatbot from './components/Chatbot/Chatbot';
 
 import './App.css';
 import Layout from './components/Layout';
@@ -113,6 +115,8 @@ function AppContent() {
   <Route path="/prijava"         element={<PrijavaPage />} />
   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
   <Route path="/reset-password"  element={<ResetPasswordPage />} />
+  <Route path="/anonimna-ocjena" element={<AnonimnaOcjenaPage />} />
+
 
   {/* Stara ruta */}
   <Route path="/doctor-view" element={<Navigate to="/doktor-rezervacije" replace />} />
@@ -180,10 +184,13 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      <Router>
+        <AppContent />
+      </Router>
+      <Chatbot />
+    </>
   );
-} 
+}
 
 export default App;
