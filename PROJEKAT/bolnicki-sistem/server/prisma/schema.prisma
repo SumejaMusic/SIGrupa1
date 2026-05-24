@@ -33,6 +33,7 @@ model Korisnik {
 }
 
 model PasswordResetToken {
+
   id          Int       @id @default(autoincrement())
   tokenHash   String    @unique
   idKorisnika Int
@@ -40,6 +41,7 @@ model PasswordResetToken {
   usedAt      DateTime?
   createdAt   DateTime  @default(now())
   korisnik    Korisnik  @relation(fields: [idKorisnika], references: [id], onDelete: Cascade)
+
 
   @@index([idKorisnika])
 }
@@ -59,7 +61,10 @@ model Pacijent {
   reminderLogs            ReminderLog[]
   rezervacije             Rezervacije[]
   termini                 Termin[]
+
 }
+
+
 
 model Doktor {
   id               Int                       @id @default(autoincrement())
@@ -208,9 +213,9 @@ model RezervacijaSpecijalista {
 }
 
 model Nalaz {
-  id            Int                 @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   naziv         String
-  vrijemeNalaza DateTime            @default(now())
+  vrijemeNalaza DateTime @default(now())
   opis          String?
   dokumentPDF   Bytes?
   pregledi      HistorijaPregleda[]

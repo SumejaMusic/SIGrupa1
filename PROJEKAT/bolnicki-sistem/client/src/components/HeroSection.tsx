@@ -129,7 +129,7 @@ useEffect(() => {
 >
   <ClipboardList className="w-5 h-5" />
   {userRole === "MEDICINSKO_OSOBLJE" 
-    ? "Medicinsko osoblje panel" 
+    ? "Panel osoblja" 
     : userRole === "DOKTOR" 
       ? "Doktor panel" 
       : "Moje rezervacije"}

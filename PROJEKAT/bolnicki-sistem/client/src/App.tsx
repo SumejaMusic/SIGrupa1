@@ -23,6 +23,7 @@ import ResetPasswordPage from './Stranice/ResetPasswordPage';
 
 import { useAutoLogout } from './hooks/useAutoLogout';
 import { AutoLogoutModal } from './components/AutoLogoutModal';
+import Chatbot from './components/Chatbot/Chatbot';
 
 import './App.css';
 import Layout from './components/Layout';
@@ -45,7 +46,7 @@ function getDefaultRoute(uloga: string | null): string {
   switch (uloga) {
     case "DOKTOR": return "/doktor-rezervacije";
     case "PACIJENT": return "/moje-rezervacije";
-    case "MEDICINSKO_OSOBLJE": return "/";
+    case "MEDICINSKO_OSOBLJE": return "/osoblje-panel";
     case "ADMINISTRATOR": return "/";
     case "VLASNIK": return "/";
     default: return "/prijava";
@@ -174,10 +175,13 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      <Router>
+        <AppContent />
+      </Router>
+      <Chatbot />
+    </>
   );
-} 
+}
 
 export default App;
