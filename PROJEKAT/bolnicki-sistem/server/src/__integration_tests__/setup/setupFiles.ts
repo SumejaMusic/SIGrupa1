@@ -149,7 +149,6 @@ beforeEach(async () => {
       danUSedmici: "PONEDJELJAK",
       vrijemeOd: new Date("2026-04-13T08:00:00"),
       vrijemeDo: new Date("2026-04-13T16:00:00"),
-      datumOd: new Date("2026-04-13"),
       aktivan: true,
     },
   });
