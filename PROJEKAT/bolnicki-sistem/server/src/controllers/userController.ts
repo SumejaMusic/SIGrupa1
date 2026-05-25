@@ -4,7 +4,7 @@ import { prisma } from "../lib/prisma.js";
 // GET /api/users/:id/profile
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const authUser = (req as any).korisnik;
     
     // Check if the user is fetching their own profile or is an admin
@@ -40,7 +40,7 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
 // PATCH /api/users/:id/profile
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const authUser = (req as any).korisnik;
 
     if (authUser.id !== id && authUser.uloga !== "ADMINISTRATOR" && authUser.uloga !== "VLASNIK") {
