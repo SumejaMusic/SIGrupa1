@@ -369,4 +369,23 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | • **Gemini free tier limit (2 req/min, 50 req/dan)** — glavna tehnička prepreka tokom razvoja; uzrokovala višestruke 429 greške • **nodemon resetuje `lastGeminiCall`** — in-memory varijabla se briše pri svakom restartu servera, što uzrokuje premature Gemini pozive; riješeno prebacivanjem u poseban modul • **`fetchWithRetry` multiplicirala greške** — originalna implementacija slala je 3 zahtjeva umjesto 1, što je trošilo kvotu 3× brže; uklonjena • **API ključ** — tim mora osigurati da `GEMINI_API_KEY` ostane isključivo na backendu i nikad ne dospije na frontend ili u Git repozitorij (dodati u `.gitignore`) • **Dnevna kvota** — free tier ima limit od 50 zahtjeva/dan što može biti nedovoljno za demo prezentaciju sprintova; preporučuje se pripremiti mock mode kao backup |
 | **Ko je koristio alat** | Mušić Sumeja |
 
+
+---
+
+## Unos 022 — Ispravka grafičkog prikaza zauzetosti kabineta i hitne dodjele
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 23.05.2026 |
+| **Sprint broj** | Sprint 9 |
+| **Alat koji je korišten** | Codex / ChatGPT |
+| **Svrha korištenja** | Pomoć pri dijagnostici i ispravci funkcionalnosti grafičkog prikaza zauzetosti kabineta u panelu medicinskog osoblja, te dodavanje provjera kroz unit testove |
+| **Kratak opis zadatka ili upita** | AI je korišten za analizu zašto klik na slobodan kabinet ne otvara formu za dodjelu hitnog slučaja, zašto modal prikazuje da nema slobodnih termina za brzu dodjelu, te zašto pretraga pacijenta ne pronalazi pacijente kada se ime/prezime unese bez dijakritičkih znakova |
+| **Šta je AI predložio ili generisao** | Izmjenu frontend logike u `SekcijaZauzetostiKabineta.tsx` tako da se forma otvara za kabinete sa statusom `SLOBODAN`; normalizaciju pretrage pacijenata radi ignorisanja dijakritičkih znakova; proširenje backend servisa `sobaOccupancyService.ts` da uz današnje termine vrati i prve naredne slobodne termine za kabinet; dodatne unit testove za statuse kabineta, naredne slobodne termine, validaciju datuma i fallback slučajeve |
+| **Šta je tim prihvatio** | Otvaranje forme klikom na slobodan kabinet, prikaz prvih slobodnih termina umjesto ograničenja samo na današnji dan, poboljšanu pretragu pacijenata i proširene backend unit testove za servis zauzetosti kabineta |
+| **Šta je tim izmijenio** | Uklonjena je frontend test infrastruktura iz commita radi manjeg i čišćeg pull requesta; iz commita su uklonjeni generisani `coverage/` izvještaji i `node_modules/.vite` cache fajlovi, a dodana su `.gitignore` pravila da se ne prate ubuduće |
+| **Šta je tim odbacio** | Commitovanje generisanih coverage HTML izvještaja, Vite/Vitest cache fajlova i nepotrebnih frontend test dependency izmjena u `package-lock.json` |
+| **Rizici, problemi ili greške** | Slobodan kabinet može otvoriti formu i kada nema trenutno dostupnih termina, pa korisnik mora dobiti jasnu poruku ili naredne slobodne termine; potrebno je paziti da se workflow pokreće na ispravnom branchu i da se testovi pokreću iz `server` foldera ili preko GitHub Actions workflowa |
+| **Ko je koristio alat** | Hamza Husović |
+
 ```.
