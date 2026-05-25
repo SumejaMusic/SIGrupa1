@@ -2,6 +2,10 @@ import { Router } from "express";
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { autorizacija } from "../middleware/autorizacija.js";
 import {
+  dohvatiZahtjeveHandler,
+  obradiZahtjevHandler,
+} from "../controllers/deactivationController.js";
+import {
   getSviKorisnici,
   getKorisnikById,
   updateKorisnik,
@@ -78,5 +82,9 @@ router.get("/rasporedi-osoblja", getRasporediOsoblja);
 router.post("/rasporedi-osoblja", createRasporedOsoblja);
 router.put("/rasporedi-osoblja/:id", updateRasporedOsoblja);
 router.delete("/rasporedi-osoblja/:id", deleteRasporedOsoblja);
+
+// ── Zahtjevi za deaktivaciju ──────────────────────────────────
+router.get("/deactivation-requests", dohvatiZahtjeveHandler);
+router.patch("/deactivation-requests/:id", obradiZahtjevHandler);
 
 export default router;

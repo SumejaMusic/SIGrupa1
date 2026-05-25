@@ -30,6 +30,7 @@ model Korisnik {
   pacijentProfile        Pacijent?
   passwordResetTokens    PasswordResetToken[]
   komentari              Komentar[]
+  zahtjeviDeaktivacije   ZahtjevDeaktivacije[]
 }
 
 model PasswordResetToken {
@@ -347,6 +348,21 @@ model ReminderLog {
   @@index([sentAt])
 }
 
+
+model ZahtjevDeaktivacije {
+  id                Int      @id @default(autoincrement())
+  idKorisnika       Int
+  status            String   @default("NA_CEKANJU")
+  razlogKorisnika   String?
+  adminObrazlozenje String?
+  idAdmina          Int?
+  kreiranAt         DateTime @default(now())
+  obradenAt         DateTime?
+  korisnik          Korisnik @relation(fields: [idKorisnika], references: [id])
+
+  @@index([idKorisnika])
+  @@index([status])
+}
 
 enum Uloga {
   ADMINISTRATOR

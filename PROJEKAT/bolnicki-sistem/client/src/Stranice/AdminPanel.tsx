@@ -1981,9 +1981,209 @@ function TabAnalitika() {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  TAB: DEAKTIVACIJE NALOGA
+// ══════════════════════════════════════════════════════════════
+function TabDeaktivacije() {
+  const [zahtjevi, setZahtjevi] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [obradaZahtjeva, setObradaZahtjeva] = useState<number | null>(null);
+  const [showOdbijModal, setShowOdbijModal] = useState<number | null>(null);
+  const [odbijObrazlozenje, setOdbijObrazlozenje] = useState("");
+  const [statusFilter, setStatusFilter] = useState("NA_CEKANJU");
+  const [poruka, setPoruka] = useState<{ tekst: string; tip: "success" | "error" } | null>(null);
+
+  const fetchZahtjevi = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qs = statusFilter === "SVI" ? "" : `?status=${statusFilter}`;
+      const res = await fetch(`${API}/admin/deactivation-requests${qs}`, {
+        headers: authHeader(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setZahtjevi(data.zahtjevi || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchZahtjevi();
+  }, [fetchZahtjevi]);
+
+  const handleOdluka = async (id: number, odluka: "ODOBRENO" | "ODBIJENO", obrazlozenje?: string) => {
+    if (odluka === "ODOBRENO" && !window.confirm("Jeste li sigurni? Ova akcija anonimizira podatke i trajno deaktivira nalog!")) {
+      return;
+    }
+
+    setObradaZahtjeva(id);
+    setPoruka(null);
+    try {
+      const res = await fetch(`${API}/admin/deactivation-requests/${id}`, {
+        method: "PATCH",
+        headers: authHeader(),
+        body: JSON.stringify({ odluka, obrazlozenje }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPoruka({ tekst: data.poruka, tip: "success" });
+        if (odluka === "ODBIJENO") {
+          setShowOdbijModal(null);
+          setOdbijObrazlozenje("");
+        }
+        fetchZahtjevi();
+      } else {
+        setPoruka({ tekst: data.poruka || "Greška", tip: "error" });
+      }
+    } catch (err) {
+      setPoruka({ tekst: "Greška servera", tip: "error" });
+    } finally {
+      setObradaZahtjeva(null);
+    }
+  };
+
+  return (
+    <div className="bg-[#1a1a2e] rounded-xl border border-white/5 overflow-hidden">
+      <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Zahtjevi za deaktivaciju</h2>
+          <p className="text-sm text-white/50">Pregled i odobravanje zahtjeva za brisanje i anonimizaciju naloga</p>
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-[#0f0f1a] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-purple-500"
+        >
+          <option value="NA_CEKANJU">Na čekanju</option>
+          <option value="ODOBRENO">Odobreno</option>
+          <option value="ODBIJENO">Odbijeno</option>
+          <option value="SVI">Svi zahtjevi</option>
+        </select>
+      </div>
+
+      <div className="p-6">
+        {poruka && (
+          <div className={`mb-6 p-4 rounded-lg text-sm border ${
+            poruka.tip === "success" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+          }`}>
+            {poruka.tekst}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-10 text-white/50 text-sm">Učitavanje zahtjeva...</div>
+        ) : zahtjevi.length === 0 ? (
+          <div className="text-center py-10 text-white/50 text-sm">Nema pronađenih zahtjeva za odabrani filter.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-white/40">
+                  <th className="px-4 py-3 font-medium">Pacijent</th>
+                  <th className="px-4 py-3 font-medium">Datum</th>
+                  <th className="px-4 py-3 font-medium">Razlog (pacijent)</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium text-right">Akcije</th>
+                </tr>
+              </thead>
+              <tbody>
+                {zahtjevi.map((z) => (
+                  <tr key={z.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-white">{z.korisnik.ime} {z.korisnik.prezime}</div>
+                      <div className="text-xs text-white/40">{z.korisnik.email}</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-white/60">
+                      {new Date(z.kreiranAt).toLocaleDateString("bs-BA")}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-white/60 max-w-[200px] truncate" title={z.razlogKorisnika || "-"}>
+                      {z.razlogKorisnika || <span className="text-white/20 italic">Nije navedeno</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider ${
+                        z.status === "NA_CEKANJU" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                        z.status === "ODOBRENO" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                        "bg-red-500/10 text-red-400 border border-red-500/20"
+                      }`}>
+                        {z.status.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {z.status === "NA_CEKANJU" ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleOdluka(z.id, "ODOBRENO")}
+                            disabled={obradaZahtjeva === z.id}
+                            className="px-3 py-1.5 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded text-xs transition-colors border border-green-500/20 disabled:opacity-50"
+                          >
+                            Odobri
+                          </button>
+                          <button
+                            onClick={() => setShowOdbijModal(z.id)}
+                            disabled={obradaZahtjeva === z.id}
+                            className="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded text-xs transition-colors border border-red-500/20 disabled:opacity-50"
+                          >
+                            Odbij
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-white/30 truncate block max-w-[150px] ml-auto" title={z.adminObrazlozenje || ""}>
+                          {z.adminObrazlozenje || "Obrađeno"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showOdbijModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#1a1a2e] rounded-xl border border-white/10 shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Odbijanje zahtjeva</h3>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-white/60 mb-2 uppercase tracking-wider">
+                Obrazloženje za pacijenta
+              </label>
+              <textarea
+                value={odbijObrazlozenje}
+                onChange={(e) => setOdbijObrazlozenje(e.target.value)}
+                className="w-full bg-[#0f0f1a] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-red-500 resize-none h-24"
+                placeholder="Unesite razlog odbijanja..."
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowOdbijModal(null)}
+                className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+              >
+                Odustani
+              </button>
+              <button
+                onClick={() => handleOdluka(showOdbijModal, "ODBIJENO", odbijObrazlozenje)}
+                disabled={obradaZahtjeva === showOdbijModal || !odbijObrazlozenje.trim()}
+                className="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {obradaZahtjeva === showOdbijModal ? "Obrada..." : "Potvrdi odbijanje"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 //  GLAVNI ADMIN PANEL
 // ══════════════════════════════════════════════════════════════
-type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika";
+type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "deaktivacije";
 
 export default function AdminPanel() {
   const [aktivniTab, setAktivniTab] = useState<Tab>("korisnici");
@@ -1995,6 +2195,7 @@ export default function AdminPanel() {
     { key: "termini", label: "Termini", opis: "Pregled svih zakazanih termina" },
     { key: "odjeli", label: "Odjeli", opis: "Pregled, dodavanje i brisanje odjela" },
     { key: "analitika", label: "Analitika", opis: "Statistike bukiranja po odjelu i doktoru" },
+    { key: "deaktivacije", label: "Deaktivacije", opis: "Zahtjevi za brisanje i anonimizaciju naloga" },
   ];
 
   return (
@@ -2042,6 +2243,7 @@ export default function AdminPanel() {
         {aktivniTab === "termini" && <TabTermini />}
         {aktivniTab === "odjeli" && <TabOdjeli />}
         {aktivniTab === "analitika" && <TabAnalitika />}
+        {aktivniTab === "deaktivacije" && <TabDeaktivacije />}
       </div>
     </div>
   );

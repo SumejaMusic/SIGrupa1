@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { apiUrl } from '../lib/api';
 import { formatDatumPrikaz, isoUTCdatum } from '../utils/rezervacijeUtils';
-import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle, Shield, AlertTriangle, Clock } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 
 interface UserProfile {
@@ -12,6 +12,16 @@ interface UserProfile {
   email: string;
   brojTelefona: string | null;
   datumRodjenja: string;
+  uloga?: string;
+}
+
+interface DeaktivacijaZahtjev {
+  id: number;
+  status: string;
+  razlogKorisnika: string | null;
+  adminObrazlozenje: string | null;
+  kreiranAt: string;
+  obradenAt: string | null;
 }
 
 export default function ProfilePage() {
@@ -29,8 +39,24 @@ export default function ProfilePage() {
 
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Deaktivacija state
+  const [deaktivacijaZahtjev, setDeaktivacijaZahtjev] = useState<DeaktivacijaZahtjev | null>(null);
+  const [showDeaktivacijaModal, setShowDeaktivacijaModal] = useState(false);
+  const [deaktivacijaRazlog, setDeaktivacijaRazlog] = useState('');
+  const [deaktivacijaLoading, setDeaktivacijaLoading] = useState(false);
+  const [deaktivacijaMessage, setDeaktivacijaMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [uloga, setUloga] = useState<string | null>(null);
+
   useEffect(() => {
     fetchProfile();
+    // Dohvati ulogu iz tokena
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUloga(payload.uloga ?? null);
+      }
+    } catch { /* ignore */ }
   }, []);
 
   const fetchProfile = async () => {
@@ -56,12 +82,27 @@ export default function ProfilePage() {
           brojTelefona: data.brojTelefona || '',
           datumRodjenja: data.datumRodjenja ? isoUTCdatum(data.datumRodjenja) : ''
         });
+
+        // Dohvati status deaktivacije
+        fetchDeaktivacijaStatus(korisnik.id, token);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchDeaktivacijaStatus = async (userId: number, token: string | null) => {
+    try {
+      const res = await fetch(apiUrl(`/api/users/${userId}/deactivation-request`), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDeaktivacijaZahtjev(data.zahtjev || null);
+      }
+    } catch { /* ignore */ }
   };
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +129,7 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data.korisnik);
-        setMessage({ text: 'Profil uspješno ažuriran', type: 'success' });
+        setMessage({ text: 'Profil uspjeÅ¡no aÅ¾uriran', type: 'success' });
         setIsEditing(false);
 
         // Update local storage name
@@ -102,13 +143,54 @@ export default function ProfilePage() {
         }
       } else {
         const err = await res.json();
-        setMessage({ text: err.poruka || 'Došlo je do greške', type: 'error' });
+        setMessage({ text: err.poruka || 'DoÅ¡lo je do greÅ¡ke', type: 'error' });
       }
     } catch (err) {
-      setMessage({ text: 'Greška servera. Pokušajte ponovo.', type: 'error' });
+      setMessage({ text: 'GreÅ¡ka servera. PokuÅ¡ajte ponovo.', type: 'error' });
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDeaktivacijaSubmit = async () => {
+    setDeaktivacijaLoading(true);
+    setDeaktivacijaMessage(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiUrl(`/api/users/${profile?.id}/deactivation-request`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ razlog: deaktivacijaRazlog || undefined })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setDeaktivacijaMessage({ text: data.poruka, type: 'success' });
+        setShowDeaktivacijaModal(false);
+        setDeaktivacijaRazlog('');
+        // Refresh status
+        if (profile) {
+          fetchDeaktivacijaStatus(profile.id, token);
+        }
+      } else {
+        setDeaktivacijaMessage({ text: data.poruka || 'GreÅ¡ka pri podnoÅ¡enju zahtjeva.', type: 'error' });
+      }
+    } catch {
+      setDeaktivacijaMessage({ text: 'GreÅ¡ka servera. PokuÅ¡ajte ponovo.', type: 'error' });
+    } finally {
+      setDeaktivacijaLoading(false);
+    }
+  };
+
+  const formatDatum = (d: string) => {
+    const datum = new Date(d);
+    const dan = String(datum.getDate()).padStart(2, '0');
+    const mjesec = String(datum.getMonth() + 1).padStart(2, '0');
+    const godina = datum.getFullYear();
+    return `${dan}/${mjesec}/${godina}`;
   };
 
   if (loading) {
@@ -124,7 +206,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <Layout step={1} totalSteps={1} breadcrumbs={['Profil']}>
-        <div className="p-4 bg-red-50 text-red-600 rounded-lg">Nije moguće učitati profil.</div>
+        <div className="p-4 bg-red-50 text-red-600 rounded-lg">Nije moguÄ‡e uÄitati profil.</div>
       </Layout>
     );
   }
@@ -142,7 +224,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">{profile.ime} {profile.prezime}</h1>
-                  <p className="text-blue-100 mt-1">Vaši lični podaci</p>
+                  <p className="text-blue-100 mt-1">VaÅ¡i liÄni podaci</p>
                 </div>
               </div>
               {!isEditing ? (
@@ -247,11 +329,11 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Datum rođenja */}
+                {/* Datum roÄ‘enja */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Calendar size={16} className="text-gray-400" />
-                    Datum rođenja
+                    Datum roÄ‘enja
                   </label>
                   {isEditing ? (
                     <DatePicker
@@ -296,14 +378,184 @@ export default function ProfilePage() {
                     ) : (
                       <Save size={18} />
                     )}
-                    <span>Sačuvaj izmjene</span>
+                    <span>SaÄuvaj izmjene</span>
                   </button>
                 </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+            PRIVATNOST I DEAKTIVACIJA â€” samo za PACIJENT ulogu
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {uloga === "PACIJENT" && (
+          <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-8 py-5 border-b border-gray-100 flex items-center gap-3">
+              <Shield size={20} className="text-gray-500" />
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Privatnost i deaktivacija</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Upravljanje VaÅ¡im nalogom i liÄnim podacima</p>
+              </div>
+            </div>
+
+            <div className="p-8">
+              {deaktivacijaMessage && (
+                <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${deaktivacijaMessage.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+                  {deaktivacijaMessage.type === 'success' && <CheckCircle size={20} className="text-green-600" />}
+                  <span>{deaktivacijaMessage.text}</span>
+                </div>
+              )}
+
+              {/* Zakonska informacija */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <Clock size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-blue-800 font-medium">Zakonski rok obrade</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      U skladu sa zakonom o zaÅ¡titi liÄnih podataka, zahtjev za deaktivaciju naloga Ä‡e biti obraÄ‘en u roku od <strong>30 dana</strong> od podnoÅ¡enja.
+                      Medicinski podaci se Äuvaju u anonimizovanoj formi zbog zakonske obaveze.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Prikaz statusa postojeÄ‡eg zahtjeva */}
+              {deaktivacijaZahtjev && (
+                <div className={`rounded-lg p-4 mb-6 border ${
+                  deaktivacijaZahtjev.status === 'NA_CEKANJU'
+                    ? 'bg-amber-50 border-amber-200'
+                    : deaktivacijaZahtjev.status === 'ODOBRENO'
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    {deaktivacijaZahtjev.status === 'NA_CEKANJU' && <Clock size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />}
+                    {deaktivacijaZahtjev.status === 'ODOBRENO' && <CheckCircle size={20} className="text-green-600 mt-0.5 flex-shrink-0" />}
+                    {deaktivacijaZahtjev.status === 'ODBIJENO' && <X size={20} className="text-red-600 mt-0.5 flex-shrink-0" />}
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${
+                        deaktivacijaZahtjev.status === 'NA_CEKANJU' ? 'text-amber-800'
+                          : deaktivacijaZahtjev.status === 'ODOBRENO' ? 'text-green-800'
+                          : 'text-red-800'
+                      }`}>
+                        {deaktivacijaZahtjev.status === 'NA_CEKANJU' && 'Zahtjev je na Äekanju'}
+                        {deaktivacijaZahtjev.status === 'ODOBRENO' && 'Zahtjev je odobren'}
+                        {deaktivacijaZahtjev.status === 'ODBIJENO' && 'Zahtjev je odbijen'}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Podnesen: {formatDatum(deaktivacijaZahtjev.kreiranAt)}
+                        {deaktivacijaZahtjev.obradenAt && ` Â· ObraÄ‘en: ${formatDatum(deaktivacijaZahtjev.obradenAt)}`}
+                      </p>
+                      {deaktivacijaZahtjev.adminObrazlozenje && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          <strong>ObrazloÅ¾enje:</strong> {deaktivacijaZahtjev.adminObrazlozenje}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Dugme za zahtjev */}
+              {(!deaktivacijaZahtjev || deaktivacijaZahtjev.status === 'ODBIJENO') && (
+                <div className="border border-red-200 rounded-lg p-5 bg-red-50/50">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">ZatraÅ¾i deaktivaciju naloga</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Ovom akcijom pokreÄ‡ete postupak trajne deaktivacije VaÅ¡eg naloga. VaÅ¡i liÄni podaci Ä‡e biti anonimizirani, a aktivni termini otkazani.
+                      </p>
+                      <button
+                        onClick={() => setShowDeaktivacijaModal(true)}
+                        className="mt-4 px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        ZatraÅ¾i deaktivaciju naloga
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {deaktivacijaZahtjev?.status === 'NA_CEKANJU' && (
+                <p className="text-sm text-gray-500 italic">
+                  VaÅ¡ zahtjev se trenutno obraÄ‘uje. BiÄ‡ete obavijeÅ¡teni emailom o odluci.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal za potvrdu deaktivacije */}
+        {showDeaktivacijaModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowDeaktivacijaModal(false)}>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertTriangle size={20} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Potvrda deaktivacije</h3>
+                    <p className="text-sm text-gray-500">Ova akcija je nepovratna</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
+                  <p className="text-sm text-amber-800">
+                    <strong>Upozorenje:</strong> Po odobrenju zahtjeva, sljedeÄ‡e akcije Ä‡e se izvrÅ¡iti:
+                  </p>
+                  <ul className="text-sm text-amber-700 mt-2 space-y-1 list-disc pl-5">
+                    <li>VaÅ¡i liÄni podaci (ime, email, telefon, JMBG) biÄ‡e anonimizirani</li>
+                    <li>Aktivni zakazani termini biÄ‡e otkazani</li>
+                    <li>NeÄ‡ete moÄ‡i pristupiti nalogu</li>
+                    <li>Medicinski podaci ostaju saÄuvani u anonimizovanoj formi</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Razlog za deaktivaciju (opcionalno)
+                  </label>
+                  <textarea
+                    value={deaktivacijaRazlog}
+                    onChange={(e) => setDeaktivacijaRazlog(e.target.value)}
+                    rows={3}
+                    placeholder="Navedite razlog zaÅ¡to Å¾elite deaktivirati nalog..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+                <button
+                  onClick={() => { setShowDeaktivacijaModal(false); setDeaktivacijaRazlog(''); }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors font-medium"
+                >
+                  Odustani
+                </button>
+                <button
+                  onClick={handleDeaktivacijaSubmit}
+                  disabled={deaktivacijaLoading}
+                  className="px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-70 flex items-center gap-2"
+                >
+                  {deaktivacijaLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                  ) : (
+                    <AlertTriangle size={16} />
+                  )}
+                  Potvrdi zahtjev
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
 }
+
