@@ -1,3 +1,14 @@
+process.on("uncaughtException", (err) => {
+  console.error("💥 CRASH:", err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason: unknown) => {
+  console.error("💥 UNHANDLED REJECTION:", reason);
+  process.exit(1);
+});
+
 process.on("uncaughtException", (err: any) => {
   console.error("GREŠKA:", err?.message || err);
   console.error("STACK:", err?.stack);
