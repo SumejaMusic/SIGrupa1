@@ -154,7 +154,7 @@ describe("anonimne recenzije - integracioni tok", () => {
       canReview: true,
       review: null,
     });
-    expect(JSON.stringify(res.body)).not.toMatch(/musicsumeja98|Amra|Testić|idPacijent|idKorisnik/i);
+    expect(JSON.stringify(res.body)).not.toMatch(/swiftmed110|Amra|Testić|idPacijent|idKorisnik/i);
   });
 
   it("ne prihvata token sa pogrešnom svrhom", async () => {
@@ -222,7 +222,7 @@ describe("anonimne recenzije - integracioni tok", () => {
 
     expect(Object.keys(review)).not.toContain("idPacijent");
     expect(Object.keys(review)).not.toContain("idKorisnik");
-    expect(JSON.stringify(review)).not.toMatch(/musicsumeja98|Amra|Testić/i);
+    expect(JSON.stringify(review)).not.toMatch(/swiftmed110|Amra|Testić/i);
   });
 
   it("nakon javne ocjene doktor vidi ažuriran prosjek i anonimni komentar", async () => {

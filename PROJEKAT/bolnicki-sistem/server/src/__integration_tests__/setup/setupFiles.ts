@@ -166,7 +166,7 @@ beforeEach(async () => {
   `;
 
   const korisnikPacijent = await prisma.korisnik.upsert({
-    where: { email: "musicsumeja98@gmail.com" },
+    where: { email: "swiftmed110@gmail.com" },
     update: { 
       emailVerifikovan: true,
       ime: "Amra",
@@ -180,7 +180,7 @@ beforeEach(async () => {
       ime: "Amra",
       prezime: "Testić",
       datumRodjenja: new Date("1995-05-15"),
-      email: "musicsumeja98@gmail.com",
+      email: "swiftmed110@gmail.com",
       pristupnaSifra: "hash_placeholder",
       emailVerifikovan: true,
       uloga: "PACIJENT",
