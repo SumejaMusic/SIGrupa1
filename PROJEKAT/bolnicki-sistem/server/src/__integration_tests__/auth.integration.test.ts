@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 import app from "../app.js";
 import { PrismaClient } from "@prisma/client";
@@ -20,7 +20,7 @@ import { posaljiResetPasswordEmail, posaljiVerifikacioniKod } from "../emailServ
 const JWT_SECRET       = process.env.JWT_SECRET ?? "test-secret";
 const ISPRAVNA_LOZINKA = "TestAuth123!";
 
-// ─── State — popunjava beforeAll ─────────────────────────────────────────────
+// ─── State — popunjava beforeEach nakon test seeda ───────────────────────────
 let idPacijent:    number | undefined;
 let idDoktor:      number | undefined;
 let idAdmin:       number | undefined;
@@ -33,7 +33,7 @@ let originalHashDoktor:   string | undefined;
 let originalHashAdmin:    string | undefined;
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
-beforeAll(async () => {
+beforeEach(async () => {
   const noviHash = await bcrypt.hash(ISPRAVNA_LOZINKA, 4);
 
   const pacijent = await prisma.korisnik.findFirst({ where: { uloga: "PACIJENT" } });

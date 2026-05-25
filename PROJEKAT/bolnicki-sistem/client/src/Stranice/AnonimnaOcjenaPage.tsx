@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AlertCircle, CalendarDays, CheckCircle2, Clock, ShieldCheck, Star, Stethoscope } from "lucide-react";
+import { apiUrl } from "../lib/api";
 
 type ReviewInfo = {
   id: number;
@@ -17,8 +18,6 @@ type ReviewInfo = {
     createdAt: string;
   } | null;
 };
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const formatVrijeme = (vrijeme: number) => {
   const sati = Math.floor(vrijeme / 60);
@@ -53,7 +52,7 @@ function AnonimnaOcjenaPage() {
       return;
     }
 
-    fetch(`${apiUrl}/api/appointments/review/${encodeURIComponent(token)}`)
+    fetch(apiUrl(`/api/appointments/review/${encodeURIComponent(token)}`))
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.poruka || "Link za anonimnu ocjenu nije validan.");
@@ -73,7 +72,7 @@ function AnonimnaOcjenaPage() {
     setMessage(null);
 
     try {
-      const res = await fetch(`${apiUrl}/api/appointments/review/${encodeURIComponent(token)}`, {
+      const res = await fetch(apiUrl(`/api/appointments/review/${encodeURIComponent(token)}`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, comment: comment.trim() }),

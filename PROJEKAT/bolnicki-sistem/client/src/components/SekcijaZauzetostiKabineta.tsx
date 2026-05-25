@@ -12,6 +12,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { apiUrl } from "../lib/api";
 
 interface Pacijent {
   id: number;
@@ -170,7 +171,7 @@ export default function SekcijaZauzetostiKabineta({
     else setLoading(true);
 
     try {
-      const res = await fetch("/api/rooms/occupancy?date=today", {
+      const res = await fetch(apiUrl("/api/rooms/occupancy?date=today"), {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
 
@@ -463,7 +464,7 @@ function ModalDodjeleHitnogSlucaja({
     setError(null);
 
     try {
-      const res = await fetch("/api/osoblje/termini", {
+      const res = await fetch(apiUrl("/api/osoblje/termini"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -516,7 +517,7 @@ function ModalDodjeleHitnogSlucaja({
         <div className="p-5 grid gap-5 md:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Pacijent</label>
+              <span className="block text-xs font-bold uppercase text-gray-500 mb-2">Pacijent</span>
               {selectedPatient ? (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -541,6 +542,9 @@ function ModalDodjeleHitnogSlucaja({
                   <div className="relative">
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
+                      id="emergency-patient-search"
+                      name="emergencyPatientSearch"
+                      aria-label="Pretraga pacijenta za hitni slučaj"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                       placeholder="Pretraži pacijenta..."
@@ -573,8 +577,11 @@ function ModalDodjeleHitnogSlucaja({
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Napomena</label>
+              <span className="block text-xs font-bold uppercase text-gray-500 mb-2">Napomena</span>
               <textarea
+                id="emergency-comment"
+                name="emergencyComment"
+                aria-label="Napomena za hitni slučaj"
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
                 rows={4}

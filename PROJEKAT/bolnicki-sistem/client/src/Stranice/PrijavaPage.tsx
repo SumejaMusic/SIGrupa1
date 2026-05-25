@@ -147,8 +147,9 @@ if (socket && socket.connected) {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-xs text-gray-500 mb-1">Email adresa</label>
+            <label htmlFor="login-email" className="block text-xs text-gray-500 mb-1">Email adresa</label>
             <input
+              id="login-email"
               name="email"
               type="email"
               value={podaci.email}
@@ -160,8 +161,9 @@ if (socket && socket.connected) {
           </div>
 
           <div className="mb-6">
-            <label className="block text-xs text-gray-500 mb-1">Lozinka</label>
+            <label htmlFor="login-password" className="block text-xs text-gray-500 mb-1">Lozinka</label>
             <input
+              id="login-password"
               name="pristupnaSifra"
               type="password"
               value={podaci.pristupnaSifra}
@@ -216,8 +218,10 @@ if (socket && socket.connected) {
 
             <form onSubmit={handleForgotPassword}>
               <div className="mb-4">
-                <label className="block text-xs text-gray-500 mb-1">Email adresa</label>
+                <label htmlFor="reset-email" className="block text-xs text-gray-500 mb-1">Email adresa</label>
                 <input
+                  id="reset-email"
+                  name="resetEmail"
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
