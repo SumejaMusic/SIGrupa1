@@ -21,7 +21,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 //import { PrismaClient } from '@prisma/client';
 
-import app, { httpServer } from "./app.js";
+import { httpServer } from "./app.js";
 import { prisma } from "./lib/prisma.js";
 import { pokreniReminderJob } from "./jobs/reminderJob.js";
 
@@ -56,7 +56,17 @@ async function applyStartupMigrations() {
     END $$
   `;
 }
-applyStartupMigrations().catch(e => console.error("Startup migration error:", e));
+const PORT = Number(process.env.PORT) || 5000;
+
+applyStartupMigrations()
+  .catch(e => console.error("Startup migration error:", e))
+  .finally(() => {
+    httpServer.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server pokrenut na http://localhost:${PORT}`);
+      pokreniReminderJob();
+    });
+  });
+
 /*
 dotenv.config();
 
