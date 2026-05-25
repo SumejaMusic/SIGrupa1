@@ -388,4 +388,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | Slobodan kabinet može otvoriti formu i kada nema trenutno dostupnih termina, pa korisnik mora dobiti jasnu poruku ili naredne slobodne termine; potrebno je paziti da se workflow pokreće na ispravnom branchu i da se testovi pokreću iz `server` foldera ili preko GitHub Actions workflowa |
 | **Ko je koristio alat** | Hamza Husović |
 
-```.
+---
+
+## Unos 023 — Implementacija statusa hroničnog bolesnika i automatskih SMS podsjetnika
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 25.05.2026. |
+| **Sprint broj** | Sprint 9 |
+| **Alat koji je korišten** | Gemini |
+| **Svrha korištenja** | Implementacija US-31-EXT: označavanje pacijenata hroničnim bolesnicima i automatizacija SMS podsjetnika putem Infobip servisa. |
+| **Kratak opis zadatka ili upita** | Kreiranje UI elemenata u detaljima termina, proširenje TypeScript tipova, izrada backend PATCH rute, te konfiguracija cron job-a za slanje poruka. |
+| **Šta je AI predložio ili generisao** | UI komponentu za TerminDetalj.tsx (toggle i input), logiku za računanje datuma podsjetnika u reminderJob.ts i integraciju za Infobip API. |
+| **Šta je tim prihvatio** | Kompletan frontend toggle sistem, backend rutu `/pacijenti/:id/hronicni`, automatsko upisivanje u ReminderLog i korištenje .env varijabli. |
+| **Šta je tim izmijenio** | Usklađivanje naziva polja sa Prisma šemom (hronicniBolesnik), dodavanje Bearer tokena u fetch pozive i normalizaciju UTC vremena. |
+| **Šta je tim odbacio** | Prijedloge za hardkodirane URL adrese backenda u korist varijabli okruženja zbog ispravnog rada aplikacije na Renderu. |
+| **Rizici, problemi ili greške** | Razlika u UTC vremenu servera i lokalnom vremenu korisnika (zahtijevalo setHours na nulu). Infobip Trial nalog dozvoljava slanje samo na verifikovane brojeve. |
+| **Ko je koristio alat** | Kenan Hatibović|
