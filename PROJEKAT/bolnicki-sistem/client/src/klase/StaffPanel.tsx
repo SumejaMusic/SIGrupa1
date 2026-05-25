@@ -10,6 +10,7 @@ import CancelModal from '../components/CancelModal';
 import UploadPdfModal from '../components/UploadPdfModal';
 import NewAppointmentModal from '../components/NewAppointmentModal';
 import SekcijaZauzetostiKabineta from '../components/SekcijaZauzetostiKabineta';
+import { apiUrl } from '../lib/api';
 
 type ViewMode = 'week' | 'day' | 'list';
 
@@ -145,7 +146,7 @@ export default function StaffPanel() {
 
   const fetchTermini = async () => {
   try {
-    const res = await fetch('/api/osoblje/termini/svi', {
+    const res = await fetch(apiUrl('/api/osoblje/termini/svi'), {
       headers: { Authorization: `Bearer ${getToken()}` }
     });
 
@@ -168,11 +169,11 @@ useEffect(() => {
   useEffect(() => {
     const headers = { Authorization: `Bearer ${getToken()}` };
     Promise.all([
-      fetch('/api/osoblje/pacijenti', { headers }).then(r => r.json()),
-      fetch('/api/osoblje/doktori',   { headers }).then(r => r.json()),
-      fetch('/api/osoblje/odjeli',    { headers }).then(r => r.json()),
-      fetch('/api/osoblje/sobe',      { headers }).then(r => r.json()),
-      fetch('/api/osoblje/tipovi-pregleda', { headers }).then(r => r.json()), // ← DODAJ
+      fetch(apiUrl('/api/osoblje/pacijenti'), { headers }).then(r => r.json()),
+      fetch(apiUrl('/api/osoblje/doktori'),   { headers }).then(r => r.json()),
+      fetch(apiUrl('/api/osoblje/odjeli'),    { headers }).then(r => r.json()),
+      fetch(apiUrl('/api/osoblje/sobe'),      { headers }).then(r => r.json()),
+      fetch(apiUrl('/api/osoblje/tipovi-pregleda'), { headers }).then(r => r.json()), // ← DODAJ
     ]).then(([pts, docs, depts, rms, tipovi]) => {
       setAllPatients(pts);
       setDoctors(docs);
@@ -225,7 +226,7 @@ useEffect(() => {
   const confirmCancel = async () => {
     if (!cancelTarget) return;
     try {
-      const res = await fetch(`/api/osoblje/termini/${cancelTarget.id}/otkazi`, {
+      const res = await fetch(apiUrl(`/api/osoblje/termini/${cancelTarget.id}/otkazi`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -262,7 +263,7 @@ useEffect(() => {
     
     try {
       // Šaljemo na ID rezervacije (npr. /api/osoblje/nalazi/74)
-      const res = await fetch(`/api/osoblje/nalazi/${uploadTarget.id}`, {
+      const res = await fetch(apiUrl(`/api/osoblje/nalazi/${uploadTarget.id}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +305,7 @@ useEffect(() => {
 
   const handleMarkUrgent = async (apt: Appointment) => {
     try {
-      const res = await fetch(`/api/osoblje/termini/${apt.id}/hitnost`, {
+      const res = await fetch(apiUrl(`/api/osoblje/termini/${apt.id}/hitnost`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -353,6 +354,8 @@ useEffect(() => {
           <div className="relative flex-1 max-w-sm">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
+              id="staff-search"
+              name="staffSearch"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Pretraži pacijente, doktore..."
@@ -492,7 +495,7 @@ useEffect(() => {
         onConfirm={async (data) => {
   try {
     // Korak 1: Kreiraj rezervaciju
-    const res = await fetch('/api/osoblje/termini', {
+    const res = await fetch(apiUrl('/api/osoblje/termini'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -518,7 +521,7 @@ useEffect(() => {
     // Korak 2: Ako postoji nalaz, uploaduj odmah nakon kreiranja
     if (data.nalaz) {
       try {
-        const nalazRes = await fetch(`/api/osoblje/nalazi/${novaRezervacija.id}`, {
+        const nalazRes = await fetch(apiUrl(`/api/osoblje/nalazi/${novaRezervacija.id}`), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import { AlertTriangle, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Appointment {
   id: number;
@@ -85,7 +86,7 @@ export default function CancelModal({ appointment: apt, onConfirm, onCancelConfi
   useEffect(() => {
     if (mode !== "pomjeri") return;
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/osoblje/termini/slobodni-datumi/${apt.doktor.id}`, {
+    fetch(apiUrl(`/api/osoblje/termini/slobodni-datumi/${apt.doktor.id}`), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -101,7 +102,7 @@ export default function CancelModal({ appointment: apt, onConfirm, onCancelConfi
     if (!datum) return;
 
     const res = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/osoblje/termini/slobodni/${apt.doktor.id}?datum=${datum}`,
+      apiUrl(`/api/osoblje/termini/slobodni/${apt.doktor.id}?datum=${datum}`),
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -121,7 +122,7 @@ export default function CancelModal({ appointment: apt, onConfirm, onCancelConfi
   const potvrdiPomjeranje = async () => {
     if (!noviTerminId) return;
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/osoblje/termini/${apt.id}/pomjeri`, {
+    const res = await fetch(apiUrl(`/api/osoblje/termini/${apt.id}/pomjeri`), {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -183,6 +184,9 @@ export default function CancelModal({ appointment: apt, onConfirm, onCancelConfi
           {mode === "pomjeri" && (
             <div className="mt-4 space-y-3">
               <select
+                id="move-appointment-date"
+                name="moveAppointmentDate"
+                aria-label="Izaberi novi datum termina"
                 value={odabraniDatum}
                 onChange={(e) => ucitajTermineZaDatum(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
@@ -201,6 +205,9 @@ export default function CancelModal({ appointment: apt, onConfirm, onCancelConfi
 
               {termini.length > 0 && (
                 <select
+                  id="move-appointment-time"
+                  name="moveAppointmentTime"
+                  aria-label="Izaberi novi termin"
                   value={noviTerminId ?? ""}
                   onChange={(e) => setNoviTerminId(Number(e.target.value))}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
