@@ -1,6 +1,6 @@
 import { prisma } from "./prisma.js";
 
-const TEST_PATIENT_EMAIL = process.env.TEST_PATIENT_EMAIL ?? "swiftmed110@gmail.com";
+const TEST_PATIENT_EMAIL = process.env.TEST_PATIENT_EMAIL ?? "musicsumeja98@gmail.com";
 const TEST_KORISNIK_ID = Number(process.env.TEST_KORISNIK_ID);
 
 export const getCurrentPacijent = async () => {

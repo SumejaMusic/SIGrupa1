@@ -492,7 +492,7 @@ console.log("Rasporedi novih doktora kreirani");
   // Korisnik — Pacijent
   // ─────────────────────────────────────────────
   const korisnikPacijent = await prisma.korisnik.upsert({
-    where: { email: "swiftmed110@gmail.com" },
+    where: { email: "musicsumeja98@gmail.com" },
     update: {
       ime: "Marko",
       prezime: "Markovic",
@@ -505,7 +505,7 @@ console.log("Rasporedi novih doktora kreirani");
       ime: "Marko",
       prezime: "Markovic",
       datumRodjenja: new Date("1995-05-15"),
-      email: "swiftmed110@gmail.com",
+      email: "musicsumeja98@gmail.com",
       pristupnaSifra: "hash_placeholder",
       brojTelefona: "62222222",
       datumRegistracije: new Date(),
