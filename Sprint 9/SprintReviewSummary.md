@@ -106,21 +106,21 @@ Sprint 9 je jedan od najproduktivnijih sprintova u projektu. Rano završavanje j
 
 | ID | Naziv | Status |
 |----|-------|--------|
-| US-11 | Dashboard za doktora — napredna kalendarska logika sa filtriranjem i preuzimanjem rasporeda | ✅ Završeno |
-| US-24 | Panel medicinskog osoblja — proširenje kontrola u realnom vremenu i optimizovana pretraga pacijenata | ✅ Završeno |
-| US-28 | Označavanje hitnosti termina — uvođenje `urgency_level` atributa i trijažnih boja | ✅ Završeno |
-| US-32 | Upload i evidencija laboratorijskih nalaza — sigurno skladište sa enkripcijom | ✅ Završeno |
-| US-31-EXT | Hronični bolesnici + SMS podsjetnik — Cron Job i Infobip integracija | ✅ Završeno |
-| US-38 | Lista čekanja za termine — event-driven servis sa TTL tajmerom | ✅ Završeno |
-| US-39 | Grafički prikaz zauzetosti specijalističkih kabineta — WebSocket/Polling | ✅ Završeno |
-| US-40 | Zahtjev za deaktivaciju i anonimizaciju profila (GDPR) | ✅ Završeno |
-| US-41 | Obavijest pacijentu o otkazanom/pomjerenom terminu — email i in-app | ✅ Završeno |
-| US-42 | Anonimna ocjena i komentar na rad doktora | ✅ Završeno |
-| US-43 | Profil korisnika — standardizacija prikaza i read-only email polje | ✅ Završeno |
-| US-44 | AI Chatbot asistent za korisnika | ✅ Završeno |
-| US-02 | Admin panel — korisnički interfejs za upravljanje ulogama | ✅ Završeno |
-| US-33 | Admin panel — backend funkcionalnosti i CRUD endpointi za upravljanje ulogama | ✅ Završeno |
-| — | Unit i integraciono testiranje novih funkcionalnosti | ✅ Završeno |
+| US-11 | Dashboard za doktora — napredna kalendarska logika sa filtriranjem i preuzimanjem rasporeda |  Završeno |
+| US-24 | Panel medicinskog osoblja — proširenje kontrola u realnom vremenu i optimizovana pretraga pacijenata |  Završeno |
+| US-28 | Označavanje hitnosti termina — uvođenje `urgency_level` atributa i trijažnih boja | Završeno |
+| US-32 | Upload i evidencija laboratorijskih nalaza — sigurno skladište sa enkripcijom |  Završeno |
+| US-31-EXT | Hronični bolesnici + SMS podsjetnik — Cron Job i Infobip integracija | Završeno |
+| US-38 | Lista čekanja za termine — event-driven servis sa TTL tajmerom | Završeno |
+| US-39 | Grafički prikaz zauzetosti specijalističkih kabineta — WebSocket/Polling | Završeno |
+| US-40 | Zahtjev za deaktivaciju i anonimizaciju profila (GDPR) |  Završeno |
+| US-41 | Obavijest pacijentu o otkazanom/pomjerenom terminu — email i in-app | Završeno |
+| US-42 | Anonimna ocjena i komentar na rad doktora | Završeno |
+| US-43 | Profil korisnika — standardizacija prikaza i read-only email polje | Završeno |
+| US-44 | AI Chatbot asistent za korisnika | Završeno |
+| US-02 | Admin panel — korisnički interfejs za upravljanje ulogama | Završeno |
+| US-33 | Admin panel — backend funkcionalnosti i CRUD endpointi za upravljanje ulogama | Završeno |
+| — | Unit i integraciono testiranje novih funkcionalnosti |  Završeno |
 
 ---
 
