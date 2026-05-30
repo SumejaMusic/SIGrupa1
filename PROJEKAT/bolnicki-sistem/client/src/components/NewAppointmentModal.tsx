@@ -5,6 +5,7 @@ import {
   Stethoscope, Calendar, AlertCircle, CheckCircle2,
   Building2, ChevronRight, Layers, 
 } from 'lucide-react';
+import { apiUrl } from '../lib/api';
 
 interface Pacijent {
   id: number;
@@ -143,7 +144,7 @@ const handleNalazFile = (f: File | undefined) => {
     setSelectedTermin(null);
     // API vraća niz ISO datuma koji imaju barem jedan slobodan termin
     // npr. ["2025-06-02","2025-06-04",...]
-    fetch(`/api/osoblje/termini/slobodni-datumi/${selectedDoctor.id}`, {
+    fetch(apiUrl(`/api/osoblje/termini/slobodni-datumi/${selectedDoctor.id}`), {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
       .then(r => r.json())
@@ -161,7 +162,7 @@ const handleNalazFile = (f: File | undefined) => {
     }
     setLoadingTermini(true);
     setSelectedTermin(null);
-    fetch(`/api/osoblje/termini/slobodni/${selectedDoctor.id}?datum=${date}`, {
+    fetch(apiUrl(`/api/osoblje/termini/slobodni/${selectedDoctor.id}?datum=${date}`), {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
       .then(r => r.json())
@@ -413,6 +414,8 @@ const handleSubmit = () => {
                 <div style={{ position:'relative' }}>
                   <Search size={15} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }} />
                   <input
+                    id="new-appointment-patient-search"
+                    name="patientSearch"
                     value={search}
                     onChange={e => { setSearch(e.target.value); setSelectedPatient(null); }}
                     placeholder="Unesite ime ili prezime…"
@@ -704,6 +707,8 @@ const handleSubmit = () => {
                 <div>
                   <label className="field-label">Komentar / Razlog posjete</label>
                   <textarea
+                    id="new-appointment-comment"
+                    name="appointmentComment"
                     value={komentar}
                     onChange={e => setKomentar(e.target.value)}
                     rows={3}
@@ -736,6 +741,8 @@ const handleSubmit = () => {
     <div>
       <label className="field-label">Naziv nalaza</label>
       <input
+        id="new-appointment-report-name"
+        name="reportName"
         value={nalazNaziv}
         onChange={e => setNalazNaziv(e.target.value)}
         placeholder="npr. Krvna slika, RTG pluća, EKG..."
@@ -793,6 +800,8 @@ const handleSubmit = () => {
         </>
       )}
       <input
+        id="new-appointment-report-file"
+        name="reportFile"
         ref={nalazInputRef}
         type="file"
         accept="application/pdf"

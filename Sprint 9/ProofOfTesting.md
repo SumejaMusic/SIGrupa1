@@ -172,3 +172,553 @@ Integracioni testovi provjeravaju HTTP sloj kontrolera `listaCekanjaController.t
 > **Napomena:** Integracioni testovi u ovom dokumentu testiraju HTTP/kontroler sloj sa mockovanim servisom i ne pokreću stvarnu bazu ni Redis. Potpuni end-to-end tok liste čekanja pokriven je kroz integracione testove u `listaCekanjaIntegration.test.ts` koji se izvršavaju protiv stvarne test baze i dokumentovani su odvojeno.
 
 **Rezultat:** 24/24 testova prošlo 
+
+---
+
+## 4. Unit testiranje — `doctorController.test.ts`
+
+Unit testovi provjeravaju poslovnu logiku kontrolera `doctorController.ts` u izolaciji. Koriste mockovan Prisma klijent i mock `req/res/next` objekte.
+
+**Komanda:** `npm test -- --run src/__tests__/doctorController.test.ts`
+**Rezultat:** Uspješno — 10/10 testova prošlo
+
+### 4.1 Testni slučajevi — `dodajKomentarDoktor (doctorController)`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-DC-001 | Uspješno dodaje komentar sa statusom 201 | Validan doktor (id: 2), rezervacija nije otkazana ni završena, `komentar.create` vraća objekt | Status 201, odgovor sadrži `tekst` i `jeDoktor: true` | Uspješno |
+| UT-DC-002 | Vraća 401 kada korisnik nije prijavljen | `req.korisnik = undefined` | Status 401, `{ poruka: "Niste prijavljeni." }` | Uspješno |
+| UT-DC-003 | Vraća 403 kada uloga nije DOKTOR | `req.korisnik.uloga = "PACIJENT"` | Status 403, `{ poruka: "Samo doktori mogu koristiti ovu rutu." }` | Uspješno |
+| UT-DC-004 | Vraća 400 kada je komentar prazan | `body.komentar = ""` | Status 400, `{ poruka: "Komentar ne može biti prazan." }` | Uspješno |
+| UT-DC-005 | Vraća 400 za neispravan ID rezervacije | `params.id = "abc"` | Status 400, `{ poruka: "Nevažeći ID rezervacije." }` | Uspješno |
+| UT-DC-006 | Vraća 404 kada rezervacija nije pronađena | `rezervacije.findUnique` vraća `null` | Status 404, `{ poruka: "Rezervacija nije pronađena." }`, `komentar.create` nije pozvan | Uspješno |
+| UT-DC-007 | Vraća 400 kada je rezervacija otkazana | `datumOtkazivanja` postavljen | Status 400, `{ poruka: "Nije moguće komentarisati otkazanu rezervaciju." }` | Uspješno |
+| UT-DC-008 | Vraća 400 kada je rezervacija završena | `zavrseno: true` | Status 400, `{ poruka: "Nije moguće komentarisati završenu rezervaciju." }` | Uspješno |
+| UT-DC-009 | Vraća 403 kada doktor pokušava komentarisati tuđu rezervaciju | `doktor.idKorisnik = 99` (drugi doktor) | Status 403, `{ poruka: "Nemate dozvolu za komentarisanje ove rezervacije." }` | Uspješno |
+| UT-DC-010 | Poziva next pri DB grešci | `rezervacije.findUnique` baca grešku | `next` pozvan sa greškom, `res.json` i `res.status` nisu pozvani | Uspješno |
+
+---
+
+## 5. Unit testiranje — `reservationController.test.ts`
+
+Unit testovi provjeravaju logiku kontrolera `reservationController.ts`. Koriste mockovan Prisma i Redis klijent, kao i mock email servis.
+
+**Komanda:** `npm test -- --run src/__tests__/reservationController.test.ts`
+**Rezultat:** Uspješno — 34/34 testova prošlo
+
+### 5.1 Testni slučajevi — `pomjeriRezervaciju`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-RC-001 | Uspješno pomjera rezervaciju i briše Redis lock (US-11) | Validan doktor, stara rezervacija i novi slobodni termin, Redis lock aktivan | `$transaction` pozvan, `redisMock.del("termin:lock:7")`, status 200 | Uspješno |
+| UT-RC-002 | Šalje email pacijentu nakon uspješnog pomjeranja (US-11) | Isto kao UT-RC-001 | `posaljiPotvrdurezerv` pozvan sa `pacijentEmail: "test@test.com"` | Uspješno |
+| UT-RC-003 | Vraća 401 kada korisnik nije prijavljen | `req.korisnik = undefined` | Status 401, `{ poruka: "Niste prijavljeni." }` | Uspješno |
+| UT-RC-004 | Vraća 403 kada korisnik nema doktorId | `korisnik` bez `doktorId` | Status 403, `{ poruka: "Nemate dozvolu." }` | Uspješno |
+| UT-RC-005 | Vraća 404 kada stara rezervacija nije pronađena | `rezervacije.findUnique` vraća `null` | Status 404, `termin.findUnique` nije pozvan | Uspješno |
+| UT-RC-006 | Vraća 403 kada doktor pokušava pomjeriti tuđu rezervaciju | `idDoktor: 99` (drugi doktor) | Status 403, `{ poruka: "Nemate dozvolu za ovu rezervaciju." }` | Uspješno |
+| UT-RC-007 | Vraća 404 kada novi termin nije pronađen | `termin.findUnique` vraća `null` | Status 404, `{ poruka: "Novi termin nije pronađen." }` | Uspješno |
+| UT-RC-008 | Vraća 409 kada novi termin nije slobodan | `termin.status = "ZAKAZAN"` | Status 409, `{ poruka: "Novi termin više nije slobodan." }`, `redisMock.get` nije pozvan | Uspješno |
+| UT-RC-009 | Vraća 409 kada termin nije zaključan u Redisu | `redisMock.get` vraća `null` | Status 409, `{ poruka: "Termin nije zaključan." }`, `$transaction` nije pozvan | Uspješno |
+| UT-RC-010 | Vraća 409 kada je termin zaključan od drugog korisnika | `redisMock.get` vraća `"999"` | Status 409, `{ poruka: "Termin nije zaključan." }`, `$transaction` nije pozvan | Uspješno |
+| UT-RC-011 | Ne briše Redis lock kada transakcija ne uspije | `$transaction` baca grešku | `redisMock.del` nije pozvan, `next` pozvan sa greškom | Uspješno |
+| UT-RC-012 | Poziva next pri DB grešci | `rezervacije.findUnique` baca grešku | `next` pozvan sa greškom, `res.json` i `res.status` nisu pozvani | Uspješno |
+
+### 5.2 Testni slučajevi — `kreirajRezervacijuDoktor`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-RC-013 | Uspješno kreira rezervaciju sa statusom 201 | Validan doktor, pacijent i slobodni budući termin, Redis lock aktivan, transakcija uspješna | Status 201, vraćena rezervacija, `redisMock.del` pozvan | Uspješno |
+| UT-RC-014 | Vraća 401 kada korisnik nije prijavljen | `req.korisnik = undefined` | Status 401, `{ poruka: "Niste prijavljeni." }` | Uspješno |
+| UT-RC-015 | Vraća 403 kada korisnik nema doktorId | `korisnik` bez `doktorId` | Status 403, `{ poruka: "Nemate dozvolu za ovu akciju." }` | Uspješno |
+| UT-RC-016 | Vraća 400 kada idTermina nedostaje ili je nevalidan | `body` bez `idTermina` | Status 400, `{ poruka: "Nedostaje ispravan idTermina." }` | Uspješno |
+| UT-RC-017 | Vraća 400 kada idPacijent nedostaje ili je nevalidan | `body` bez `idPacijent` | Status 400, `{ poruka: "Nedostaje ispravan idPacijent." }` | Uspješno |
+| UT-RC-018 | Vraća 404 kada pacijent nije pronađen | `pacijent.findUnique` vraća `null` | Status 404, `{ poruka: "Pacijent nije pronađen." }` | Uspješno |
+| UT-RC-019 | Vraća 404 kada termin nije pronađen | `termin.findUnique` vraća `null` | Status 404, `{ poruka: "Termin nije pronađen." }` | Uspješno |
+| UT-RC-020 | Vraća 409 kada termin nije slobodan | `termin.status = "ZAKAZAN"` | Status 409, `{ poruka: "Termin više nije slobodan." }` | Uspješno |
+| UT-RC-021 | Vraća 400 kada je termin u prošlosti | `vi.useFakeTimers`, datum termina u prošlosti | Status 400, `{ poruka: "Nevalidna rezervacija: ne možete rezervisati termin u prošlosti." }` | Uspješno |
+| UT-RC-022 | Vraća 409 za duplu rezervaciju | `rezervacije.findFirst` vraća postojeću rezervaciju | Status 409, `{ poruka: "Rezervacija za ovaj termin već postoji." }` | Uspješno |
+| UT-RC-023 | Vraća 409 kada termin nije zaključan u Redisu | `redisMock.get` vraća `null` | Status 409, `{ poruka: "Termin nije zaključan. Pokrenite proces ponovo." }`, `$transaction` nije pozvan | Uspješno |
+| UT-RC-024 | Briše Redis lock nakon uspješne rezervacije | Sve mock vrijednosti ispravne | `redisMock.del("termin:lock:5")` pozvan | Uspješno |
+| UT-RC-025 | Poziva next pri DB grešci | `pacijent.findUnique` baca grešku | `next` pozvan sa greškom, `res.json` i `res.status` nisu pozvani | Uspješno |
+
+### 5.3 Testni slučajevi — `dodajKomentarDoktor (reservationController)`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-RC-026 | Uspješno dodaje komentar sa statusom 201 | Validan doktor (id: 2), `komentar.create` vraća objekt sa korisnik podacima | Status 201, odgovor sadrži `tekst`, `jeDoktor: true`, `autor: "Dr. Marić"` | Uspješno |
+| UT-RC-027 | Vraća 403 kada uloga nije DOKTOR | `uloga: "PACIJENT"` | Status 403, `rezervacije.findUnique` nije pozvan | Uspješno |
+| UT-RC-028 | Vraća 400 kada je komentar prazan | `body.komentar = ""` | Status 400, `{ poruka: "Komentar ne može biti prazan." }` | Uspješno |
+| UT-RC-029 | Vraća 404 kada rezervacija nije pronađena | `rezervacije.findUnique` vraća `null` | Status 404, `komentar.create` nije pozvan | Uspješno |
+| UT-RC-030 | Vraća 400 kada je rezervacija otkazana | `datumOtkazivanja` postavljen | Status 400, `komentar.create` nije pozvan | Uspješno |
+| UT-RC-031 | Vraća 400 kada je rezervacija završena | `zavrseno: true` | Status 400, `komentar.create` nije pozvan | Uspješno |
+| UT-RC-032 | Vraća 403 kada doktor komentariše tuđu rezervaciju | `doktor.idKorisnik = 99` | Status 403, `komentar.create` nije pozvan | Uspješno |
+| UT-RC-033 | Poziva next pri DB grešci | `komentar.create` baca grešku | `next` pozvan sa greškom, `res.json` i `res.status` nisu pozvani | Uspješno |
+
+### 5.4 Testni slučajevi — `otkaziRezervacijuOsoblje` (dodatni)
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-RC-034 | Vraća 400 kada je termin već prošao | Termin sa datumom u prošlosti (48h unazad) | Status 400, `{ poruka: "Nije moguće otkazati termin koji je već prošao." }`, `$transaction` nije pozvan | Uspješno |
+
+---
+
+## 6. Unit testiranje — `OsobljeController.test.ts`
+
+Unit testovi provjeravaju HTTP kontroler sloj `OsobljeController.ts`. Servis je potpuno mockovan, a testovi verifikuju ispravno prosljeđivanje parametara servisu i rukovanje greškama.
+
+**Komanda:** `npm test -- --run src/__tests__/OsobljeController.test.ts`
+**Rezultat:** Uspješno — 34/34 testova prošlo
+
+### 6.1 Testni slučajevi — `getDnevniTermini`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-001 | Vraća termine za zadani datum | `query.datum = "2026-05-18"`, servis vraća 2 termina | `getDnevniTerminiService` pozvan, status 200, lista termina | Uspješno |
+| UT-OC-002 | Koristi danas kao datum ako datum nije poslan | `query = {}` | `getDnevniTerminiService` pozvan, status 200 | Uspješno |
+| UT-OC-003 | Vraća 400 za neispravan format datuma | `query.datum = "nije-datum"` | Status 400, `{ poruka: "Neispravan format datuma. Koristite YYYY-MM-DD." }`, servis nije pozvan | Uspješno |
+| UT-OC-004 | Poziva next pri grešci servisa | Servis baca grešku | `next` pozvan sa greškom, `res.json` nije pozvan | Uspješno |
+
+### 6.2 Testni slučajevi — `pretragaTermina`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-005 | Vraća rezultate pretrage za validno ime | `query.ime = "Amina"`, servis vraća rezultat | `pretragaTerminaService("Amina")` pozvan, status 200 | Uspješno |
+| UT-OC-006 | Vraća 400 kada ime nije poslano | `query = {}` | Status 400, poruka sadrži `"najmanje 2 karaktera"`, servis nije pozvan | Uspješno |
+| UT-OC-007 | Vraća 400 kada je ime kraće od 2 karaktera | `query.ime = "A"` | Status 400, servis nije pozvan | Uspješno |
+| UT-OC-008 | Poziva next pri grešci servisa | Servis baca grešku | `next` pozvan sa greškom | Uspješno |
+
+### 6.3 Testni slučajevi — `getDetaljiTermina`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-009 | Vraća detalje rezervacije po ID-u | `params.id = "1"`, servis vraća rezervaciju | `getDetaljiTerminaService(1)` pozvan, status 200 | Uspješno |
+| UT-OC-010 | Vraća 404 kada rezervacija nije pronađena | Servis vraća `null` | Status 404, `{ poruka: "Rezervacija nije pronađena." }` | Uspješno |
+| UT-OC-011 | Vraća 400 za neispravan ID | `params.id = "abc"` | Status 400, `{ poruka: "Neispravan ID rezervacije." }`, servis nije pozvan | Uspješno |
+| UT-OC-012 | Poziva next pri grešci servisa | Servis baca grešku | `next` pozvan sa greškom | Uspješno |
+
+### 6.4 Testni slučajevi — `otkaziTermin`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-013 | Uspješno otkazuje termin sa potvrdom | `body.potvrda = true`, servis vraća poruku | `otkaziTerminService(1)` pozvan, status 200 | Uspješno |
+| UT-OC-014 | Vraća 400 kada potvrda nije poslana | `body = {}` | Status 400, poruka sadrži `"potvrda"`, servis nije pozvan | Uspješno |
+| UT-OC-015 | Vraća 400 za neispravan ID | `params.id = "abc"`, `body.potvrda = true` | Status 400, `{ poruka: "Neispravan ID rezervacije." }`, servis nije pozvan | Uspješno |
+| UT-OC-016 | Prosljeđuje status grešku iz servisa (404) | Servis baca `{ status: 404, poruka: "Rezervacija nije pronađena." }` | Status 404, odgovarajuća poruka, `next` nije pozvan | Uspješno |
+| UT-OC-017 | Prosljeđuje status grešku iz servisa (400 — već otkazana) | Servis baca `{ status: 400, poruka: "Rezervacija je već otkazana." }` | Status 400, `next` nije pozvan | Uspješno |
+| UT-OC-018 | Poziva next pri neočekivanoj grešci | Servis baca `new Error("DB greška")` | `next` pozvan sa greškom, `res.json` nije pozvan | Uspješno |
+
+### 6.5 Testni slučajevi — `kreirajTerminZaPacijenta`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-019 | Uspješno kreira termin i upravlja Redis lockom | Validna `body` polja, `redisMock.get` vraća `null` | `redisMock.setex("termin:lock:5", 30, "osoblje")`, servis pozvan, `redisMock.del("termin:lock:5")`, status 201 | Uspješno |
+| UT-OC-020 | Vraća 400 kada nedostaju obavezna polja | `body = { idDoktor: 2 }` | Status 400, `{ poruka: "Obavezna polja: idTermina, idDoktor, idPacijent." }`, servis nije pozvan | Uspješno |
+| UT-OC-021 | Vraća 409 kada je termin već zaključan | `redisMock.get` vraća `"osoblje"` | Status 409, `{ poruka: "Termin je trenutno u procesu rezervacije." }`, servis nije pozvan | Uspješno |
+| UT-OC-022 | Briše Redis lock i poziva next kada servis baci grešku | Servis baca grešku | `redisMock.del("termin:lock:5")` pozvan, `next` pozvan sa greškom, `res.json` nije pozvan | Uspješno |
+| UT-OC-023 | Prosljeđuje status grešku iz servisa (404) | Servis baca `{ status: 404, poruka: "Pacijent nije pronađen." }` | Status 404, odgovarajuća poruka, `next` nije pozvan | Uspješno |
+
+### 6.6 Testni slučajevi — `getOtkazaniTermini`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-024 | Vraća otkazane termine bez filtera datuma | `query = {}` | `getOtkazaniTerminiService(undefined)` pozvan, status 200 | Uspješno |
+| UT-OC-025 | Prihvata datum u formatu DD-MM-YYYY | `query.datum = "17-05-2026"` | `getOtkazaniTerminiService` pozvan sa `Date` objektom, status 200 | Uspješno |
+| UT-OC-026 | Vraća 400 za neispravan format datuma | `query.datum = "2026-05-17"` (YYYY-MM-DD) | Status 400, `{ poruka: "Neispravan format datuma. Koristite DD-MM-YYYY." }`, servis nije pozvan | Uspješno |
+| UT-OC-027 | Poziva next pri grešci servisa | Servis baca grešku | `next` pozvan sa greškom | Uspješno |
+
+### 6.7 Testni slučajevi — `getHitniTermini`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-028 | Vraća listu hitnih termina | Servis vraća 1 hitni termin | `getHitniTerminiService` pozvan, status 200 | Uspješno |
+| UT-OC-029 | Vraća prazan niz kada nema hitnih termina | Servis vraća `[]` | `res.json([])` pozvan, `next` nije pozvan | Uspješno |
+| UT-OC-030 | Poziva next pri grešci servisa | Servis baca grešku | `next` pozvan sa greškom | Uspješno |
+
+### 6.8 Testni slučajevi — `getZavrseniPregledi`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-031 | Vraća sve završene preglede bez filtera | `query = {}` | `getZavrseniPregledService(undefined)` pozvan, status 200 | Uspješno |
+| UT-OC-032 | Filtrira završene preglede po idPacijenta | `query.idPacijenta = "5"` | `getZavrseniPregledService(5)` pozvan | Uspješno |
+| UT-OC-033 | Vraća 400 za neispravan idPacijenta | `query.idPacijenta = "abc"` | Status 400, `{ poruka: "Neispravan ID pacijenta." }`, servis nije pozvan | Uspješno |
+| UT-OC-034 | Poziva next pri grešci servisa | Servis baca grešku | `next` pozvan sa greškom | Uspješno |
+
+### 6.9 Testni slučajevi — `postaviHitnost`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-035 | Uspješno mijenja hitnost rezervacije | `params.id = "1"`, `body.hitnost = true` | `postaviHitnostService(1, true)` pozvan, status 200 | Uspješno |
+| UT-OC-036 | Vraća 400 kada hitnost nije boolean | `body.hitnost = "true"` (string) | Status 400, poruka sadrži `"boolean"`, servis nije pozvan | Uspješno |
+| UT-OC-037 | Vraća 400 za neispravan ID | `params.id = "abc"` | Status 400, `{ poruka: "Neispravan ID rezervacije." }`, servis nije pozvan | Uspješno |
+| UT-OC-038 | Prosljeđuje status grešku iz servisa (404) | Servis baca `{ status: 404 }` | Status 404, `next` nije pozvan | Uspješno |
+| UT-OC-039 | Prosljeđuje status grešku iz servisa (400 — već hitna) | Servis baca `{ status: 400, poruka: "Rezervacija je već označena kao hitna." }` | Status 400, `next` nije pozvan | Uspješno |
+| UT-OC-040 | Poziva next pri neočekivanoj grešci | Servis baca `new Error("DB greška")` | `next` pozvan sa greškom, `res.json` nije pozvan | Uspješno |
+
+### 6.10 Testni slučajevi — `pomjeriTermin (osoblje)`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-OC-041 | Uspješno pomjera termin | `params.id = "1"`, `body.noviTerminId = 7` | `pomjeriTerminService(1, 7)` pozvan, status 200 | Uspješno |
+| UT-OC-042 | Vraća 400 za neispravan ID rezervacije | `params.id = "abc"` | Status 400, `{ poruka: "Neispravan ID rezervacije." }`, servis nije pozvan | Uspješno |
+| UT-OC-043 | Vraća 400 za neispravan ID novog termina | `body.noviTerminId = "abc"` | Status 400, `{ poruka: "Neispravan ID novog termina." }`, servis nije pozvan | Uspješno |
+| UT-OC-044 | Prosljeđuje status grešku iz servisa (404) | Servis baca `{ status: 404 }` | Status 404, `next` nije pozvan | Uspješno |
+| UT-OC-045 | Prosljeđuje status grešku iz servisa (409) | Servis baca `{ status: 409, poruka: "Novi termin više nije slobodan." }` | Status 409, `next` nije pozvan | Uspješno |
+| UT-OC-046 | Poziva next pri neočekivanoj grešci | Servis baca `new Error("DB greška")` | `next` pozvan sa greškom, `res.json` nije pozvan | Uspješno |
+
+---
+
+---
+
+## 7. Integracioni testovi — `osoblje.integration.test.ts`
+
+Integracioni testovi provjeravaju HTTP sloj ruta za medicinsko osoblje kroz stvarne HTTP zahtjeve koristeći `supertest`. Testovi koriste stvarnu Express aplikaciju, testnu bazu i Redis lockove kako bi simulirali realne scenarije rada osoblja sa terminima i rezervacijama.
+
+**Komanda:** `npm test -- --run src/__integration_tests__/osoblje.integration.test.ts`
+**Rezultat:** Uspješno — 15/15 testova prošlo
+
+### 7.1 Metodologija
+
+| Komponenta | Pristup | Razlog |
+| :--- | :--- | :--- |
+| HTTP sloj | `supertest` + Express app | Testiranje stvarnog request/response ciklusa |
+| Prisma test baza | stvarni PrismaClient | Validacija promjena nad terminima i rezervacijama |
+| Redis | stvarni Redis test lockovi | Testiranje zaključavanja termina |
+| JWT autentifikacija | generisani test tokeni | Simulacija prijavljenog osoblja i pacijenta |
+| Email servis | `vi.mock` | Sprječavanje stvarnog slanja emailova |
+
+---
+
+### 7.2 Testni slučajevi — `GET /api/osoblje/termini`
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-OS-001 | Vraća dnevne termine za današnji datum | `GET /api/osoblje/termini` | Status 200, vraćen niz termina | Uspješno |
+| IT-OS-002 | Vraća 400 za neispravan format datuma | `datum=nije-datum` | Status 400, poruka sadrži `"datum"` | Uspješno |
+| IT-OS-003 | Vraća termine za specifičan datum | `datum=2026-06-01` | Status 200, vraćen niz termina | Uspješno |
+
+---
+
+### 7.3 Testni slučajevi — `GET /api/osoblje/termini/pretraga`
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-OS-004 | Vraća rezultate za validno ime | `ime=An` | Status 200, vraćen niz rezultata | Uspješno |
+| IT-OS-005 | Vraća 400 kada ime ima manje od 2 karaktera | `ime=A` | Status 400, poruka sadrži `"2 karaktera"` | Uspješno |
+| IT-OS-006 | Vraća 400 kada ime nije poslano | bez query parametra | Status 400 | Uspješno |
+
+---
+
+### 7.4 Testni slučajevi — `GET /api/osoblje/termini/hitni`
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-OS-007 | Vraća listu hitnih termina | `GET /api/osoblje/termini/hitni` | Status 200, vraćen niz hitnih termina | Uspješno |
+
+---
+
+### 7.5 Testni slučajevi — `GET /api/osoblje/termini/otkazani`
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-OS-008 | Vraća sve otkazane termine bez filtera | bez query parametara | Status 200, vraćen niz termina | Uspješno |
+| IT-OS-009 | Filtrira otkazane termine po datumu | `datum=01-06-2026` | Status 200, vraćen niz termina | Uspješno |
+| IT-OS-010 | Vraća 400 za pogrešan format datuma | `datum=2026-06-01` | Status 400, poruka sadrži `"DD-MM-YYYY"` | Uspješno |
+
+---
+
+### 7.6 Testni slučajevi — `PATCH /api/osoblje/termini/:id/otkazi`
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-OS-011 | Osoblje uspješno otkazuje rezervaciju | Validna rezervacija + `{ potvrda: true }` | Status 200, termin vraćen na `SLOBODAN` | Uspješno |
+| IT-OS-012 | Vraća 400 bez potvrde | Prazan body `{}` | Status 400, poruka sadrži `"potvrda"` | Uspješno |
+| IT-OS-013 | Vraća 404 za nepostojeću rezervaciju | `id=99999` | Status 404 | Uspješno |
+
+---
+
+### 7.7 Testni slučajevi — `PATCH /api/osoblje/termini/:id/hitnost`
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-OS-014 | Uspješno mijenja hitnost rezervacije | `{ hitnost: true }` | Status 200, `hitnost: true` | Uspješno |
+| IT-OS-015 | Vraća 400 kada hitnost nije boolean | `{ hitnost: "true" }` | Status 400, poruka sadrži `"boolean"` | Uspješno |
+| IT-OS-016 | Vraća 404 za nepostojeću rezervaciju | `id=99999` | Status 404 | Uspješno |
+
+---
+
+### 7.8 Pregled rezultata po grupama
+
+| Grupa testova | Broj testova | Rezultat |
+|---|---:|---|
+| `GET /api/osoblje/termini` | 3 | Uspješno |
+| `GET /api/osoblje/termini/pretraga` | 3 | Uspješno |
+| `GET /api/osoblje/termini/hitni` | 1 | Uspješno |
+| `GET /api/osoblje/termini/otkazani` | 3 | Uspješno |
+| `PATCH /api/osoblje/termini/:id/otkazi` | 3 | Uspješno |
+| `PATCH /api/osoblje/termini/:id/hitnost` | 3 | Uspješno |
+| **Ukupno** | **16** | **Uspješno** |
+
+---
+
+## 8. Ažurirani ukupni pregled
+
+| Tip testiranja | Fajl | Testova | Rezultat |
+|---|---|---:|---|
+| Unit (kontroler) | `doctorController.test.ts` | 10 | Uspješno |
+| Unit (kontroler) | `reservationController.test.ts` | 34 | Uspješno |
+| Unit (kontroler) | `OsobljeController.test.ts` | 46 | Uspješno |
+| Integracioni | `osoblje.integration.test.ts` | 16 | Uspješno |
+| **Ukupno** | | **106** | **Uspješno** |
+
+---
+
+**Rezultat:** 106/106 testova prošlo
+
+---
+
+## 9. Unit testiranje — `recenzijaController.test.ts`
+
+Unit testovi provjeravaju logiku kontrolera `recenzijaController.ts` u izolaciji. Fokus je na anonimnom kreiranju recenzija, validaciji ocjene, sprječavanju duplih ocjena, javnom email linku za recenziju, prikazu prosjeka za doktora i administratorskom sakrivanju neprimjerenih komentara. Prisma sloj je mockovan kroz `prismaMock`, a JWT tokeni se generišu sa testnim `JWT_SECRET`.
+
+**Izvršeno:** 25.05.2026.  
+**Komanda:** `npm test -- --run src/__tests__/recenzijaController.test.ts src/__tests__/sobaOccupancyService.test.ts`  
+**Rezultat:** Uspješno — zajedno sa `sobaOccupancyService.test.ts` prošlo 20/20 testova
+
+### 9.1 Metodologija
+
+| Komponenta | Pristup | Razlog |
+| :--- | :--- | :--- |
+| Prisma baza | `vi.mock("../lib/prisma.js")` + `prismaMock` | Izolacija od stvarne baze |
+| HTTP objekti | Mock `req`, `res`, `next` | Testiranje kontrolera bez pokretanja Express servera |
+| JWT tokeni | `jsonwebtoken` + testni secret | Kontrola javnog linka za anonimnu recenziju |
+| Privatnost pacijenta | Asercije nad JSON odgovorom i `create.data` objektom | Potvrda da se podaci pacijenta ne vraćaju niti spremaju u recenziju |
+
+---
+
+### 9.2 Testni slučajevi — `kreirajRecenziju`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-REC-001 | Kreira anonimnu ocjenu bez spremanja pacijent FK-a | Rezervacija `id: 42`, pacijent `id: 10`, `rating: 5`, komentar `"Odličan pristup."` | Status 201, recenzija kreirana bez `idPacijent`, `patientId` i `idKorisnik`; odgovor ne sadrži podatke pacijenta | Uspješno |
+| UT-REC-002 | Ne dozvoljava ocjenu izvan raspona 1-5 | `rating: 6` | Status 400, poruka `"Ocjena je obavezna i mora biti broj od 1 do 5."`, `recenzija.create` nije pozvan | Uspješno |
+| UT-REC-003 | Ne dozvoljava da se isti termin ocijeni dva puta | Rezervacija već ima `recenzija: { id: 3 }` | Status 409, poruka `"Ovaj termin je već ocijenjen."`, nova recenzija se ne kreira | Uspješno |
+| UT-REC-004 | Ne dozvoljava ocjenjivanje nezavršenog pregleda | Rezervacija ima `zavrseno: false` | Status 400, poruka `"Ocjenu možete ostaviti tek nakon završenog pregleda."` | Uspješno |
+
+---
+
+### 9.3 Testni slučajevi — javna anonimna recenzija iz email linka
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-REC-005 | Vraća podatke za javnu formu bez podataka o pacijentu | Validan JWT token sa `appointmentId: 42` i `purpose: "appointment-review"` | Odgovor sadrži doktora, termin i `canReview: true`, ali ne sadrži `idPacijent`, `idKorisnik`, pacijenta ili email | Uspješno |
+| UT-REC-006 | Kreira recenziju preko tokena bez login sesije | Validan javni token, `rating: 4`, komentar `"Vrlo korektan pregled."` | Status 201, recenzija kreirana samo sa `idRezervacije`, `ocjena` i `komentar` | Uspješno |
+
+---
+
+### 9.4 Testni slučajevi — `getRecenzijeZaDoktora`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-REC-007 | Vraća prosjek i anonimne komentare bez podataka o pacijentu | Tri recenzije za doktora, dvije sa komentarom | `averageRating: 3.33`, `reviewCount: 3`, komentari označeni kao `Anonymous Patient 1/2`, bez imena i prezimena pacijenta | Uspješno |
+
+---
+
+### 9.5 Testni slučajevi — `sakrijRecenziju`
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-REC-008 | Administrator može sakriti komentar koji krši pravila | Korisnik sa ulogom `ADMINISTRATOR`, recenzija `id: 9` | `recenzija.update` pozvan sa `sakriven: true`, odgovor sadrži `hidden: true` | Uspješno |
+
+---
+
+### 9.6 Pregled rezultata po grupama
+
+| Grupa testova | Broj testova | Rezultat |
+|---|---:|---|
+| `kreirajRecenziju` | 4 | Uspješno |
+| Javna anonimna recenzija iz email linka | 2 | Uspješno |
+| `getRecenzijeZaDoktora` | 1 | Uspješno |
+| `sakrijRecenziju` | 1 | Uspješno |
+| **Ukupno** | **8** | **Uspješno** |
+
+---
+
+## 10. Integracioni testovi — `recenzija.integration.test.ts`
+
+Integracioni testovi pokrivaju kompletan HTTP tok anonimnih recenzija kroz stvarnu Express aplikaciju (`supertest`) i Prisma test bazu. Testovi kreiraju termine i rezervacije, generišu javne review tokene, šalju zahtjeve na API rute i zatim provjeravaju stvarni zapis u tabeli `Recenzija`.
+
+**Komanda:** `npm run test:integration -- src/__integration_tests__/recenzija.integration.test.ts`  
+**Status lokalnog izvršavanja 25.05.2026:** Blokirano jer Docker daemon nije pokrenut/dostupan (`dockerDesktopLinuxEngine`), pa global setup nije mogao podići Postgres i Redis test kontejnere. Test slučajevi ispod su dokumentovani prema automatizovanom test fajlu.
+
+### 10.1 Metodologija
+
+| Komponenta | Pristup | Razlog |
+| :--- | :--- | :--- |
+| HTTP sloj | `supertest` + stvarna Express `app` instanca | Provjera realnog request/response toka |
+| Baza podataka | PrismaClient nad test bazom | Provjera stvarnog upisa recenzija |
+| JWT | Ručno kreirani review tokeni | Kontrola validnog, pogrešnog i isteklog linka |
+| Cleanup | `afterEach` briše testne recenzije, rezervacije i termine | Izolacija testova i stabilan redoslijed izvršavanja |
+
+---
+
+### 10.2 Testni slučajevi — javni review link
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-REC-001 | Javni token vraća podatke za formu bez otkrivanja pacijenta | `GET /api/appointments/review/:token` sa validnim tokenom | Status 200, `appointment` sadrži doktora i termin, ali ne sadrži ime, email ili ID pacijenta | Automatizovano |
+| IT-REC-002 | Ne prihvata token sa pogrešnom svrhom | `GET /api/appointments/review/:token` sa `purpose: "wrong-purpose"` | Status 401, poruka `"Link za ocjenu nije validan."` | Automatizovano |
+| IT-REC-003 | Ne prihvata istekao token | `POST /api/appointments/review/:token` sa isteklim tokenom | Status 401, poruka `"Link za ocjenu nije validan ili je istekao."` | Automatizovano |
+
+---
+
+### 10.3 Testni slučajevi — kreiranje anonimne recenzije
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-REC-004 | Sprema anonimnu ocjenu u reviews tabelu preko javnog email linka | `POST /api/appointments/review/:token`, `rating: 5`, komentar | Status 201, recenzija upisana u bazu sa `sakriven: false` | Automatizovano |
+| IT-REC-005 | Ne sprema podatke pacijenta u zapis recenzije | Nakon javne recenzije čita se `prisma.recenzija.findUniqueOrThrow` | Zapis nema `idPacijent` ni `idKorisnik` i ne sadrži podatke pacijenta | Automatizovano |
+| IT-REC-006 | Ne dozvoljava duplu ocjenu istog termina | Dva `POST` zahtjeva za isti token | Drugi zahtjev vraća 409, broj recenzija za rezervaciju ostaje 1 | Automatizovano |
+| IT-REC-007 | Odbija ocjenu izvan raspona 1-5 i ne upisuje u bazu | `rating: 6` | Status 400, broj recenzija ostaje 0 | Automatizovano |
+| IT-REC-008 | Odbija komentar duži od 500 znakova | `comment: "a".repeat(501)` | Status 400, poruka `"Komentar ne smije imati više od 500 znakova."` | Automatizovano |
+| IT-REC-009 | Ne dozvoljava ocjenu pregleda koji nije završen | Rezervacija sa `zavrseno: false` | Status 400, poruka `"Ocjenu možete ostaviti tek nakon završenog pregleda."` | Automatizovano |
+| IT-REC-010 | Ne dozvoljava ocjenu otkazanog pregleda | Rezervacija sa `datumOtkazivanja` | Status 400, poruka `"Nije moguće ocijeniti otkazani termin."` | Automatizovano |
+
+---
+
+### 10.4 Testni slučajevi — prikaz doktoru i postojeća zaštićena ruta
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-REC-011 | Nakon javne ocjene doktor vidi ažuriran prosjek i anonimni komentar | `GET /api/doktori/1/reviews` sa doktor JWT tokenom | Status 200, `averageRating: 3`, `reviewCount: 2`, komentari anonimni | Automatizovano |
+| IT-REC-012 | Postojeća zaštićena pacijent ruta i dalje sprema review u istu tabelu | `POST /api/appointments/:id/review` sa pacijent JWT tokenom | Status 201, zapis postoji u `Recenzija` tabeli sa ispravnom ocjenom i komentarom | Automatizovano |
+
+---
+
+### 10.5 Pregled rezultata po grupama
+
+| Grupa testova | Broj testova | Rezultat |
+|---|---:|---|
+| Javni review link | 3 | Automatizovano |
+| Kreiranje anonimne recenzije | 7 | Automatizovano |
+| Prikaz doktoru i postojeća ruta | 2 | Automatizovano |
+| **Ukupno** | **12** | **Za izvršenje potreban Docker test setup** |
+
+---
+
+## 11. Unit testiranje — `sobaOccupancyService.test.ts`
+
+Unit testovi provjeravaju poslovnu logiku servisa `getZauzetostSobaService` bez stvarne baze. Testovi pokrivaju statuse kabineta (`ZAUZET`, `USKORO_ZAUZET`, `SLOBODAN`), izračun trenutnog i sljedećeg termina, dostupne slobodne termine za hitnu dodjelu, fallback vrijednosti i validaciju `date` query parametra.
+
+**Izvršeno:** 25.05.2026.  
+**Komanda:** `npm test -- --run src/__tests__/recenzijaController.test.ts src/__tests__/sobaOccupancyService.test.ts`  
+**Rezultat:** Uspješno — zajedno sa `recenzijaController.test.ts` prošlo 20/20 testova
+
+### 11.1 Metodologija
+
+| Komponenta | Pristup | Razlog |
+| :--- | :--- | :--- |
+| Prisma baza | `prismaMock.soba.findMany`, `prismaMock.rezervacije.findMany`, `prismaMock.termin.findMany` | Potpuna kontrola soba, rezervacija i slobodnih termina |
+| Vrijeme izvršavanja | Ručno proslijeđen `now` parametar | Determinističko testiranje statusa u odnosu na trenutno vrijeme |
+| Datumi | `today`, `YYYY-MM-DD`, nevalidni datumi | Pokrivanje današnjeg, budućeg, prošlog i nepostojećeg datuma |
+| Fallback logika | Nepotpuni doktor/pacijent/tipPregleda podaci | Stabilan odgovor i kada relacije nisu kompletne |
+
+---
+
+### 11.2 Testni slučajevi — statusi i termini kabineta
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-SO-001 | Označava kabinet kao zauzet kada je termin trenutno u toku | Trenutno vrijeme 10:10, rezervacija 10:00-10:30 | Status `ZAUZET`, popunjen `currentAppointment`, sljedeći termin u 11:00, `canAssignEmergency: false` | Uspješno |
+| UT-SO-002 | Označava kabinet kao uskoro zauzet kada sljedeći termin počinje unutar 30 minuta | Trenutno vrijeme 10:00, termin u 10:20 | Status `USKORO_ZAUZET`, `currentAppointment: null`, `nextAppointment` u 10:20 | Uspješno |
+| UT-SO-003 | Označava kabinet kao slobodan i nudi slobodne termine za hitnu dodjelu | Sljedeća rezervacija u 11:40, slobodni termini 10:10 i 10:50 | Status `SLOBODAN`, `availableTerms` sadrži termine, `canAssignEmergency: true` | Uspješno |
+| UT-SO-004 | Nudi naredne slobodne termine kada slobodan kabinet nema termin danas | Nema današnjih rezervacija, slobodan termin 24.05.2026. u 09:00 | `availableTerms` sadrži naredni slobodan termin, `canAssignEmergency: true` | Uspješno |
+| UT-SO-005 | Prihvata konkretan datum i ne označava prošli dan kao uskoro zauzet | `date: "2026-05-22"`, trenutno vrijeme 23.05.2026. | `date: "2026-05-22"`, status `SLOBODAN`, bez trenutnog i sljedećeg termina | Uspješno |
+| UT-SO-006 | Za budući dan vraća prvi sljedeći termin, ali status ostaje slobodan | `date: "2026-05-24"`, termin u 09:00, slobodan termin u 10:00 | Status `SLOBODAN`, prikazan `nextAppointment` i `availableTerms` | Uspješno |
+
+---
+
+### 11.3 Testni slučajevi — fallback i validacija
+
+| ID testa | Naziv testa | Testni podaci | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| UT-SO-007 | Koristi sobu direktno sa rezervacije i fallback trajanje doktora kada tip pregleda nije dodijeljen | Rezervacija ima `idSobe: 1`, `tipPregleda: null` | `currentAppointment.tipPregleda: null`, kraj termina izračunat preko `trajanjePregleda` doktora | Uspješno |
+| UT-SO-008 | Preskače rezervacije i slobodne termine koji se ne mogu povezati | Rezervacija i termin bez povezive sobe | Kabinet ostaje `SLOBODAN`, `availableTerms: []`, `canAssignEmergency: true` | Uspješno |
+| UT-SO-009 | Vraća null za aktivnog doktora kada kabinet nema doktora, termina ni rezervacija | Soba bez doktora i bez termina | `activeDoctor: null`, `canAssignEmergency: false` | Uspješno |
+| UT-SO-010 | Pokriva fallback vrijednosti za doktora, pacijenta, trajanje pregleda i prošle slobodne termine | Doktor bez detalja, pacijent `null`, jedan prošli i jedan budući slobodan termin | Prazna polja doktora, `pacijent: null`, prošli slobodni termin se ne prikazuje | Uspješno |
+| UT-SO-011 | Odbija neispravan date query parametar | `date: "23-05-2026"` | Reject sa statusom 400 i porukom `"Neispravan format datuma. Koristite YYYY-MM-DD ili today."` | Uspješno |
+| UT-SO-012 | Odbija datum koji ne postoji u kalendaru | `date: "2026-02-30"` | Reject sa statusom 400 i porukom `"Uneseni datum ne postoji u kalendaru."` | Uspješno |
+
+---
+
+### 11.4 Pregled rezultata po grupama
+
+| Grupa testova | Broj testova | Rezultat |
+|---|---:|---|
+| Statusi i termini kabineta | 6 | Uspješno |
+| Fallback i validacija | 6 | Uspješno |
+| **Ukupno** | **12** | **Uspješno** |
+
+---
+
+## 12. Integracioni testovi — `sobaOccupancy.integration.test.ts`
+
+Integracioni testovi provjeravaju rutu `GET /api/rooms/occupancy` kroz stvarnu Express aplikaciju. Fokus je na autorizaciji za medicinsko osoblje, zabrani pristupa pacijentima i doktorima, vraćanju liste kabineta za tekući dan, prikazu slobodnih termina za hitne slučajeve i crvenom statusu kada je termin trenutno u toku.
+
+**Komanda:** `npm run test:integration -- src/__integration_tests__/sobaOccupancy.integration.test.ts`  
+**Status lokalnog izvršavanja 25.05.2026:** Blokirano jer Docker daemon nije pokrenut/dostupan (`dockerDesktopLinuxEngine`), pa global setup nije mogao podići Postgres i Redis test kontejnere. Test slučajevi ispod su dokumentovani prema automatizovanom test fajlu.
+
+### 12.1 Metodologija
+
+| Komponenta | Pristup | Razlog |
+| :--- | :--- | :--- |
+| HTTP sloj | `supertest` + stvarna Express `app` instanca | Testiranje realne rute i middleware lanca |
+| Autentifikacija | Ručno potpisani JWT tokeni za različite uloge | Provjera RBAC pravila |
+| Test baza | PrismaClient + seed podaci | Kreiranje slobodnog i zauzetog termina za kabinet |
+| Datum/vrijeme | Dinamički današnji datum i trenutna minuta | Testiranje statusa zauzetosti u realnom vremenu |
+
+---
+
+### 12.2 Testni slučajevi — autorizacija i validacija
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-SO-001 | Odbija zahtjev bez JWT tokena | `GET /api/rooms/occupancy?date=today` bez `Authorization` headera | Status 401, odgovor sadrži `poruka` | Automatizovano |
+| IT-SO-002 | Odbija pacijenta jer samo medicinsko osoblje smije vidjeti zauzetost | JWT sa ulogom `PACIJENT` | Status 403, poruka `"Nemate dozvolu za pristup ovom resursu."` | Automatizovano |
+| IT-SO-003 | Odbija doktora jer US-39 pripada panelu medicinskog osoblja | JWT sa ulogom `DOKTOR` | Status 403 | Automatizovano |
+| IT-SO-006 | Vraća 400 za neispravan format datuma | `date=23-05-2026`, JWT `MEDICINSKO_OSOBLJE` | Status 400, poruka `"Neispravan format datuma. Koristite YYYY-MM-DD ili today."` | Automatizovano |
+
+---
+
+### 12.3 Testni slučajevi — zauzetost kabineta
+
+| ID testa | Naziv testa | Zahtjev | Očekivani rezultat | Status |
+|---|---|---|---|---|
+| IT-SO-004 | Medicinskom osoblju vraća listu kabineta za tekući dan | JWT `MEDICINSKO_OSOBLJE`, kreiran slobodan termin danas | Status 200, `date` je današnji datum, `refreshIntervalSeconds: 60`, soba 1 ima status `SLOBODAN`, `canAssignEmergency: true` | Automatizovano |
+| IT-SO-005 | Označava kabinet crveno kada je termin trenutno u toku | JWT `MEDICINSKO_OSOBLJE`, kreirana rezervacija koja je počela prije 5 minuta | Status 200, soba 1 ima status `ZAUZET`, `canAssignEmergency: false`, popunjen `currentAppointment` | Automatizovano |
+
+---
+
+### 12.4 Pregled rezultata po grupama
+
+| Grupa testova | Broj testova | Rezultat |
+|---|---:|---|
+| Autorizacija i validacija | 4 | Automatizovano |
+| Zauzetost kabineta | 2 | Automatizovano |
+| **Ukupno** | **6** | **Za izvršenje potreban Docker test setup** |
+
+---
+
+## 13. Pregled dodatka za recenzije i zauzetost kabineta
+
+| Tip testiranja | Fajl | Testova | Rezultat |
+|---|---|---:|---|
+| Unit (kontroler) | `recenzijaController.test.ts` | 8 | Uspješno |
+| Unit (servis) | `sobaOccupancyService.test.ts` | 12 | Uspješno |
+| Integracioni | `recenzija.integration.test.ts` | 12 | Automatizovano, lokalno izvršenje blokirano jer Docker nije pokrenut |
+| Integracioni | `sobaOccupancy.integration.test.ts` | 6 | Automatizovano, lokalno izvršenje blokirano jer Docker nije pokrenut |
+| **Ukupno dokumentovano** | | **38** | **20 lokalno izvršeno, 18 zahtijeva Docker test setup** |
+
+---
+
+**Lokalno potvrđen rezultat dodatka:** 20/20 unit testova prošlo.  
+**Napomena za integracione testove:** Za izvršavanje je potrebno pokrenuti Docker Desktop kako bi `vitest.integration.config.ts` mogao startati Postgres i Redis kontejnere iz `docker-compose.test.yml`.

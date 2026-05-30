@@ -1,3 +1,4 @@
+
 # AI Usage Log 
 
 Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja uloge AI alata tokom rada na projektu.

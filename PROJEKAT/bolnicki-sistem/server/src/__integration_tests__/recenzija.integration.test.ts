@@ -8,25 +8,15 @@ const prisma = new PrismaClient();
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "test-secret";
 const DOKTOR_ID = 1;
-//const PACIJENT_ID = 1;
+const PACIJENT_ID = 1;
 const PACIJENT_KORISNIK_ID = 2;
 const TIP_PREGLEDA_ID = 1;
 const SOBA_ID = 1;
 
-
-let PACIJENT_ID: number;  // ← više nije const, i nije 1
-
-
 let PACIJENT_TOKEN: string;
 let DOKTOR_TOKEN: string;
 
-beforeAll(async () => {  // ← dodaj async
-  // Dohvati pravi pacijent ID za korisnika 2
-  const pacijent = await prisma.pacijent.findFirstOrThrow({
-    where: { idKorisnik: PACIJENT_KORISNIK_ID },
-  });
-  PACIJENT_ID = pacijent.id;
-
+beforeAll(() => {
   PACIJENT_TOKEN = jwt.sign(
     { id: PACIJENT_KORISNIK_ID, uloga: "PACIJENT" },
     JWT_SECRET,
