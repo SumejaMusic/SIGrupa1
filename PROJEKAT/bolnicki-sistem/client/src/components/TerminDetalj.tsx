@@ -26,6 +26,9 @@ import {
   statusConfig
 } from "../utils/rezervacijeUtils";
 
+import { UputnicaModal } from "./uputnica/UputnicaModal";
+import { mapTerminNaUputnicu } from "../utils/uputnicaMapper";
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const otvoriNalazPDF = async (nalazId: number) => {
@@ -73,6 +76,7 @@ export function TerminDetalji({
   const [historija, setHistorija] = useState<any[]>([]);
   const [loadingHistorija, setLoadingHistorija] = useState(false);
   const [selectedHistorija, setSelectedHistorija] = useState<any | null>(null);
+  const [showUputnica, setShowUputnica] = useState(false);
 
   // --- STATE ZA HRONIČNOG PACIJENTA ---
   const [isChronic, setIsChronic] = useState(termin.pacijent.hronicniBolesnik || false);
@@ -218,26 +222,36 @@ export function TerminDetalji({
             {tc.trajanje} min
           </span>
 
-          {termin.status === "zakazan" && (
+          {termin.status !== "otkazan" && (
             <div className="ml-auto flex items-center gap-1.5 flex-wrap">
               <button
-                onClick={() => onPromjenaDuzine(termin)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 font-semibold transition-colors border border-orange-200"
+                onClick={() => setShowUputnica(true)}
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-semibold transition-colors border border-indigo-200"
               >
-                <Timer size={10} /> Promijeni dužinu
+                <FileText size={10} /> Uputnica
               </button>
-              <button
-                onClick={() => onOtkaziTermin(termin)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 font-semibold transition-colors border border-red-200"
-              >
-                <XCircle size={10} /> Otkaži
-              </button>
-              <button
-                onClick={() => onZavrsiPregled(termin)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200 font-semibold transition-colors border border-green-200"
-              >
-                <CheckCircle size={10} /> Završi pregled
-              </button>
+              {termin.status === "zakazan" && (
+                <>
+                  <button
+                    onClick={() => onPromjenaDuzine(termin)}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 font-semibold transition-colors border border-orange-200"
+                  >
+                    <Timer size={10} /> Promijeni dužinu
+                  </button>
+                  <button
+                    onClick={() => onOtkaziTermin(termin)}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 font-semibold transition-colors border border-red-200"
+                  >
+                    <XCircle size={10} /> Otkaži
+                  </button>
+                  <button
+                    onClick={() => onZavrsiPregled(termin)}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200 font-semibold transition-colors border border-green-200"
+                  >
+                    <CheckCircle size={10} /> Završi pregled
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -267,6 +281,13 @@ export function TerminDetalji({
           </button>
         ))}
       </div>
+
+      {showUputnica && (
+        <UputnicaModal
+          data={mapTerminNaUputnicu(termin)}
+          onClose={() => setShowUputnica(false)}
+        />
+      )}
 
       {/* Tab sadržaj */}
       <div className="flex-1 overflow-y-auto p-4">
