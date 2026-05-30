@@ -335,9 +335,9 @@ export async function posaljiObavijestIzuzetak(
 
   const terminListHtml = zahvaceniTermini.length
     ? `<ul>${zahvaceniTermini.map((t) => {
-        const rez = t.rezervacije[0];
-        return `<li>${formatVrijeme(t.vrijeme)} — ${rez.pacijent.korisnik.ime} ${rez.pacijent.korisnik.prezime}</li>`;
-      }).join('')}</ul>`
+      const rez = t.rezervacije[0];
+      return `<li>${formatVrijeme(t.vrijeme)} — ${rez.pacijent.korisnik.ime} ${rez.pacijent.korisnik.prezime}</li>`;
+    }).join('')}</ul>`
     : '<p style="color:#888">Nema zakazanih termina za taj dan.</p>';
 
   const result = await getResend().emails.send({

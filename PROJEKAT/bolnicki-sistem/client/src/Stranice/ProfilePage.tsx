@@ -1,9 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import Layout from '../components/Layout';
 import { apiUrl } from '../lib/api';
 import { formatDatumPrikaz, isoUTCdatum } from '../utils/rezervacijeUtils';
 import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle } from 'lucide-react';
 import DatePicker from 'react-datepicker';
+
+const MaskedDateInput = forwardRef<HTMLInputElement, any>(({ value, onChange, ...props }, ref) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 8) val = val.slice(0, 8);
+    let formatted = val;
+    if (val.length > 4) {
+      formatted = `${val.slice(0, 2)}/${val.slice(2, 4)}/${val.slice(4)}`;
+    } else if (val.length > 2) {
+      formatted = `${val.slice(0, 2)}/${val.slice(2)}`;
+    }
+    e.target.value = formatted;
+    if (onChange) onChange(e);
+  };
+  return <input ref={ref} value={value} onChange={handleChange} {...props} />;
+});
 
 interface UserProfile {
   id: number;
@@ -255,14 +271,19 @@ export default function ProfilePage() {
                   </label>
                   {isEditing ? (
                     <DatePicker
-                      selected={editForm.datumRodjenja ? new Date(editForm.datumRodjenja + 'T12:00:00') : null}
+                      customInput={<MaskedDateInput />}
+                      selected={
+                        editForm.datumRodjenja && !isNaN(new Date(editForm.datumRodjenja + 'T12:00:00').getTime())
+                          ? new Date(editForm.datumRodjenja + 'T12:00:00')
+                          : null
+                      }
                       onChange={(date: Date | null) => {
-                        if (date) {
-                          const y = date.getFullYear();
+                        if (date && !isNaN(date.getTime()) && date.getFullYear() >= 1000) {
+                          const y = String(date.getFullYear()).padStart(4, '0');
                           const m = String(date.getMonth() + 1).padStart(2, '0');
                           const d = String(date.getDate()).padStart(2, '0');
                           setEditForm({ ...editForm, datumRodjenja: `${y}-${m}-${d}` });
-                        } else {
+                        } else if (!date) {
                           setEditForm({ ...editForm, datumRodjenja: '' });
                         }
                       }}
