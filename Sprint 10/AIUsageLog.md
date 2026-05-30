@@ -406,3 +406,22 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Prijedloge za hardkodirane URL adrese backenda u korist varijabli okruženja zbog ispravnog rada aplikacije na Renderu. |
 | **Rizici, problemi ili greške** | Razlika u UTC vremenu servera i lokalnom vremenu korisnika (zahtijevalo setHours na nulu). Infobip Trial nalog dozvoljava slanje samo na verifikovane brojeve. |
 | **Ko je koristio alat** | Kenan Hatibović|
+
+---
+
+
+## Unos 024 — Generisanje PDF uputnice specijalistu
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 30.05.2026. |
+| **Sprint broj** | Sprint 10 |
+| **Alat koji je korišten** | Claude (Anthropic) — claude.ai |
+| **Svrha korištenja** | Podrška pri dizajnu modula za generisanje PDF uputnice specijalistu od strane doktora |
+| **Kratak opis zadatka ili upita** | Definisanje strukture PDF uputnice, logike generisanja dokumenta i integracije sa historijom bolesti pacijenta |
+| **Šta je AI predložio ili generisao** | Strukturu PDF dokumenta (podaci o ustanovi, pacijentu, doktoru, dijagnoza sa ICD-10 kodom, ciljani specijalist, oznaka hitnosti), HTML-to-PDF pristup generisanja te logiku arhiviranja uputnice vezivanjem za `pregled_id` i pohranom na siguran storage |
+| **Šta je tim prihvatio** | Struktura PDF dokumenta i HTML-to-PDF pristup; logika arhiviranja vezana za `pregled_id` |
+| **Šta je tim izmijenio** | Dodat logo ustanove u zaglavlje; odabran library usklađen sa postojećim tech stackom; pohrana fajla integrirana sa sigurnim storage modulom iz US-32 |
+| **Šta je tim odbacio** | Automatsko slanje uputnice emailom (odgođeno za naredni sprint); QR kod na uputnici (zahtijeva dodatnu sigurnosnu analizu) |
+| **Rizici, problemi ili greške** | AI je inicijalno predložio pohranu PDF-a kao BLOB u bazi podataka — tim je odbacio prijedlog jer narušava performanse (NFR-18, NFR-19) i zamijenio ga pohranom na storage uz referencu u bazi |
+| **Ko je koristio alat** | Mušić Sumeja |
