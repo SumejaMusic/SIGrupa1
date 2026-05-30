@@ -152,6 +152,6 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | **Razmatrane opcije** | 1. Uvrstiti funkcionalnost u Sprint 10 kao novi user story (US-NEW), 2. Odgoditi implementaciju za Sprint 11, 3. Implementirati kao proširenje postojećeg US-32 (upload nalaza) |
 | **Odabrana opcija** | Uvrstiti u Sprint 10 kao samostalan user story (US-NEW) |
 | **Razlog izbora** | Funkcionalnost je visoko prioritetna za koriničko iskustvo doktora i direktno se naslanja na infrastrukturu sigurnog storage modula već implementiranog u Sprintu 9 (US-32). Uvođenje u Sprint 10 ne narušava planirani scope, a odgađanje bi stvorilo tehnički dug i usporilo Release 3. |
-| **Posljedice odluke** | Tim implementira formu za unos podataka uputnice, PDF generisanje i arhiviranje dokumenta u historiji bolesti. Automatsko slanje uputnice emailom i QR kod odgođeni su za naredni sprint kako se ne bi prekoračio scope. Pohrana fajla integrirana je sa postojećim storage modulom (US-32). |
+| **Posljedice odluke** | Tim implementira formu za unos podataka uputnice, PDF generisanje i arhiviranje dokumenta u historiji bolesti.  |
 | **Status odluke** | Aktivna |
 
