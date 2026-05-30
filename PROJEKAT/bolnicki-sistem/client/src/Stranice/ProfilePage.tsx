@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { apiUrl } from '../lib/api';
 import { formatDatumPrikaz, isoUTCdatum } from '../utils/rezervacijeUtils';
@@ -129,7 +129,7 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data.korisnik);
-        setMessage({ text: 'Profil uspjeÅ¡no aÅ¾uriran', type: 'success' });
+        setMessage({ text: 'Profil uspješno ažuriran', type: 'success' });
         setIsEditing(false);
 
         // Update local storage name
@@ -143,10 +143,10 @@ export default function ProfilePage() {
         }
       } else {
         const err = await res.json();
-        setMessage({ text: err.poruka || 'DoÅ¡lo je do greÅ¡ke', type: 'error' });
+        setMessage({ text: err.poruka || 'Došlo je do greške', type: 'error' });
       }
     } catch (err) {
-      setMessage({ text: 'GreÅ¡ka servera. PokuÅ¡ajte ponovo.', type: 'error' });
+      setMessage({ text: 'Greška servera. Pokušajte ponovo.', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -176,10 +176,10 @@ export default function ProfilePage() {
           fetchDeaktivacijaStatus(profile.id, token);
         }
       } else {
-        setDeaktivacijaMessage({ text: data.poruka || 'GreÅ¡ka pri podnoÅ¡enju zahtjeva.', type: 'error' });
+        setDeaktivacijaMessage({ text: data.poruka || 'Greška pri podnošenju zahtjeva.', type: 'error' });
       }
     } catch {
-      setDeaktivacijaMessage({ text: 'GreÅ¡ka servera. PokuÅ¡ajte ponovo.', type: 'error' });
+      setDeaktivacijaMessage({ text: 'Greška servera. Pokušajte ponovo.', type: 'error' });
     } finally {
       setDeaktivacijaLoading(false);
     }
@@ -206,7 +206,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <Layout step={1} totalSteps={1} breadcrumbs={['Profil']}>
-        <div className="p-4 bg-red-50 text-red-600 rounded-lg">Nije moguÄ‡e uÄitati profil.</div>
+        <div className="p-4 bg-red-50 text-red-600 rounded-lg">Nije moguće učitati profil.</div>
       </Layout>
     );
   }
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">{profile.ime} {profile.prezime}</h1>
-                  <p className="text-blue-100 mt-1">VaÅ¡i liÄni podaci</p>
+                  <p className="text-blue-100 mt-1">Vaši lični podaci</p>
                 </div>
               </div>
               {!isEditing ? (
@@ -329,11 +329,11 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Datum roÄ‘enja */}
+                {/* Datum rođenja */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Calendar size={16} className="text-gray-400" />
-                    Datum roÄ‘enja
+                    Datum rođenja
                   </label>
                   {isEditing ? (
                     <DatePicker
@@ -378,7 +378,7 @@ export default function ProfilePage() {
                     ) : (
                       <Save size={18} />
                     )}
-                    <span>SaÄuvaj izmjene</span>
+                    <span>Sačuvaj izmjene</span>
                   </button>
                 </div>
               )}
@@ -386,16 +386,16 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-            PRIVATNOST I DEAKTIVACIJA â€” samo za PACIJENT ulogu
-           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* -----------------------------------------------------------
+            PRIVATNOST I DEAKTIVACIJA — samo za PACIJENT ulogu
+           ----------------------------------------------------------- */}
         {uloga === "PACIJENT" && (
           <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-8 py-5 border-b border-gray-100 flex items-center gap-3">
               <Shield size={20} className="text-gray-500" />
               <div>
                 <h2 className="text-lg font-semibold text-gray-800">Privatnost i deaktivacija</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Upravljanje VaÅ¡im nalogom i liÄnim podacima</p>
+                <p className="text-sm text-gray-500 mt-0.5">Upravljanje Vašim nalogom i ličnim podacima</p>
               </div>
             </div>
 
@@ -414,43 +414,41 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-sm text-blue-800 font-medium">Zakonski rok obrade</p>
                     <p className="text-sm text-blue-700 mt-1">
-                      U skladu sa zakonom o zaÅ¡titi liÄnih podataka, zahtjev za deaktivaciju naloga Ä‡e biti obraÄ‘en u roku od <strong>30 dana</strong> od podnoÅ¡enja.
-                      Medicinski podaci se Äuvaju u anonimizovanoj formi zbog zakonske obaveze.
+                      U skladu sa zakonom o zaštiti ličnih podataka, zahtjev za deaktivaciju naloga će biti obrađen u roku od <strong>30 dana</strong> od podnošenja.
+                      Medicinski podaci se čuvaju u anonimizovanoj formi zbog zakonske obaveze.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Prikaz statusa postojeÄ‡eg zahtjeva */}
+              {/* Prikaz statusa postojećeg zahtjeva */}
               {deaktivacijaZahtjev && (
-                <div className={`rounded-lg p-4 mb-6 border ${
-                  deaktivacijaZahtjev.status === 'NA_CEKANJU'
-                    ? 'bg-amber-50 border-amber-200'
-                    : deaktivacijaZahtjev.status === 'ODOBRENO'
+                <div className={`rounded-lg p-4 mb-6 border ${deaktivacijaZahtjev.status === 'NA_CEKANJU'
+                  ? 'bg-amber-50 border-amber-200'
+                  : deaktivacijaZahtjev.status === 'ODOBRENO'
                     ? 'bg-green-50 border-green-200'
                     : 'bg-red-50 border-red-200'
-                }`}>
+                  }`}>
                   <div className="flex items-start gap-3">
                     {deaktivacijaZahtjev.status === 'NA_CEKANJU' && <Clock size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />}
                     {deaktivacijaZahtjev.status === 'ODOBRENO' && <CheckCircle size={20} className="text-green-600 mt-0.5 flex-shrink-0" />}
                     {deaktivacijaZahtjev.status === 'ODBIJENO' && <X size={20} className="text-red-600 mt-0.5 flex-shrink-0" />}
                     <div className="flex-1">
-                      <p className={`text-sm font-medium ${
-                        deaktivacijaZahtjev.status === 'NA_CEKANJU' ? 'text-amber-800'
-                          : deaktivacijaZahtjev.status === 'ODOBRENO' ? 'text-green-800'
+                      <p className={`text-sm font-medium ${deaktivacijaZahtjev.status === 'NA_CEKANJU' ? 'text-amber-800'
+                        : deaktivacijaZahtjev.status === 'ODOBRENO' ? 'text-green-800'
                           : 'text-red-800'
-                      }`}>
-                        {deaktivacijaZahtjev.status === 'NA_CEKANJU' && 'Zahtjev je na Äekanju'}
+                        }`}>
+                        {deaktivacijaZahtjev.status === 'NA_CEKANJU' && 'Zahtjev je na čekanju'}
                         {deaktivacijaZahtjev.status === 'ODOBRENO' && 'Zahtjev je odobren'}
                         {deaktivacijaZahtjev.status === 'ODBIJENO' && 'Zahtjev je odbijen'}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
                         Podnesen: {formatDatum(deaktivacijaZahtjev.kreiranAt)}
-                        {deaktivacijaZahtjev.obradenAt && ` Â· ObraÄ‘en: ${formatDatum(deaktivacijaZahtjev.obradenAt)}`}
+                        {deaktivacijaZahtjev.obradenAt && ` · Obrađen: ${formatDatum(deaktivacijaZahtjev.obradenAt)}`}
                       </p>
                       {deaktivacijaZahtjev.adminObrazlozenje && (
                         <p className="text-sm text-gray-600 mt-2">
-                          <strong>ObrazloÅ¾enje:</strong> {deaktivacijaZahtjev.adminObrazlozenje}
+                          <strong>Obrazloženje:</strong> {deaktivacijaZahtjev.adminObrazlozenje}
                         </p>
                       )}
                     </div>
@@ -464,15 +462,15 @@ export default function ProfilePage() {
                   <div className="flex items-start gap-3">
                     <AlertTriangle size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">ZatraÅ¾i deaktivaciju naloga</p>
+                      <p className="text-sm font-medium text-gray-800">Zatraži deaktivaciju naloga</p>
                       <p className="text-sm text-gray-600 mt-1">
-                        Ovom akcijom pokreÄ‡ete postupak trajne deaktivacije VaÅ¡eg naloga. VaÅ¡i liÄni podaci Ä‡e biti anonimizirani, a aktivni termini otkazani.
+                        Ovom akcijom pokrećete postupak trajne deaktivacije Vašeg naloga. Vaši lični podaci će biti anonimizirani, a aktivni termini otkazani.
                       </p>
                       <button
                         onClick={() => setShowDeaktivacijaModal(true)}
                         className="mt-4 px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
                       >
-                        ZatraÅ¾i deaktivaciju naloga
+                        Zatraži deaktivaciju naloga
                       </button>
                     </div>
                   </div>
@@ -481,7 +479,7 @@ export default function ProfilePage() {
 
               {deaktivacijaZahtjev?.status === 'NA_CEKANJU' && (
                 <p className="text-sm text-gray-500 italic">
-                  VaÅ¡ zahtjev se trenutno obraÄ‘uje. BiÄ‡ete obavijeÅ¡teni emailom o odluci.
+                  Vaš zahtjev se trenutno obrađuje. Bićete obaviješteni emailom o odluci.
                 </p>
               )}
             </div>
@@ -507,13 +505,13 @@ export default function ProfilePage() {
               <div className="p-6">
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
                   <p className="text-sm text-amber-800">
-                    <strong>Upozorenje:</strong> Po odobrenju zahtjeva, sljedeÄ‡e akcije Ä‡e se izvrÅ¡iti:
+                    <strong>Upozorenje:</strong> Po odobrenju zahtjeva, sljedeće akcije će se izvršiti:
                   </p>
                   <ul className="text-sm text-amber-700 mt-2 space-y-1 list-disc pl-5">
-                    <li>VaÅ¡i liÄni podaci (ime, email, telefon, JMBG) biÄ‡e anonimizirani</li>
-                    <li>Aktivni zakazani termini biÄ‡e otkazani</li>
-                    <li>NeÄ‡ete moÄ‡i pristupiti nalogu</li>
-                    <li>Medicinski podaci ostaju saÄuvani u anonimizovanoj formi</li>
+                    <li>Vaši lični podaci (ime, email, telefon, JMBG) biće anonimizirani</li>
+                    <li>Aktivni zakazani termini biće otkazani</li>
+                    <li>Nećete moći pristupiti nalogu</li>
+                    <li>Medicinski podaci ostaju sačuvani u anonimizovanoj formi</li>
                   </ul>
                 </div>
 
@@ -525,7 +523,7 @@ export default function ProfilePage() {
                     value={deaktivacijaRazlog}
                     onChange={(e) => setDeaktivacijaRazlog(e.target.value)}
                     rows={3}
-                    placeholder="Navedite razlog zaÅ¡to Å¾elite deaktivirati nalog..."
+                    placeholder="Navedite razlog zašto želite deaktivirati nalog..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none text-sm"
                   />
                 </div>
@@ -558,4 +556,3 @@ export default function ProfilePage() {
     </Layout>
   );
 }
-

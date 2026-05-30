@@ -1991,6 +1991,7 @@ function TabDeaktivacije() {
   const [odbijObrazlozenje, setOdbijObrazlozenje] = useState("");
   const [statusFilter, setStatusFilter] = useState("NA_CEKANJU");
   const [poruka, setPoruka] = useState<{ tekst: string; tip: "success" | "error" } | null>(null);
+  const [odabraniZahtjev, setOdabraniZahtjev] = useState<any | null>(null);
 
   const fetchZahtjevi = useCallback(async () => {
     setLoading(true);
@@ -2091,7 +2092,7 @@ function TabDeaktivacije() {
               </thead>
               <tbody>
                 {zahtjevi.map((z) => (
-                  <tr key={z.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <tr key={z.id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setOdabraniZahtjev(z)}>
                     <td className="px-4 py-3">
                       <div className="font-medium text-white">{z.korisnik.ime} {z.korisnik.prezime}</div>
                       <div className="text-xs text-white/40">{z.korisnik.email}</div>
@@ -2115,14 +2116,14 @@ function TabDeaktivacije() {
                       {z.status === "NA_CEKANJU" ? (
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleOdluka(z.id, "ODOBRENO")}
+                            onClick={(e) => { e.stopPropagation(); handleOdluka(z.id, "ODOBRENO"); }}
                             disabled={obradaZahtjeva === z.id}
                             className="px-3 py-1.5 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded text-xs transition-colors border border-green-500/20 disabled:opacity-50"
                           >
                             Odobri
                           </button>
                           <button
-                            onClick={() => setShowOdbijModal(z.id)}
+                            onClick={(e) => { e.stopPropagation(); setShowOdbijModal(z.id); }}
                             disabled={obradaZahtjeva === z.id}
                             className="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded text-xs transition-colors border border-red-500/20 disabled:opacity-50"
                           >
@@ -2142,6 +2143,68 @@ function TabDeaktivacije() {
           </div>
         )}
       </div>
+
+      {odabraniZahtjev && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setOdabraniZahtjev(null)}>
+          <div className="bg-[#1a1a2e] rounded-xl border border-white/10 shadow-2xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">Detalji zahtjeva</h3>
+              <button onClick={() => setOdabraniZahtjev(null)} className="text-white/40 hover:text-white transition-colors text-xl leading-none">
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-5 text-sm text-white/80">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5">
+                  <span className="text-white/40 block text-[10px] uppercase tracking-wider mb-1 font-semibold">Pacijent</span>
+                  <div className="font-medium text-white text-base">{odabraniZahtjev.korisnik.ime} {odabraniZahtjev.korisnik.prezime}</div>
+                  <div className="text-white/50 text-xs mt-0.5">{odabraniZahtjev.korisnik.email}</div>
+                </div>
+                <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5">
+                  <span className="text-white/40 block text-[10px] uppercase tracking-wider mb-1 font-semibold">Status</span>
+                  <span className={`inline-block px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider ${
+                    odabraniZahtjev.status === "NA_CEKANJU" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                    odabraniZahtjev.status === "ODOBRENO" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                    "bg-red-500/10 text-red-400 border border-red-500/20"
+                  }`}>
+                    {odabraniZahtjev.status.replace("_", " ")}
+                  </span>
+                  <div className="text-white/40 text-[10px] uppercase tracking-wider mt-2 font-semibold">Kreirano</div>
+                  <div className="text-white/60 text-xs">{new Date(odabraniZahtjev.kreiranAt).toLocaleString("bs-BA")}</div>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-white/40 block text-[10px] uppercase tracking-wider mb-2 font-semibold ml-1">Razlog pacijenta</span>
+                <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5 whitespace-pre-wrap text-white/70 min-h-[80px] max-h-[160px] overflow-y-auto break-words [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
+                  {odabraniZahtjev.razlogKorisnika || <span className="italic text-white/30">Nije navedeno</span>}
+                </div>
+              </div>
+
+              {odabraniZahtjev.status !== "NA_CEKANJU" && (
+                <div>
+                  <div className="flex justify-between items-baseline mb-2 ml-1">
+                    <span className="text-white/40 block text-[10px] uppercase tracking-wider font-semibold">Obrazloženje admina</span>
+                    <span className="text-white/30 text-[10px]">{odabraniZahtjev.obradenAt ? new Date(odabraniZahtjev.obradenAt).toLocaleString("bs-BA") : ""}</span>
+                  </div>
+                  <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5 whitespace-pre-wrap text-white/70 min-h-[80px] max-h-[160px] overflow-y-auto break-words [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
+                    {odabraniZahtjev.adminObrazlozenje || <span className="italic text-white/30">Nema obrazloženja</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setOdabraniZahtjev(null)}
+                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors text-sm font-medium border border-white/10"
+              >
+                Zatvori
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showOdbijModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
