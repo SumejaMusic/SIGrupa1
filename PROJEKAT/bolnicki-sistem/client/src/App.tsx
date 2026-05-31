@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";  // dodaj useCallback
 import { isTokenValid, handleExpiredSession } from './utils/auth';
 import HomePage from './Stranice/HomePage';
 import AdminPanel from './Stranice/AdminPanel';
+import MenadzmantPanel from './Stranice/MenadzmentPanel';
 //import RezervacijaPacijent from './klase/RezervacijaPacijent';
 
 import MojeRezervacije from './klase/MojeRezervacije';
@@ -161,6 +162,12 @@ function AppContent() {
       <AdminPanel />
     </ProtectedRoute>
   } />
+
+  <Route path="/menadzment" element={
+  <ProtectedRoute allowedUloge={["VLASNIK", "ADMINISTRATOR"]}>
+    <MenadzmantPanel />
+  </ProtectedRoute>
+} />
 
   {/* Rezervacija — pacijent, doktor i admin */}
   <Route path="/step1-odjeli" element={

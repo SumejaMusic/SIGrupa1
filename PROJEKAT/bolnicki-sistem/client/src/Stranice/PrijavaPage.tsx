@@ -100,21 +100,25 @@ if (socket && socket.connected) {
       // Redirect prema ulozi korisnika
       const uloga = data.korisnik.uloga;
       switch (uloga) {
-        case "DOKTOR":
-          navigate("/doktor-rezervacije");
-          break;
-        case "PACIJENT":
-          navigate("/moje-rezervacije");
-          break;
-        case "MEDICINSKO_OSOBLJE":
-          navigate("/osoblje-panel");
-          break;
-        case "ADMINISTRATOR":
-        case "VLASNIK":
-        default:
-          navigate("/");
-          break;
-      }
+      case "DOKTOR":
+        navigate("/doktor-rezervacije");
+        break;
+      case "PACIJENT":
+        navigate("/moje-rezervacije");
+        break;
+      case "MEDICINSKO_OSOBLJE":
+        navigate("/osoblje-panel");
+        break;
+      case "ADMINISTRATOR":
+        navigate("/admin");
+        break;
+      case "VLASNIK":
+        navigate("/menadzment");
+        break;
+      default:
+        navigate("/");
+        break;
+    }
     } catch {
       setGreske({ opsta: 'Greška servera. Pokušajte ponovo.' });
     } finally {
