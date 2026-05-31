@@ -1,8 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Activity, ShieldCheck, RefreshCw } from 'lucide-react';
 import { apiUrl } from '../lib/api';
 import DatePicker from 'react-datepicker';
+
+const MaskedDateInput = forwardRef<HTMLInputElement, any>(({ value, onChange, ...props }, ref) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 8) val = val.slice(0, 8);
+    let formatted = val;
+    if (val.length > 4) {
+      formatted = `${val.slice(0, 2)}/${val.slice(2, 4)}/${val.slice(4)}`;
+    } else if (val.length > 2) {
+      formatted = `${val.slice(0, 2)}/${val.slice(2)}`;
+    }
+    e.target.value = formatted;
+    if (onChange) onChange(e);
+  };
+  return <input ref={ref} value={value} onChange={handleChange} {...props} />;
+});
 
 interface Greske {
   ime?: string;
@@ -460,10 +476,15 @@ export default function RegistracijaPage() {
               <div className="mb-4">
                 <label className="block text-xs text-gray-500 mb-1">Datum rođenja</label>
                 <DatePicker
-                  selected={podaci.datumRodjenja ? new Date(podaci.datumRodjenja + 'T12:00:00') : null}
+                  customInput={<MaskedDateInput />}
+                  selected={
+                    podaci.datumRodjenja && !isNaN(new Date(podaci.datumRodjenja + 'T12:00:00').getTime())
+                      ? new Date(podaci.datumRodjenja + 'T12:00:00')
+                      : null
+                  }
                   onChange={(date: Date | null) => {
-                    if (date) {
-                      const y = date.getFullYear();
+                    if (date && !isNaN(date.getTime()) && date.getFullYear() >= 1000) {
+                      const y = String(date.getFullYear()).padStart(4, '0');
                       const m = String(date.getMonth() + 1).padStart(2, '0');
                       const d = String(date.getDate()).padStart(2, '0');
                       const iso = `${y}-${m}-${d}`;
@@ -471,7 +492,7 @@ export default function RegistracijaPage() {
                       if (greske.datumRodjenja) {
                         setGreske(prev => ({ ...prev, datumRodjenja: validirajPolje('datumRodjenja', iso) }));
                       }
-                    } else {
+                    } else if (!date) {
                       setPodaci(prev => ({ ...prev, datumRodjenja: '' }));
                     }
                   }}
