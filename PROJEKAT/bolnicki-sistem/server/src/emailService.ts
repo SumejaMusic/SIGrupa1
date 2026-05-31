@@ -53,10 +53,23 @@ function formatDatumEmail(datum: Date): string {
   return `${d}/${m}/${y}`;
 }
 
-function getResend(): Resend {
+function getResend(): any {
   if (!process.env.RESEND_API_KEY) {
     throw new Error('Missing API key. Pass it to the constructor `new Resend("re_123")`');
   }
+
+  // Mock implementation for dummy key
+  if (process.env.RESEND_API_KEY === 're_123456789') {
+    return {
+      emails: {
+        send: async (payload: any) => {
+          console.log("[MOCK RESEND] Simulirano slanje emaila na:", payload.to, "Tema:", payload.subject);
+          return { data: { id: "mock_email_id" }, error: null };
+        }
+      }
+    };
+  }
+
   return new Resend(process.env.RESEND_API_KEY);
 }
 
@@ -506,3 +519,145 @@ export async function posaljiPozivZaOcjenu(podaci: PozivZaOcjenuEmailPodaci): Pr
   }
   console.log(`✅ Poziv za anonimnu ocjenu rezervacije #${rezervacijaId} poslan.`);
 }
+
+// ══════════════════════════════════════════════════════════════
+//  EMAIL ZA DEAKTIVACIJU NALOGA
+// ══════════════════════════════════════════════════════════════
+
+export async function posaljiPotvrdZahtjevaDeaktivacije(email: string, ime: string): Promise<void> {
+  const result = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to: TO_EMAIL,
+    subject: '📋 Potvrda zahtjeva za deaktivaciju naloga',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #6b21a8; padding: 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 22px;">📋 Zahtjev za deaktivaciju primljen</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p style="font-size: 16px;">Poštovani/a <strong>${ime}</strong>,</p>
+          <p style="color: #555;">Vaš zahtjev za deaktivaciju naloga je uspješno primljen. Zahtjev će biti obrađen u skladu sa zakonskim rokom od <strong>30 dana</strong>.</p>
+          <div style="background-color: #f0f4ff; border: 1px solid #1a73e8; border-radius: 4px; padding: 14px 16px; margin: 20px 0;">
+            <strong>ℹ️ Šta dalje:</strong>
+            <ul style="margin: 8px 0 0; padding-left: 20px; color: #555;">
+              <li>Administrator će pregledati Vaš zahtjev.</li>
+              <li>Bićete obaviješteni emailom o odluci.</li>
+              <li>Ukoliko imate zakazane termine, oni će biti otkazani po odobrenju.</li>
+              <li>Medicinski podaci će biti sačuvani u anonimizovanoj formi.</li>
+            </ul>
+          </div>
+          <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 14px 16px; margin-top: 20px;">
+            <strong>⚠️ Napomena:</strong> Do odluke o zahtjevu, Vaš nalog ostaje aktivan i možete ga normalno koristiti.
+          </div>
+        </div>
+        <div style="background-color: #f8f9fa; padding: 16px; text-align: center; border-top: 1px solid #dee2e6;">
+          <p style="margin: 0; color: #888; font-size: 13px;">
+            © ${new Date().getFullYear()} Bolnički Sistem — Automatska obavijest, ne odgovarajte na ovaj email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+
+  if (result.error) {
+    throw new Error(`Resend nije poslao potvrdu zahtjeva deaktivacije: ${result.error.message}`);
+  }
+  console.log(`✅ Potvrda zahtjeva za deaktivaciju poslana.`);
+}
+
+export async function posaljiOdlukuDeaktivacije(
+  email: string,
+  ime: string,
+  odobreno: boolean,
+  obrazlozenje?: string
+): Promise<void> {
+  const subject = odobreno
+    ? '✅ Zahtjev za deaktivaciju naloga — odobren'
+    : '❌ Zahtjev za deaktivaciju naloga — odbijen';
+
+  const bgColor = odobreno ? '#15803d' : '#e53e3e';
+  const naslov = odobreno ? '✅ Zahtjev odobren' : '❌ Zahtjev odbijen';
+
+  const sadrzaj = odobreno
+    ? `<p style="color: #555;">Vaš zahtjev za deaktivaciju naloga je <strong>odobren</strong>. Vaš nalog je deaktiviran i lični podaci su anonimizirani u skladu sa zakonom.</p>
+       <div style="background-color: #f0fdf4; border: 1px solid #22c55e; border-radius: 4px; padding: 14px 16px; margin: 20px 0;">
+         <strong>ℹ️ Informacija:</strong> Medicinski podaci su sačuvani u anonimizovanoj formi zbog zakonske obaveze. Vaš nalog više nije aktivan.
+       </div>`
+    : `<p style="color: #555;">Vaš zahtjev za deaktivaciju naloga je <strong>odbijen</strong>.</p>
+       ${obrazlozenje ? `
+       <div style="background-color: #fef2f2; border: 1px solid #ef4444; border-radius: 4px; padding: 14px 16px; margin: 20px 0;">
+         <strong>Obrazloženje:</strong> ${obrazlozenje}
+       </div>` : ''}
+       <p style="color: #555;">Vaš nalog ostaje aktivan. Možete podnijeti novi zahtjev ako smatrate da je to potrebno.</p>`;
+
+  const result = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to: TO_EMAIL,
+    subject,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: ${bgColor}; padding: 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 22px;">${naslov}</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p style="font-size: 16px;">Poštovani/a <strong>${ime}</strong>,</p>
+          ${sadrzaj}
+        </div>
+        <div style="background-color: #f8f9fa; padding: 16px; text-align: center; border-top: 1px solid #dee2e6;">
+          <p style="margin: 0; color: #888; font-size: 13px;">
+            © ${new Date().getFullYear()} Bolnički Sistem — Automatska obavijest, ne odgovarajte na ovaj email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+
+  if (result.error) {
+    throw new Error(`Resend nije poslao odluku o deaktivaciji: ${result.error.message}`);
+  }
+  console.log(`✅ Email odluke o deaktivaciji poslan (${odobreno ? 'odobreno' : 'odbijeno'}).`);
+}
+
+export async function posaljiObavijestOtkazTerminaDeaktivacija(
+  email: string,
+  ime: string,
+  termini: { datum: Date; vrijeme: number; doktorIme: string; doktorPrezime: string }[]
+): Promise<void> {
+  if (termini.length === 0) return;
+
+  const terminListHtml = termini
+    .map(
+      (t) =>
+        `<li>${formatDatumEmail(t.datum)} u ${formatVrijeme(t.vrijeme)} — Dr. ${t.doktorIme} ${t.doktorPrezime}</li>`
+    )
+    .join('');
+
+  const result = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to: TO_EMAIL,
+    subject: '⚠️ Otkazani termini — deaktivacija naloga',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #d97706; padding: 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 22px;">⚠️ Termini otkazani</h1>
+        </div>
+        <div style="padding: 30px;">
+          <p style="font-size: 16px;">Poštovani/a <strong>${ime}</strong>,</p>
+          <p style="color: #555;">Zbog odobrenja Vašeg zahtjeva za deaktivaciju naloga, sljedeći zakazani termini su automatski otkazani:</p>
+          <ul style="line-height: 1.8;">${terminListHtml}</ul>
+        </div>
+        <div style="background-color: #f8f9fa; padding: 16px; text-align: center; border-top: 1px solid #dee2e6;">
+          <p style="margin: 0; color: #888; font-size: 13px;">
+            © ${new Date().getFullYear()} Bolnički Sistem — Automatska obavijest, ne odgovarajte na ovaj email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+
+  if (result.error) {
+    throw new Error(`Resend nije poslao obavijest o otkazanim terminima: ${result.error.message}`);
+  }
+  console.log(`✅ Obavijest o ${termini.length} otkazanih termina zbog deaktivacije poslana.`);
+}
+

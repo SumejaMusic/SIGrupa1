@@ -211,6 +211,17 @@ export const resetPassword = async (req: Request, res: Response) => {
       return;
     }
 
+    // Spriječi reset lozinke za deaktivirane/anonimizirane naloge
+    const korisnikZaReset = await prisma.korisnik.findUnique({
+      where: { id: resetToken.idKorisnika },
+      select: { email: true },
+    });
+
+    if (!korisnikZaReset || korisnikZaReset.email.endsWith("@anon.local")) {
+      res.status(403).json({ poruka: "Ovaj nalog je deaktiviran i ne može biti reaktiviran." });
+      return;
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
