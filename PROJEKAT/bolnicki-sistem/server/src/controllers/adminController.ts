@@ -995,24 +995,46 @@ export const deleteAdminOdjel = async (req: Request, res: Response) => {
 
 export const getAnalitika = async (req: Request, res: Response) => {
   try {
-    const danas = new Date();
-    danas.setHours(0, 0, 0, 0);
+  const { period = "mjesec", datumOd, datumDo } = req.query;
 
-    const sutra = new Date(danas);
-    sutra.setDate(danas.getDate() + 1);
+const danas = new Date();
+danas.setHours(0, 0, 0, 0);
+const sutra = new Date(danas);
+sutra.setDate(danas.getDate() + 1);
 
-    // Start of week (Monday)
-    const dow = danas.getDay();
-    const diffToMonday = dow === 0 ? -6 : 1 - dow;
-    const pocetakSedmice = new Date(danas);
-    pocetakSedmice.setDate(danas.getDate() + diffToMonday);
-    const krajSedmice = new Date(pocetakSedmice);
-    krajSedmice.setDate(pocetakSedmice.getDate() + 7);
+let pocetakPerioda: Date;
+let krajPerioda: Date;
 
-    // Current month range
-    const pocetakMjeseca = new Date(danas.getFullYear(), danas.getMonth(), 1);
-    const krajMjeseca = new Date(danas.getFullYear(), danas.getMonth() + 1, 0);
-    krajMjeseca.setHours(23, 59, 59, 999);
+if (period === "custom" && datumOd && datumDo) {
+  pocetakPerioda = new Date(String(datumOd));
+  krajPerioda = new Date(String(datumDo));
+  krajPerioda.setHours(23, 59, 59, 999);
+} else if (period === "sedmica") {
+  const dow = danas.getDay();
+  const diffToMonday = dow === 0 ? -6 : 1 - dow;
+  pocetakPerioda = new Date(danas);
+  pocetakPerioda.setDate(danas.getDate() + diffToMonday);
+  krajPerioda = new Date(pocetakPerioda);
+  krajPerioda.setDate(pocetakPerioda.getDate() + 7);
+} else if (period === "danas") {
+  pocetakPerioda = danas;
+  krajPerioda = sutra;
+} else {
+  pocetakPerioda = new Date(danas.getFullYear(), danas.getMonth(), 1);
+  krajPerioda = new Date(danas.getFullYear(), danas.getMonth() + 1, 0);
+  krajPerioda.setHours(23, 59, 59, 999);
+}
+
+// Za kartice — uvijek tekuća sedmica/danas bez obzira na filter
+const dow = danas.getDay();
+const diffToMonday = dow === 0 ? -6 : 1 - dow;
+const pocetakSedmice = new Date(danas);
+pocetakSedmice.setDate(danas.getDate() + diffToMonday);
+const krajSedmice = new Date(pocetakSedmice);
+krajSedmice.setDate(pocetakSedmice.getDate() + 7);
+
+const pocetakMjeseca = pocetakPerioda;
+const krajMjeseca = krajPerioda;
 
     const [terminDanas, terminSedmica, ukupnoMjesec, otkazaniMjesec, propusteniMjesec] =
       await Promise.all([

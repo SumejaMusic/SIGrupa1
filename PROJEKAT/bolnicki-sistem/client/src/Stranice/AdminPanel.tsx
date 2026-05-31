@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
+import StatistikaDashboard from "../components/StatistikaDashboard";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const API = `${BASE_URL}/api`;
 
@@ -1983,7 +1983,7 @@ function TabAnalitika() {
 // ══════════════════════════════════════════════════════════════
 //  GLAVNI ADMIN PANEL
 // ══════════════════════════════════════════════════════════════
-type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika";
+type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "statistika";
 
 export default function AdminPanel() {
   const [aktivniTab, setAktivniTab] = useState<Tab>("korisnici");
@@ -1995,6 +1995,7 @@ export default function AdminPanel() {
     { key: "termini", label: "Termini", opis: "Pregled svih zakazanih termina" },
     { key: "odjeli", label: "Odjeli", opis: "Pregled, dodavanje i brisanje odjela" },
     { key: "analitika", label: "Analitika", opis: "Statistike bukiranja po odjelu i doktoru" },
+    { key: "statistika", label: "Statistika", opis: "Grafički prikaz statistike zakazanih pregleda" },
   ];
 
   return (
@@ -2042,6 +2043,7 @@ export default function AdminPanel() {
         {aktivniTab === "termini" && <TabTermini />}
         {aktivniTab === "odjeli" && <TabOdjeli />}
         {aktivniTab === "analitika" && <TabAnalitika />}
+        {aktivniTab === "statistika" && <StatistikaDashboard />}
       </div>
     </div>
   );
