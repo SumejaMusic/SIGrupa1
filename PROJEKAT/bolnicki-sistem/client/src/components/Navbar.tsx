@@ -280,18 +280,36 @@ export default function Navbar() {
                   Panel osoblja
                 </button>
               )}
-              {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
+              {korisnik.uloga === 'VLASNIK' && (
+              <button
+                onClick={() => navigate('/menadzment')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  scrolled ? 'text-purple-700 border border-purple-200 hover:bg-purple-50' : 'text-white border border-white/30 hover:bg-white/10'
+                }`}
+              >
+                Menadžment Panel
+              </button>
+            )}
+            {korisnik.uloga === 'ADMINISTRATOR' && (
+              <>
+                <button
+                  onClick={() => navigate('/menadzment')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    scrolled ? 'text-purple-700 border border-purple-200 hover:bg-purple-50' : 'text-white border border-white/30 hover:bg-white/10'
+                  }`}
+                >
+                  Menadžment Panel
+                </button>
                 <button
                   onClick={() => navigate('/admin')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    scrolled
-                      ? 'text-purple-700 border border-purple-200 hover:bg-purple-50'
-                      : 'text-white border border-white/30 hover:bg-white/10'
+                    scrolled ? 'text-purple-700 border border-purple-200 hover:bg-purple-50' : 'text-white border border-white/30 hover:bg-white/10'
                   }`}
                 >
                   Admin Panel
                 </button>
-              )}
+              </>
+            )}
 
               <button
 
@@ -411,11 +429,21 @@ export default function Navbar() {
                     Panel osoblja
                   </button>
                 )}
-                {(korisnik.uloga === 'ADMINISTRATOR' || korisnik.uloga === 'VLASNIK') && (
-                  <button onClick={() => { navigate('/admin'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
-                    Admin Panel
-                  </button>
-                )}
+                {korisnik.uloga === 'VLASNIK' && (
+                    <button onClick={() => { navigate('/menadzment'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
+                      Menadžment Panel
+                    </button>
+                  )}
+                  {korisnik.uloga === 'ADMINISTRATOR' && (
+                    <>
+                      <button onClick={() => { navigate('/menadzment'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
+                        Menadžment Panel
+                      </button>
+                      <button onClick={() => { navigate('/admin'); setMenuOpen(false); }} className="flex-1 py-2 rounded-lg text-sm font-medium text-purple-700 border border-purple-200 hover:bg-purple-50">
+                        Admin Panel
+                      </button>
+                    </>
+                  )}
                 <button onClick={odjava} className="flex-1 py-2 rounded-lg text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50">
 
                 Odjava

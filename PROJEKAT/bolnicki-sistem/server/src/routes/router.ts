@@ -14,6 +14,7 @@ import sobaRoutes from "./sobaRoutes.js";
 import chatRoutes from "./chat.js";
 import listaCekanjaRoutes from "./listaCekanjaRoutes.js";
 import userRoutes from "./userRoutes.js";
+import vlasnikRoutes from "./vlasnikRoutes.js";
 
 import {
   getNalaziZaPacijenta,
@@ -50,6 +51,7 @@ router.use("/lista-cekanja", listaCekanjaRoutes);
 router.use("/rooms", sobaRoutes);
 router.use("/admin", adminRoutes);
 router.use("/chat", chatRoutes);
+router.use("/vlasnik", vlasnikRoutes);
 
 router.get(
   "/nalazi/pacijent/:pacijentId",

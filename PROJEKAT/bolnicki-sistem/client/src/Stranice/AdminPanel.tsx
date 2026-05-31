@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
+import StatistikaDashboard from "../components/StatistikaDashboard";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const API = `${BASE_URL}/api`;
 
@@ -2246,6 +2246,7 @@ function TabDeaktivacije() {
 // ══════════════════════════════════════════════════════════════
 //  GLAVNI ADMIN PANEL
 // ══════════════════════════════════════════════════════════════
+type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "statistika";
 type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "deaktivacije";
 
 export default function AdminPanel() {
@@ -2258,6 +2259,7 @@ export default function AdminPanel() {
     { key: "termini", label: "Termini", opis: "Pregled svih zakazanih termina" },
     { key: "odjeli", label: "Odjeli", opis: "Pregled, dodavanje i brisanje odjela" },
     { key: "analitika", label: "Analitika", opis: "Statistike bukiranja po odjelu i doktoru" },
+    { key: "statistika", label: "Statistika", opis: "Grafički prikaz statistike zakazanih pregleda" },
     { key: "deaktivacije", label: "Deaktivacije", opis: "Zahtjevi za brisanje i anonimizaciju naloga" },
   ];
 
@@ -2306,6 +2308,7 @@ export default function AdminPanel() {
         {aktivniTab === "termini" && <TabTermini />}
         {aktivniTab === "odjeli" && <TabOdjeli />}
         {aktivniTab === "analitika" && <TabAnalitika />}
+        {aktivniTab === "statistika" && <StatistikaDashboard />}
         {aktivniTab === "deaktivacije" && <TabDeaktivacije />}
       </div>
     </div>
