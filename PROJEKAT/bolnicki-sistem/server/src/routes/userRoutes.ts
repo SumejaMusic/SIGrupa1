@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getProfile, updateProfile } from "../controllers/userController.js";
+import { podnosenjeZahtjeva, dohvatiStatusZahtjevaHandler } from "../controllers/deactivationController.js";
 import { autentifikuj } from "../middleware/authMiddleware.js";
 import { body, validationResult } from "express-validator";
 
@@ -21,5 +22,9 @@ const validateProfileUpdate = [
 
 router.get("/:id/profile", autentifikuj, getProfile);
 router.patch("/:id/profile", autentifikuj, validateProfileUpdate, updateProfile);
+
+// ── Deaktivacija naloga ──────────────────────────────────────
+router.post("/:id/deactivation-request", autentifikuj, podnosenjeZahtjeva);
+router.get("/:id/deactivation-request", autentifikuj, dohvatiStatusZahtjevaHandler);
 
 export default router;
