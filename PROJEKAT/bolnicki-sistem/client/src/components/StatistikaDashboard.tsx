@@ -41,7 +41,6 @@ type Period = "danas" | "sedmica" | "mjesec" | "custom";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const API = `${BASE_URL}/api`;
 
-const BOJE_GRAFOVA = ["#7C3AED", "#0D9488", "#D97706", "#DC2626", "#2563EB", "#059669"];
 const BOJE_PIE = ["#0D9488", "#D97706", "#DC2626"];
 
 function authHeader(): Record<string, string> {
@@ -83,6 +82,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+function getUloga(): string {
+  const token = localStorage.getItem("token");
+  if (!token) return "";
+  try {
+    return JSON.parse(atob(token.split(".")[1])).uloga ?? "";
+  } catch {
+    return "";
+  }
+}
+
 // ── Glavna komponenta ─────────────────────────────────────────
 export default function StatistikaDashboard() {
   const [data, setData] = useState<AnalitikaData | null>(null);
@@ -92,25 +101,22 @@ export default function StatistikaDashboard() {
   const [datumOd, setDatumOd] = useState("");
   const [datumDo, setDatumDo] = useState("");
   const [filterOdjel, setFilterOdjel] = useState("");
-  const [vrijemePocetka] = useState(performance.now());
-  const [vrijemeUcitavanja, setVrijemeUcitavanja] = useState<number | null>(null);
 
   const ucitaj = async (p: Period, od?: string, doo?: string) => {
-    const start = performance.now();
-    setLoading(true);
-    setGreska(false);
-    try {
-      let url = `${API}/admin/analitika?period=${p}`;
-      if (p === "custom" && od && doo) url += `&datumOd=${od}&datumDo=${doo}`;
-      const res = await fetch(url, { headers: authHeader() });
-      if (!res.ok) throw new Error();
-      setData(await res.json());
-      setVrijemeUcitavanja(Math.round(performance.now() - start));
-    } catch {
-      setGreska(true);
-    }
-    setLoading(false);
-  };
+  setLoading(true);
+  setGreska(false);
+  try {
+    const bazaUrl = getUloga() === "ADMINISTRATOR" ? `${API}/admin` : `${API}/vlasnik`;
+    let url = `${bazaUrl}/analitika?period=${p}`;
+    if (p === "custom" && od && doo) url += `&datumOd=${od}&datumDo=${doo}`;
+    const res = await fetch(url, { headers: authHeader() });
+    if (!res.ok) throw new Error();
+    setData(await res.json());
+  } catch {
+    setGreska(true);
+  }
+  setLoading(false);
+};
 
   useEffect(() => {
     ucitaj("mjesec");
@@ -190,6 +196,23 @@ export default function StatistikaDashboard() {
       ? "text-orange-400"
       : "text-green-400";
 
+  const exportStatistiku = async () => {
+    let url = `${API}/vlasnik/export-csv?period=${period}`;
+    if (period === "custom" && datumOd && datumDo) {
+      url += `&datumOd=${datumOd}&datumDo=${datumDo}`;
+    }
+    const res = await fetch(url, { headers: authHeader() });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.setAttribute("download", `statistika_${period}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+  
+
   return (
     <div className="space-y-6">
 
@@ -245,12 +268,12 @@ export default function StatistikaDashboard() {
             Primijeni
           </button>
 
-          {vrijemeUcitavanja !== null && (
-            <span className={`text-xs ml-auto ${vrijemeUcitavanja <= 3000 ? "text-green-400" : "text-red-400"}`}>
-              ⚡ Učitano za {(vrijemeUcitavanja / 1000).toFixed(2)}s
-              {vrijemeUcitavanja > 3000 && " (NFR-15 prekoračen)"}
-            </span>
-          )}
+          <button
+            onClick={exportStatistiku}
+            className="px-4 py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs rounded-lg font-medium transition-colors flex items-center gap-1.5"
+          >
+            ↓ Export CSV
+          </button>
         </div>
       </div>
 

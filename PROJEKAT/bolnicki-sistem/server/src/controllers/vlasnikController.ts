@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma.js";
-import { Parser } from "json2csv";
+import XLSX from "xlsx";
 
 // ── Registrovani korisnici po ulogama ──────────────────────────
 export const getKorisniciPoUlogama = async (req: Request, res: Response) => {
@@ -79,35 +79,48 @@ export const getTerminiStats = async (req: Request, res: Response) => {
   }
 };
 
-// ── Export termina u CSV za odabrani period ────────────────────
-export const exportTerminiCSV = async (req: Request, res: Response) => {
+export const exportStatistikaCSV = async (req: Request, res: Response) => {
   try {
-    const { od, do: do_ } = req.query;
+    const { period = "mjesec", datumOd, datumDo } = req.query;
 
-    if (!od || !do_) {
-      res.status(400).json({ poruka: "Parametri 'od' i 'do' su obavezni." });
-      return;
+    // ── Isti period logic kao getAnalitika ──
+    const danas = new Date();
+    danas.setHours(0, 0, 0, 0);
+
+    let pocetakPerioda: Date;
+    let krajPerioda: Date;
+
+    if (period === "custom" && datumOd && datumDo) {
+      pocetakPerioda = new Date(String(datumOd));
+      krajPerioda = new Date(String(datumDo));
+      krajPerioda.setHours(23, 59, 59, 999);
+    } else if (period === "sedmica") {
+      const dow = danas.getDay();
+      const diffToMonday = dow === 0 ? -6 : 1 - dow;
+      pocetakPerioda = new Date(danas);
+      pocetakPerioda.setDate(danas.getDate() + diffToMonday);
+      krajPerioda = new Date(pocetakPerioda);
+      krajPerioda.setDate(pocetakPerioda.getDate() + 7);
+    } else if (period === "danas") {
+      pocetakPerioda = danas;
+      krajPerioda = new Date(danas);
+      krajPerioda.setDate(danas.getDate() + 1);
+    } else {
+      pocetakPerioda = new Date(danas.getFullYear(), danas.getMonth(), 1);
+      krajPerioda = new Date(danas.getFullYear(), danas.getMonth() + 1, 0);
+      krajPerioda.setHours(23, 59, 59, 999);
     }
 
-    const termini = await prisma.rezervacije.findMany({
+    const termini = await prisma.termin.findMany({
       where: {
-        datumKreiranja: {
-          gte: new Date(String(od)),
-          lte: new Date(String(do_)),
-        },
-        datumOtkazivanja: null,
+        datum: { gte: pocetakPerioda, lte: krajPerioda },
+        status: { in: ["SLOBODAN", "ZAKAZAN", "POTVRDJEN", "OTKAZAN"] },
       },
       select: {
-        id: true,
-        datumKreiranja: true,
-        hitnost: true,
-        zavrseno: true,
-        termin: { select: { datum: true, vrijeme: true, status: true } },
-        pacijent: {
-          select: { korisnik: { select: { ime: true, prezime: true } } },
-        },
+        status: true,
         doktor: {
           select: {
+            id: true,
             korisnik: { select: { ime: true, prezime: true } },
             odjel: { select: { naziv: true } },
           },
@@ -115,28 +128,64 @@ export const exportTerminiCSV = async (req: Request, res: Response) => {
       },
     });
 
-    const podaci = termini.map((r) => ({
-      ID: r.id,
-      Datum_termina: r.termin.datum.toISOString().split("T")[0],
-      Vrijemie_termina: r.termin.vrijeme,
-      Status_termina: r.termin.status,
-      Pacijent: `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`,
-      Doktor: `${r.doktor.korisnik.ime} ${r.doktor.korisnik.prezime}`,
-      Odjel: r.doktor.odjel.naziv,
-      Hitnost: r.hitnost ? "Da" : "Ne",
-      Zavrseno: r.zavrseno ? "Da" : "Ne",
-      Datum_kreiranja: r.datumKreiranja.toISOString().split("T")[0],
-    }));
+    // ── Agregacija po doktoru ──
+    const doktoriMap: Record<number, {
+      ime: string; prezime: string; odjel: string;
+      slobodni: number; zakazani: number; otkazani: number; ukupno: number;
+    }> = {};
 
-    const parser = new Parser();
-    const csv = parser.parse(podaci);
+    for (const t of termini) {
+      const did = t.doktor.id;
+      if (!doktoriMap[did]) {
+        doktoriMap[did] = {
+          ime: t.doktor.korisnik.ime,
+          prezime: t.doktor.korisnik.prezime,
+          odjel: t.doktor.odjel.naziv,
+          slobodni: 0, zakazani: 0, otkazani: 0, ukupno: 0,
+        };
+      }
+      doktoriMap[did].ukupno++;
+      if (t.status === "SLOBODAN") doktoriMap[did].slobodni++;
+      else if (t.status === "OTKAZAN") doktoriMap[did].otkazani++;
+      else doktoriMap[did].zakazani++;
+    }
 
-    res.header("Content-Type", "text/csv; charset=utf-8");
-    res.header(
-      "Content-Disposition",
-      `attachment; filename="termini_${od}_${do_}.csv"`
-    );
-    res.send("\uFEFF" + csv); // BOM za Excel da čita UTF-8
+    const podaci = Object.values(doktoriMap)
+      .sort((a, b) => b.zakazani - a.zakazani)
+      .map((d) => ({
+        "Doktor": `Dr. ${d.ime} ${d.prezime}`,
+        "Odjel": d.odjel,
+        "Ukupno termina": d.ukupno,
+        "Zakazanih": d.zakazani,
+        "Slobodnih": d.slobodni,
+        "Otkazanih": d.otkazani,
+        "Iskorištenost (%)": d.ukupno > 0 ? Math.round((d.zakazani / d.ukupno) * 100) : 0,
+      }));
+
+    // ── Export kao XLSX ──
+    const worksheet = XLSX.utils.json_to_sheet(podaci);
+    worksheet["!cols"] = [
+      { wch: 28 }, // Doktor
+      { wch: 20 }, // Odjel
+      { wch: 16 }, // Ukupno
+      { wch: 12 }, // Zakazanih
+      { wch: 12 }, // Slobodnih
+      { wch: 12 }, // Otkazanih
+      { wch: 18 }, // Iskorištenost
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Statistika");
+
+    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+    const periodLabel = period === "custom"
+      ? `${datumOd}_${datumDo}`
+      : String(period);
+
+    res.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.header("Content-Disposition", `attachment; filename="statistika_${periodLabel}.xlsx"`);
+    res.send(buffer);
   } catch (error: any) {
     res.status(500).json({ poruka: error?.message ?? "Greška pri exportu." });
   }
