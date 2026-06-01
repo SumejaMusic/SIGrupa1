@@ -33,7 +33,7 @@ beforeAll(() => {
 afterEach(async () => {
   terminCounter = 100;
   
-  // Čišćenje recenzija i rezervacija (Usklađeno sa nazivima iz kontrolera)
+  // 1. Vraćeno na ispravan naziv modela: prisma.rezervacije
   await prisma.recenzija.deleteMany({
     where: {
       rezervacija: {
@@ -50,7 +50,7 @@ afterEach(async () => {
     },
   });
 
-  await prisma.rezervacija.deleteMany({
+  await prisma.rezervacije.deleteMany({
     where: { idTermina: { gt: 2 } },
   });
 
@@ -59,7 +59,7 @@ afterEach(async () => {
   });
 
   // Resetovanje seed termina na SLOBODAN
-  await prisma.rezervacija.deleteMany({ where: { idTermina: { in: [1, 2] } } });
+  await prisma.rezervacije.deleteMany({ where: { idTermina: { in: [1, 2] } } });
   await prisma.termin.updateMany({
     where: { id: { in: [1, 2] } },
     data: { status: "SLOBODAN" },
@@ -118,7 +118,8 @@ async function kreirajRezervaciju(options: {
     });
   }
 
-  return prisma.rezervacija.create({
+  // Vraćeno na ispravan naziv modela iz tvoje baze: rezervacije
+  return prisma.rezervacije.create({
     data: {
       idTermina,
       idPacijent: PACIJENT_ID,
@@ -222,22 +223,22 @@ describe("anonimne recenzije - integracioni tok", () => {
   it("nakon javne ocjene vlasnik/vodič vidi recenziju kroz novu getRecenzije rutu", async () => {
     const prva = await kreirajRezervaciju({ idTermina: 1, vrijeme: 600 });
 
-    // Kreiramo recenziju putem javne rute
     await request(app).post(`/api/appointments/review/${kreirajReviewToken(prva.id)}`).send({
       rating: 4,
       comment: "Iskreno dopao mi se doktor i dosao bih opet",
     });
 
-    // Pozivamo getRecenzije rutu iz vlasnikController-a
     const res = await request(app)
       .get("/api/vlasnik/recenzije")
       .query({ samo_sa_komentarom: "true" })
-      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`); // ili token vlasnika/admina zavisi od middleware-a
+      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("recenzije");
     expect(res.body).toHaveProperty("paginacija");
-    expect(res.body.recenzije[0]).mock({
+    
+    // Ispravljena sintaksa: .toMatchObject umjesto pogrešnog .mock()
+    expect(res.body.recenzije[0]).toMatchObject({
       ocjena: 4,
       komentar: "Iskreno dopao mi se doktor i dosao bih opet",
       sakriven: false,
