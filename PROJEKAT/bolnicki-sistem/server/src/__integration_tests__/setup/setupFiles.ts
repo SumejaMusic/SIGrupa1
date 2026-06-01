@@ -1,6 +1,6 @@
 import { beforeEach, afterAll, vi } from "vitest";
 import { Router } from "express";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Redis } from "ioredis";
 import jwt from "jsonwebtoken";
 
@@ -143,16 +143,14 @@ beforeEach(async () => {
   });
 
   // ── Seed: Raspored doktora ───────────────────────────────────
-  const rasporedDoktoraData: Prisma.RasporedDoktoraUncheckedCreateInput = {
-    idDoktor: doktor.id,
-    danUSedmici: "PONEDJELJAK",
-    vrijemeOd: new Date("2026-04-13T08:00:00"),
-    vrijemeDo: new Date("2026-04-13T16:00:00"),
-    aktivan: true,
-  };
-
   await prisma.rasporedDoktora.create({
-    data: rasporedDoktoraData,
+    data: {
+      idDoktor: doktor.id,
+      danUSedmici: "PONEDJELJAK",
+      vrijemeOd: new Date("2026-04-13T08:00:00"),
+      vrijemeDo: new Date("2026-04-13T16:00:00"),
+      aktivan: true,
+    },
   });
 
   // ── Seed: Korisnik pacijenta (id=2) ──────────────────────────

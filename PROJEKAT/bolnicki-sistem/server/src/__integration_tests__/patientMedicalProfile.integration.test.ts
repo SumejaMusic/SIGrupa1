@@ -15,7 +15,6 @@ const prisma = new PrismaClient();
 
 const PACIJENT_EMAIL = "musicsumeja98@gmail.com";
 const DOKTOR_ID = 1;
-const DRUGI_DOKTOR_ID = 2;
 const TERMIN_ID = 1;
 const TIP_PREGLEDA_ID = 1;
 
@@ -23,6 +22,7 @@ let pacijentToken: string;
 let doktorToken: string;
 let pacijentId: number;
 let pacijentKorisnikId: number;
+let doktorOdjelId: number;
 
 beforeEach(async () => {
   const jwtSecret = process.env.JWT_SECRET ?? "test-secret";
@@ -32,7 +32,7 @@ beforeEach(async () => {
   });
   const doktor = await prisma.doktor.findUnique({
     where: { id: DOKTOR_ID },
-    select: { idKorisnik: true },
+    select: { idKorisnik: true, idOdjela: true },
   });
 
   if (!pacijent || !doktor) {
@@ -41,6 +41,7 @@ beforeEach(async () => {
 
   pacijentId = pacijent.id;
   pacijentKorisnikId = pacijent.idKorisnik;
+  doktorOdjelId = doktor.idOdjela;
 
   pacijentToken = jwt.sign(
     { id: pacijentKorisnikId, uloga: "PACIJENT" },
@@ -91,6 +92,53 @@ async function pripremiRezervacijuZaDoktora() {
   });
 
   return rezervacija;
+}
+
+async function generisiSlobodanBrojLicence() {
+  const pocetniBroj = 900000 + Math.floor(Math.random() * 90000);
+
+  for (let offset = 0; offset < 1000; offset += 1) {
+    const brojLicence = pocetniBroj + offset;
+    const postojeciDoktor = await prisma.doktor.findUnique({
+      where: { brojLicence },
+      select: { id: true },
+    });
+
+    if (!postojeciDoktor) {
+      return brojLicence;
+    }
+  }
+
+  throw new Error("Nije moguće generisati jedinstven broj licence za test doktora.");
+}
+
+async function kreirajDrugogDoktora() {
+  const suffix = `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  const brojLicence = await generisiSlobodanBrojLicence();
+  const korisnik = await prisma.korisnik.create({
+    data: {
+      jmbg: "2222222222222",
+      jmbgHash: `jmbg-hash-drugi-doktor-${suffix}`,
+      ime: "Drugi",
+      prezime: "Doktor",
+      datumRodjenja: new Date("1982-02-02"),
+      email: `drugi.doktor.${suffix}@test.com`,
+      pristupnaSifra: "hash_placeholder",
+      emailVerifikovan: true,
+      uloga: "DOKTOR",
+    },
+  });
+
+  return prisma.doktor.create({
+    data: {
+      idKorisnik: korisnik.id,
+      idOdjela: doktorOdjelId,
+      idSobe: null,
+      brojLicence,
+      specijalizacija: "Opca medicina",
+      trajanjePregleda: 30,
+    },
+  });
 }
 
 describe("Medicinski profil pacijenta — integracioni testovi", () => {
@@ -166,8 +214,10 @@ describe("Medicinski profil pacijenta — integracioni testovi", () => {
   });
 
   it("NFR-01: doktor ne može pristupiti medicinskim podacima pacijenata drugog doktora", async () => {
+    const drugiDoktor = await kreirajDrugogDoktora();
+
     const res = await request(app)
-      .get(`/api/rezervacije/doktor/${DRUGI_DOKTOR_ID}`)
+      .get(`/api/rezervacije/doktor/${drugiDoktor.id}`)
       .set("Authorization", `Bearer ${doktorToken}`);
 
     expect(res.status).toBe(403);
