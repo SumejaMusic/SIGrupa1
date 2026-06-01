@@ -1,25 +1,28 @@
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+// Definišemo čistu konfiguraciju
+const config = {
   test: {
-    // Putanje do tvojih setup fajlova
     globalSetup: "./src/__integration_tests__/setup/globalSetup.ts",
     setupFiles: ["./src/__integration_tests__/setup/setupFiles.ts"],
     include: ["./src/__integration_tests__/**/*.test.ts"],
 
-    // RJEŠENJE ZA GREŠKU:
-    // Umjesto 'threads', koristi 'pool' za izolaciju procesa
-    pool: 'forks', 
-    
-    // Onemogućava pokretanje više test fajlova odjednom
-    fileParallelism: false, 
+    // ── OVO GASI PARALELIZAM U VITEST 4 ─────────────────────────────
+    pool: "forks",
+    forks: {
+      singleFork: true, // Izvršava fajl po fajl u jednom procesu
+    },
+    fileParallelism: false,
+    // ────────────────────────────────────────────────────────────────
 
     sequence: {
-      // Osigurava da se testovi unutar jednog fajla izvršavaju redom
-      concurrent: false, 
+      concurrent: false, // Strogo zabranjuje paralelno izvršavanje testova
     },
 
     testTimeout: 30000,
     hookTimeout: 60000,
   },
-});
+};
+
+// Prosleđujemo je kroz 'as any' da TypeScript ne bi prigovarao
+export default defineConfig(config as any);

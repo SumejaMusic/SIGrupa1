@@ -33,6 +33,7 @@ import {
   createRasporedOsoblja,
   updateRasporedOsoblja,
   deleteRasporedOsoblja,
+  getAuditLogs,
 } from "../controllers/adminController.js";
 
 const router = Router();
@@ -87,4 +88,6 @@ router.delete("/rasporedi-osoblja/:id", deleteRasporedOsoblja);
 router.get("/deactivation-requests", dohvatiZahtjeveHandler);
 router.patch("/deactivation-requests/:id", obradiZahtjevHandler);
 
+// ── Audit Log ─────────────────────────────────────────────────
+router.get("/audit-logs", getAuditLogs);   // ← NOVO
 export default router;
