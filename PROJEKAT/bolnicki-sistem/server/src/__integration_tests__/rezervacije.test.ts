@@ -267,7 +267,7 @@ describe("GET /api/rezervacije/doktor/:doktorId", () => {
   });
 
   it("vraća praznu listu za doktora bez rezervacija", async () => {
-    const res = await request(app).get("/api/rezervacije/doktor/99999")
+    const res = await request(app).get(`/api/rezervacije/doktor/${DOKTOR_ID}`)
       .set("Authorization", `Bearer ${DOKTOR_TOKEN}`)
       .set("x-test-korisnik-id", "1");
 

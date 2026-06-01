@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef } from 'react';
 import Layout from '../components/Layout';
 import { apiUrl } from '../lib/api';
 import { formatDatumPrikaz, isoUTCdatum } from '../utils/rezervacijeUtils';
-import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle, Shield, AlertTriangle, Clock } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle, Shield, AlertTriangle, Clock, HeartPulse, Droplets, ClipboardList } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 
 const MaskedDateInput = forwardRef<HTMLInputElement, any>(({ value, onChange, ...props }, ref) => {
@@ -21,6 +21,16 @@ const MaskedDateInput = forwardRef<HTMLInputElement, any>(({ value, onChange, ..
   return <input ref={ref} value={value} onChange={handleChange} {...props} />;
 });
 
+interface PatientMedicalProfile {
+  id: number;
+  alergije: string | null;
+  hronicneBolesti: string | null;
+  krvnaGrupa: string | null;
+  doniraKrv: boolean;
+  imaoOperacije: boolean;
+  operacijeOpis: string | null;
+}
+
 interface UserProfile {
   id: number;
   ime: string;
@@ -29,6 +39,7 @@ interface UserProfile {
   brojTelefona: string | null;
   datumRodjenja: string;
   uloga?: string;
+  pacijentProfile?: PatientMedicalProfile | null;
 }
 
 interface DeaktivacijaZahtjev {
@@ -40,6 +51,9 @@ interface DeaktivacijaZahtjev {
   obradenAt: string | null;
 }
 
+const krvneGrupe = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const prikazPolja = (vrijednost?: string | null) => vrijednost?.trim() || '/';
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -50,7 +64,13 @@ export default function ProfilePage() {
     ime: '',
     prezime: '',
     brojTelefona: '',
-    datumRodjenja: ''
+    datumRodjenja: '',
+    alergije: '',
+    hronicneBolesti: '',
+    krvnaGrupa: '',
+    doniraKrv: false,
+    imaoOperacije: false,
+    operacijeOpis: ''
   });
 
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -96,7 +116,13 @@ export default function ProfilePage() {
           ime: data.ime,
           prezime: data.prezime,
           brojTelefona: data.brojTelefona || '',
-          datumRodjenja: data.datumRodjenja ? isoUTCdatum(data.datumRodjenja) : ''
+          datumRodjenja: data.datumRodjenja ? isoUTCdatum(data.datumRodjenja) : '',
+          alergije: data.pacijentProfile?.alergije || '',
+          hronicneBolesti: data.pacijentProfile?.hronicneBolesti || '',
+          krvnaGrupa: data.pacijentProfile?.krvnaGrupa || '',
+          doniraKrv: data.pacijentProfile?.doniraKrv || false,
+          imaoOperacije: data.pacijentProfile?.imaoOperacije || false,
+          operacijeOpis: data.pacijentProfile?.operacijeOpis || ''
         });
 
         // Dohvati status deaktivacije
@@ -121,10 +147,17 @@ export default function ProfilePage() {
     } catch { /* ignore */ }
   };
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setEditForm({
       ...editForm,
       [e.target.name]: e.target.value
+    });
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditForm({
+      ...editForm,
+      [e.target.name]: e.target.checked
     });
   };
 
@@ -133,13 +166,31 @@ export default function ProfilePage() {
     setMessage(null);
     try {
       const token = localStorage.getItem('token');
+      const payload: any = {
+        ime: editForm.ime,
+        prezime: editForm.prezime,
+        brojTelefona: editForm.brojTelefona,
+        datumRodjenja: editForm.datumRodjenja
+      };
+
+      if ((profile?.uloga ?? uloga) === 'PACIJENT') {
+        Object.assign(payload, {
+          alergije: editForm.alergije,
+          hronicneBolesti: editForm.hronicneBolesti,
+          krvnaGrupa: editForm.krvnaGrupa,
+          doniraKrv: editForm.doniraKrv,
+          imaoOperacije: editForm.imaoOperacije,
+          operacijeOpis: editForm.imaoOperacije ? editForm.operacijeOpis : ''
+        });
+      }
+
       const res = await fetch(apiUrl(`/api/users/${profile?.id}/profile`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -226,6 +277,9 @@ export default function ProfilePage() {
       </Layout>
     );
   }
+
+  const prikaziMedicinskiProfil = (profile.uloga ?? uloga) === "PACIJENT";
+  const medicinskiProfil = profile.pacijentProfile;
 
   return (
     <Layout step={1} totalSteps={1} breadcrumbs={['Profil']}>
@@ -387,6 +441,140 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {prikaziMedicinskiProfil && (
+                <div className="pt-6 mt-6 border-t border-gray-100">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <HeartPulse size={20} className="text-blue-700" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-800">Medicinski profil</h2>
+                      <p className="text-sm text-gray-500 mt-0.5">Ključne informacije dostupne doktoru pri pregledu</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <AlertTriangle size={16} className="text-gray-400" />
+                        Poznate alergije
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          name="alergije"
+                          value={editForm.alergije}
+                          onChange={handleEditChange}
+                          rows={3}
+                          placeholder="Npr. penicilin, polen, lateks..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent whitespace-pre-wrap">{prikazPolja(medicinskiProfil?.alergije)}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <ClipboardList size={16} className="text-gray-400" />
+                        Hronične bolesti
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          name="hronicneBolesti"
+                          value={editForm.hronicneBolesti}
+                          onChange={handleEditChange}
+                          rows={3}
+                          placeholder="Npr. dijabetes, astma, hipertenzija..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent whitespace-pre-wrap">{prikazPolja(medicinskiProfil?.hronicneBolesti)}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <Droplets size={16} className="text-gray-400" />
+                        Krvna grupa
+                      </label>
+                      {isEditing ? (
+                        <select
+                          name="krvnaGrupa"
+                          value={editForm.krvnaGrupa}
+                          onChange={handleEditChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                        >
+                          {krvneGrupe.map(grupa => (
+                            <option key={grupa || 'empty'} value={grupa}>{grupa || 'Nije navedeno'}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{prikazPolja(medicinskiProfil?.krvnaGrupa)}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Doniranje krvi</label>
+                        {isEditing ? (
+                          <label className="flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer">
+                            <input
+                              type="checkbox"
+                              name="doniraKrv"
+                              checked={editForm.doniraKrv}
+                              onChange={handleCheckboxChange}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">Doniram krv</span>
+                          </label>
+                        ) : (
+                          <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{medicinskiProfil?.doniraKrv ? 'Da' : 'Ne'}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Prethodne operacije</label>
+                        {isEditing ? (
+                          <label className="flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer">
+                            <input
+                              type="checkbox"
+                              name="imaoOperacije"
+                              checked={editForm.imaoOperacije}
+                              onChange={handleCheckboxChange}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">Imao/la sam operacije</span>
+                          </label>
+                        ) : (
+                          <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{medicinskiProfil?.imaoOperacije ? 'Da' : 'Ne'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {(isEditing ? editForm.imaoOperacije : medicinskiProfil?.imaoOperacije) && (
+                      <div className="md:col-span-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <ClipboardList size={16} className="text-gray-400" />
+                          Opis prethodnih operacija
+                        </label>
+                        {isEditing ? (
+                          <textarea
+                            name="operacijeOpis"
+                            value={editForm.operacijeOpis}
+                            onChange={handleEditChange}
+                            rows={3}
+                            placeholder="Navedite vrstu operacije i približnu godinu..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                          />
+                        ) : (
+                          <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent whitespace-pre-wrap">{prikazPolja(medicinskiProfil?.operacijeOpis)}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {isEditing && (
                 <div className="pt-6 mt-6 border-t border-gray-100 flex justify-end">
                   <button
@@ -410,7 +598,7 @@ export default function ProfilePage() {
         {/* -----------------------------------------------------------
             PRIVATNOST I DEAKTIVACIJA — samo za PACIJENT ulogu
            ----------------------------------------------------------- */}
-        {uloga === "PACIJENT" && (
+        {prikaziMedicinskiProfil && (
           <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-8 py-5 border-b border-gray-100 flex items-center gap-3">
               <Shield size={20} className="text-gray-500" />

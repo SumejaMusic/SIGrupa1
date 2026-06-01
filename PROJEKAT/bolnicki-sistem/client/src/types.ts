@@ -27,6 +27,12 @@ export interface Nalaz {
 export interface Pacijent {
   reviewPeriodDays: number;
   hronicniBolesnik: boolean;
+  alergije?: string | null;
+  hronicneBolesti?: string | null;
+  krvnaGrupa?: string | null;
+  doniraKrv?: boolean;
+  imaoOperacije?: boolean;
+  operacijeOpis?: string | null;
   id: number;
   ime: string;
   prezime: string;
