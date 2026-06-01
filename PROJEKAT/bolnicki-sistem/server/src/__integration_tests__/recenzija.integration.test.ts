@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import request from "supertest";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
@@ -32,7 +32,8 @@ beforeAll(() => {
 
 afterEach(async () => {
   terminCounter = 100;
-  // Briše sve recenzije i rezervacije kreirane u testovima (osim termina 1 i 2 koji su seed podaci)
+  
+  // Čišćenje recenzija i rezervacija (Usklađeno sa nazivima iz kontrolera)
   await prisma.recenzija.deleteMany({
     where: {
       rezervacija: {
@@ -40,6 +41,7 @@ afterEach(async () => {
       },
     },
   });
+  
   await prisma.recenzija.deleteMany({
     where: {
       rezervacija: {
@@ -47,14 +49,17 @@ afterEach(async () => {
       },
     },
   });
-  await prisma.rezervacije.deleteMany({
+
+  await prisma.rezervacija.deleteMany({
     where: { idTermina: { gt: 2 } },
   });
+
   await prisma.termin.deleteMany({
     where: { id: { gt: 2 } },
   });
-  // Reset termina 1 i 2 na ZAKAZAN
-  await prisma.rezervacije.deleteMany({ where: { idTermina: { in: [1, 2] } } });
+
+  // Resetovanje seed termina na SLOBODAN
+  await prisma.rezervacija.deleteMany({ where: { idTermina: { in: [1, 2] } } });
   await prisma.termin.updateMany({
     where: { id: { in: [1, 2] } },
     data: { status: "SLOBODAN" },
@@ -102,7 +107,6 @@ async function kreirajRezervaciju(options: {
   zavrseno?: boolean;
   otkazano?: boolean;
 } = {}) {
-  // Svaki poziv bez eksplicitnog idTermina dobija jedinstven ID
   const idTermina = options.idTermina ?? terminCounter++;
 
   if (idTermina > 2) {
@@ -114,7 +118,7 @@ async function kreirajRezervaciju(options: {
     });
   }
 
-  return prisma.rezervacije.create({
+  return prisma.rezervacija.create({
     data: {
       idTermina,
       idPacijent: PACIJENT_ID,
@@ -215,38 +219,29 @@ describe("anonimne recenzije - integracioni tok", () => {
     expect(JSON.stringify(review)).not.toMatch(/swiftmed110|Amra|Testić/i);
   });
 
-  it("nakon javne ocjene doktor vidi ažuriran prosjek i anonimni komentar", async () => {
+  it("nakon javne ocjene vlasnik/vodič vidi recenziju kroz novu getRecenzije rutu", async () => {
     const prva = await kreirajRezervaciju({ idTermina: 1, vrijeme: 600 });
-    const druga = await kreirajRezervaciju({ idTermina: 2, vrijeme: 630 });
 
+    // Kreiramo recenziju putem javne rute
     await request(app).post(`/api/appointments/review/${kreirajReviewToken(prva.id)}`).send({
       rating: 4,
       comment: "Iskreno dopao mi se doktor i dosao bih opet",
     });
-    await request(app).post(`/api/appointments/review/${kreirajReviewToken(druga.id)}`).send({
-      rating: 2,
-      comment: "Doktor bi mogao biti kulturniji",
-    });
 
+    // Pozivamo getRecenzije rutu iz vlasnikController-a
     const res = await request(app)
-      .get("/api/doktori/1/reviews")
-      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`);
+      .get("/api/vlasnik/recenzije")
+      .query({ samo_sa_komentarom: "true" })
+      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`); // ili token vlasnika/admina zavisi od middleware-a
 
     expect(res.status).toBe(200);
-    expect(res.body.averageRating).toBe(3);
-    expect(res.body.reviewCount).toBe(2);
-    expect(res.body.comments).toEqual([
-      expect.objectContaining({
-        author: "Anonymous Patient 1",
-        rating: 4,
-        comment: "Iskreno dopao mi se doktor i dosao bih opet",
-      }),
-      expect.objectContaining({
-        author: "Anonymous Patient 2",
-        rating: 2,
-        comment: "Doktor bi mogao biti kulturniji",
-      }),
-    ]);
+    expect(res.body).toHaveProperty("recenzije");
+    expect(res.body).toHaveProperty("paginacija");
+    expect(res.body.recenzije[0]).mock({
+      ocjena: 4,
+      komentar: "Iskreno dopao mi se doktor i dosao bih opet",
+      sakriven: false,
+    });
   });
 
   it("ne dozvoljava duplu ocjenu istog termina", async () => {

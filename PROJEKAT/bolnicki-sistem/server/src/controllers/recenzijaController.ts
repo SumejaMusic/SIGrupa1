@@ -5,13 +5,21 @@ import { prisma } from "../lib/prisma.js";
 const MAX_COMMENT_LENGTH = 500;
 const REVIEW_TOKEN_PURPOSE = "appointment-review";
 
-type RecenzijaZaDoktora = {
+/*type RecenzijaZaDoktora = {
   id: number;
   ocjena: number;
   komentar: string | null;
   kreiranoAt: Date;
+};*/
+// Novo — prikazuje i sakrivene, ali bez teksta
+type RecenzijaZaDoktora = {
+  id: number;
+  ocjena: number;
+  komentar: string | null;
+  
+  kreiranoAt: Date;
+  sakriven: boolean;   // ← dodati ovo u tip
 };
-
 type ReviewTokenPayload = {
   appointmentId: number;
   purpose: typeof REVIEW_TOKEN_PURPOSE;
@@ -51,7 +59,7 @@ const procitajReviewToken = (token: string): number | null => {
   return Number(payload.appointmentId);
 };
 
-const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
+/*const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
   let brojac = 0;
   return recenzije
     .filter((recenzija) => recenzija.komentar && recenzija.komentar.trim().length > 0)
@@ -63,6 +71,23 @@ const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
         rating: recenzija.ocjena,
         comment: recenzija.komentar,
         createdAt: recenzija.kreiranoAt,
+      };
+    });
+};*/
+
+
+const mapirajAnonimneKomentare = (recenzije: RecenzijaZaDoktora[]) => {
+  let brojac = 0;
+  return recenzije
+    .filter((r) => r.komentar || r.sakriven) // prikaži one sa komentarom ILI sakrivene
+    .map((r) => {
+      brojac += 1;
+      return {
+        id: r.id,
+        author: `Anonymous Patient ${brojac}`,
+        rating: r.ocjena,
+        comment: r.sakriven ? null : r.komentar, // sakriven = null tekst
+        createdAt: r.kreiranoAt,
       };
     });
 };
@@ -95,6 +120,8 @@ const kreirajRecenzijuZaTermin = async (appointmentId: number, rating: number, c
       ocjena: true,
       komentar: true,
       kreiranoAt: true,
+      // Novo — odmah kreirana recenzija nije sakrivena
+      sakriven: true,
     },
   });
 
@@ -225,9 +252,10 @@ export const getJavniPozivZaRecenziju = async (req: Request, res: Response, next
         id: true,
         zavrseno: true,
         datumOtkazivanja: true,
-        recenzija: { select: { id: true, ocjena: true, komentar: true, kreiranoAt: true } },
+        recenzija: { select: { id: true, ocjena: true, komentar: true, kreiranoAt: true,sakriven: true } },
         termin: { select: { datum: true, vrijeme: true } },
         doktor: { select: { korisnik: { select: { ime: true, prezime: true } } } },
+        
       },
     });
 
@@ -327,7 +355,7 @@ export const getRecenzijeZaDoktora = async (req: Request, res: Response, next: N
       return;
     }
 
-    const recenzije = await prisma.recenzija.findMany({
+   /* const recenzije = await prisma.recenzija.findMany({
       where: {
         sakriven: false,
         rezervacija: { idDoktor: doktorId },
@@ -343,9 +371,35 @@ export const getRecenzijeZaDoktora = async (req: Request, res: Response, next: N
         { id: "asc" },
       ],
     });
+    
 
     const suma = recenzije.reduce((acc, recenzija) => acc + recenzija.ocjena, 0);
-    const averageRating = recenzije.length > 0 ? Number((suma / recenzije.length).toFixed(2)) : null;
+    const averageRating = recenzije.length > 0 ? Number((suma / recenzije.length).toFixed(2)) : null;*/
+    // Novo — dohvata SVE recenzije, sakriven samo utiče na prikaz komentara
+const recenzije = await prisma.recenzija.findMany({
+  where: {
+    rezervacija: { idDoktor: doktorId },
+  },
+  select: {
+    id: true,
+    ocjena: true,
+    komentar: true,
+    sakriven: true,
+    kreiranoAt: true,
+  },
+  orderBy: [{ kreiranoAt: "asc" }, { id: "asc" }],
+});
+
+// Prosjek uključuje SVE ocjene (i sakrivene)
+const suma = recenzije.reduce((acc, recenzija) => acc + recenzija.ocjena, 0);
+const averageRating = recenzije.length > 0 ? Number((suma / recenzije.length).toFixed(2)) : null;
+
+res.json({
+  doctorId: doktorId,
+  averageRating,
+  reviewCount: recenzije.length,
+  comments: mapirajAnonimneKomentare(recenzije),
+});
 
     res.json({
       doctorId: doktorId,

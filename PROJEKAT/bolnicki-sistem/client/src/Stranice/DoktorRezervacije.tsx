@@ -45,11 +45,18 @@ import {
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "";
 
-type DoctorReviewComment = {
+/*type DoctorReviewComment = {
   id: number;
   author: string;
   rating: number;
   comment: string;
+  createdAt: string;
+};*/
+type DoctorReviewComment = {
+  id: number;
+  author: string;
+  rating: number;
+  comment: string | null;  // ← null za sakrivene
   createdAt: string;
 };
 
@@ -1145,7 +1152,13 @@ export default function DoktorRezervacije() {
                               {comment.rating}/5
                             </span>
                           </div>
-                          <p className="text-sm text-gray-700 leading-snug">{comment.comment}</p>
+                          {comment.comment ? (
+  <p className="text-sm text-gray-700 leading-snug">{comment.comment}</p>
+) : (
+  <p className="text-sm text-gray-400 italic">
+    [Komentar uklonjen od strane administratora]
+  </p>
+)}
                         </div>
                       ))}
                     </div>
