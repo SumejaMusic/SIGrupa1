@@ -11,6 +11,12 @@ const validateProfileUpdate = [
     body("prezime").optional().isString().trim().notEmpty().withMessage("Prezime ne može biti prazno"),
     body("brojTelefona").optional({ nullable: true }).isString().trim(),
     body("datumRodjenja").optional().isISO8601().withMessage("Nevalidan format datuma"),
+    body("alergije").optional({ nullable: true }).isString().trim().isLength({ max: 1000 }).withMessage("Alergije mogu imati najviše 1000 karaktera"),
+    body("hronicneBolesti").optional({ nullable: true }).isString().trim().isLength({ max: 1000 }).withMessage("Hronične bolesti mogu imati najviše 1000 karaktera"),
+    body("krvnaGrupa").optional({ nullable: true, checkFalsy: true }).isIn(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]).withMessage("Nevalidna krvna grupa"),
+    body("doniraKrv").optional().isBoolean().withMessage("Polje doniraKrv mora biti boolean"),
+    body("imaoOperacije").optional().isBoolean().withMessage("Polje imaoOperacije mora biti boolean"),
+    body("operacijeOpis").optional({ nullable: true }).isString().trim().isLength({ max: 1000 }).withMessage("Opis operacija može imati najviše 1000 karaktera"),
     (req: any, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

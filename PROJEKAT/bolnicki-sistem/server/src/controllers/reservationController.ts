@@ -412,8 +412,32 @@ export const getRezervacijeZaPacijenta = async (req: Request, res: Response, nex
 // GET /api/rezervacije/doktor/:doktorId
 export const getRezervacijeZaDoktora = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const doktorId = Number(req.params.doktorId);
+    if (!Number.isInteger(doktorId) || doktorId <= 0) {
+      res.status(400).json({ poruka: "Neispravan ID doktora." });
+      return;
+    }
+
+    const korisnikPayload = (req as any).korisnik;
+    if (korisnikPayload?.uloga === "DOKTOR") {
+      const doktor = await prisma.doktor.findUnique({
+        where: { id: doktorId },
+        select: { idKorisnik: true },
+      });
+
+      if (!doktor) {
+        res.status(404).json({ poruka: "Doktor nije pronađen." });
+        return;
+      }
+
+      if (doktor.idKorisnik !== korisnikPayload.id) {
+        res.status(403).json({ poruka: "Nemate dozvolu za pregled rezervacija ovog doktora." });
+        return;
+      }
+    }
+
     const rezervacije = await prisma.rezervacije.findMany({
-      where: { idDoktor: Number(req.params.doktorId) },
+      where: { idDoktor: doktorId },
       include: {
         termin: true,
         pacijent: { include: { korisnik: true } },
