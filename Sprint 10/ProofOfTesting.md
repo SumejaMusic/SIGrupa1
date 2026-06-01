@@ -214,3 +214,307 @@ Test Files  1 passed (1)
        ✓ sadrži naziv tabele i serijalizirane nove detalje 0ms
      ✓ nepoznata akcija (1)
        ✓ generički ispis sadrži naziv akcije i tabele 0ms
+```
+# Proof of Testing — VlasnikController
+
+ 
+**Modul:** `vlasnikController.js`  
+**Tip testova:** Unit testovi (Vitest) + Integracioni testovi (Supertest)
+
+---
+
+## 1. Pregled testnog pokrivanja
+
+| Metoda kontrolera | Unit testovi | Integracioni testovi | Ukupno |
+|---|---|---|---|
+| `getTerminiDetalji` | 2 | 1 | 3 |
+| `getSaleOccupancy` | 1 | 1 | 2 |
+| `sakrijiRecenziju` | 3 | 2 | 5 |
+| `getRecenzije` | 2 | 1 | 3 |
+| **Ukupno** | **8** | **5** | **13** |
+
+---
+
+## 2. Unit testovi (`vlasnikController.unit.test.ts`)
+
+Testovi koriste `prismaMock` (mockDeep Prisma klijent) i direktno pozivaju funkcije kontrolera bez HTTP sloja.
+
+### 2.1 `getTerminiDetalji`
+
+#### Test 1 — Kalkulacija lokalnog vremena i formatiranje datuma
+
+**Opis:** Provjerava da li kontroler ispravno dodaje +2 sata na UTC vrijednost termina i formatira datum u `DD.MM.YYYY.` format.
+
+**Ulazni podaci:**
+- `vrijeme: 600` (600 minuta od ponoći = 10:00 UTC)
+- `datum: 2026-06-01T00:00:00.000Z`
+
+**Očekivani izlaz:**
+```json
+{
+  "terminId": 1,
+  "datum": "01.06.2026.",
+  "vrijemePrikaz": "12:00",
+  "status": "SLOBODAN"
+}
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+#### Test 2 — Prepoznavanje statusa `OTKAZAN`
+
+**Opis:** Provjerava da li kontroler prepisuje status u `OTKAZAN` kada rezervacija ima popunjen `datumOtkazivanja`, bez obzira na originalni status termina u bazi.
+
+**Ulazni podaci:**
+- `status: "ZAKAZAN"` u bazi
+- Rezervacija sa `datumOtkazivanja: 2026-05-31T15:30:00.000Z`
+
+**Očekivani izlaz:**
+```json
+{
+  "status": "OTKAZAN",
+  "rezervacijaId": 99,
+  "zakazaoIme": "Adis",
+  "otkazaoIme": "Adis"
+}
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+### 2.2 `getSaleOccupancy`
+
+#### Test 3 — Uklanjanje duplikata rezervacija
+
+**Opis:** Provjerava da li kontroler koristi `Map` strukturu za deduplikaciju rezervacija koje se pojavljuju i direktno u sobi i kroz doktora/termine. Ukupan broj rezervacija mora biti 1, ne 2.
+
+**Ulazni podaci:**
+- Soba ID 10 sa rezervacijom ID 50 koja se pojavljuje duplo (jednom direktno, jednom kroz doktora)
+
+**Očekivani izlaz:**
+```json
+{
+  "sobaId": 10,
+  "naziv": "Operaciona Sala 1",
+  "ukupnoRezervacija": 1,
+  "aktivnih": 1,
+  "zavrsenih": 0,
+  "otkazanih": 0
+}
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+### 2.3 `sakrijiRecenziju`
+
+#### Test 4 — Status 404 kada recenzija ne postoji
+
+**Opis:** Provjerava da li kontroler vraća HTTP 404 i odgovarajuću poruku kada tražena recenzija nije pronađena u bazi.
+
+**Mock:** `recenzija.findUnique` vraća `null`
+
+**Očekivani odgovor:**
+```json
+{ "poruka": "Recenzija nije pronađena." }
+```
+
+**HTTP status:** `404`  
+**Rezultat:** ✅ PASS
+
+---
+
+#### Test 5 — Status 400 kada je recenzija već sakrivena
+
+**Opis:** Provjerava zaštitu od dvostrukog sakrivanja. Ako recenzija već ima `sakriven: true`, kontroler mora odbiti zahtjev.
+
+**Mock:** `recenzija.findUnique` vraća objekat sa `sakriven: true`
+
+**Očekivani odgovor:**
+```json
+{ "poruka": "Recenzija je već sakrivena." }
+```
+
+**HTTP status:** `400`  
+**Rezultat:** ✅ PASS
+
+---
+
+#### Test 6 — Uspješno sakrivanje recenzije
+
+**Opis:** Provjerava da li `update` upit u bazu šalje tačno `sakriven: true`, `sakrivenAt: Date` i `komentar: null` (brisanje teksta komentara).
+
+**Mock:** `recenzija.findUnique` vraća `{ id: 12, sakriven: false }`
+
+**Provjera Prisma poziva:**
+```javascript
+prismaMock.recenzija.update({
+  where: { id: 12 },
+  data: {
+    sakriven: true,
+    sakrivenAt: expect.any(Date),
+    komentar: null
+  }
+})
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+### 2.4 `getRecenzije`
+
+#### Test 7 — Paginirana lista recenzija
+
+**Opis:** Provjerava da li kontroler ispravno računa `skip` i `take` vrijednosti na osnovu query parametara `stranica` i `limit`, te da li odgovor sadrži ispravan `paginacija` objekat.
+
+**Query parametri:** `stranica=2`, `limit=10`
+
+**Provjera Prisma poziva:**
+```javascript
+recenzija.findMany({ skip: 10, take: 10 })
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+#### Test 8 — Filter `samo_sa_komentarom`
+
+**Opis:** Provjerava da li query parametar `samo_sa_komentarom=true` rezultuje ispravnim Prisma `where` filterom.
+
+**Očekivani Prisma upit:**
+```javascript
+recenzija.findMany({
+  where: { komentar: { not: null } }
+})
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+## 3. Integracioni testovi (`vlasnikController.integration.test.ts`)
+
+Testovi koriste `supertest` i Express aplikaciju sa stvarnim rutama. Provjeravaju cjelokupan HTTP sloj — parsiranje query stringa, routing, HTTP statusove i response body.
+
+### 3.1 `GET /api/vlasnik/termini-detalji`
+
+#### Test 9 — Mapiranje query parametara i paginacija
+
+**Opis:** Provjerava da li su stringovi iz HTTP query stringa (`stranica`, `limit`) ispravno pretvoreni u brojeve i proslijeđeni Prismi kao `skip`/`take`.
+
+**HTTP zahtjev:** `GET /api/vlasnik/termini-detalji?stranica=3&limit=15&status=SLOBODAN`
+
+**Provjere:**
+- HTTP status: `200`
+- Response sadrži `termini` i `paginacija` ključeve
+- `paginacija.stranica = 3`, `paginacija.limit = 15`
+- Prisma primila `skip: 30` i `take: 15`
+
+**Rezultat:** ✅ PASS
+
+---
+
+### 3.2 `GET /api/vlasnik/sale-occupancy`
+
+#### Test 10 — Kalkulacija stanja soba kroz HTTP odgovor
+
+**Opis:** End-to-end provjera: mock soba sa 2 rezervacije (1 završena, 1 aktivna) mora rezultovati ispravnim brojevima u JSON odgovoru.
+
+**HTTP zahtjev:** `GET /api/vlasnik/sale-occupancy`
+
+**Očekivani odgovor:**
+```json
+[{
+  "sobaId": 1,
+  "naziv": "Soba 101",
+  "ukupnoRezervacija": 2,
+  "aktivnih": 1,
+  "zavrsenih": 1,
+  "otkazanih": 0
+}]
+```
+
+**Rezultat:** ✅ PASS
+
+---
+
+### 3.3 `PATCH /api/vlasnik/recenzije/:id/hide`
+
+#### Test 11 — Uspješno sakrivanje kroz HTTP
+
+**Opis:** Provjerava cjelokupan tok: HTTP PATCH zahtjev → kontroler → Prisma update → JSON odgovor sa porukom o uspjehu.
+
+**HTTP zahtjev:** `PATCH /api/vlasnik/recenzije/42/hide`
+
+**Provjere:**
+- HTTP status: `200`
+- Response: `{ "poruka": "Recenzija uspješno sakrivena." }`
+- Prisma `update` pozvan sa `where: { id: 42 }`
+
+**Rezultat:** ✅ PASS
+
+---
+
+#### Test 12 — Bad Request za već sakrivenu recenziju
+
+**Opis:** Provjerava da HTTP sloj ispravno propagira 400 grešku i da se `update` nikada ne izvršava.
+
+**HTTP zahtjev:** `PATCH /api/vlasnik/recenzije/42/hide`  
+**Mock:** recenzija ima `sakriven: true`
+
+**Provjere:**
+- HTTP status: `400`
+- Response: `{ "poruka": "Recenzija je već sakrivena." }`
+- `prismaMock.recenzija.update` — **nije pozvan**
+
+**Rezultat:** ✅ PASS
+
+---
+
+### 3.4 `GET /api/vlasnik/recenzije`
+
+#### Test 13 — Query parametar `samo_sa_komentarom` kroz HTTP
+
+**Opis:** End-to-end provjera da HTTP query string `samo_sa_komentarom=true` prođe kroz Express routing i dođe do Prisma `where` objekta u ispravnom obliku.
+
+**HTTP zahtjev:** `GET /api/vlasnik/recenzije?samo_sa_komentarom=true`
+
+**Provjera Prisma poziva:**
+```javascript
+recenzija.findMany({
+  where: { komentar: { not: null } }
+})
+```
+
+**HTTP status:** `200`  
+**Rezultat:** ✅ PASS
+
+---
+
+## 4. Sažetak rezultata
+
+| | Broj testova | Prošlo | Palo |
+|---|---|---|---|
+| Unit testovi | 8 | 8 | 0 |
+| Integracioni testovi | 5 | 5 | 0 |
+| **Ukupno** | **13** | **13** | **0** |
+
+**Svi testovi su prošli. ✅**
+
+---
+
+## 5. Tehnički stack
+
+| Komponenta | Tehnologija |
+|---|---|
+| Test framework | Vitest |
+| HTTP testiranje | Supertest |
+| Prisma mock | `mockDeep` (`vitest-mock-extended`) |
+| Baza podataka (prod) | PostgreSQL via Prisma ORM |
+| Jezik | TypeScript |
