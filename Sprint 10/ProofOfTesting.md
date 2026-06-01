@@ -68,17 +68,11 @@ Svi testovi unutar paketa administrativnih funkcionalnosti za revizijske zapisni
 
 ---
 
-Naravno! Nazivi testova su bili previše tehnički i opisni na sirov način. U QA praksi i modernom razvoju (BDD - Behavior-Driven Development), nazivi testova treba da čitaju kao jasne specifikacije sistema (npr. koristeći formu "treba da uradi X kada se desi Y").
 
-Evo potpuno ušminkanog, profesionalnog i čitljivog Dokaza o testiranju sa prelijepo strukturiranim i pročišćenim nazivima testnih scenarija.
-
-Ovaj sadržaj možeš direktno kopirati u svoj .md fajl:
-
-Markdown
-# Dokaz o testiranju (Proof of Testing)
+# Proof of Testing - AuditLog
 
 **Projekat:** Bolnički Informacioni Sistem  
-**Modul:** Administrativni panel — Upravljanje revizijskim zapisnicima (*Audit Logs*)  
+**Modul:** Admin panel — *Audit Logs* 
 **Tehnološki stog:** Vitest, Supertest, Express.js, Prisma ORM, Docker (Testna baza)  
 **Status izvršenja:** 100% USPIJEŠNO  
 
