@@ -15,6 +15,7 @@ const SOBA_ID = 1;
 
 let PACIJENT_TOKEN: string;
 let DOKTOR_TOKEN: string;
+let VLASNIK_TOKEN: string;
 
 beforeAll(() => {
   PACIJENT_TOKEN = jwt.sign(
@@ -28,12 +29,19 @@ beforeAll(() => {
     JWT_SECRET,
     { expiresIn: "1h" }
   );
+
+  // VLASNIK_TOKEN rješava 403 Forbidden grešku na administratorskim rutama
+  VLASNIK_TOKEN = jwt.sign(
+    { id: 99, uloga: "VLASNIK" },
+    JWT_SECRET,
+    { expiresIn: "1h" }
+  );
 });
 
 afterEach(async () => {
   terminCounter = 100;
   
-  // 1. Vraćeno na ispravan naziv modela: prisma.rezervacije
+  // Čišćenje recenzija i rezervacija (Usklađeno sa množinom modela 'rezervacije')
   await prisma.recenzija.deleteMany({
     where: {
       rezervacija: {
@@ -118,7 +126,7 @@ async function kreirajRezervaciju(options: {
     });
   }
 
-  // Vraćeno na ispravan naziv modela iz tvoje baze: rezervacije
+  // Model u bazi je 'rezervacije' (množina)
   return prisma.rezervacije.create({
     data: {
       idTermina,
@@ -228,16 +236,16 @@ describe("anonimne recenzije - integracioni tok", () => {
       comment: "Iskreno dopao mi se doktor i dosao bih opet",
     });
 
+    // Koristi se VLASNIK_TOKEN da se izbjegne 403 Forbidden status kod
     const res = await request(app)
       .get("/api/vlasnik/recenzije")
       .query({ samo_sa_komentarom: "true" })
-      .set("Authorization", `Bearer ${DOKTOR_TOKEN}`);
+      .set("Authorization", `Bearer ${VLASNIK_TOKEN}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("recenzije");
     expect(res.body).toHaveProperty("paginacija");
     
-    // Ispravljena sintaksa: .toMatchObject umjesto pogrešnog .mock()
     expect(res.body.recenzije[0]).toMatchObject({
       ocjena: 4,
       komentar: "Iskreno dopao mi se doktor i dosao bih opet",
