@@ -425,3 +425,19 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Prvobitne sirove opise testova koji su bili previše tehnički i nečitljivi za konačni izvještaj, te generičke fallback poruke koje nisu prepoznavale specifične tabele i akcije. |
 | **Rizici, problemi ili greške** | *Kontekstualno usklađivanje:* Najveći izazov je bio osigurati da testni framework (Vitest) ispravno komunicira sa realnom testnom bazom u Dockeru bez ometanja globalnih seed podataka. Problem je riješen uvođenjem ciljanog čišćenja samo `AuditLog` tabele, što su alati uspješno predložili. |
 | **Ko je koristio alat** | Amina Alispahić |
+
+# AI Usage Log - Mendazment panel: pregled zauzetosti sala sakrivanje recenzija prikazivanje otkazanih, zakazanih i slobodnih termina i pisanje unit i integracionih testova
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 01.06.2026. |
+| **Sprint broj** | Sprint 10 |
+| **Alat koji je korišten** | Claude (Anthropic) |
+| **Svrha korištenja** | Podrška u razvoju backend kontrolera, pisanju testova i integraciji u frontend |
+| **Kratak opis zadatka ili upita** | Implementacija četiri funkcije u `vlasnikController.ts`: `getTerminiDetalji`, `getSaleOccupancy`, `sakrijiRecenziju` i `getRecenzije`, te pisanje unit i integracionih testova |
+| **Šta je AI predložio ili generisao** | Logiku filtriranja termina po statusu (SLOBODAN, OTKAZAN, ZAKAZAN/POTVRDJEN), konverziju UTC vremena u lokalno (+2h), deduplikaciju rezervacija putem `Map` strukture u `getSaleOccupancy`, validaciju u `sakrijiRecenziju` (404/400 provjere), paginacijsku logiku u `getRecenzije` |
+| **Šta je tim prihvatio** | Cjelokupna logika svih četiri kontrolerskih funkcija, struktura Prisma upita sa `select`/`where`/`orderBy`, deduplikacija rezervacija u `getSaleOccupancy`, logika određivanja `stvarniStatus` u `getTerminiDetalji` |
+| **Šta je tim izmijenio** | Testovi su samostalno napisani (unit i integracioni), frontend integracija je urađena samostalno; prilagođeni su nazivi polja i struktura odgovora prema potrebama UI-a |
+| **Šta je tim odbacio** | — |
+| **Rizici, problemi ili greške** | Timezone offset (+2h) je hardkodiran kao konstanta (`+ 120` minuta) umjesto dinamičke detekcije — potrebno pratiti pri prelasku na zimsko/ljetno računanje vremena |
+| **Ko je koristio alat** | Amina Alispahić |
