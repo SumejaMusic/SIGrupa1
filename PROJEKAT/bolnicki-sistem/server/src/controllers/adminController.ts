@@ -174,7 +174,7 @@ export const updateKorisnik = async (req: Request, res: Response) => {
           ...(prezime && { prezime }),
           ...(email && { email }),
           ...(brojTelefona !== undefined && { brojTelefona }),
-          ...(datumRodjenja !== undefined && { datumRodjenja: datumRodjenja ? new Date(datumRodjenja) : null }),
+          ...(datumRodjenja && { datumRodjenja: new Date(datumRodjenja) }),
         },
         select: {
           id: true,
@@ -260,7 +260,7 @@ export const deleteKorisnik = async (req: Request, res: Response) => {
 
     const korisnik = await prisma.korisnik.findUnique({
       where: { id: Number(id) },
-      select: { id: true, ime: true, prezime: true, email: true, uloga: true },
+      include: { doktorProfile: true, pacijentProfile: true, osobljeProfile: true },
     });
 
     if (!korisnik) {
@@ -269,14 +269,89 @@ export const deleteKorisnik = async (req: Request, res: Response) => {
     }
 
     await prisma.$transaction(async (tx) => {
+      // ── Doktor cascade ──────────────────────────────────────────────
+      if (korisnik.doktorProfile) {
+        const doktorId = korisnik.doktorProfile.id;
+
+        const allTerminiIds = (await tx.termin.findMany({
+          where: { idDoktor: doktorId }, select: { id: true },
+        })).map(t => t.id);
+
+        const rezViaTermini = allTerminiIds.length > 0
+          ? (await tx.rezervacije.findMany({ where: { idTermina: { in: allTerminiIds } }, select: { id: true } })).map(r => r.id)
+          : [];
+        const rezDirekt = (await tx.rezervacije.findMany({ where: { idDoktor: doktorId }, select: { id: true } })).map(r => r.id);
+        const sveRezIds = [...new Set([...rezViaTermini, ...rezDirekt])];
+
+        if (sveRezIds.length > 0) {
+          const historijaIds = (await tx.historijaPregleda.findMany({
+            where: { idRezervacija: { in: sveRezIds } }, select: { id: true },
+          })).map(h => h.id);
+          if (historijaIds.length > 0) await tx.recept.deleteMany({ where: { idHistorijaPregleda: { in: historijaIds } } });
+          await tx.historijaPregleda.deleteMany({ where: { idRezervacija: { in: sveRezIds } } });
+          await tx.podsjetnik.deleteMany({ where: { idRezervacije: { in: sveRezIds } } });
+          await tx.rezervacijaSpecijalista.deleteMany({ where: { idRezervacije: { in: sveRezIds } } });
+          await (tx as any).komentar.deleteMany({ where: { idRezervacije: { in: sveRezIds } } });
+          await tx.rezervacije.deleteMany({ where: { id: { in: sveRezIds } } });
+        }
+        await tx.rezervacijaSpecijalista.deleteMany({
+          where: { OR: [{ idSpecijaliste: doktorId }, { idDoktorOpste: doktorId }] },
+        });
+        await tx.recept.deleteMany({ where: { idDoktor: doktorId } });
+        await tx.historijaPregleda.deleteMany({ where: { idDoktor: doktorId } });
+        if (allTerminiIds.length > 0) await tx.termin.deleteMany({ where: { id: { in: allTerminiIds } } });
+        await tx.listaCekanja.deleteMany({ where: { idDoktor: doktorId } });
+        await (tx as any).izuzetakRasporeda.deleteMany({ where: { idDoktor: doktorId } });
+        await tx.rasporedDoktora.deleteMany({ where: { idDoktor: doktorId } });
+        await tx.doktor.delete({ where: { id: doktorId } });
+      }
+
+      // ── Pacijent cascade ────────────────────────────────────────────
+      if (korisnik.pacijentProfile) {
+        const pacijentId = korisnik.pacijentProfile.id;
+
+        const sveRezIds = (await tx.rezervacije.findMany({
+          where: { idPacijent: pacijentId }, select: { id: true },
+        })).map(r => r.id);
+
+        if (sveRezIds.length > 0) {
+          const historijaIds = (await tx.historijaPregleda.findMany({
+            where: { idRezervacija: { in: sveRezIds } }, select: { id: true },
+          })).map(h => h.id);
+          if (historijaIds.length > 0) await tx.recept.deleteMany({ where: { idHistorijaPregleda: { in: historijaIds } } });
+          await tx.historijaPregleda.deleteMany({ where: { idRezervacija: { in: sveRezIds } } });
+          await tx.rezervacijaSpecijalista.deleteMany({ where: { idRezervacije: { in: sveRezIds } } });
+          await tx.podsjetnik.deleteMany({ where: { idRezervacije: { in: sveRezIds } } });
+          await (tx as any).komentar.deleteMany({ where: { idRezervacije: { in: sveRezIds } } });
+          await tx.rezervacije.deleteMany({ where: { id: { in: sveRezIds } } });
+        }
+        await tx.listaCekanja.deleteMany({ where: { idPacijent: pacijentId } });
+        await (tx as any).reminderLog.deleteMany({ where: { idPacijent: pacijentId } });
+        await tx.termin.updateMany({ where: { pacijentId }, data: { pacijentId: null } });
+        await tx.pacijent.delete({ where: { id: pacijentId } });
+      }
+
+      // ── Medicinsko osoblje cascade ───────────────────────────────────
+      if (korisnik.osobljeProfile) {
+        const osobljeId = korisnik.osobljeProfile.id;
+        await tx.rasporedOsoblja.deleteMany({ where: { idOsoblje: osobljeId } });
+        await tx.mediciskoOsoblje.delete({ where: { id: osobljeId } });
+      }
+
+      // ── Korisnik-level records ───────────────────────────────────────
+      await (tx as any).zahtjevDeaktivacije.deleteMany({ where: { idKorisnika: Number(id) } });
+      await tx.auditLog.deleteMany({ where: { idKorisnika: Number(id) } });
+
+      // ── Delete korisnik ─────────────────────────────────────────────
       await tx.korisnik.delete({ where: { id: Number(id) } });
 
+      // ── Audit log (admin's action) ──────────────────────────────────
       await kreirajAuditLog(
         {
           idKorisnika: adminId,
           tipAkcije: "DELETE",
           izmenjenaTabela: "Korisnik",
-          stariPodaci: korisnik,
+          stariPodaci: { id: korisnik.id, ime: korisnik.ime, prezime: korisnik.prezime, email: korisnik.email, uloga: korisnik.uloga },
           ipAdresa: req.ip,
         },
         tx
@@ -724,9 +799,15 @@ export const deleteIzuzetak = async (req: Request, res: Response) => {
 export const osvjeziTermine = async (req: Request, res: Response) => {
   try {
     const dani: number = Number(req.body?.dani) > 0 ? Number(req.body.dani) : 60;
+    const idDoktorFilter: number | null = req.body?.idDoktor ? Number(req.body.idDoktor) : null;
+    const datumOdStr: string | undefined = req.body?.datumOd;
+    const datumDoStr: string | undefined = req.body?.datumDo;
 
     const templates = await prisma.rasporedDoktora.findMany({
-      where: { aktivan: true },
+      where: {
+        aktivan: true,
+        ...(idDoktorFilter !== null ? { idDoktor: idDoktorFilter } : {}),
+      },
       include: { doktor: { select: { id: true, trajanjePregleda: true } } },
     });
 
@@ -735,8 +816,16 @@ export const osvjeziTermine = async (req: Request, res: Response) => {
       PETAK: 5, SUBOTA: 6, NEDJELJA: 0,
     };
 
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const endDate = new Date(today); endDate.setDate(endDate.getDate() + dani);
+    let today: Date;
+    let endDate: Date;
+
+    if (datumOdStr && datumDoStr) {
+      today = new Date(datumOdStr); today.setHours(0, 0, 0, 0);
+      endDate = new Date(datumDoStr); endDate.setHours(23, 59, 59, 999);
+    } else {
+      today = new Date(); today.setHours(0, 0, 0, 0);
+      endDate = new Date(today); endDate.setDate(endDate.getDate() + dani);
+    }
 
     let kreirano = 0;
 
