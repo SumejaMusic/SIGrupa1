@@ -397,7 +397,11 @@ export const promijeniUlogu = async (req: Request, res: Response) => {
           tipAkcije: "PROMJENA_ULOGE",
           izmenjenaTabela: "Korisnik",
           stariPodaci: { uloga: staraUloga },
-          noviPodaci: { uloga: novaUloga },
+          noviPodaci: { uloga: novaUloga,
+            ime: korisnik.ime,
+    prezime: korisnik.prezime,
+    email: korisnik.email
+           },
           ipAdresa: req.ip,
         },
         tx
@@ -461,11 +465,16 @@ export const blokirajNalog = async (req: Request, res: Response) => {
           tipAkcije: "BLOKIRANJE_NALOGA",
           izmenjenaTabela: "Korisnik",
           stariPodaci: { nalogZakljucan: false },
-          noviPodaci: { nalogZakljucan: true },
-          ipAdresa: req.ip,
-        },
-        tx
-      );
+          
+        // ↓ Dodaj ime i prezime
+  noviPodaci: { 
+    nalogZakljucan: true,
+    ime: korisnik.ime,
+    prezime: korisnik.prezime,
+    email: korisnik.email
+  },
+  ipAdresa: req.ip,
+}, tx);
     });
 
     res.json({ poruka: "Nalog je uspješno blokiran." });
@@ -511,7 +520,10 @@ export const odblokirajNalog = async (req: Request, res: Response) => {
           tipAkcije: "DEBLOKIRANJE_NALOGA",
           izmenjenaTabela: "Korisnik",
           stariPodaci: { nalogZakljucan: true },
-          noviPodaci: { nalogZakljucan: false },
+          noviPodaci: { nalogZakljucan: false,
+            ime: korisnik.ime,
+        prezime: korisnik.prezime,
+        email: korisnik.email },
           ipAdresa: req.ip,
         },
         tx
@@ -1334,5 +1346,128 @@ export const getSviTermini = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ poruka: "Greška pri dohvatanju termina." });
+  }
+};
+
+// dio za audit logove
+export const getAuditLogs = async (req: Request, res: Response) => {
+  try {
+    const {
+      stranica = "1",
+      limit = "20",
+      tipAkcije,
+      izmenjenaTabela,
+      idKorisnika,
+      datumOd,
+      datumDo,
+    } = req.query;
+
+    const skip = (Number(stranica) - 1) * Number(limit);
+    const take = Number(limit);
+
+    const where: any = {};
+
+    if (tipAkcije) where.tipAkcije = tipAkcije;
+    if (izmenjenaTabela) where.izmenjenaTabela = izmenjenaTabela;
+    if (idKorisnika) where.idKorisnika = Number(idKorisnika);
+
+   if (datumOd || datumDo) {
+  where.vrijemeAkcije = {};
+  
+  if (datumOd) {
+    // Prihvata direktan ISO string poslat sa frontenda
+    where.vrijemeAkcije.gte = new Date(String(datumOd));
+  }
+  
+  if (datumDo) {
+    where.vrijemeAkcije.lte = new Date(String(datumDo));
+  }
+}
+
+    const [logs, ukupno] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { vrijemeAkcije: "desc" },
+        include: {
+          korisnik: {
+            select: { ime: true, prezime: true, email: true, uloga: true },
+          },
+        },
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
+
+    res.json({
+      logs,
+      paginacija: {
+        ukupno,
+        stranica: Number(stranica),
+        limit: take,
+        ukupnoStranica: Math.ceil(ukupno / take),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ poruka: "Greška pri dohvatanju audit logova." });
+  }
+};
+
+// ============================================================
+//  POMOĆNA FUNKCIJA ZA LIJEP ISPIS DETALJA AKCIJE (HUMAN-READABLE)
+// ============================================================
+
+export const formatirajDetaljeAkcije = (log: any): string => {
+  if (!log) return "Nema podataka o akciji.";
+
+  const korisnikIme = log.korisnik 
+    ? `${log.korisnik.ime} ${log.korisnik.prezime} (${log.korisnik.uloga})` 
+    : `Korisnik ID: ${log.idKorisnika}`;
+    
+  const stari = log.stariPodaci || {};
+  const novi = log.noviPodaci || {};
+
+  switch (log.tipAkcije) {
+    case "PROMJENA_ULOGE":
+      return `Korisnik ${korisnikIme} je promijenio ulogu korisniku ${novi.ime || ""} ${novi.prezime || ""} iz "${stari.uloga || 'NEPOZNATO'}" u "${novi.uloga || 'NEPOZNATO'}".`;
+
+    case "BLOKIRANJE_NALOGA":
+      return `Korisnik ${korisnikIme} je BLOKIRAO nalog korisniku ${novi.ime || ""} ${novi.prezime || ""}.`;
+
+    case "DEBLOKIRANJE_NALOGA":
+      return `Korisnik ${korisnikIme} je ODBLOKIRAO nalog korisniku ${novi.ime || ""} ${novi.prezime || ""}.`;
+
+    case "DELETE":
+      return `Korisnik ${korisnikIme} je obrisao zapis iz tabele [${log.izmenjenaTabela}]. Obrisani podaci: ${JSON.stringify(stari)}`;
+
+    case "UPDATE":
+      // Dinamičko poređenje šta se tačno promijenilo između starog i novog objekta
+      const izmjene: string[] = [];
+      
+      Object.keys(novi).forEach((kljuc) => {
+        // Preskačemo profilPodaci za bazični ispis ili ih unutra parsiramo
+        if (kljuc === "profilPodaci") return; 
+        
+        if (stari[kljuc] !== novi[kljuc]) {
+          izmjene.push(`[${kljuc}]: sa "${stari[kljuc] ?? 'prazno'}" na "${novi[kljuc] ?? 'prazno'}"`);
+        }
+      });
+
+      // Ako postoje specifične izmjene unutar profilPodaci (npr. specijalizacija, odjel)
+      if (novi.profilPodaci) {
+        izmjene.push(`Ažurirani specifični profilni podaci: ${JSON.stringify(novi.profilPodaci)}`);
+      }
+
+      return izmjene.length > 0
+        ? `Korisnik ${korisnikIme} je ažurirao tabelu [${log.izmenjenaTabela}] za korisnika ${novi.ime || ""} ${novi.prezime || ""}. Izmjene: ${izmjene.join(", ")}`
+        : `Korisnik ${korisnikIme} je sačuvao formu ažuriranja za [${log.izmenjenaTabela}], ali vrijednosti polja nisu mijenjane.`;
+
+    case "UPSERT":
+      return `Korisnik ${korisnikIme} je kreirao ili ažurirao šablon u tabeli [${log.izmenjenaTabela}]. Novi detalji: ${JSON.stringify(novi)}`;
+
+    default:
+      // Generički ispis za bilo koju drugu akciju (npr. ako dodaš nove akcije kasnije)
+      return `Korisnik ${korisnikIme} je izvršio akciju [${log.tipAkcije}] nad tabelom [${log.izmenjenaTabela}]. Star vrijednost: ${JSON.stringify(stari)} | Nova vrijednost: ${JSON.stringify(novi)}`;
   }
 };

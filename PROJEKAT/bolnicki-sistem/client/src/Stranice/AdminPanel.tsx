@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import StatistikaDashboard from "../components/StatistikaDashboard";
+import TabAuditLog from "./TabAuditLog";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const API = `${BASE_URL}/api`;
 
@@ -2246,8 +2247,8 @@ function TabDeaktivacije() {
 // ══════════════════════════════════════════════════════════════
 //  GLAVNI ADMIN PANEL
 // ══════════════════════════════════════════════════════════════
-type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "statistika";
-type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "deaktivacije";
+//type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "statistika";
+type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "deaktivacije" | "auditlog" | "statistika";
 
 export default function AdminPanel() {
   const [aktivniTab, setAktivniTab] = useState<Tab>("korisnici");
@@ -2261,6 +2262,7 @@ export default function AdminPanel() {
     { key: "analitika", label: "Analitika", opis: "Statistike bukiranja po odjelu i doktoru" },
     { key: "statistika", label: "Statistika", opis: "Grafički prikaz statistike zakazanih pregleda" },
     { key: "deaktivacije", label: "Deaktivacije", opis: "Zahtjevi za brisanje i anonimizaciju naloga" },
+    { key: "auditlog", label: "Audit Log", opis: "Historija svih akcija u sistemu" },
   ];
 
   return (
@@ -2310,6 +2312,7 @@ export default function AdminPanel() {
         {aktivniTab === "analitika" && <TabAnalitika />}
         {aktivniTab === "statistika" && <StatistikaDashboard />}
         {aktivniTab === "deaktivacije" && <TabDeaktivacije />}
+        {aktivniTab === "auditlog" && <TabAuditLog />}
       </div>
     </div>
   );
