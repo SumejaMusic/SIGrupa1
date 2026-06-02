@@ -141,17 +141,17 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 ---
 
 
-## DEC-010 — Uvođenje novog user storya za generisanje PDF uputnice specijalistu
+## DEC-010 — Uvođenje novih user storija u Sprint 10
 
 | Stavka | Opis |
 | :--- | :--- |
 | **ID odluke** | DEC-010 |
 | **Datum** | 30.05.2026. |
-| **Kratak naziv odluke** | Uvođenje generisanja PDF uputnice specijalistu kao nova funkcionalnost u Sprint 10 |
-| **Opis problema ili pitanja** | Tokom Sprint 9 identificirana je potreba da doktori mogu kreirati i izdavati formalne uputnice specijalistima direktno iz sistema tokom ili nakon pregleda, umjesto ručnog pisanja ili korištenja vanjskih alata. Funkcionalnost nije bila planirana u inicijalnom backlogu. |
-| **Razmatrane opcije** | 1. Uvrstiti funkcionalnost u Sprint 10 kao novi user story (US-NEW), 2. Odgoditi implementaciju za Sprint 11, 3. Implementirati kao proširenje postojećeg US-32 (upload nalaza) |
-| **Odabrana opcija** | Uvrstiti u Sprint 10 kao samostalan user story (US-NEW) |
-| **Razlog izbora** | Funkcionalnost je visoko prioritetna za koriničko iskustvo doktora i direktno se naslanja na infrastrukturu sigurnog storage modula već implementiranog u Sprintu 9 (US-32). Uvođenje u Sprint 10 ne narušava planirani scope, a odgađanje bi stvorilo tehnički dug i usporilo Release 3. |
-| **Posljedice odluke** | Tim implementira formu za unos podataka uputnice, PDF generisanje i arhiviranje dokumenta u historiji bolesti.  |
+| **Kratak naziv odluke** | Uvođenje novih funkcionalnosti u Sprint 10: generisanje PDF uputnice specijalistu, potvrda dolaska pacijenta jednim klikom i proširenje medicinskog profila pacijenta |
+| **Opis problema ili pitanja** | Tokom Sprint 9 identificirane su tri funkcionalne potrebe koje nisu bile planirane u inicijalnom backlogu: (1) doktori trebaju moći kreirati i izdavati formalne uputnice specijalistima direktno iz sistema tokom ili nakon pregleda, umjesto ručnog pisanja ili korištenja vanjskih alata; (2) medicinsko osoblje nema način da jednim klikom potvrdi dolazak pacijenta i obavijesti doktora o čekaonici u realnom vremenu; (3) sistem ne pruža doktorima uvid u ključne medicinske podatke pacijenta (krvna grupa, alergije, hronične bolesti, prethodne operacije) pri pregledu, što može uzrokovati greške u terapiji. |
+| **Razmatrane opcije** | **US-47 (PDF uputnica):** 1. Uvrstiti u Sprint 10 kao novi user story, 2. Odgoditi implementaciju za Sprint 11, 3. Implementirati kao proširenje postojećeg US-32 (upload nalaza). **US-45 (Potvrda dolaska):** 1. Uvrstiti u Sprint 10 kao novi user story, 2. Implementirati kao proširenje US-24 (Panel medicinskog osoblja), 3. Odgoditi za Sprint 11. **US-46 (Medicinski profil):** 1. Uvrstiti u Sprint 10 kao proširenje US-43 (Profil korisnika), 2. Implementirati kao samostalan user story u Sprint 10, 3. Odgoditi za Sprint 11. |
+| **Odabrana opcija** | Sve tri funkcionalnosti uvrstiti u Sprint 10 kao samostalne user storije (US-45, US-46, US-47) |
+| **Razlog izbora** | Sve tri funkcionalnosti su visoko prioritetne za korisničko iskustvo i operativnu efikasnost sistema. US-47 se direktno naslanja na infrastrukturu sigurnog storage modula implementiranog u Sprintu 9 (US-32). US-45 koristi WebSocket servis već planiran za Sprint 10 (NFR-16), čime se izbjegava dupliciranje tehničke implementacije. US-46 nadopunjuje prošireni profil pacijenta (US-43) i direktno podržava sigurnost terapija, što ga čini kritičnim za medicinski integritet sistema. Uvođenje svih triju u Sprint 10 ne narušava planirani scope, a odgađanje bi stvorilo tehnički dug i usporilo Release 4. |
+| **Posljedice odluke** | Tim implementira: (US-47) formu za unos podataka uputnice, PDF generisanje i arhiviranje dokumenta u historiji bolesti; (US-45) dugme za potvrdu dolaska u panelu medicinskog osoblja sa real-time ažuriranjem doktorovog dashboarda putem WebSocket mehanizma; (US-46) proširenje tabele `pacijent` sa medicinskim atributima i odgovarajući prikaz u doktorovom interfejsu uz zaštitu pristupa prema NFR-01. |
 | **Status odluke** | Aktivna |
 
