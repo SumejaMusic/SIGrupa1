@@ -1,4 +1,4 @@
-# Sprint 10 Goal — Admin panel, statistike, menadžment i generisanje PDF uputnica
+# Sprint Goal 10 — Admin panel, statistike, menadžment i generisanje PDF uputnica
 
 ## Sprint cilj
 
