@@ -94,7 +94,7 @@ interface Props {
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   ZAKAZAN:  { label: 'Zakazano',  cls: 'bg-blue-100 text-blue-700' },
-  POTVRDJEN: { label: 'Potvrđeno', cls: 'bg-indigo-100 text-indigo-700' },
+  POTVRDJEN: { label: 'Čeka u čekaonici', cls: 'bg-amber-100 text-amber-700' },
   ZAVRSEN:  { label: 'Završeno',  cls: 'bg-emerald-100 text-emerald-700' },
   OTKAZAN:  { label: 'Otkazano',  cls: 'bg-gray-100 text-gray-500' },
 };
@@ -132,8 +132,8 @@ export default function AppointmentDetailModal({ appointment: apt, onClose, onCa
       console.error('Greška pri otvaranju PDF-a');
     }
   };
-  let currentStatusKey = apt.termin.status;
-  if (apt.zavrseno) currentStatusKey = 'ZAKAZAN';
+  let currentStatusKey: string = apt.termin.status;
+  if (apt.zavrseno) currentStatusKey = 'ZAVRSEN';
   if (apt.datumOtkazivanja !== null) currentStatusKey = 'OTKAZAN';
 
   const statusInfo = STATUS_MAP[currentStatusKey] ?? STATUS_MAP.ZAKAZAN;

@@ -42,6 +42,7 @@ export const tipConfig = {
 
 export const statusConfig = {
   zakazan: { label: "Zakazan", cls: "bg-blue-100 text-blue-700" },
+  ceka: { label: "Čeka", cls: "bg-amber-100 text-amber-700" },
   zavrsen: { label: "Završen", cls: "bg-gray-100 text-gray-600" },
   otkazan: { label: "Otkazan", cls: "bg-red-100 text-red-600" },
 };
@@ -84,6 +85,7 @@ export function mapirajRezervaciju(r: any): Termin {
   let status: StatusTermina = "zakazan";
   if (r.datumOtkazivanja) status = "otkazan";
   else if (r.zavrseno) status = "zavrsen";
+  else if (r.termin?.status === "POTVRDJEN") status = "ceka";
 
   const pacijentAutor = `${r.pacijent.korisnik.ime} ${r.pacijent.korisnik.prezime}`;
   const komentari: Komentar[] = Array.isArray(r.komentari) && r.komentari.length > 0

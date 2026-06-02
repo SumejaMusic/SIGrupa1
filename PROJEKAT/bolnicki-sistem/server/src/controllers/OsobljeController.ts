@@ -29,6 +29,7 @@ import {
   getTipoviPregledaService,
   getSlobodniDatumiDoktoraService,
   pomjeriTerminService,
+  potvrdiDolazakPacijentaService,
 } from "../osobljeService.js";
 import { redis } from "../lib/redis.js";
 import { io } from "../app.js";
@@ -402,6 +403,32 @@ export async function postaviHitnost(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
+
+export async function potvrdiDolazakPacijenta(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ poruka: "Neispravan ID rezervacije." });
+      return;
+    }
+
+    const rezervacija = await potvrdiDolazakPacijentaService(id);
+    io.emit("termin-azuriran", {
+      doktorId: rezervacija.idDoktor,
+      terminId: rezervacija.idTermina,
+      status: rezervacija.termin.status,
+    });
+
+    res.status(200).json(rezervacija);
+  } catch (err: any) {
+    if (err.status) {
+      res.status(err.status).json({ poruka: err.poruka });
+      return;
+    }
+    next(err);
+  }
+}
+
 export async function getAllPacijenti(req: Request, res: Response, next: NextFunction) {
   try {
     res.status(200).json(await getAllPacijentiService());
