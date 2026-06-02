@@ -138,5 +138,20 @@ Evidencija važnih projektnih, arhitektonskih i tehničkih odluka.
 | **Razlog izbora** | Uvođenje ovih funkcionalnosti u Sprint 9 omogućava ranu validaciju ključnih sistema poput automatskih podsjetnika i integracije sa eksternim servisima (SMS/Resend), čime se izbjegava rizik integracije pred sam kraj projekta. Takođe, rješavaju se kritični zahtjevi privatnosti (anonimizacija i deaktivacija računa) te se podiže ukupni kvalitet sistema kroz uvođenje analitičkih prikaza i chatbota. |
 | **Posljedice odluke** | Sprint backlog za Sprint 9 se proširuje i ažurira sa sljedećim korisničkim pričama i dodijeljenim resursima:<br><br>• **US-31-EXT:** Označavanje pacijenta kao hronični bolesnik + SMS podsjetnik (Proširenje US-31)<br>• **US-38:** Lista čekanja za termine<br>• **US-39:** Grafički prikaz zauzetosti specijalističkih kabineta<br>• **US-40:** Zahtjev za deaktivaciju i anonimizaciju naloga*<br>• **US-41:** Obavijest pacijentu o otkazanom/pomjerenom terminu*<br>• **US-42:** Anonimna ocjena i komentar na rad doktora *<br>• **US-43:** Profil korisnika <br>• **US-44:** Implementacija pametnog chatbota<br><br>Potrebno je prilagoditi prioritetizaciju unutar tima. |
 | **Status odluke** | Aktivna |
+---
 
+
+## DEC-010 — Uvođenje novog user storya za generisanje PDF uputnice specijalistu
+
+| Stavka | Opis |
+| :--- | :--- |
+| **ID odluke** | DEC-010 |
+| **Datum** | 30.05.2026. |
+| **Kratak naziv odluke** | Uvođenje generisanja PDF uputnice specijalistu kao nova funkcionalnost u Sprint 10 |
+| **Opis problema ili pitanja** | Tokom Sprint 9 identificirana je potreba da doktori mogu kreirati i izdavati formalne uputnice specijalistima direktno iz sistema tokom ili nakon pregleda, umjesto ručnog pisanja ili korištenja vanjskih alata. Funkcionalnost nije bila planirana u inicijalnom backlogu. |
+| **Razmatrane opcije** | 1. Uvrstiti funkcionalnost u Sprint 10 kao novi user story (US-NEW), 2. Odgoditi implementaciju za Sprint 11, 3. Implementirati kao proširenje postojećeg US-32 (upload nalaza) |
+| **Odabrana opcija** | Uvrstiti u Sprint 10 kao samostalan user story (US-NEW) |
+| **Razlog izbora** | Funkcionalnost je visoko prioritetna za koriničko iskustvo doktora i direktno se naslanja na infrastrukturu sigurnog storage modula već implementiranog u Sprintu 9 (US-32). Uvođenje u Sprint 10 ne narušava planirani scope, a odgađanje bi stvorilo tehnički dug i usporilo Release 3. |
+| **Posljedice odluke** | Tim implementira formu za unos podataka uputnice, PDF generisanje i arhiviranje dokumenta u historiji bolesti.  |
+| **Status odluke** | Aktivna |
 
