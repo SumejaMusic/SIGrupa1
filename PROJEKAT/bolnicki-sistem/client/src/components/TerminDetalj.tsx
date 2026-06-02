@@ -12,7 +12,10 @@ import {
   Timer,
   XCircle,
   CheckCircle,
-  Activity
+  Activity,
+  HeartPulse,
+  Droplets,
+  ClipboardList
 } from "lucide-react";
 
 import type { Termin, Nalaz } from "../types";
@@ -30,6 +33,8 @@ import { UputnicaModal } from "./uputnica/UputnicaModal";
 import { mapTerminNaUputnicu } from "../utils/uputnicaMapper";
 
 const apiUrl = import.meta.env.VITE_API_URL;
+
+const prikazMedicinskogPolja = (vrijednost?: string | null) => vrijednost?.trim() || "/";
 
 const otvoriNalazPDF = async (nalazId: number) => {
   try {
@@ -311,6 +316,58 @@ export function TerminDetalji({
                   <div className="text-sm font-semibold text-gray-800 leading-snug">{item.value}</div>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-6 border-t border-dashed pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <HeartPulse size={15} className="text-red-500" />
+                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Medicinski profil
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2.5">
+                {[
+                  { label: "Poznate alergije", value: prikazMedicinskogPolja(termin.pacijent.alergije), icon: AlertTriangle },
+                  { label: "Hronične bolesti", value: prikazMedicinskogPolja(termin.pacijent.hronicneBolesti), icon: ClipboardList },
+                ].map(item => (
+                  <div key={item.label} className="bg-red-50/40 rounded-xl p-3 border border-red-100">
+                    <div className="flex items-center gap-1.5 text-xs text-red-500 mb-1 font-medium uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                      <item.icon size={11} />
+                      {item.label}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800 leading-snug whitespace-pre-wrap">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 mt-2.5">
+                {[
+                  { label: "Krvna grupa", value: prikazMedicinskogPolja(termin.pacijent.krvnaGrupa), icon: Droplets },
+                  { label: "Donira krv", value: termin.pacijent.doniraKrv ? "Da" : "Ne", icon: Droplets },
+                  { label: "Prethodne operacije", value: termin.pacijent.imaoOperacije ? "Da" : "Ne", icon: ClipboardList },
+                ].map(item => (
+                  <div key={item.label} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                      <item.icon size={11} />
+                      {item.label}
+                    </div>
+                    <div className="text-sm font-semibold text-gray-800 leading-snug">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {termin.pacijent.imaoOperacije && (
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mt-2.5">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide" style={{ fontSize: "10px" }}>
+                    <ClipboardList size={11} />
+                    Opis operacija
+                  </div>
+                  <div className="text-sm font-semibold text-gray-800 leading-snug whitespace-pre-wrap">
+                    {prikazMedicinskogPolja(termin.pacijent.operacijeOpis)}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* SEKCIJA ZA HRONIČNOG PACIJENTA */}

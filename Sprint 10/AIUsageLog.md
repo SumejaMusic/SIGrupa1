@@ -336,6 +336,7 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | Migracija `20260524120000_redesign_raspored` uklonila je `datumOd`/`datumDo` iz `RasporedDoktora`, ali ovo nije odmah sinhronizovano sa `seed.ts` i `setupFiles.ts`, što je uzrokovalo pad integracionih testova u narednoj sesiji. |
 | **Ko je koristio alat** | Hana Mahmutović |
 
+
 ---
 
 ## Unos 020 — Dijagnoza i ispravak integracionih testova
@@ -406,3 +407,37 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Prijedloge za hardkodirane URL adrese backenda u korist varijabli okruženja zbog ispravnog rada aplikacije na Renderu. |
 | **Rizici, problemi ili greške** | Razlika u UTC vremenu servera i lokalnom vremenu korisnika (zahtijevalo setHours na nulu). Infobip Trial nalog dozvoljava slanje samo na verifikovane brojeve. |
 | **Ko je koristio alat** | Kenan Hatibović|
+
+# Unos 024 — AuditLog: korisnički interfejs i backend funkcionalnosti, pisanje integracionih i unit testova za auditLog
+
+Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja uloge AI alata tokom rada na projektu.
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 1. juni 2026. |
+| **Sprint broj** | Sprint 10  |
+| **Alat koji je korišten** | **Claude**, **Gemini**  |
+| **Svrha korištenja** | Razvoj serverske logike, formatiranje JSON struktura, pisanje integracionih testova. |
+| **Kratak opis zadatka ili upita** | Implementacija rute i dvije funkcije unutar administrativnog kontrolera za preuzimanje i prikazivanje detalja revizijskih zapisnika (`Audit Logs`). Generisanje pratećih automatizovanih testova |
+| **Šta je AI predložio ili generisao** | 1. **Claude:** Pomogao u implementaciji dvije ključne funkcije u kontroleru: `getAuditLogs` (za preuzimanje, paginaciju i napredno filtriranje) i `formatirajDetaljeAkcije` (robusna pomoćna funkcija koja parsira kompleksne `stariPodaci`/`noviPodaci` JSON objekte i pretvara ih u tekst prilagođen ljudima).<br>2. **Gemini:** Generisao 36 automatizovanih testnih scenarija (15 unit i 21 integracioni test) te kreirao formalni QA izvještaj sa BDD nomenklaturom testova (koncept *"Treba da uradi X kada se desi Y"*). |
+| **Šta je tim prihvatio** | * Od Claude-a: Arhitekturu kontrolera, SQL/Prisma logiku filtriranja datuma/tipova akcija, i sve rubne slučajeve (edge-cases) za parsiranje uloga, blokiranja i ažuriranja profila.<br>* Od Gemini-ja: Kompletnu strukturu testova, `beforeEach` strategiju izolacije baze podataka i prečišćene, profesionalne nazive testova za dokumentaciju. |
+| **Šta je tim izmijenio** | Ručno su mapirani testni tokeni i `x-test-korisnik-id` zaglavlja u integracionim testovima kako bi se osiguralo da simulirani zahtjevi u potpunosti prolaze kroz postojeći `authMiddleware`. |
+| **Šta je tim odbacio** | Prvobitne sirove opise testova koji su bili previše tehnički i nečitljivi za konačni izvještaj, te generičke fallback poruke koje nisu prepoznavale specifične tabele i akcije. |
+| **Rizici, problemi ili greške** | *Kontekstualno usklađivanje:* Najveći izazov je bio osigurati da testni framework (Vitest) ispravno komunicira sa realnom testnom bazom u Dockeru bez ometanja globalnih seed podataka. Problem je riješen uvođenjem ciljanog čišćenja samo `AuditLog` tabele, što su alati uspješno predložili. |
+| **Ko je koristio alat** | Amina Alispahić |
+
+# AI Usage Log - Mendazment panel: pregled zauzetosti sala sakrivanje recenzija prikazivanje otkazanih, zakazanih i slobodnih termina i pisanje unit i integracionih testova
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 01.06.2026. |
+| **Sprint broj** | Sprint 10 |
+| **Alat koji je korišten** | Claude (Anthropic) |
+| **Svrha korištenja** | Podrška u razvoju backend kontrolera, pisanju testova i integraciji u frontend |
+| **Kratak opis zadatka ili upita** | Implementacija četiri funkcije u `vlasnikController.ts`: `getTerminiDetalji`, `getSaleOccupancy`, `sakrijiRecenziju` i `getRecenzije`, te pisanje unit i integracionih testova |
+| **Šta je AI predložio ili generisao** | Logiku filtriranja termina po statusu (SLOBODAN, OTKAZAN, ZAKAZAN/POTVRDJEN), konverziju UTC vremena u lokalno (+2h), deduplikaciju rezervacija putem `Map` strukture u `getSaleOccupancy`, validaciju u `sakrijiRecenziju` (404/400 provjere), paginacijsku logiku u `getRecenzije` |
+| **Šta je tim prihvatio** | Cjelokupna logika svih četiri kontrolerskih funkcija, struktura Prisma upita sa `select`/`where`/`orderBy`, deduplikacija rezervacija u `getSaleOccupancy`, logika određivanja `stvarniStatus` u `getTerminiDetalji` |
+| **Šta je tim izmijenio** | Testovi su samostalno napisani (unit i integracioni), frontend integracija je urađena samostalno; prilagođeni su nazivi polja i struktura odgovora prema potrebama UI-a |
+| **Šta je tim odbacio** | — |
+| **Rizici, problemi ili greške** | Timezone offset (+2h) je hardkodiran kao konstanta (`+ 120` minuta) umjesto dinamičke detekcije — potrebno pratiti pri prelasku na zimsko/ljetno računanje vremena |
+| **Ko je koristio alat** | Amina Alispahić |

@@ -1,9 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import Layout from '../components/Layout';
 import { apiUrl } from '../lib/api';
 import { formatDatumPrikaz, isoUTCdatum } from '../utils/rezervacijeUtils';
-import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Edit2, Save, X, CheckCircle, Shield, AlertTriangle, Clock, HeartPulse, Droplets, ClipboardList } from 'lucide-react';
 import DatePicker from 'react-datepicker';
+
+const MaskedDateInput = forwardRef<HTMLInputElement, any>(({ value, onChange, ...props }, ref) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 8) val = val.slice(0, 8);
+    let formatted = val;
+    if (val.length > 4) {
+      formatted = `${val.slice(0, 2)}/${val.slice(2, 4)}/${val.slice(4)}`;
+    } else if (val.length > 2) {
+      formatted = `${val.slice(0, 2)}/${val.slice(2)}`;
+    }
+    e.target.value = formatted;
+    if (onChange) onChange(e);
+  };
+  return <input ref={ref} value={value} onChange={handleChange} {...props} />;
+});
+
+interface PatientMedicalProfile {
+  id: number;
+  alergije: string | null;
+  hronicneBolesti: string | null;
+  krvnaGrupa: string | null;
+  doniraKrv: boolean;
+  imaoOperacije: boolean;
+  operacijeOpis: string | null;
+}
 
 interface UserProfile {
   id: number;
@@ -12,7 +38,21 @@ interface UserProfile {
   email: string;
   brojTelefona: string | null;
   datumRodjenja: string;
+  uloga?: string;
+  pacijentProfile?: PatientMedicalProfile | null;
 }
+
+interface DeaktivacijaZahtjev {
+  id: number;
+  status: string;
+  razlogKorisnika: string | null;
+  adminObrazlozenje: string | null;
+  kreiranAt: string;
+  obradenAt: string | null;
+}
+
+const krvneGrupe = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const prikazPolja = (vrijednost?: string | null) => vrijednost?.trim() || '/';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -24,13 +64,35 @@ export default function ProfilePage() {
     ime: '',
     prezime: '',
     brojTelefona: '',
-    datumRodjenja: ''
+    datumRodjenja: '',
+    alergije: '',
+    hronicneBolesti: '',
+    krvnaGrupa: '',
+    doniraKrv: false,
+    imaoOperacije: false,
+    operacijeOpis: ''
   });
 
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Deaktivacija state
+  const [deaktivacijaZahtjev, setDeaktivacijaZahtjev] = useState<DeaktivacijaZahtjev | null>(null);
+  const [showDeaktivacijaModal, setShowDeaktivacijaModal] = useState(false);
+  const [deaktivacijaRazlog, setDeaktivacijaRazlog] = useState('');
+  const [deaktivacijaLoading, setDeaktivacijaLoading] = useState(false);
+  const [deaktivacijaMessage, setDeaktivacijaMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [uloga, setUloga] = useState<string | null>(null);
+
   useEffect(() => {
     fetchProfile();
+    // Dohvati ulogu iz tokena
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUloga(payload.uloga ?? null);
+      }
+    } catch { /* ignore */ }
   }, []);
 
   const fetchProfile = async () => {
@@ -54,8 +116,17 @@ export default function ProfilePage() {
           ime: data.ime,
           prezime: data.prezime,
           brojTelefona: data.brojTelefona || '',
-          datumRodjenja: data.datumRodjenja ? isoUTCdatum(data.datumRodjenja) : ''
+          datumRodjenja: data.datumRodjenja ? isoUTCdatum(data.datumRodjenja) : '',
+          alergije: data.pacijentProfile?.alergije || '',
+          hronicneBolesti: data.pacijentProfile?.hronicneBolesti || '',
+          krvnaGrupa: data.pacijentProfile?.krvnaGrupa || '',
+          doniraKrv: data.pacijentProfile?.doniraKrv || false,
+          imaoOperacije: data.pacijentProfile?.imaoOperacije || false,
+          operacijeOpis: data.pacijentProfile?.operacijeOpis || ''
         });
+
+        // Dohvati status deaktivacije
+        fetchDeaktivacijaStatus(korisnik.id, token);
       }
     } catch (err) {
       console.error(err);
@@ -64,10 +135,29 @@ export default function ProfilePage() {
     }
   };
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const fetchDeaktivacijaStatus = async (userId: number, token: string | null) => {
+    try {
+      const res = await fetch(apiUrl(`/api/users/${userId}/deactivation-request`), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDeaktivacijaZahtjev(data.zahtjev || null);
+      }
+    } catch { /* ignore */ }
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setEditForm({
       ...editForm,
       [e.target.name]: e.target.value
+    });
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditForm({
+      ...editForm,
+      [e.target.name]: e.target.checked
     });
   };
 
@@ -76,13 +166,31 @@ export default function ProfilePage() {
     setMessage(null);
     try {
       const token = localStorage.getItem('token');
+      const payload: any = {
+        ime: editForm.ime,
+        prezime: editForm.prezime,
+        brojTelefona: editForm.brojTelefona,
+        datumRodjenja: editForm.datumRodjenja
+      };
+
+      if ((profile?.uloga ?? uloga) === 'PACIJENT') {
+        Object.assign(payload, {
+          alergije: editForm.alergije,
+          hronicneBolesti: editForm.hronicneBolesti,
+          krvnaGrupa: editForm.krvnaGrupa,
+          doniraKrv: editForm.doniraKrv,
+          imaoOperacije: editForm.imaoOperacije,
+          operacijeOpis: editForm.imaoOperacije ? editForm.operacijeOpis : ''
+        });
+      }
+
       const res = await fetch(apiUrl(`/api/users/${profile?.id}/profile`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -111,6 +219,47 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeaktivacijaSubmit = async () => {
+    setDeaktivacijaLoading(true);
+    setDeaktivacijaMessage(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(apiUrl(`/api/users/${profile?.id}/deactivation-request`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ razlog: deaktivacijaRazlog || undefined })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setDeaktivacijaMessage({ text: data.poruka, type: 'success' });
+        setShowDeaktivacijaModal(false);
+        setDeaktivacijaRazlog('');
+        // Refresh status
+        if (profile) {
+          fetchDeaktivacijaStatus(profile.id, token);
+        }
+      } else {
+        setDeaktivacijaMessage({ text: data.poruka || 'Greška pri podnošenju zahtjeva.', type: 'error' });
+      }
+    } catch {
+      setDeaktivacijaMessage({ text: 'Greška servera. Pokušajte ponovo.', type: 'error' });
+    } finally {
+      setDeaktivacijaLoading(false);
+    }
+  };
+
+  const formatDatum = (d: string) => {
+    const datum = new Date(d);
+    const dan = String(datum.getDate()).padStart(2, '0');
+    const mjesec = String(datum.getMonth() + 1).padStart(2, '0');
+    const godina = datum.getFullYear();
+    return `${dan}/${mjesec}/${godina}`;
+  };
+
   if (loading) {
     return (
       <Layout step={1} totalSteps={1} breadcrumbs={['Profil']}>
@@ -128,6 +277,9 @@ export default function ProfilePage() {
       </Layout>
     );
   }
+
+  const prikaziMedicinskiProfil = (profile.uloga ?? uloga) === "PACIJENT";
+  const medicinskiProfil = profile.pacijentProfile;
 
   return (
     <Layout step={1} totalSteps={1} breadcrumbs={['Profil']}>
@@ -255,14 +407,19 @@ export default function ProfilePage() {
                   </label>
                   {isEditing ? (
                     <DatePicker
-                      selected={editForm.datumRodjenja ? new Date(editForm.datumRodjenja + 'T12:00:00') : null}
+                      customInput={<MaskedDateInput />}
+                      selected={
+                        editForm.datumRodjenja && !isNaN(new Date(editForm.datumRodjenja + 'T12:00:00').getTime())
+                          ? new Date(editForm.datumRodjenja + 'T12:00:00')
+                          : null
+                      }
                       onChange={(date: Date | null) => {
-                        if (date) {
-                          const y = date.getFullYear();
+                        if (date && !isNaN(date.getTime()) && date.getFullYear() >= 1000) {
+                          const y = String(date.getFullYear()).padStart(4, '0');
                           const m = String(date.getMonth() + 1).padStart(2, '0');
                           const d = String(date.getDate()).padStart(2, '0');
                           setEditForm({ ...editForm, datumRodjenja: `${y}-${m}-${d}` });
-                        } else {
+                        } else if (!date) {
                           setEditForm({ ...editForm, datumRodjenja: '' });
                         }
                       }}
@@ -284,6 +441,140 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {prikaziMedicinskiProfil && (
+                <div className="pt-6 mt-6 border-t border-gray-100">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <HeartPulse size={20} className="text-blue-700" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-800">Medicinski profil</h2>
+                      <p className="text-sm text-gray-500 mt-0.5">Ključne informacije dostupne doktoru pri pregledu</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <AlertTriangle size={16} className="text-gray-400" />
+                        Poznate alergije
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          name="alergije"
+                          value={editForm.alergije}
+                          onChange={handleEditChange}
+                          rows={3}
+                          placeholder="Npr. penicilin, polen, lateks..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent whitespace-pre-wrap">{prikazPolja(medicinskiProfil?.alergije)}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <ClipboardList size={16} className="text-gray-400" />
+                        Hronične bolesti
+                      </label>
+                      {isEditing ? (
+                        <textarea
+                          name="hronicneBolesti"
+                          value={editForm.hronicneBolesti}
+                          onChange={handleEditChange}
+                          rows={3}
+                          placeholder="Npr. dijabetes, astma, hipertenzija..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                        />
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent whitespace-pre-wrap">{prikazPolja(medicinskiProfil?.hronicneBolesti)}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        <Droplets size={16} className="text-gray-400" />
+                        Krvna grupa
+                      </label>
+                      {isEditing ? (
+                        <select
+                          name="krvnaGrupa"
+                          value={editForm.krvnaGrupa}
+                          onChange={handleEditChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                        >
+                          {krvneGrupe.map(grupa => (
+                            <option key={grupa || 'empty'} value={grupa}>{grupa || 'Nije navedeno'}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{prikazPolja(medicinskiProfil?.krvnaGrupa)}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Doniranje krvi</label>
+                        {isEditing ? (
+                          <label className="flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer">
+                            <input
+                              type="checkbox"
+                              name="doniraKrv"
+                              checked={editForm.doniraKrv}
+                              onChange={handleCheckboxChange}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">Doniram krv</span>
+                          </label>
+                        ) : (
+                          <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{medicinskiProfil?.doniraKrv ? 'Da' : 'Ne'}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Prethodne operacije</label>
+                        {isEditing ? (
+                          <label className="flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer">
+                            <input
+                              type="checkbox"
+                              name="imaoOperacije"
+                              checked={editForm.imaoOperacije}
+                              onChange={handleCheckboxChange}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">Imao/la sam operacije</span>
+                          </label>
+                        ) : (
+                          <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent">{medicinskiProfil?.imaoOperacije ? 'Da' : 'Ne'}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {(isEditing ? editForm.imaoOperacije : medicinskiProfil?.imaoOperacije) && (
+                      <div className="md:col-span-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <ClipboardList size={16} className="text-gray-400" />
+                          Opis prethodnih operacija
+                        </label>
+                        {isEditing ? (
+                          <textarea
+                            name="operacijeOpis"
+                            value={editForm.operacijeOpis}
+                            onChange={handleEditChange}
+                            rows={3}
+                            placeholder="Navedite vrstu operacije i približnu godinu..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                          />
+                        ) : (
+                          <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-800 border border-transparent whitespace-pre-wrap">{prikazPolja(medicinskiProfil?.operacijeOpis)}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {isEditing && (
                 <div className="pt-6 mt-6 border-t border-gray-100 flex justify-end">
                   <button
@@ -303,6 +594,173 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* -----------------------------------------------------------
+            PRIVATNOST I DEAKTIVACIJA — samo za PACIJENT ulogu
+           ----------------------------------------------------------- */}
+        {prikaziMedicinskiProfil && (
+          <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-8 py-5 border-b border-gray-100 flex items-center gap-3">
+              <Shield size={20} className="text-gray-500" />
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Privatnost i deaktivacija</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Upravljanje Vašim nalogom i ličnim podacima</p>
+              </div>
+            </div>
+
+            <div className="p-8">
+              {deaktivacijaMessage && (
+                <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${deaktivacijaMessage.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+                  {deaktivacijaMessage.type === 'success' && <CheckCircle size={20} className="text-green-600" />}
+                  <span>{deaktivacijaMessage.text}</span>
+                </div>
+              )}
+
+              {/* Zakonska informacija */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <Clock size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-blue-800 font-medium">Zakonski rok obrade</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      U skladu sa zakonom o zaštiti ličnih podataka, zahtjev za deaktivaciju naloga će biti obrađen u roku od <strong>30 dana</strong> od podnošenja.
+                      Medicinski podaci se čuvaju u anonimizovanoj formi zbog zakonske obaveze.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Prikaz statusa postojećeg zahtjeva */}
+              {deaktivacijaZahtjev && (
+                <div className={`rounded-lg p-4 mb-6 border ${deaktivacijaZahtjev.status === 'NA_CEKANJU'
+                  ? 'bg-amber-50 border-amber-200'
+                  : deaktivacijaZahtjev.status === 'ODOBRENO'
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-red-50 border-red-200'
+                  }`}>
+                  <div className="flex items-start gap-3">
+                    {deaktivacijaZahtjev.status === 'NA_CEKANJU' && <Clock size={20} className="text-amber-600 mt-0.5 flex-shrink-0" />}
+                    {deaktivacijaZahtjev.status === 'ODOBRENO' && <CheckCircle size={20} className="text-green-600 mt-0.5 flex-shrink-0" />}
+                    {deaktivacijaZahtjev.status === 'ODBIJENO' && <X size={20} className="text-red-600 mt-0.5 flex-shrink-0" />}
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${deaktivacijaZahtjev.status === 'NA_CEKANJU' ? 'text-amber-800'
+                        : deaktivacijaZahtjev.status === 'ODOBRENO' ? 'text-green-800'
+                          : 'text-red-800'
+                        }`}>
+                        {deaktivacijaZahtjev.status === 'NA_CEKANJU' && 'Zahtjev je na čekanju'}
+                        {deaktivacijaZahtjev.status === 'ODOBRENO' && 'Zahtjev je odobren'}
+                        {deaktivacijaZahtjev.status === 'ODBIJENO' && 'Zahtjev je odbijen'}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Podnesen: {formatDatum(deaktivacijaZahtjev.kreiranAt)}
+                        {deaktivacijaZahtjev.obradenAt && ` · Obrađen: ${formatDatum(deaktivacijaZahtjev.obradenAt)}`}
+                      </p>
+                      {deaktivacijaZahtjev.adminObrazlozenje && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          <strong>Obrazloženje:</strong> {deaktivacijaZahtjev.adminObrazlozenje}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Dugme za zahtjev */}
+              {(!deaktivacijaZahtjev || deaktivacijaZahtjev.status === 'ODBIJENO') && (
+                <div className="border border-red-200 rounded-lg p-5 bg-red-50/50">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">Zatraži deaktivaciju naloga</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Ovom akcijom pokrećete postupak trajne deaktivacije Vašeg naloga. Vaši lični podaci će biti anonimizirani, a aktivni termini otkazani.
+                      </p>
+                      <button
+                        onClick={() => setShowDeaktivacijaModal(true)}
+                        className="mt-4 px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        Zatraži deaktivaciju naloga
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {deaktivacijaZahtjev?.status === 'NA_CEKANJU' && (
+                <p className="text-sm text-gray-500 italic">
+                  Vaš zahtjev se trenutno obrađuje. Bićete obaviješteni emailom o odluci.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal za potvrdu deaktivacije */}
+        {showDeaktivacijaModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowDeaktivacijaModal(false)}>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertTriangle size={20} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Potvrda deaktivacije</h3>
+                    <p className="text-sm text-gray-500">Ova akcija je nepovratna</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
+                  <p className="text-sm text-amber-800">
+                    <strong>Upozorenje:</strong> Po odobrenju zahtjeva, sljedeće akcije će se izvršiti:
+                  </p>
+                  <ul className="text-sm text-amber-700 mt-2 space-y-1 list-disc pl-5">
+                    <li>Vaši lični podaci (ime, email, telefon, JMBG) biće anonimizirani</li>
+                    <li>Aktivni zakazani termini biće otkazani</li>
+                    <li>Nećete moći pristupiti nalogu</li>
+                    <li>Medicinski podaci ostaju sačuvani u anonimizovanoj formi</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Razlog za deaktivaciju (opcionalno)
+                  </label>
+                  <textarea
+                    value={deaktivacijaRazlog}
+                    onChange={(e) => setDeaktivacijaRazlog(e.target.value)}
+                    rows={3}
+                    placeholder="Navedite razlog zašto želite deaktivirati nalog..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+                <button
+                  onClick={() => { setShowDeaktivacijaModal(false); setDeaktivacijaRazlog(''); }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors font-medium"
+                >
+                  Odustani
+                </button>
+                <button
+                  onClick={handleDeaktivacijaSubmit}
+                  disabled={deaktivacijaLoading}
+                  className="px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-70 flex items-center gap-2"
+                >
+                  {deaktivacijaLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                  ) : (
+                    <AlertTriangle size={16} />
+                  )}
+                  Potvrdi zahtjev
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
