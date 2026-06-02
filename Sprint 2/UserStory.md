@@ -1,6 +1,7 @@
 # User Story
 
 **Izmjena nakon Sprinta 2:** User Storiji ažurirani — usklađeni ID-evi i dodana kolona s referencom na Product Backlog.
+**Izmjena nakon Sprinta 10:** Dodani novi User Storiji US-45, US-46 i US-47 iz Sprint 10 Backloga.
 
 
 | ID | Povezanost sa PB | Naziv | Opis | Poslovna vrijednost | Prioritet | Pretpostavke | Otvorena pitanja |
@@ -16,7 +17,7 @@
 | **US-09** | PB-1 | Otkazivanje termina (medicinsko osoblje) | Kao medicinsko osoblje, želim da mogu otkazati termine pacijenata, kako bih oslobodio termine u slučaju promjena u rasporedu. | Sistem omogućava veću fleksibilnost u rasporedu, prilagođavajući se potrebama i pacijenata i osoblja. To pomaže u optimalnoj organizaciji termina, tako da se vrijeme efikasno koristi. | Nizak (Low) | - Termin je već rezervisan<br>- Osoblje ima pristup panelu medicinskog osoblja | - Koliko ranije se može izvršiti otkazivanje?<br>- Da li se šalje obavijest pacijentu? |
 | **US-10** | PB-1 | Otkazivanje termina (pacijent) | Kao pacijent, želim da mogu otkazati svoj termin, kako bih oslobodio termin u slučaju spriječenosti. | Ovaj sistem pomaže da se broj neiskorištenih termina značajno smanji, čime se resursi bolje raspoređuju i maksimalno iskorištavaju. Istovremeno, omogućava veću fleksibilnost u planiranju, što pozitivno utiče na zadovoljstvo pacijenata i olakšava njihovo iskustvo sa uslugom. | Nizak (Low) | - Termin je već rezervisan<br>- Sistem vodi evidenciju svih termina | - Koliko ranije pacijent može otkazati termin?<br>- Da li se šalje potvrda o otkazivanju? |
 | **US-11** | PB-10 | Dashboard za doktora – pregled rasporeda | Kao doktor, želim da imam pregled svog dnevnog i sedmičnog rasporeda, kako bih efikasno organizovao svoje obaveze. | Sistem doprinosi boljoj organizaciji svakodnevnog rada, jer pruža jasan pregled obaveza i zadataka. Time se značajno smanjuje mogućnost grešaka u rasporedu, a zaposlenima omogućava učinkovitije planiranje radnog dana. Kao rezultat, produktivnost raste, a radni proces postaje jednostavniji i pregledniji. | Nizak (Low) | - Termini su već definisani<br>- Doktor ima pristup svom panelu | - Da li doktor može mijenjati termine?<br>- Da li vidi i historiju pregleda pacijenata? |
-| **US-12** | PB-1 | Automatsko oslobađanje zaključanih termina | Kao sistem, želim automatski osloboditi termine koji nisu potvrđeni u određenom vremenu, kako bi se povećila dostupnost termina za druge pacijente. | Sistem omogućava bolje iskorištenje dostupnih termina, čime se smanjuju zastoji i neiskorišteni resursi. Time se rad administracije i medicinskog osoblja znatno olakšava, jer je organizacija procesa jasnija i efikasnija, što doprinosi glatkom funkcionisanju cijelog sistema. | Nizak (Low) | - Postoje termini označeni kao “zaključani”<br>- Sistem prati status potvrđenosti termina | - Koliko vremena mora proći prije oslobađanja termina? |
+| **US-12** | PB-1 | Automatsko oslobađanje zaključanih termina | Kao sistem, želim automatski osloboditi termine koji nisu potvrđeni u određenom vremenu, kako bi se povećila dostupnost termina za druge pacijente. | Sistem omogućava bolje iskorištenje dostupnih termina, čime se smanjuju zastoji i neiskorišteni resursi. Time se rad administracije i medicinskog osoblja znatno olakšava, jer je organizacija procesa jasnija i efikasnija, što doprinosi glatkom funkcionisanju cijelog sistema. | Nizak (Low) | - Postoje termini označeni kao "zaključani"<br>- Sistem prati status potvrđenosti termina | - Koliko vremena mora proći prije oslobađanja termina? |
 | **US-13** | PB-2 | Validacija i sprječavanje duplih rezervacija | Kao sistem, želim spriječiti dupliranje termina u isto vrijeme za istog pacijenta, kako bih izbjegao konflikte i greške u rasporedu. | Sistem osigurava preciznu evidenciju svih zakazanih termina, čime se značajno smanjuje mogućnost administrativnih grešaka. To ne samo da olakšava posao osoblju, već i poboljšava iskustvo pacijenata, koji imaju pouzdan uvid u svoje termine, kao i doktora, kojima je rad organizovan i pregledan. | Visok (High) | - Pacijenti mogu rezervisati termine online<br>- Sistem prati sve postojeće rezervacije | - Da li se validacija odnosi i na specijaliste i porodične doktore?<br>- Šta se dešava ako pacijent pokuša rezervisati dupli termin? |
 | **US-14** | PB-3 | Upravljanje radnim vremenom doktora (admin) | Kao administrator, želim da mogu upravljati radnim vremenom doktora, kako bi se termini mogli pravilno planirati i zakazivati. | Naš sistem pomaže u efikasnijoj organizaciji rasporeda doktora, što omogućava optimalno korištenje dostupnih resursa. Istovremeno, smanjuje se rizik od grešaka prilikom zakazivanja, čime cijeli proces postaje pouzdaniji i pregledniji, a rad osoblja jednostavniji. | Visok (High) | - Administrator ima pristup admin panelu<br>- Doktor je registrovan u sistemu | - Da li doktor može sam mijenjati svoje radno vrijeme?<br>- Kako se tretiraju vanredni i hitni termini? |
 | **US-15** | PB-10 | Upravljanje radnim vremenom doktora | Kao doktor, želim da imam pravo slanja upita promjene dužine termina pregleda, kako bi termini u sistemu bili usklađeni sa terminima koji se izvršavaju u zdravstvenoj ustanovi. | Neusklađenost dužine termina u sistemu s realnošću u ustanovi direktno uzrokuje kolizije u rasporedu, prekovremeno čekanje pacijenata i gubitak povjerenja u digitalni sistem rezervacija. Omogućavanjem procesa promjene dužine termina kroz formalni upit, ustanova osigurava da raspored u sistemu uvijek odražava stvarno stanje čime se smanjuju operativne greške, rasterećuje administrativno osoblje od ručnih korekcija i povećava pouzdanost sistema. | Visok (High) | - Doktor je registrovan u sistemu<br>- Svaki termin u sistemu ima definisanu dužinu trajanja kao atribut koji se može mijenjati<br>- Doktor ne može direktno mijenjati dužinu termina<br>- Administrator je jedini koji može odobriti ili odbiti upit za promjenu<br>- Doktor je obavješten o statusu upita (odobreno/odbijeno) putem notifikacije u sistemu | - Da li upit odobrava samo administrator ili i neko iz odjela uprave?<br>- Na koji način doktor i admin primaju obavještenje o upitu? |
@@ -35,7 +36,7 @@
 | **US-28** | PB-11 | Označavanje hitnosti prijavljenog termina | Kao medicinsko osoblje, želim vizuelno označiti hitne pacijente u sistemu, kako bi prioritetni termini bili obrađeni odmah. | Sistem omogućava pravovremenu obradu hitnih pacijenata, što je ključno za njihovu sigurnost i zdravlje. Time se povećava efikasnost rada medicinskog osoblja, a rizik od propusta u urgentnim situacijama značajno se smanjuje, čime se poboljšava ukupna kvaliteta pružene njege. | Srednji (Medium) | - Sistem prepoznaje urgentne slučajeve<br>- Korisnici imaju pristup označavanju | - Koji kriterijumi određuju hitnost?<br>- Da li pacijent vidi oznaku hitnosti? |
 | **US-29** | PB-3 | Statistika zdravstvene ustanove | Kao administrator, želim vidjeti statistiku rezervacija termina, kako bih identificirao uska grla u sistemu. | Sistem omogućava administratoru vidljive pokazatelje opterećenosti resursa, stopu otkayivanja termina te trend rezervacija koji pomazu pri ranom otkrivanju problema. Smanjenjem vremena cekanja za uklanjanje problema poboljsava reputaciju zdravstvene ustanove te smanjuje nezadovoljstvo pacijenta. | Srednji (Medium) | - Podaci o terminima su u bazi<br>- Admin ima prava uvida<br>- Sistem bilježi datume rezervacija i termina<br>- Sistem može generisati CSV/PDF | - Nivo statistike (ustanova/odjel/ljekar)?<br>- Da li je potreban grafički prikaz?<br>- Koje konkretne metrike su potrebne? |
 | **US-30** | PB-9 | Statistika zdravstvene ustanove | Kao uprava zdravstvene ustanove, želim eksportovati statistiku zakazanih pregleda doktora u CSV formatu, kako bih mogao analizirati podatke i planirati resurse. | Sistem omogućava detaljniju analizu podataka, što olakšava planiranje resursa i rasporeda. Takođe, pojednostavljuje pripremu izvještaja i pomaže u donošenju informisanih odluka, čime se povećava efikasnost i preglednost cjelokupnog procesa. | Nizak (Low) | - Podaci o terminima su u bazi<br>- Sistem može generisati CSV fajl | - Da li se eksport vrši periodično ili na zahtjev?<br>- Ko ima pristup eksportovanim podacima? |
-| **US-31** | PB-7 | Automatski podsjetnik | Kao pacijent, želim da sistem automatski šalje podsjetnike pacijentima sa hroničnim bolestima, kako bi se smanjila zaboravljena zakazivanja pregleda. | Veća prisutnost pacijenata na zakazanim terminima doprinosi kontinuitetu liječenja i boljoj njezi. Istovremeno, smanjuje se administrativni posao jer više nije potrebno ručno slati podsjetnike, što olakšava rad osoblja i čini cijeli proces efikasnijim. | Nizak (Low) | - Pacijent ima atribut “hronični bolesnik”<br>- Sistem može slati emailove | - Koliko često se šalje podsjetnik?<br>- Da li se podsjetnik šalje i putem SMS-a? |
+| **US-31** | PB-7 | Automatski podsjetnik | Kao pacijent, želim da sistem automatski šalje podsjetnike pacijentima sa hroničnim bolestima, kako bi se smanjila zaboravljena zakazivanja pregleda. | Veća prisutnost pacijenata na zakazanim terminima doprinosi kontinuitetu liječenja i boljoj njezi. Istovremeno, smanjuje se administrativni posao jer više nije potrebno ručno slati podsjetnike, što olakšava rad osoblja i čini cijeli proces efikasnijim. | Nizak (Low) | - Pacijent ima atribut "hronični bolesnik"<br>- Sistem može slati emailove | - Koliko često se šalje podsjetnik?<br>- Da li se podsjetnik šalje i putem SMS-a? |
 | **US-32** | PB-4 | Upload i evidencija laboratorijskih nalaza | Kao medicinsko osoblje, želim dodavati PDF nalaze ili vrijednosti u historiju pregleda pacijenata, kako bi podaci bili kompletni i dostupni za buduće preglede. | Detaljna evidencija pacijenata omogućava doktorima precizniju analizu i praćenje razvoja bolesti, što doprinosi kvalitetnijem liječenju. Također, smanjuje se rizik od gubitka važnih podataka, čime se osigurava sigurnost i pouzdanost informacija. | Srednji (Medium) | - Pacijent ima nalaze spremne za upload<br>- Sistem omogućava sigurno pohranjivanje | - Koji tip fajlova je dozvoljen?<br>- Koliko dugo se čuvaju uploadovani fajlovi? |
 | **US-33** | PB-3 | Admin panel - backend | Kao backend developer, želim razviti backend funkcionalnosti za admin panel, kako bi administratori mogli upravljati korisnicima, terminima i resursima. | Admin panel predstavlja centralno upravljanje ovog sistema čime bi sistem funkcionisao efikasnije, povećavo sigurnost i omogućavao jednostavno upravljanje svim funkcijama sistema. | Visok (High) | - Baza podataka je spremna<br>- API-jevi za frontend su planirani | - Koje funkcionalnosti backend treba podržati prvo?<br>- Da li će biti REST API? |
 | **US-34** | PB-8 | Kreirati ER model baze podataka | Kao sistem dizajner, želim definisati entitete, atribute, relacije, primarne i strane ključeve, kako bi baza podataka bila pravilno strukturirana i spremna za implementaciju. | Ove funkcionalnosti osiguravaju pravilno funkcionisanje sistema i pomažu u provjeri i validaciji poslovnih procesa. Time se značajno smanjuje rizik od grešaka prilikom implementacije baze podataka, čime se povećava pouzdanost i stabilnost cijelog sistema. | Visok (High) | - Postoji produkt backlog<br>- Sistemski zahtjevi su definisani | - Koji tip baze (SQL/NoSQL)?<br>- Da li će model podržavati buduća proširenja? |
@@ -50,6 +51,9 @@
 | **US-42** | PB-10 | Anonimna ocjena i komentar na rad doktora | Kao pacijent, želim da nakon završenog pregleda ostavim anonimnu ocjenu i kratak komentar na rad doktora, kako bi se unaprijedio kvalitet usluge. | Mehanizam povratnih informacija pruža menadžmentu ustanove dragocjen uvid u performanse osoblja i nivo pružene usluge. Anonimnost osigurava objektivnost i iskrenost u recenzijama, bez straha od pristrasnosti pri budućim pregledima, dok ljekarima daje konstruktivan uvid u aspekte komunikacije ili rada koje mogu unaprijediti. | Srednji (Medium) | - Termin u bazi posjeduje status 'ZAVRŠEN'<br>- Sistem garantuje nemogućnost povezivanja identiteta sa ocjenom | - Može li ljekar vidjeti ko je ostavio ocjenu?<br>- Da li postoji moderacija tekstualnih komentara? |
 | **US-43** | PB-4 | Profil korisnika | Kao korisnik, želim imati pregledan profil s osnovnim podacima, kako bih mogao upravljati informacijama. | Centralizovani profil omogućava korisnicima brz uvid u njihove lične i kontakt podatke, osiguravajući da su informacije u sistemu uvijek ažurne. Standardizacija prikaza i validacija unosa smanjuju mogućnost pogrešaka u komunikaciji (pogrešan format telefona ili datuma), što olakšava rad i pacijentima i administraciji. | Visok (High) | - Korisnik je uspješno autentifikovan na sistemu<br>- Implementirane helperske funkcije za lokalne formate | - Koja polja korisnik smije samostalno mijenjati?<br>- Koji format datuma se koristi za prikaz? |
 | **US-44** | PB-12 | Implementacija chatbota | Kao korisnik, želim imati pristup pametnom chatbotu na platformi, kako bih brzo dobio odgovore na česta pitanja i pomoć pri navigaciji. | Chatbot pruža trenutnu podršku korisnicima 24/7, rješavajući uobičajene nedoumice bez potrebe za angažovanjem telefonskih operatera ili administrativnog osoblja. Time se značajno rasterećuje korisnička podrška klinike, dok pacijenti dobijaju brze smjernice i informacije o uslugama, radnom vremenu i pripremi za preglede. | Nizak (Low) | - Kreirana baza znanja sa često postavljanim pitanjima<br>- Chatbot interfejs integrisan u javni dio aplikacije | - Da li chatbot ima pristup medicinskim podacima korisnika?<br>- Može li chatbot rezervisati termin u ime korisnika? |
+| **US-45** | PB-11 | Potvrda dolaska pacijenta jednim klikom | Kao medicinsko osoblje, želim moći potvrditi dolazak pacijenta jednim klikom u panelu, kako bi doktor vidio ko od zakazanih pacijenata čeka u čekaonici. | Sistem omogućava medicinskom osoblju brzu i preciznu evidenciju dolazaka pacijenata, eliminišući neažurne liste čekaonice. Doktor u svakom trenutku ima tačan uvid u to ko čeka na pregled, što doprinosi boljoj organizaciji rada i smanjuje nepotrebne zastoje između pregleda. | Visok (High) | - Medicinsko osoblje ima pristup panelu<br>- Termin je u statusu ZAKAZAN<br>- WebSocket servis je implementiran | - Da li se potvrda dolaska može poništiti?<br>- Ko sve može potvrditi dolazak pacijenta? |
+| **US-46** | PB-4 | Proširenje medicinskog profila pacijenta | Kao pacijent, želim da u svom profilu navedem poznate alergije, hronične bolesti, krvnu grupu, podatak o doniranju krvi i prethodne operacije, kako bi doktor imao ključne medicinske informacije odmah pri pregledu. | Centralizovani medicinski profil omogućava doktorima brz uvid u zdravstveno stanje pacijenta bez potrebe za ručnim prikupljanjem anamneze tokom pregleda. Time se povećava efikasnost pregleda, smanjuje rizik od grešaka (npr. propisivanje lijekova na koje pacijent ima alergiju) i unapređuje kvalitet pružene medicinske usluge. | Visok (High) | - Korisnik je uspješno autentifikovan<br>- Profil pacijenta postoji u sistemu<br>- Implementirana zaštita prema NFR-01 | - Da li pacijent može sam unositi sve medicinske podatke ili je potrebna verifikacija doktora?<br>- Koja polja su obavezna? |
+| **US-47** | PB-10 | Generisanje PDF uputnice specijalistu | Kao doktor, želim generisati PDF uputnicu specijalistu direktno iz sistema tokom ili nakon pregleda, kako bi pacijent dobio formalan dokument za nastavak liječenja. | Digitalno generisanje uputnica eliminira potrebu za ručnim pisanjem dokumenata i smanjuje mogućnost grešaka pri prenosu informacija. Pacijent dobija formalan i čitljiv dokument odmah po pregledu, što ubrzava proces upućivanja i poboljšava koordinaciju između doktora opšte prakse i specijalista. | Visok (High) | - Doktor je prijavljen i provodi pregled<br>- Podaci o pacijentu i specijalistima su dostupni u sistemu<br>- Implementirana PDF generacija | - Da li uputnica ima standardizovani državni format?<br>- Može li se uputnica slati direktno specijalistu putem sistema? |
 
 # Plan Sprintova
 
@@ -101,9 +105,17 @@
 - **US-42** — Anonimna ocjena i komentar na rad doktora
 - **US-43** — Profil korisnika
 
-## Sprint 10
+## Sprint 10 — Admin panel, statistike, menadžment i proširenja (Release 4)
+- **US-18** — Menadžment panel
+- **US-33** — Admin panel – backend funkcionalnosti
+- **US-20** — Logovanje svih akcija u sistemu (audit log)
+- **US-29** — Statistika zdravstvene ustanove
+- **US-30** — Export statistike zakazanih pregleda u CSV formatu
+- **US-40** — Zahtjev za deaktivaciju i anonimizaciju profila (GDPR)
+- **US-45** — Potvrda dolaska pacijenta jednim klikom *(NOVO)*
+- **US-46** — Proširenje medicinskog profila pacijenta *(NOVO)*
+- **US-47** — Generisanje PDF uputnice specijalistu *(NOVO)*
 - **US-12** — Oslobađanje zaključanih termina
-- **US-29 & US-30** — Statistika i export
 - **US-15** — Upit za promjenu dužine termina
 - **US-31** — Automatski podsjetnik
 - **US-23** — Vodič
@@ -112,6 +124,7 @@
 # Acceptance Criteria
 
 **Izmjena nakon Sprinta 2:** AC ažurirani, usklađeni sa US
+**Izmjena nakon Sprinta 10:** Dodani AC za US-45, US-46 i US-47
 
 ### ID Storyja: US-01
 **Naziv:** Historija pregleda korisnika
@@ -129,8 +142,6 @@
 
 4. **Navigacija i prazna historija:**
    - **Ako** pacijent nema nijedan prethodni pregled u bazi, **tada** korisnik treba dobiti jasnu poruku na ekranu: "Trenutno nemate zabilježenih pregleda u historiji".
-  
-
 
 ### ID Storyja: US-02
 **Naziv:** Admin panel
@@ -192,8 +203,6 @@
 5. **Feedback poruka:**
    - **Korisnik (admin) treba dobiti** potvrdu na vrhu ekrana "Pacijent uspješno registrovan" odmah nakon što se podaci upišu u bazu.
 
-
-
 ### ID Storyja: US-05
 **Naziv:** Pregled dostupnih resursa
 
@@ -213,8 +222,6 @@
 
 5. **Vizuelna razlika termina:**
    - **Korisnik treba dobiti** jasan vizuelni prikaz (npr. različite boje) između termina koji su slobodni za klik i onih koji su već popunjeni ili blokirani od strane administracije.
-
-
 
 ### ID Storyja: US-06
 **Naziv:** Rezervacija termina
@@ -280,8 +287,6 @@
 4. **Link za otkazivanje/izmjenu:**
    - **Korisnik treba dobiti** link unutar emaila koji ga vodi direktno na opciju otkazivanja ili pomjeranja termina, u skladu sa pravilima poliklinike.
 
-
-
 ### ID Storyja: US-09
 **Naziv:** Otkazivanje termina (medicinsko osoblje)
 
@@ -301,7 +306,6 @@
 
 5. **Ažuriranje kalendara:**
    - **Sistem mora osigurati** da se otkazani termin odmah nakon akcije osoblja prikaže kao slobodan u kalendaru za ostale korisnike koji vrše pretragu.
-
 
 ### ID Storyja: US-10
 **Naziv:** Otkazivanje termina (pacijent)
@@ -326,7 +330,6 @@
 6. **Feedback na ekranu:**
    - **Korisnik treba dobiti** jasnu poruku na ekranu: "Vaš termin je uspješno otkazan" odmah nakon što se akcija završi.
 
-
 ### ID Storyja: US-11
 **Naziv:** Dashboard za doktora – pregled rasporeda
 
@@ -336,11 +339,10 @@
    - **Kada** je doktor na svom panelu, **ako** klikne na opciju "Sedmični prikaz", **tada** mu sistem mora prikazati tabelu sa svim terminima raspoređenim po danima u tekućoj sedmici.
 
 2. **Mijenjanje termina (Odgovor na otvoreno pitanje):**
-   - **Sistem mora omogućiti** doktoru da pomjeri (izmjeni) termin pacijenta ako dođe do neplaniranih promjena. **Kada** doktor izmijeni termin, **tada** pacijent mora automatski dobiti email obavijest o novom vremenu pregleda.
+   - **Sistem mora omogućiti** doktoru da pomjeri (izmijeni) termin pacijenta ako dođe do neplaniranih promjena. **Kada** doktor izmijeni termin, **tada** pacijent mora automatski dobiti email obavijest o novom vremenu pregleda.
 
 3. **Historija pregleda pacijenta (Odgovor na otvoreno pitanje):**
    - **Kada** doktor pregleda listu pacijenata za taj dan, **ako** klikne na ime pacijenta, **tada** mu sistem mora otvoriti uvid u historiju prethodnih dolazaka i nalaza tog pacijenta radi boljeg uvida u slučaj.
-
 
 ### ID Storyja: US-12
 **Naziv:** Automatsko oslobađanje zaključanih termina
@@ -376,7 +378,6 @@
    - Kada više korisnika želi rezervisati isti termin, tada se termin zaključava za korisnika čiji je zahtjev prvi stigao 
    - Kada pacijent želi rezervisati termin, ako njegov zahtjev stigne na server poslije zahtjeva drugog pacijenta, tada pacijent dobija poruku na ekranu "Žao nam je. Termin je već rezervisan. Molimo izaberite drugi"
 
-
 ### ID Storyja: US-14
 **Naziv:** Upravljanje radnim vremenom doktora (admin)
 
@@ -411,7 +412,6 @@
 4. **Preklapanje sa postojećim terminima**
     - Sistem ne smije dozvoliti promjenu dužine termina ako bi nova dužina uzrokovala preklapanje sa već zakazanim terminima
 
-
 ### ID Storyja: US-16
 **Naziv:** Reset lozinke putem emaila
 
@@ -434,7 +434,6 @@
 5. **Sigurnost lozinke**
    - Sistem ne smije dozvoliti postavljanje lozinke koja ima manje od 8 karaktera, nema bar jedno veliko slovo i barem 1 broj
 
-
 ### ID Storyja: US-17
 **Naziv:** Rezervacija termina kod specijaliste putem porodičnog doktora 
 
@@ -451,8 +450,6 @@
    - Sistem ne smije dozvoliti otkazivanje rezervacije 24 h prije rezervisanog termina
    - Korisnik treba obavijest na ekranu "Rezervaciju nije moguće otkazati 24 h prije"
 
-
-   
 ### ID Storyja: US-18
 **Naziv:** Menadžment panel
 
@@ -480,8 +477,6 @@
 7. **Upotreba za izvještavanje (Odgovor na otvoreno pitanje)**
     - Sistem mora omogućiti administratoru eksportovanje podataka o terminima za odabrani period u CSV formatu
 
-
-
 ### ID Storyja: US-19
 **Naziv:** Automatska odjava nakon perioda neaktivnosti
 
@@ -504,7 +499,6 @@
 5. **Sigurnost sesije**
     - Nakon automatske odjave, korisnička sesija mora biti poništena
     - Pokušaj pristupa zaštićenim stranicama s isteknutom sesijom mora rezultirati preusmjeravanjem na login formu
-
 
 ### ID Storyja: US-20
 **Naziv:** Logovanje svih akcija u sistemu (audit log)
@@ -546,7 +540,6 @@
 4. **Prikaz detalja komentara**
     - Sistem mora prikazati komentar u detaljima termina uz informacije: tekst komentara, ime osobe koja je unijela komentar i datum unosa
     - Ukoliko termin nema komentara, u sekciji za komentare prikazuje se poruka "Nema komentara za ovaj termin"
-
 
 ### ID Storyja: US-22
 **Naziv:** Dodavanje komentara prilikom zakazivanja termina
@@ -594,8 +587,6 @@
    - **Kada** osoblje unese ime pacijenta u polje za pretragu, **tada** sistem mora filtrirati listu i prikazati samo termine vezane za tog specifičnog pacijenta. 
 5. **Ograničenje pristupa:** - **Sistem ne smije dozvoliti** običnim pacijentima pristup ovom panelu. Pristup je dozvoljen isključivo medicinskom osoblju ili administrator.
 
-
-
 ### ID Storyja: US-25 
 **Naziv:** Two factor authentication (2FA) 
 --- 
@@ -612,8 +603,6 @@
 6. **Poruka o slanju koda:**
     - **Korisnik treba dobiti** jasnu informaciju na ekranu kako bi znao da treba provjeriti svoj inbox prije nastavka prijave.
 
-
-
 ### ID Storyja: US-26 
 **Naziv:** Detekcija neobičnog ponašanja - blokiranje naloga
  --- 
@@ -626,12 +615,10 @@
 4. **Ručno odblokiranje (Admin):**
    - **Sistem mora omogućiti** administratoru da unutar admin panela vidi listu blokiranih korisnika i da ih ručno odblokira prije isteka vremena ako pacijent to zatraži (npr. putem telefona).
 
-
-
 ### ID Storyja: US-27
  **Naziv:** Enkripcija osjetljivih podataka
  --- 
-1. **Enkripcija na nivou baze (Odgovor na otvoreno pitanje):
+1. **Enkripcija na nivou baze (Odgovor na otvoreno pitanje):**
    - **Sistem mora osigurati** da se osjetljivi podaci pacijenata čuvaju isključivo u enkriptovanom obliku koristeći standardni **AES-256** algoritam 
 2. **Heširanje lozinki:**
    - **Kada** korisnik kreira lozinku, **ako** sistem treba da je spasi u bazu, **tada** ona mora biti heširana tako da niko, pa ni administrator baze, ne može vidjeti lozinku u običnom tekstu. 
@@ -676,7 +663,6 @@
 
 4. **Čitljivost fajla:**
    - **Sistem mora osigurati** da su podaci u CSV fajlu pravilno razdvojeni i formatirani.
-
 
 ### ID Storyja: US-31
 **Naziv:** Automatski podsjetnik
@@ -928,3 +914,60 @@
 
 3. **Eskalacija i fallback:**
    - **Ako** chatbot ne uspije prepoznati namjeru korisnika nakon dva uzastopna pokušaja, **tada** mora ispisati poruku sa fiksnim kontakt informacijama klinike (broj telefona i email centrale) za dalju ljudsku podršku.
+
+---
+
+### ID Storyja: US-45
+**Naziv:** Potvrda dolaska pacijenta jednim klikom
+
+---
+
+1. **Dugme za potvrdu dolaska:**
+   - **Kada** medicinsko osoblje pristupi listi termina za taj dan, **tada** sistem mora prikazati dugme "Potvrdi dolazak" pored svakog zakazanog termina. **Kada** osoblje klikne na dugme, sistem mijenja status termina u "PRISUTAN" i prikazuje potvrdu na ekranu.
+
+2. **Ažuriranje u realnom vremenu (NFR-16):**
+   - **Sistem mora ažurirati** doktorov dashboard u roku od 2 sekunde od potvrde dolaska, prikazujući pacijenta u listi "Čekaonica". Promjena statusa mora biti vidljiva i osoblju i doktoru bez potrebe za ručnim osvježavanjem stranice.
+
+3. **Vizuelna indikacija čekaonice:**
+   - **Kada** je dolazak potvrđen, **tada** se pacijent na doktorovom dashboardu mora vizuelno istaknuti (npr. zelenom bojom) kako bi se jasno razlikovao od zakazanih ali još nepristiglih termina.
+
+4. **Ograničenje pristupa:**
+   - **Sistem ne smije dozvoliti** pacijentima potvrdu dolaska. Ova opcija dostupna je isključivo medicinskom osoblju i administratorima. Ako pacijent pokuša pristupiti ovoj funkcionalnosti, sistem mora vratiti grešku "Pristup odbijen".
+
+---
+
+### ID Storyja: US-46
+**Naziv:** Proširenje medicinskog profila pacijenta
+
+---
+
+1. **Proširena forma profila:**
+   - **Kada** pacijent otvori stranicu svog profila i klikne na sekciju "Medicinski podaci", **tada** sistem mora prikazati polja za: krvnu grupu (dropdown), poznate alergije (slobodan tekst), hronične bolesti, prethodne operacije i podatak o doniranju krvi (checkbox).
+
+2. **Prikaz doktoru pri pregledu:**
+   - **Kada** doktor otvori profil pacijenta koji ima zakazan termin, **tada** sistem mora prikazati unešene medicinske podatke u posebnoj sekciji "Medicinski profil" unutar doktorovog prikaza. Pristup je zaštićen prema NFR-01 — vidljivo isključivo ovlaštenom medicinskom osoblju.
+
+3. **Zaštita podataka (NFR-01):**
+   - **Sistem ne smije dozvoliti** pristup medicinskim podacima pacijenta osobama koje nisu ovlaštene. Korisnici koji nemaju odgovarajuću ulogu moraju dobiti grešku "Pristup odbijen" kada pokušaju prikazati ove podatke.
+
+4. **Opcionalna polja i čuvanje:**
+   - **Sistem mora dozvoliti** pacijentu da sačuva profil i bez popunjavanja medicinskih polja, jer su ona opcionalna. **Kada** pacijent popuni i potvrdi izmjene, sistem upisuje podatke u bazu i prikazuje potvrdu "Medicinski profil uspješno ažuriran".
+
+---
+
+### ID Storyja: US-47
+**Naziv:** Generisanje PDF uputnice specijalistu
+
+---
+
+1. **Forma za unos podataka uputnice:**
+   - **Kada** je doktor na stranici pregleda pacijenta, **tada** sistem mora ponuditi opciju "Generiši uputnicu". **Kada** doktor klikne na tu opciju, otvara se forma sa obaveznim poljima: ime i prezime pacijenta, ime specijaliste ili odjela, razlog upućivanja i datum. **Sistem ne smije dozvoliti** generisanje uputnice bez popunjenih obaveznih polja — korisnik dobija poruku "Molimo popunite sva obavezna polja".
+
+2. **Generisanje PDF dokumenta:**
+   - **Kada** doktor popuni formu i klikne "Generiši PDF", **tada** sistem mora kreirati PDF dokument sa svim unesenim podacima (ime pacijenta, podaci o doktoru, razlog upućivanja, datum) u roku od 5 sekundi. Generisani PDF mora sadržavati logo/zaglavlje zdravstvene ustanove.
+
+3. **Preuzimanje i slanje uputnice:**
+   - **Sistem mora ponuditi** doktoru opciju preuzimanja generisanog PDF dokumenta i/ili slanja na email adresu pacijenta registrovanu u sistemu. Pacijent dobija email sa generisanom uputnicom kao prilogom.
+
+4. **Nepotpuni podaci:**
+   - **Sistem ne smije dozvoliti** generisanje uputnice ako podaci o pacijentu nisu uneseni u sistem. U slučaju nepotpunih podataka, sistem prikazuje poruku "Podaci o pacijentu su nepotpuni. Molimo ažurirajte profil pacijenta prije generisanja uputnice".
