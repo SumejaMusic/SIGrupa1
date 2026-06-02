@@ -71,9 +71,9 @@ Svi testovi unutar paketa administrativnih funkcionalnosti za revizijske zapisni
 
 # Proof of Testing - AuditLog
 
-**Projekat:** Bolnički Informacioni Sistem  
+ 
 **Modul:** Admin panel — *Audit Logs* 
-**Tehnološki stog:** Vitest, Supertest, Express.js, Prisma ORM, Docker (Testna baza)  
+**Tehnološki stek:** Vitest, Supertest, Express.js, Prisma ORM, Docker (Testna baza)  
 **Status izvršenja:** 100% USPIJEŠNO  
 
 ---
@@ -82,7 +82,7 @@ Svi testovi unutar paketa administrativnih funkcionalnosti za revizijske zapisni
 
 Svi testni scenariji unutar administrativnog modula za reviziju su uspješno izvršeni i validirani. Ukupno je pokrenuto **36 automatizovanih testova** podijeljenih u dvije komplementarne cjeline:
 * **Unit testovi (`auditLog.unit.test.ts`):** 15 scenarija koji izoluju i potvrđuju tačnost poslovne logike za formatiranje i tekstualno mapiranje sirovih JSON struktura.
-* **Integracioni testovi (`auditLog.integration.test.ts`):** 21 scenario koji verifikuje cjelokupan HTTP životni ciklus (autentifikacija, RBAC autorizacija, kontroleri, paginacija i kompleksni upiti nad bazom podataka).
+* **Integracioni testovi (`auditLog.integration.test.ts`):** 21 scenario koji verifikuje cjelokupan HTTP životni ciklus (autentifikacija, RBAC autorizacija, kontroleri  i kompleksni upiti nad bazom podataka).
 
 | Testni paket (Fajl) | Pokrenuto | Prošlo (Passed) | Palo (Failed) | Pokrivenost (Status) |
 | :--- | :---: | :---: | :---: | :---: |
@@ -146,7 +146,7 @@ Verifikacija sigurnosnih protokola, ispravnosti API krajnje tačke (endpointa), 
 
 ## 3. Izolacija okruženja i integritet testova
 
-* **Arhitekturalna izolacija:** Svaki integracioni test operiše u hermetički izolovanom stanju. Korištenjem `beforeEach` kuka vrši se ciljano pražnjenje tabele `AuditLog` prije izvršenja svake pojedinačne specifikacije. Time je eliminisana mogućnost međusobnog uticaja testova (*test leakage*) i garantovana idempotentnost.
+* **Arhitekturalna izolacija:** Svaki integracioni test operiše u izolovanom stanju. Korištenjem `beforeEach`  vrši se ciljano pražnjenje tabele `AuditLog` prije izvršenja svake pojedinačne specifikacije. Time je eliminisana mogućnost međusobnog uticaja testova (*test leakage*) i garantovana idempotentnost.
 * **Brzina i stabilnost:** Unit testovi pokazuju vrhunske performanse izvršavajući se trenutno (~0ms), dok se integracioni HTTP ciklusi stabilno izvršavaju u opsegu od ~40ms do ~90ms, dokazujući efikasnost indeksiranja nad testnom bazom.
 
 ---
@@ -217,7 +217,6 @@ Test Files  1 passed (1)
 ```
 # Proof of Testing — VlasnikController
 
- 
 **Modul:** `vlasnikController.js`  
 **Tip testova:** Unit testovi (Vitest) + Integracioni testovi (Supertest)
 
@@ -235,7 +234,7 @@ Test Files  1 passed (1)
 
 ---
 
-## 2. Unit testovi (`vlasnikController.unit.test.ts`)
+## 2. Unit testovi (`menadzment.unit.test.ts`)
 
 Testovi koriste `prismaMock` (mockDeep Prisma klijent) i direktno pozivaju funkcije kontrolera bez HTTP sloja.
 
@@ -398,7 +397,7 @@ recenzija.findMany({
 
 ---
 
-## 3. Integracioni testovi (`vlasnikController.integration.test.ts`)
+## 3. Integracioni testovi (`menadzment.integration.test.ts`)
 
 Testovi koriste `supertest` i Express aplikaciju sa stvarnim rutama. Provjeravaju cjelokupan HTTP sloj — parsiranje query stringa, routing, HTTP statusove i response body.
 
