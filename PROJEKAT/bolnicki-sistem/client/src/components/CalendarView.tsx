@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Clock, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, AlertTriangle, CheckCircle, XCircle, UserCheck } from 'lucide-react';
 
 interface Appointment {
   id: number;
@@ -72,17 +72,19 @@ interface Props {
   view: 'week' | 'day';
 }
 
-type UIStatus = 'ZAKAZAN' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
+type UIStatus = 'ZAKAZAN' | 'CEKAONICA' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
 
 const getUIStatus = (apt: Appointment): UIStatus => {
   if (apt.termin.status === 'OTKAZAN' || apt.datumOtkazivanja !== null) return 'OTKAZAN';
   if (apt.zavrseno) return 'ZAVRSEN';
+  if (apt.termin.status === 'POTVRDJEN') return 'CEKAONICA';
   if (apt.hitnost || apt.tipPregleda?.naziv === 'Hitni pregled') return 'HITAN'; // ← dodano tipPregleda provjera
   return 'ZAKAZAN';
 };
 
 const STATUS_STYLES: Record<UIStatus, string> = {
   ZAKAZAN: 'bg-blue-50 border-blue-300 hover:bg-blue-100',
+  CEKAONICA: 'bg-amber-50 border-amber-300 hover:bg-amber-100',
   HITAN: 'bg-red-50 border-red-400 hover:bg-red-100',
   ZAVRSEN: 'bg-emerald-50 border-emerald-300 hover:bg-emerald-100',
   OTKAZAN: 'bg-gray-50 border-gray-300 hover:bg-gray-100 opacity-60',
@@ -90,6 +92,7 @@ const STATUS_STYLES: Record<UIStatus, string> = {
 
 const STATUS_BADGE: Record<UIStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   ZAKAZAN: { label: 'Zakazano', cls: 'bg-blue-100 text-blue-700', icon: <Clock size={10} /> },
+  CEKAONICA: { label: 'Čeka', cls: 'bg-amber-100 text-amber-700', icon: <UserCheck size={10} /> },
   HITAN: { label: 'Hitno', cls: 'bg-red-100 text-red-700', icon: <AlertTriangle size={10} /> },
   ZAVRSEN: { label: 'Završeno', cls: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle size={10} /> },
   OTKAZAN: { label: 'Otkazano', cls: 'bg-gray-100 text-gray-500', icon: <XCircle size={10} /> },
@@ -195,6 +198,7 @@ export default function CalendarView({ appointments, currentDate, onDateChange, 
         <h2 className="text-base font-semibold text-gray-800">{title}</h2>
         <div className="flex items-center gap-3 text-xs text-gray-500">
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />Zakazano</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />Čeka</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block" />Hitno</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />Završeno</span>
           <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-gray-300 inline-block" />Otkazano</span>

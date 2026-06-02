@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import { io as socketIO } from "socket.io-client";
 import { Sidebar } from "../components/Sidebar";
 import { TerminRed } from "../components/TerminRed";
 import { TerminDetalji } from "../components/TerminDetalj";
@@ -829,6 +830,40 @@ export default function DoktorRezervacije() {
   useEffect(() => {
     if (!doktorId) return;
 
+    const socket = socketIO(apiUrl);
+    const osvjeziTermine = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/rezervacije/doktor/${doktorId}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        });
+        if (res.status === 401) {
+          handleExpiredSession();
+          return;
+        }
+
+        const data = await res.json();
+        const novaLista = Array.isArray(data) ? data.map(mapirajRezervaciju) : [];
+        setListaTermina(novaLista);
+        setSelectedTermin(prev => prev ? novaLista.find(t => t.id === prev.id) ?? prev : prev);
+      } catch {
+        setListaTermina([]);
+      }
+    };
+
+    socket.on("termin-azuriran", (data) => {
+      if (!data?.doktorId || Number(data.doktorId) === Number(doktorId)) {
+        osvjeziTermine();
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [doktorId]);
+
+  useEffect(() => {
+    if (!doktorId) return;
+
     fetch(`${apiUrl}/api/doktori/${doktorId}/reviews`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
     })
@@ -850,7 +885,7 @@ export default function DoktorRezervacije() {
   const filterTermini = (termini: Termin[]) => {
     if (filterStatus === "otkazani") return termini.filter(t => t.status === "otkazan");
     if (filterStatus === "zavrseni") return termini.filter(t => t.status === "zavrsen");
-    return termini.filter(t => t.status === "zakazan");
+    return termini.filter(t => t.status === "zakazan" || t.status === "ceka");
   };
 
   const dnevniTermini = filterTermini(

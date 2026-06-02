@@ -1,5 +1,5 @@
 export type TipPregleda = "hitni" | "preventivni" | "kontrolni";
-export type StatusTermina = "zakazan" | "zavrsen" | "otkazan";
+export type StatusTermina = "zakazan" | "ceka" | "zavrsen" | "otkazan";
 
 export interface Komentar {
   id: number;

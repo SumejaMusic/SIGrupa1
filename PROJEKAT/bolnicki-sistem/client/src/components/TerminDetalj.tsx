@@ -235,7 +235,7 @@ export function TerminDetalji({
               >
                 <FileText size={10} /> Uputnica
               </button>
-              {termin.status === "zakazan" && (
+              {(termin.status === "zakazan" || termin.status === "ceka") && (
                 <>
                   <button
                     onClick={() => onPromjenaDuzine(termin)}
