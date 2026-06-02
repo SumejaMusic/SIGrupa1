@@ -636,6 +636,73 @@ export async function postaviHitnostService(idRezervacije: number, hitnost: bool
   });
 }
 
+export async function potvrdiDolazakPacijentaService(idRezervacije: number) {
+  const rezervacija = await prisma.rezervacije.findUnique({
+    where: { id: idRezervacije },
+    include: {
+      termin: true,
+      pacijent: {
+        include: {
+          korisnik: {
+            select: {
+              id: true,
+              ime: true,
+              prezime: true,
+              email: true,
+              brojTelefona: true,
+              datumRodjenja: true,
+            },
+          },
+        },
+      },
+      doktor: {
+        include: {
+          korisnik: { select: { id: true, ime: true, prezime: true } },
+          odjel: true,
+          soba: true,
+        },
+      },
+      tipPregleda: true,
+      soba: true,
+      historija: {
+        include: {
+          nalaz: { select: { id: true, naziv: true, vrijemeNalaza: true, opis: true } },
+        },
+      },
+    },
+  });
+
+  if (!rezervacija) {
+    throw { status: 404, poruka: "Rezervacija nije pronađena." };
+  }
+
+  if (rezervacija.datumOtkazivanja !== null || rezervacija.termin.status === "OTKAZAN") {
+    throw { status: 400, poruka: "Ne možete potvrditi dolazak za otkazanu rezervaciju." };
+  }
+
+  if (rezervacija.zavrseno) {
+    throw { status: 400, poruka: "Ne možete potvrditi dolazak za završen pregled." };
+  }
+
+  if (rezervacija.termin.status === "POTVRDJEN") {
+    throw { status: 400, poruka: "Dolazak pacijenta je već potvrđen." };
+  }
+
+  if (rezervacija.termin.status !== "ZAKAZAN") {
+    throw { status: 400, poruka: "Dolazak se može potvrditi samo za zakazan termin." };
+  }
+
+  const azuriranTermin = await prisma.termin.update({
+    where: { id: rezervacija.idTermina },
+    data: { status: "POTVRDJEN" },
+  });
+
+  return normalizujRezervaciju(dekriptujPacijenta({
+    ...rezervacija,
+    termin: azuriranTermin,
+  }));
+}
+
 // ─── 13. Sve liste za novi termin modal ───────────────────────────────────────
 
 export async function getAllPacijentiService() {

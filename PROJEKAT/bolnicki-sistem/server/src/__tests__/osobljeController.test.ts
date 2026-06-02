@@ -12,6 +12,7 @@ import {
   getZavrseniPregledi,
   postaviHitnost,
   pomjeriTermin,
+  potvrdiDolazakPacijenta,
 } from "../controllers/OsobljeController.js";
 
 vi.mock("../app.js", () => ({
@@ -40,6 +41,7 @@ vi.mock("../osobljeService.js", () => ({
   getSlobodniTerminiDoktoraService: vi.fn(),
   getTipoviPregledaService: vi.fn(),
   getSlobodniDatumiDoktoraService: vi.fn(),
+  potvrdiDolazakPacijentaService: vi.fn(),
 }));
 
 import {
@@ -53,6 +55,7 @@ import {
   getZavrseniPregledService,
   postaviHitnostService,
   pomjeriTerminService,
+  potvrdiDolazakPacijentaService,
 } from "../osobljeService.js";
 
 const mockReqRes = (params = {}, query = {}, body = {}) => ({
@@ -576,6 +579,48 @@ describe("postaviHitnost", () => {
 
     expect(next).toHaveBeenCalledWith(greška);
     expect(res.json).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────
+// potvrdiDolazakPacijenta
+// ─────────────────────────────────────────────
+describe("potvrdiDolazakPacijenta", () => {
+  it("uspješno potvrđuje dolazak pacijenta", async () => {
+    const rezervacija = { id: 1, idDoktor: 2, idTermina: 5, termin: { status: "POTVRDJEN" } };
+    vi.mocked(potvrdiDolazakPacijentaService).mockResolvedValue(rezervacija as any);
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await potvrdiDolazakPacijenta(req, res, next);
+
+    expect(potvrdiDolazakPacijentaService).toHaveBeenCalledWith(1);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(rezervacija);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("vraća 400 za neispravan ID", async () => {
+    const { req, res, next } = mockReqRes({ id: "abc" });
+    await potvrdiDolazakPacijenta(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Neispravan ID rezervacije." });
+    expect(potvrdiDolazakPacijentaService).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("prosljeđuje status grešku iz servisa", async () => {
+    vi.mocked(potvrdiDolazakPacijentaService).mockRejectedValue({
+      status: 400,
+      poruka: "Dolazak pacijenta je već potvrđen.",
+    });
+
+    const { req, res, next } = mockReqRes({ id: "1" });
+    await potvrdiDolazakPacijenta(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ poruka: "Dolazak pacijenta je već potvrđen." });
+    expect(next).not.toHaveBeenCalled();
   });
 });
 

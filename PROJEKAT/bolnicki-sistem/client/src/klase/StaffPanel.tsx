@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Calendar, List, Plus, Search, 
-  Activity, Clock, AlertTriangle, CheckCircle, Filter, LayoutGrid
+  Activity, Clock, AlertTriangle, CheckCircle, Filter, LayoutGrid, UserCheck
 } from 'lucide-react';
 
 import CalendarView from '../components/CalendarView';
@@ -14,11 +14,12 @@ import { apiUrl } from '../lib/api';
 
 type ViewMode = 'week' | 'day' | 'list';
 
-type FilterStatus = 'all' | 'ZAKAZAN' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
+type FilterStatus = 'all' | 'ZAKAZAN' | 'CEKAONICA' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
 
 const STATUS_LABEL: Record<FilterStatus, string> = {
   all: 'Svi termini',
   ZAKAZAN: 'Zakazani',
+  CEKAONICA: 'Čekaonica',
   HITAN: 'Hitni',
   ZAVRSEN: 'Završeni',
   OTKAZAN: 'Otkazani',
@@ -102,6 +103,7 @@ interface Appointment {
 const getUIStatus = (apt: Appointment): FilterStatus => {
   if (apt.termin.status === 'OTKAZAN' || apt.datumOtkazivanja !== null) return 'OTKAZAN';
   if (apt.zavrseno) return 'ZAVRSEN';
+  if (apt.termin.status === 'POTVRDJEN') return 'CEKAONICA';
   return 'ZAKAZAN'; 
 };
 
@@ -131,6 +133,7 @@ export default function StaffPanel() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmingArrivalId, setConfirmingArrivalId] = useState<number | null>(null);
 
   const [allPatients, setAllPatients] = useState<Appointment['pacijent'][]>([]);
   const [doctors, setDoctors] = useState<Appointment['doktor'][]>([]);
@@ -213,6 +216,7 @@ useEffect(() => {
     return {
       total: todayApts.length,
       scheduled: todayApts.filter(a => getUIStatus(a) === 'ZAKAZAN').length,
+      waiting: todayApts.filter(a => getUIStatus(a) === 'CEKAONICA').length,
       urgent: todayApts.filter(a => (a.hitnost === true || a.tipPregleda?.naziv === "Hitni pregled") && getUIStatus(a) === 'ZAKAZAN').length,
       completed: todayApts.filter(a => getUIStatus(a) === 'ZAVRSEN').length,
     };
@@ -324,6 +328,36 @@ useEffect(() => {
     }
   };
 
+  const handleConfirmArrival = async (apt: Appointment) => {
+    setConfirmingArrivalId(apt.id);
+
+    try {
+      const res = await fetch(apiUrl(`/api/osoblje/termini/${apt.id}/dolazak`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`
+        }
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.poruka ?? 'Greška pri potvrdi dolaska.');
+      }
+
+      setAppointments(prev => prev.map(a =>
+        a.id === apt.id
+          ? { ...a, termin: { ...a.termin, status: 'POTVRDJEN' } }
+          : a
+      ));
+      showNotif(`${apt.pacijent.korisnik.ime} ${apt.pacijent.korisnik.prezime} je označen/a kao prisutan/a.`);
+    } catch (err: any) {
+      showNotif(err.message ?? 'Greška pri potvrdi dolaska.');
+    } finally {
+      setConfirmingArrivalId(null);
+    }
+  };
+
   const currentApt = selectedApt ? appointments.find(a => a.id === selectedApt.id) ?? selectedApt : null;
 
   if (loading) {
@@ -379,6 +413,7 @@ useEffect(() => {
         <div className="max-w-screen-2xl mx-auto px-6 py-3 flex items-center gap-6">
           <StatChip icon={<Clock size={14} className="text-blue-600" />} label="Danas ukupno" value={stats.total} color="blue" />
           <StatChip icon={<Clock size={14} className="text-blue-600" />} label="Zakazani" value={stats.scheduled} color="blue" />
+          <StatChip icon={<UserCheck size={14} className="text-amber-600" />} label="Čekaonica" value={stats.waiting} color="amber" />
           <StatChip icon={<AlertTriangle size={14} className="text-red-500" />} label="Hitni" value={stats.urgent} color="red" />
           <StatChip icon={<CheckCircle size={14} className="text-emerald-500" />} label="Završeni" value={stats.completed} color="emerald" />
 
@@ -386,7 +421,7 @@ useEffect(() => {
 
           {/* Filter by status */}
           <div className="flex items-center gap-1.5 bg-gray-100 rounded-xl p-1">
-            {(['all', 'ZAKAZAN', 'HITAN', 'ZAVRSEN', 'OTKAZAN'] as FilterStatus[]).map(s => (
+            {(['all', 'ZAKAZAN', 'CEKAONICA', 'HITAN', 'ZAVRSEN', 'OTKAZAN'] as FilterStatus[]).map(s => (
               <button
                 key={s}
                 onClick={() => setFilterStatus(s)}
@@ -435,7 +470,12 @@ useEffect(() => {
           onNotify={showNotif}
         />
         {viewMode === 'list' ? (
-          <ListView appointments={filteredAppointments} onAppointmentClick={setSelectedApt} />
+          <ListView
+            appointments={filteredAppointments}
+            onAppointmentClick={setSelectedApt}
+            onConfirmArrival={handleConfirmArrival}
+            confirmingArrivalId={confirmingArrivalId}
+          />
         ) : (
           <div className="h-full overflow-hidden">
             <CalendarView
@@ -569,6 +609,7 @@ useEffect(() => {
 function StatChip({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
   const colors: Record<string, string> = {
     blue: 'text-blue-700',
+    amber: 'text-amber-700',
     red: 'text-red-600',
     emerald: 'text-emerald-600',
   };
@@ -581,10 +622,21 @@ function StatChip({ icon, label, value, color }: { icon: React.ReactNode; label:
   );
 }
 
-function ListView({ appointments, onAppointmentClick }: { appointments: Appointment[]; onAppointmentClick: (a: Appointment) => void }) {
+function ListView({
+  appointments,
+  onAppointmentClick,
+  onConfirmArrival,
+  confirmingArrivalId
+}: {
+  appointments: Appointment[];
+  onAppointmentClick: (a: Appointment) => void;
+  onConfirmArrival: (a: Appointment) => void;
+  confirmingArrivalId: number | null;
+}) {
   const STATUS_STYLES: Record<FilterStatus, string> = {
     all: '',
     ZAKAZAN: 'bg-blue-100 text-blue-700',
+    CEKAONICA: 'bg-amber-100 text-amber-700',
     HITAN: 'bg-red-100 text-red-700',
     ZAVRSEN: 'bg-emerald-100 text-emerald-700',
     OTKAZAN: 'bg-gray-100 text-gray-500',
@@ -593,6 +645,7 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
   const STATUS_LABELS: Record<FilterStatus, string> = {
     all: '',
     ZAKAZAN: 'Zakazan',
+    CEKAONICA: 'Čeka',
     HITAN: 'Hitno',
     ZAVRSEN: 'Završeno',
     OTKAZAN: 'Otkazano',
@@ -606,7 +659,7 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
   return (
     <div className="p-6">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="grid grid-cols-[1fr_1fr_1fr_120px_80px_100px_80px] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <div className="grid grid-cols-[1fr_1fr_1fr_120px_80px_100px_80px_140px] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
           <span>Pacijent</span>
           <span>Doktor</span>
           <span>Odjel / Soba</span>
@@ -614,6 +667,7 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
           <span>Vrijeme</span>
           <span>Vrsta</span>
           <span>Status</span>
+          <span>Dolazak</span>
         </div>
         {sorted.length === 0 && (
           <div className="py-16 text-center text-gray-400">
@@ -630,7 +684,7 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
             <div
               key={apt.id}
               onClick={() => onAppointmentClick(apt)}
-              className={`grid grid-cols-[1fr_1fr_1fr_120px_80px_100px_80px] gap-4 px-5 py-4 cursor-pointer hover:bg-blue-50/60 transition-colors border-b border-gray-100 last:border-0 ${i % 2 === 0 ? '' : 'bg-gray-50/40'}`}
+              className={`grid grid-cols-[1fr_1fr_1fr_120px_80px_100px_80px_140px] gap-4 px-5 py-4 cursor-pointer hover:bg-blue-50/60 transition-colors border-b border-gray-100 last:border-0 ${i % 2 === 0 ? '' : 'bg-gray-50/40'}`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs font-bold text-blue-700">
@@ -668,6 +722,30 @@ function ListView({ appointments, onAppointmentClick }: { appointments: Appointm
                   <span className="px-2 py-1 rounded-lg text-xs font-semibold text-center bg-red-100 text-red-700">
                     Hitno
                   </span>
+                )}
+              </div>
+
+              <div className="self-center">
+                {uiStatus === 'ZAKAZAN' ? (
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onConfirmArrival(apt);
+                    }}
+                    disabled={confirmingArrivalId === apt.id}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    title="Potvrdi dolazak pacijenta"
+                  >
+                    <UserCheck size={13} />
+                    {confirmingArrivalId === apt.id ? 'Potvrđujem...' : 'Potvrdi'}
+                  </button>
+                ) : uiStatus === 'CEKAONICA' ? (
+                  <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-100 px-2.5 py-2 text-xs font-semibold text-amber-700">
+                    <UserCheck size={13} />
+                    Čeka
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-400">Nije dostupno</span>
                 )}
               </div>
             </div>
