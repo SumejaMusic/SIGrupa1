@@ -474,3 +474,20 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Kreiranje enuma za trenutni status zahteva za deaktivaciju. |
 | **Rizici, problemi ili greške** | Inicijalno propušteni "Testovi podatkovnog integriteta" koji su naknadno adresirani kreiranjem `deactivation.test.ts`. |
 | **Ko je koristio alat** | Lamija Halilović |
+
+
+## Unos 028 — Proširenje medicinskog profila pacijenta
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 02.06.2026. |
+| **Sprint broj** | Sprint 10 |
+| **Alat koji je korišten** | OpenAI Codex / ChatGPT |
+| **Svrha korištenja** | Implementacija i provjera funkcionalnosti proširenja medicinskog profila pacijenta u okviru bolničkog sistema, uključujući backend, bazu, frontend prikaz i zaštitu pristupa prema NFR-01 |
+| **Kratak opis zadatka ili upita** | Proširenje tabele `Pacijent` medicinskim atributima: krvna grupa, alergije, hronične bolesti, podatak o doniranju krvi i prethodne operacije; dodavanje forme za unos u profilu pacijenta; prikaz medicinskih podataka doktoru u detaljima pregleda/rezervacije; provjera i prilagođavanje testova za novu funkcionalnost i NFR-01 pristup |
+| **Šta je AI predložio ili generisao** | Prisma migraciju `20260530090000_add_patient_medical_profile` za dodavanje medicinskih polja na postojeću tabelu `Pacijent`; proširenje `Pacijent` modela u `schema.prisma`; backend izmjene u `userController.ts` i `userRoutes.ts` za spremanje, validaciju i dohvat medicinskog profila; validaciju krvne grupe; frontend izmjene u `ProfilePage.tsx` za unos medicinskih podataka; proširenje tipova i mapiranja u `types.ts` i `rezervacijeUtils.ts`; prikaz medicinskih podataka u `TerminDetalj.tsx`; NFR-01 zaštitu u `reservationController.ts`; unit i integracione testove za medicinski profil pacijenta |
+| **Šta je tim prihvatio** | Dodavanje medicinskih atributa na postojeći model `Pacijent`; forma u profilu pacijenta; prikaz medicinskih podataka doktoru u detaljima rezervacije; validacija krvne grupe; Prisma migracija za Neon bazu; zaštita da doktor ne može pregledati podatke pacijenata kroz tuđe doktorske rezervacije; testovi za spremanje, dohvat, validaciju i prikaz medicinskog profila |
+| **Šta je tim izmijenio** | Prilagođeni su integracioni testovi nakon uvođenja NFR-01 zaštite. Test za tuđeg doktora je promijenjen tako da prvo kreira stvarnog drugog doktora, pa očekuje `403`. Test za doktora bez rezervacija je promijenjen da koristi postojećeg doktora, pa očekuje `200 []`, umjesto da koristi nepostojeći ID koji ispravno vraća `404` |
+| **Šta je tim odbacio** | Nije dodavana posebna tabela za medicinski profil jer su podaci vezani direktno za pacijenta i prihvaćeno je proširenje postojeće tabele `Pacijent`. Nije prihvaćeno mijenjanje produkcijskog endpointa samo da bi stari testovi prošli, nego su testovi prilagođeni stvarnom ponašanju sistema |
+| **Rizici, problemi ili greške** | Kod migracija na Neon bazi pojavio se problem sa starijom migracijom gdje je tabela već postojala, pa je bilo potrebno koristiti Prisma resolve postupak i provjeriti stanje migracija. Integracioni testovi lokalno zahtijevaju pokrenut Docker Desktop jer koriste testne Postgres i Redis kontejnere. Također je utvrđeno da generisanje PDF uputnice postoji na posebnoj grani `origin/GenerisanjePDFUputnice`, ali nije dio trenutne grane `feature/Dovrsavanje` |
+| **Ko je koristio alat** | Hamza Husović |
