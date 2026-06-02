@@ -444,7 +444,7 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | *Kontekstualno usklađivanje:* Najveći izazov je bio osigurati da testni framework (Vitest) ispravno komunicira sa realnom testnom bazom u Dockeru bez ometanja globalnih seed podataka. Problem je riješen uvođenjem ciljanog čišćenja samo `AuditLog` tabele, što su alati uspješno predložili. |
 | **Ko je koristio alat** | Amina Alispahić |
 
-# AI Usage Log - Mendazment panel: pregled zauzetosti sala sakrivanje recenzija prikazivanje otkazanih, zakazanih i slobodnih termina i pisanje unit i integracionih testova
+# Unos 026 - Mendazment panel: pregled zauzetosti sala sakrivanje recenzija prikazivanje otkazanih, zakazanih i slobodnih termina i pisanje unit i integracionih testova
 
 | Stavka | Opis |
 | :--- | :--- |
@@ -459,3 +459,18 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | — |
 | **Rizici, problemi ili greške** | Timezone offset (+2h) je hardkodiran kao konstanta (`+ 120` minuta) umjesto dinamičke detekcije — potrebno pratiti pri prelasku na zimsko/ljetno računanje vremena |
 | **Ko je koristio alat** | Amina Alispahić |
+
+# Unos 027 - Deaktivacija i anonimizacija korisničkih naloga
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 2.06.2026. |
+| **Sprint broj** | 10 |
+| **Alat koji je korišten** | Claude (Opus) |
+| **Svrha korištenja** | Razvoj, verifikacija koda i kreiranje testnih scenarija za funkcionalnost deaktivacije korisničkog naloga. |
+| **Kratak opis zadatka ili upita** | Implementacija i verifikacija funkcionalnosti za deaktivaciju i anonimizaciju korisničkih naloga, uključujući frontend profil, backend servis za anonimizaciju i admin panel. |
+| **Šta je AI predložio ili generisao** | Strukturu servisa za anonimizaciju (`deactivationService.ts`), logiku izmjene ličnih podataka u anonimne tokene, zaključavanje naloga, te testni fajl `deactivation.test.ts`. |
+| **Šta je tim prihvatio** | Kompletnu arhitekturu anonimizacije, logiku za slanje notifikacija, proces odobravanja/odbijanja u Admin panelu i kreirane unit testove. |
+| **Šta je tim izmijenio** | Dodatna validacija za spriječavanje duplih zahtjeva za deaktivaciju koja je preciznije definisana tokom implementacije. |
+| **Šta je tim odbacio** | Kreiranje enuma za trenutni status zahteva za deaktivaciju. |
+| **Rizici, problemi ili greške** | Inicijalno propušteni "Testovi podatkovnog integriteta" koji su naknadno adresirani kreiranjem `deactivation.test.ts`. |
+| **Ko je koristio alat** | Lamija Halilović |
