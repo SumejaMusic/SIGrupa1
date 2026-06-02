@@ -685,7 +685,7 @@ export async function potvrdiDolazakPacijentaService(idRezervacije: number) {
   }
 
   if (rezervacija.termin.status === "POTVRDJEN") {
-    throw { status: 400, poruka: "Dolazak pacijenta je već potvrđen." };
+    return normalizujRezervaciju(dekriptujPacijenta(rezervacija));
   }
 
   if (rezervacija.termin.status !== "ZAKAZAN") {

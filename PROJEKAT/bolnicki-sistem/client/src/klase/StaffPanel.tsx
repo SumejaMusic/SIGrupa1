@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { io as socketIO } from 'socket.io-client';
 import {
   Calendar, List, Plus, Search, 
   Activity, Clock, AlertTriangle, CheckCircle, Filter, LayoutGrid, UserCheck
@@ -10,11 +11,12 @@ import CancelModal from '../components/CancelModal';
 import UploadPdfModal from '../components/UploadPdfModal';
 import NewAppointmentModal from '../components/NewAppointmentModal';
 import SekcijaZauzetostiKabineta from '../components/SekcijaZauzetostiKabineta';
-import { apiUrl } from '../lib/api';
+import { API_BASE_URL, apiUrl } from '../lib/api';
 
 type ViewMode = 'week' | 'day' | 'list';
 
 type FilterStatus = 'all' | 'ZAKAZAN' | 'CEKAONICA' | 'HITAN' | 'ZAVRSEN' | 'OTKAZAN';
+type UIStatus = Exclude<FilterStatus, 'all'> | 'NEDOSTUPAN';
 
 const STATUS_LABEL: Record<FilterStatus, string> = {
   all: 'Svi termini',
@@ -100,11 +102,12 @@ interface Appointment {
   } | null;
 }
 
-const getUIStatus = (apt: Appointment): FilterStatus => {
+const getUIStatus = (apt: Appointment): UIStatus => {
   if (apt.termin.status === 'OTKAZAN' || apt.datumOtkazivanja !== null) return 'OTKAZAN';
   if (apt.zavrseno) return 'ZAVRSEN';
   if (apt.termin.status === 'POTVRDJEN') return 'CEKAONICA';
-  return 'ZAKAZAN'; 
+  if (apt.termin.status === 'ZAKAZAN') return 'ZAKAZAN';
+  return 'NEDOSTUPAN'; 
 };
 
 const formatIntTime = (time: number): string => {
@@ -167,6 +170,17 @@ export default function StaffPanel() {
 
 useEffect(() => {
   fetchTermini();
+}, []);
+
+useEffect(() => {
+  const socket = socketIO(API_BASE_URL || undefined);
+  socket.on('termin-azuriran', () => {
+    fetchTermini();
+  });
+
+  return () => {
+    socket.disconnect();
+  };
 }, []);
 
   useEffect(() => {
@@ -241,11 +255,12 @@ useEffect(() => {
       if (!res.ok) throw new Error(data?.poruka ?? 'Greška pri potvrdi dolaska.');
 
       setAppointments(prev => prev.map(a =>
-        a.id === apt.id ? { ...a, termin: { ...a.termin, status: 'POTVRDJEN' } } : a
+        a.id === apt.id ? (data ?? { ...a, termin: { ...a.termin, status: 'POTVRDJEN' } }) : a
       ));
       showNotif(`${apt.pacijent.korisnik.ime} ${apt.pacijent.korisnik.prezime} je označen/a kao prisutan/a.`);
     } catch (err: any) {
       showNotif(err.message ?? 'Greška pri potvrdi dolaska.');
+      await fetchTermini();
     } finally {
       setConfirmingArrivalId(null);
     }
@@ -627,22 +642,22 @@ function ListView({
   onConfirmArrival: (a: Appointment) => void;
   confirmingArrivalId: number | null;
 }) {
-  const STATUS_STYLES: Record<FilterStatus, string> = {
-    all: '',
+  const STATUS_STYLES: Record<UIStatus, string> = {
     ZAKAZAN: 'bg-blue-100 text-blue-700',
     CEKAONICA: 'bg-amber-100 text-amber-700',
     HITAN: 'bg-red-100 text-red-700',
     ZAVRSEN: 'bg-emerald-100 text-emerald-700',
     OTKAZAN: 'bg-gray-100 text-gray-500',
+    NEDOSTUPAN: 'bg-gray-100 text-gray-400',
   };
 
-  const STATUS_LABELS: Record<FilterStatus, string> = {
-    all: '',
+  const STATUS_LABELS: Record<UIStatus, string> = {
     ZAKAZAN: 'Zakazan',
     CEKAONICA: 'Čeka',
     HITAN: 'Hitno',
     ZAVRSEN: 'Završeno',
     OTKAZAN: 'Otkazano',
+    NEDOSTUPAN: 'Nedostupno',
   };
 
   const sorted = [...appointments].sort((a, b) => {
