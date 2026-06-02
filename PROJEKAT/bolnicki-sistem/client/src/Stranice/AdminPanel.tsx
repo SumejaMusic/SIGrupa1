@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import StatistikaDashboard from "../components/StatistikaDashboard";
 import TabAuditLog from "./TabAuditLog";
@@ -61,6 +61,7 @@ interface RezervacijaKratka {
 
 interface Termin {
   id: number;
+  idDoktor: number;
   datum: string;
   vrijeme: number;
   status: string;
@@ -572,7 +573,7 @@ function TabKorisnici() {
                           <div><span className="text-white/40">Pozicija:</span> <span className="text-white/80 ml-1">{detalji.osobljeProfile.pozicija}</span></div>
                           <div><span className="text-white/40">Odjel:</span> <span className="text-white/80 ml-1">{detalji.osobljeProfile.odjel?.naziv}</span></div>
                         </>)}
-                        {detalji.pacijentProfile && (
+                        {detalji.uloga === "PACIJENT" && detalji.pacijentProfile && (
                           <div><span className="text-white/40">Hronični bolesnik:</span> <span className="text-white/80 ml-1">{detalji.pacijentProfile.hronicniBolesnik ? "Da" : "Ne"}</span></div>
                         )}
                       </div>
@@ -831,6 +832,8 @@ function TabRaspored() {
   const [notif, setNotif] = useState<{ poruka: string; tip: "uspjeh" | "greska" } | null>(null);
   const [view, setView] = useState<"kanban" | "klasifikacija">("kanban");
   const [podView, setPodView] = useState<"doktori" | "osoblje">("doktori");
+  const [aktiviraniSet, setAktiviraniSet] = useState<Set<string>>(new Set());
+  const todayDanName = ["NEDJELJA", "PONEDJELJAK", "UTORAK", "SRIJEDA", "CETVRTAK", "PETAK", "SUBOTA"][new Date().getDay()];
 
   // modals — doktori
   const [editModal, setEditModal] = useState<EditModal | null>(null);
@@ -884,20 +887,77 @@ function TabRaspored() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => { dohvati(); dohvatiDoktore(); dohvatiOsoblje(); }, [dohvati, dohvatiDoktore, dohvatiOsoblje]);
+  const dohvatiSedmicneTermine = useCallback(async () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    // Query one extra day before Monday: server stores dates at local midnight
+    // which in UTC+2 is previous day 22:00 UTC, so gte("YYYY-MM-DD") would
+    // miss Monday's appointments without this adjustment.
+    const queryFrom = new Date(monday);
+    queryFrom.setDate(monday.getDate() - 1);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    try {
+      const res = await fetch(`${API}/admin/termini?datumOd=${fmt(queryFrom)}&datumDo=${fmt(sunday)}&limit=500`, { headers: authHeader() });
+      if (!res.ok) return;
+      const data = await res.json();
+      const DAN_PO_BROJU: Record<number, string> = { 0: "NEDJELJA", 1: "PONEDJELJAK", 2: "UTORAK", 3: "SRIJEDA", 4: "CETVRTAK", 5: "PETAK", 6: "SUBOTA" };
+      const set = new Set<string>();
+      for (const t of (data.termini ?? [])) {
+        if (!t.idDoktor) continue;
+        const localDate = new Date(t.datum);
+        if (localDate < monday || localDate > sunday) continue;
+        set.add(`${t.idDoktor}-${DAN_PO_BROJU[localDate.getDay()]}`);
+      }
+      setAktiviraniSet(set);
+    } catch { /* silent */ }
+  }, []);
+  useEffect(() => { dohvati(); dohvatiDoktore(); dohvatiOsoblje(); dohvatiSedmicneTermine(); }, [dohvati, dohvatiDoktore, dohvatiOsoblje, dohvatiSedmicneTermine]);
 
   // ── actions ─────────────────────────────────────────────────
-  const osvjeziTermine = async (dani: 1 | 7 | 30) => {
+  const osvjeziTermine = async (dani: number, extra?: { datumOd?: string; datumDo?: string; idDoktor?: number }) => {
     setOsvjezavanje(true);
     const res = await fetch(`${API}/admin/osvjezi-termine`, {
       method: "POST", headers: authHeader(),
-      body: JSON.stringify({ dani }),
+      body: JSON.stringify({ dani, ...extra }),
     });
     const data = await res.json();
     setNotif({ poruka: data.poruka, tip: res.ok ? "uspjeh" : "greska" });
+    await dohvatiSedmicneTermine();
     setOsvjezavanje(false);
   };
 
+  const osvjeziTermineSljedeciMjesec = async () => {
+    const today = new Date();
+    const nextMonthFirst = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMonthLast = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    await osvjeziTermine(0, { datumOd: fmt(nextMonthFirst), datumDo: fmt(nextMonthLast) });
+  };
+
+  const dodajTermineZaDoktora = async (idDoktor: number, danUSedmici: string) => {
+    const DAN_TO_OFFSET: Record<string, number> = {
+      PONEDJELJAK: 0, UTORAK: 1, SRIJEDA: 2, CETVRTAK: 3,
+      PETAK: 4, SUBOTA: 5, NEDJELJA: 6,
+    };
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - diffToMonday);
+    const offset = DAN_TO_OFFSET[danUSedmici] ?? 0;
+    const target = new Date(monday);
+    target.setDate(monday.getDate() + offset);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    await osvjeziTermine(0, { datumOd: fmt(target), datumDo: fmt(target), idDoktor });
+    setEditModal(null);
+  };
   const snimiEdit = async () => {
     if (!editModal) return;
     const res = await fetch(`${API}/admin/rasporedi/${editModal.raspored.id}`, {
@@ -1067,13 +1127,10 @@ function TabRaspored() {
         </span>
         {podView === "doktori" && (
           <div className="ml-auto flex gap-2">
-            <button onClick={() => osvjeziTermine(1)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-800 hover:bg-teal-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
-              {osvjezavanje ? "Generisanje…" : "↻ Danas"}
-            </button>
-            <button onClick={() => osvjeziTermine(7)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors disabled:opacity-50">
+                        <button onClick={() => osvjeziTermine(7)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors disabled:opacity-50">
               {osvjezavanje ? "Generisanje…" : "↻ Sljedeća sedmica"}
             </button>
-            <button onClick={() => osvjeziTermine(30)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium transition-colors disabled:opacity-50">
+            <button onClick={osvjeziTermineSljedeciMjesec} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium transition-colors disabled:opacity-50">
               {osvjezavanje ? "Generisanje…" : "↻ Sljedeći mjesec"}
             </button>
           </div>
@@ -1086,27 +1143,32 @@ function TabRaspored() {
         <>
           {/* ══ DOCTOR KANBAN / KLASIFIKACIJA ══ */}
           {view === "kanban" ? (
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-3 min-w-max">
+            <div className="pb-2">
+              <div className="grid grid-cols-7 gap-2">
                 {DANI.map((dan) => {
                   const cards = kanbanPoDisnima[dan];
+                  const isToday = dan === todayDanName;
                   return (
-                    <div key={dan} className="w-44 flex-shrink-0">
-                      <div className="bg-white/5 border border-white/10 rounded-t-lg px-3 py-2 text-center">
-                        <span className="text-xs font-bold text-white/70 tracking-wider">{dan}</span>
+                    <div key={dan}>
+                      <div className={`border rounded-t-lg px-2 py-2 text-center ${isToday ? 'bg-purple-600/20 border-purple-500/40' : 'bg-white/5 border-white/10'}`}>
+                        <span className={`text-xs font-bold tracking-wider ${isToday ? 'text-purple-300' : 'text-white/70'}`}>
+                          {dan.slice(0, 3)}
+                          {isToday && <span className="ml-1 text-[9px] text-purple-400">• danas</span>}
+                        </span>
                       </div>
-                      <div className="bg-white/[0.02] border border-t-0 border-white/10 rounded-b-lg p-2 min-h-[120px] flex flex-col gap-2">
+                      <div className={`border border-t-0 rounded-b-lg p-1.5 min-h-[120px] flex flex-col gap-1.5 ${isToday ? 'bg-purple-900/10 border-purple-500/30' : 'bg-white/[0.02] border-white/10'}`}>
                         {cards.map((r) => {
+                          const isAktiviran = aktiviraniSet.has(`${r.idDoktor}-${r.danUSedmici}`);
                           const boja = bojaOdjela(r.doktor.odjel.naziv);
                           return (
-                            <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2.5 ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
-                              <p className="text-xs font-semibold text-white leading-tight">Dr. {r.doktor.korisnik.ime[0]}. {r.doktor.korisnik.prezime}</p>
-                              <p className={`text-[10px] mt-0.5 px-1.5 py-0.5 rounded inline-block ${boja.tag}`}>{r.doktor.odjel.naziv}</p>
-                              <p className="text-[11px] text-white/60 mt-1">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
+                            <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2 transition-all ${isAktiviran ? `ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 shadow-sm` : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'}`}>
+                              <p className="text-[11px] font-semibold text-white leading-tight truncate">Dr. {r.doktor.korisnik.ime[0]}. {r.doktor.korisnik.prezime}</p>
+                              <p className={`text-[9px] mt-0.5 px-1 py-0.5 rounded inline-block ${isAktiviran ? boja.tag : 'bg-white/10 text-white/50'}`}>{r.doktor.odjel.naziv}</p>
+                              <p className={`text-[10px] mt-0.5 ${isAktiviran ? 'text-white/60' : 'text-white/30'}`}>{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
                             </button>
                           );
                         })}
-                        <button onClick={() => { setNoviModal({ danUSedmici: dan }); setNovaForma({ idDoktor: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-xs py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
+                        <button onClick={() => { setNoviModal({ danUSedmici: dan }); setNovaForma({ idDoktor: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-[10px] py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
                           + Dodaj
                         </button>
                       </div>
@@ -1131,12 +1193,15 @@ function TabRaspored() {
                         <div key={doktor} className="px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 items-start">
                           <p className="text-sm font-semibold text-white w-44 flex-shrink-0">Dr. {doktor}</p>
                           <div className="flex flex-wrap gap-2">
-                            {rasps.sort((a, b) => DANI.indexOf(a.danUSedmici) - DANI.indexOf(b.danUSedmici)).map((r) => (
-                              <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`text-xs px-2.5 py-1 rounded-lg ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
-                                <span className="font-semibold text-white/80">{r.danUSedmici.slice(0, 3)}</span>
-                                <span className="text-white/50 ml-1">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</span>
-                              </button>
-                            ))}
+                            {rasps.sort((a, b) => DANI.indexOf(a.danUSedmici) - DANI.indexOf(b.danUSedmici)).map((r) => {
+                              const isAktiviran = aktiviraniSet.has(`${r.idDoktor}-${r.danUSedmici}`);
+                              return (
+                                <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`text-xs px-2.5 py-1 rounded-lg ring-1 transition-all hover:brightness-125 ${isAktiviran ? `${boja.ring} ${boja.bg}` : 'ring-white/10 bg-white/5'}`}>
+                                  <span className={`font-semibold ${isAktiviran ? 'text-white/80' : 'text-white/40'}`}>{r.danUSedmici.slice(0, 3)}</span>
+                                  <span className={`ml-1 ${isAktiviran ? 'text-white/50' : 'text-white/25'}`}>{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</span>
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -1175,28 +1240,32 @@ function TabRaspored() {
         <>
           {/* ══ STAFF KANBAN / KLASIFIKACIJA ══ */}
           {view === "kanban" ? (
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-3 min-w-max">
+            <div className="pb-2">
+              <div className="grid grid-cols-7 gap-2">
                 {DANI.map((dan) => {
                   const cards = kanbanOsobljePoDisnima[dan];
+                  const isToday = dan === todayDanName;
                   return (
-                    <div key={dan} className="w-48 flex-shrink-0">
-                      <div className="bg-white/5 border border-white/10 rounded-t-lg px-3 py-2 text-center">
-                        <span className="text-xs font-bold text-white/70 tracking-wider">{dan}</span>
+                    <div key={dan}>
+                      <div className={`border rounded-t-lg px-2 py-2 text-center ${isToday ? 'bg-yellow-600/20 border-yellow-500/40' : 'bg-white/5 border-white/10'}`}>
+                        <span className={`text-xs font-bold tracking-wider ${isToday ? 'text-yellow-300' : 'text-white/70'}`}>
+                          {dan.slice(0, 3)}
+                          {isToday && <span className="ml-1 text-[9px] text-yellow-400">• danas</span>}
+                        </span>
                       </div>
-                      <div className="bg-white/[0.02] border border-t-0 border-white/10 rounded-b-lg p-2 min-h-[120px] flex flex-col gap-2">
+                      <div className={`border border-t-0 rounded-b-lg p-1.5 min-h-[120px] flex flex-col gap-1.5 ${isToday ? 'bg-yellow-900/10 border-yellow-500/30' : 'bg-white/[0.02] border-white/10'}`}>
                         {cards.map((r) => {
                           const boja = bojaOdjela(r.osoblje.odjel.naziv);
                           return (
-                            <button key={r.id} onClick={() => { setEditOsobljeModal({ raspored: r }); setEditOsobljeForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2.5 ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
-                              <p className="text-xs font-semibold text-white leading-tight">{r.osoblje.korisnik.ime} {r.osoblje.korisnik.prezime}</p>
-                              <p className="text-[10px] mt-0.5 px-1.5 py-0.5 rounded inline-block bg-yellow-500/20 text-yellow-300">{r.osoblje.pozicija}</p>
-                              <p className="text-[10px] text-white/40 mt-0.5">{r.osoblje.odjel.naziv}</p>
-                              <p className="text-[11px] text-white/60 mt-1">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
+                            <button key={r.id} onClick={() => { setEditOsobljeModal({ raspored: r }); setEditOsobljeForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2 ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
+                              <p className="text-[11px] font-semibold text-white leading-tight truncate">{r.osoblje.korisnik.ime} {r.osoblje.korisnik.prezime}</p>
+                              <p className="text-[9px] mt-0.5 px-1 py-0.5 rounded inline-block bg-yellow-500/20 text-yellow-300">{r.osoblje.pozicija}</p>
+                              <p className="text-[10px] text-white/40 mt-0.5 truncate">{r.osoblje.odjel.naziv}</p>
+                              <p className="text-[10px] text-white/60 mt-0.5">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
                             </button>
                           );
                         })}
-                        <button onClick={() => { setNoviOsobljeModal({ danUSedmici: dan }); setNovaOsobljeForma({ idOsoblje: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-xs py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
+                        <button onClick={() => { setNoviOsobljeModal({ danUSedmici: dan }); setNovaOsobljeForma({ idOsoblje: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-[10px] py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
                           + Dodaj
                         </button>
                       </div>
@@ -1282,6 +1351,15 @@ function TabRaspored() {
                 className="w-full py-2 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-sm font-medium transition-colors"
               >
                 + Dodaj izuzetak za specifični datum
+              </button>
+            </div>
+
+            <div className="mt-3">
+              <button
+                onClick={() => dodajTermineZaDoktora(editModal.raspored.idDoktor, editModal.raspored.danUSedmici)}
+                className="w-full py-2 rounded-lg bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 text-sm font-medium transition-colors"
+              >
+                ↻ Dodaj termine za ovaj dan
               </button>
             </div>
           </div>
