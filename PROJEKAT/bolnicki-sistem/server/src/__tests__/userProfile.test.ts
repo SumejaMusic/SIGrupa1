@@ -9,6 +9,9 @@ vi.mock('../lib/prisma.js', () => ({
     korisnik: {
       findUnique: vi.fn(),
       update: vi.fn(),
+    },
+    pacijent: {
+      update: vi.fn(),
     }
   }
 }));
@@ -38,12 +41,30 @@ describe('User Profile API', () => {
 
   describe('GET /users/:id/profile', () => {
     it('trebalo bi vratiti podatke profila za validan id', async () => {
-      const mockUser = { id: 1, ime: 'Test', prezime: 'Testic', email: 'test@test.com', brojTelefona: '12345', datumRodjenja: new Date('1990-01-01'), uloga: 'PACIJENT' };
+      const mockUser = {
+        id: 1,
+        ime: 'Test',
+        prezime: 'Testic',
+        email: 'test@test.com',
+        brojTelefona: '12345',
+        datumRodjenja: new Date('1990-01-01'),
+        uloga: 'PACIJENT',
+        pacijentProfile: {
+          id: 1,
+          alergije: 'Penicilin',
+          hronicneBolesti: null,
+          krvnaGrupa: 'A+',
+          doniraKrv: true,
+          imaoOperacije: false,
+          operacijeOpis: null,
+        },
+      };
       (prisma.korisnik.findUnique as any).mockResolvedValue(mockUser);
 
       const res = await request(app).get('/users/1/profile');
       expect(res.status).toBe(200);
       expect(res.body.ime).toBe('Test');
+      expect(res.body.pacijentProfile.krvnaGrupa).toBe('A+');
     });
 
     it('trebalo bi vratiti 403 ako korisnik pristupa tudjem profilu', async () => {
@@ -69,6 +90,56 @@ describe('User Profile API', () => {
       expect(res.status).toBe(200);
       expect(res.body.poruka).toBe('Profil uspješno ažuriran');
       expect(res.body.korisnik.ime).toBe('NovoIme');
+    });
+
+    it('trebalo bi uspješno ažurirati medicinski profil pacijenta', async () => {
+      const mockUpdatedUser = {
+        id: 1,
+        ime: 'Test',
+        prezime: 'Testic',
+        email: 'test@test.com',
+        brojTelefona: '12345',
+        datumRodjenja: new Date('1990-01-01'),
+        uloga: 'PACIJENT',
+        pacijentProfile: null,
+      };
+      const mockUpdatedPatientProfile = {
+        id: 1,
+        alergije: 'Penicilin',
+        hronicneBolesti: 'Astma',
+        krvnaGrupa: 'A+',
+        doniraKrv: true,
+        imaoOperacije: true,
+        operacijeOpis: 'Operacija koljena 2020.',
+      };
+
+      (prisma.korisnik.update as any).mockResolvedValue(mockUpdatedUser);
+      (prisma.pacijent.update as any).mockResolvedValue(mockUpdatedPatientProfile);
+
+      const res = await request(app)
+        .patch('/users/1/profile')
+        .send({
+          alergije: 'Penicilin',
+          hronicneBolesti: 'Astma',
+          krvnaGrupa: 'A+',
+          doniraKrv: true,
+          imaoOperacije: true,
+          operacijeOpis: 'Operacija koljena 2020.'
+        });
+
+      expect(res.status).toBe(200);
+      expect(prisma.pacijent.update).toHaveBeenCalledWith(expect.objectContaining({
+        where: { idKorisnik: 1 },
+        data: expect.objectContaining({
+          alergije: 'Penicilin',
+          hronicneBolesti: 'Astma',
+          krvnaGrupa: 'A+',
+          doniraKrv: true,
+          imaoOperacije: true,
+          operacijeOpis: 'Operacija koljena 2020.',
+        }),
+      }));
+      expect(res.body.korisnik.pacijentProfile.krvnaGrupa).toBe('A+');
     });
 
     it('trebalo bi vratiti grešku za nevalidan datum', async () => {

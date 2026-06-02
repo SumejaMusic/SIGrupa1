@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
+import StatistikaDashboard from "../components/StatistikaDashboard";
+import TabAuditLog from "./TabAuditLog";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const API = `${BASE_URL}/api`;
 
@@ -60,6 +61,7 @@ interface RezervacijaKratka {
 
 interface Termin {
   id: number;
+  idDoktor: number;
   datum: string;
   vrijeme: number;
   status: string;
@@ -571,7 +573,7 @@ function TabKorisnici() {
                           <div><span className="text-white/40">Pozicija:</span> <span className="text-white/80 ml-1">{detalji.osobljeProfile.pozicija}</span></div>
                           <div><span className="text-white/40">Odjel:</span> <span className="text-white/80 ml-1">{detalji.osobljeProfile.odjel?.naziv}</span></div>
                         </>)}
-                        {detalji.pacijentProfile && (
+                        {detalji.uloga === "PACIJENT" && detalji.pacijentProfile && (
                           <div><span className="text-white/40">Hronični bolesnik:</span> <span className="text-white/80 ml-1">{detalji.pacijentProfile.hronicniBolesnik ? "Da" : "Ne"}</span></div>
                         )}
                       </div>
@@ -830,6 +832,8 @@ function TabRaspored() {
   const [notif, setNotif] = useState<{ poruka: string; tip: "uspjeh" | "greska" } | null>(null);
   const [view, setView] = useState<"kanban" | "klasifikacija">("kanban");
   const [podView, setPodView] = useState<"doktori" | "osoblje">("doktori");
+  const [aktiviraniSet, setAktiviraniSet] = useState<Set<string>>(new Set());
+  const todayDanName = ["NEDJELJA", "PONEDJELJAK", "UTORAK", "SRIJEDA", "CETVRTAK", "PETAK", "SUBOTA"][new Date().getDay()];
 
   // modals — doktori
   const [editModal, setEditModal] = useState<EditModal | null>(null);
@@ -883,20 +887,77 @@ function TabRaspored() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => { dohvati(); dohvatiDoktore(); dohvatiOsoblje(); }, [dohvati, dohvatiDoktore, dohvatiOsoblje]);
+  const dohvatiSedmicneTermine = useCallback(async () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    // Query one extra day before Monday: server stores dates at local midnight
+    // which in UTC+2 is previous day 22:00 UTC, so gte("YYYY-MM-DD") would
+    // miss Monday's appointments without this adjustment.
+    const queryFrom = new Date(monday);
+    queryFrom.setDate(monday.getDate() - 1);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    try {
+      const res = await fetch(`${API}/admin/termini?datumOd=${fmt(queryFrom)}&datumDo=${fmt(sunday)}&limit=500`, { headers: authHeader() });
+      if (!res.ok) return;
+      const data = await res.json();
+      const DAN_PO_BROJU: Record<number, string> = { 0: "NEDJELJA", 1: "PONEDJELJAK", 2: "UTORAK", 3: "SRIJEDA", 4: "CETVRTAK", 5: "PETAK", 6: "SUBOTA" };
+      const set = new Set<string>();
+      for (const t of (data.termini ?? [])) {
+        if (!t.idDoktor) continue;
+        const localDate = new Date(t.datum);
+        if (localDate < monday || localDate > sunday) continue;
+        set.add(`${t.idDoktor}-${DAN_PO_BROJU[localDate.getDay()]}`);
+      }
+      setAktiviraniSet(set);
+    } catch { /* silent */ }
+  }, []);
+  useEffect(() => { dohvati(); dohvatiDoktore(); dohvatiOsoblje(); dohvatiSedmicneTermine(); }, [dohvati, dohvatiDoktore, dohvatiOsoblje, dohvatiSedmicneTermine]);
 
   // ── actions ─────────────────────────────────────────────────
-  const osvjeziTermine = async (dani: 1 | 7 | 30) => {
+  const osvjeziTermine = async (dani: number, extra?: { datumOd?: string; datumDo?: string; idDoktor?: number }) => {
     setOsvjezavanje(true);
     const res = await fetch(`${API}/admin/osvjezi-termine`, {
       method: "POST", headers: authHeader(),
-      body: JSON.stringify({ dani }),
+      body: JSON.stringify({ dani, ...extra }),
     });
     const data = await res.json();
     setNotif({ poruka: data.poruka, tip: res.ok ? "uspjeh" : "greska" });
+    await dohvatiSedmicneTermine();
     setOsvjezavanje(false);
   };
 
+  const osvjeziTermineSljedeciMjesec = async () => {
+    const today = new Date();
+    const nextMonthFirst = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMonthLast = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    await osvjeziTermine(0, { datumOd: fmt(nextMonthFirst), datumDo: fmt(nextMonthLast) });
+  };
+
+  const dodajTermineZaDoktora = async (idDoktor: number, danUSedmici: string) => {
+    const DAN_TO_OFFSET: Record<string, number> = {
+      PONEDJELJAK: 0, UTORAK: 1, SRIJEDA: 2, CETVRTAK: 3,
+      PETAK: 4, SUBOTA: 5, NEDJELJA: 6,
+    };
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - diffToMonday);
+    const offset = DAN_TO_OFFSET[danUSedmici] ?? 0;
+    const target = new Date(monday);
+    target.setDate(monday.getDate() + offset);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    await osvjeziTermine(0, { datumOd: fmt(target), datumDo: fmt(target), idDoktor });
+    setEditModal(null);
+  };
   const snimiEdit = async () => {
     if (!editModal) return;
     const res = await fetch(`${API}/admin/rasporedi/${editModal.raspored.id}`, {
@@ -1066,13 +1127,10 @@ function TabRaspored() {
         </span>
         {podView === "doktori" && (
           <div className="ml-auto flex gap-2">
-            <button onClick={() => osvjeziTermine(1)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-800 hover:bg-teal-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
-              {osvjezavanje ? "Generisanje…" : "↻ Danas"}
-            </button>
-            <button onClick={() => osvjeziTermine(7)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors disabled:opacity-50">
+                        <button onClick={() => osvjeziTermine(7)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors disabled:opacity-50">
               {osvjezavanje ? "Generisanje…" : "↻ Sljedeća sedmica"}
             </button>
-            <button onClick={() => osvjeziTermine(30)} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium transition-colors disabled:opacity-50">
+            <button onClick={osvjeziTermineSljedeciMjesec} disabled={osvjezavanje} className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium transition-colors disabled:opacity-50">
               {osvjezavanje ? "Generisanje…" : "↻ Sljedeći mjesec"}
             </button>
           </div>
@@ -1085,27 +1143,32 @@ function TabRaspored() {
         <>
           {/* ══ DOCTOR KANBAN / KLASIFIKACIJA ══ */}
           {view === "kanban" ? (
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-3 min-w-max">
+            <div className="pb-2">
+              <div className="grid grid-cols-7 gap-2">
                 {DANI.map((dan) => {
                   const cards = kanbanPoDisnima[dan];
+                  const isToday = dan === todayDanName;
                   return (
-                    <div key={dan} className="w-44 flex-shrink-0">
-                      <div className="bg-white/5 border border-white/10 rounded-t-lg px-3 py-2 text-center">
-                        <span className="text-xs font-bold text-white/70 tracking-wider">{dan}</span>
+                    <div key={dan}>
+                      <div className={`border rounded-t-lg px-2 py-2 text-center ${isToday ? 'bg-purple-600/20 border-purple-500/40' : 'bg-white/5 border-white/10'}`}>
+                        <span className={`text-xs font-bold tracking-wider ${isToday ? 'text-purple-300' : 'text-white/70'}`}>
+                          {dan.slice(0, 3)}
+                          {isToday && <span className="ml-1 text-[9px] text-purple-400">• danas</span>}
+                        </span>
                       </div>
-                      <div className="bg-white/[0.02] border border-t-0 border-white/10 rounded-b-lg p-2 min-h-[120px] flex flex-col gap-2">
+                      <div className={`border border-t-0 rounded-b-lg p-1.5 min-h-[120px] flex flex-col gap-1.5 ${isToday ? 'bg-purple-900/10 border-purple-500/30' : 'bg-white/[0.02] border-white/10'}`}>
                         {cards.map((r) => {
+                          const isAktiviran = aktiviraniSet.has(`${r.idDoktor}-${r.danUSedmici}`);
                           const boja = bojaOdjela(r.doktor.odjel.naziv);
                           return (
-                            <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2.5 ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
-                              <p className="text-xs font-semibold text-white leading-tight">Dr. {r.doktor.korisnik.ime[0]}. {r.doktor.korisnik.prezime}</p>
-                              <p className={`text-[10px] mt-0.5 px-1.5 py-0.5 rounded inline-block ${boja.tag}`}>{r.doktor.odjel.naziv}</p>
-                              <p className="text-[11px] text-white/60 mt-1">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
+                            <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2 transition-all ${isAktiviran ? `ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 shadow-sm` : 'bg-white/5 ring-1 ring-white/10 hover:bg-white/10'}`}>
+                              <p className="text-[11px] font-semibold text-white leading-tight truncate">Dr. {r.doktor.korisnik.ime[0]}. {r.doktor.korisnik.prezime}</p>
+                              <p className={`text-[9px] mt-0.5 px-1 py-0.5 rounded inline-block ${isAktiviran ? boja.tag : 'bg-white/10 text-white/50'}`}>{r.doktor.odjel.naziv}</p>
+                              <p className={`text-[10px] mt-0.5 ${isAktiviran ? 'text-white/60' : 'text-white/30'}`}>{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
                             </button>
                           );
                         })}
-                        <button onClick={() => { setNoviModal({ danUSedmici: dan }); setNovaForma({ idDoktor: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-xs py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
+                        <button onClick={() => { setNoviModal({ danUSedmici: dan }); setNovaForma({ idDoktor: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-[10px] py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
                           + Dodaj
                         </button>
                       </div>
@@ -1130,12 +1193,15 @@ function TabRaspored() {
                         <div key={doktor} className="px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 items-start">
                           <p className="text-sm font-semibold text-white w-44 flex-shrink-0">Dr. {doktor}</p>
                           <div className="flex flex-wrap gap-2">
-                            {rasps.sort((a, b) => DANI.indexOf(a.danUSedmici) - DANI.indexOf(b.danUSedmici)).map((r) => (
-                              <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`text-xs px-2.5 py-1 rounded-lg ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
-                                <span className="font-semibold text-white/80">{r.danUSedmici.slice(0, 3)}</span>
-                                <span className="text-white/50 ml-1">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</span>
-                              </button>
-                            ))}
+                            {rasps.sort((a, b) => DANI.indexOf(a.danUSedmici) - DANI.indexOf(b.danUSedmici)).map((r) => {
+                              const isAktiviran = aktiviraniSet.has(`${r.idDoktor}-${r.danUSedmici}`);
+                              return (
+                                <button key={r.id} onClick={() => { setEditModal({ raspored: r }); setEditForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`text-xs px-2.5 py-1 rounded-lg ring-1 transition-all hover:brightness-125 ${isAktiviran ? `${boja.ring} ${boja.bg}` : 'ring-white/10 bg-white/5'}`}>
+                                  <span className={`font-semibold ${isAktiviran ? 'text-white/80' : 'text-white/40'}`}>{r.danUSedmici.slice(0, 3)}</span>
+                                  <span className={`ml-1 ${isAktiviran ? 'text-white/50' : 'text-white/25'}`}>{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</span>
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -1174,28 +1240,32 @@ function TabRaspored() {
         <>
           {/* ══ STAFF KANBAN / KLASIFIKACIJA ══ */}
           {view === "kanban" ? (
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-3 min-w-max">
+            <div className="pb-2">
+              <div className="grid grid-cols-7 gap-2">
                 {DANI.map((dan) => {
                   const cards = kanbanOsobljePoDisnima[dan];
+                  const isToday = dan === todayDanName;
                   return (
-                    <div key={dan} className="w-48 flex-shrink-0">
-                      <div className="bg-white/5 border border-white/10 rounded-t-lg px-3 py-2 text-center">
-                        <span className="text-xs font-bold text-white/70 tracking-wider">{dan}</span>
+                    <div key={dan}>
+                      <div className={`border rounded-t-lg px-2 py-2 text-center ${isToday ? 'bg-yellow-600/20 border-yellow-500/40' : 'bg-white/5 border-white/10'}`}>
+                        <span className={`text-xs font-bold tracking-wider ${isToday ? 'text-yellow-300' : 'text-white/70'}`}>
+                          {dan.slice(0, 3)}
+                          {isToday && <span className="ml-1 text-[9px] text-yellow-400">• danas</span>}
+                        </span>
                       </div>
-                      <div className="bg-white/[0.02] border border-t-0 border-white/10 rounded-b-lg p-2 min-h-[120px] flex flex-col gap-2">
+                      <div className={`border border-t-0 rounded-b-lg p-1.5 min-h-[120px] flex flex-col gap-1.5 ${isToday ? 'bg-yellow-900/10 border-yellow-500/30' : 'bg-white/[0.02] border-white/10'}`}>
                         {cards.map((r) => {
                           const boja = bojaOdjela(r.osoblje.odjel.naziv);
                           return (
-                            <button key={r.id} onClick={() => { setEditOsobljeModal({ raspored: r }); setEditOsobljeForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2.5 ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
-                              <p className="text-xs font-semibold text-white leading-tight">{r.osoblje.korisnik.ime} {r.osoblje.korisnik.prezime}</p>
-                              <p className="text-[10px] mt-0.5 px-1.5 py-0.5 rounded inline-block bg-yellow-500/20 text-yellow-300">{r.osoblje.pozicija}</p>
-                              <p className="text-[10px] text-white/40 mt-0.5">{r.osoblje.odjel.naziv}</p>
-                              <p className="text-[11px] text-white/60 mt-1">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
+                            <button key={r.id} onClick={() => { setEditOsobljeModal({ raspored: r }); setEditOsobljeForma({ vrijemeOd: formatVrijeme(r.vrijemeOd), vrijemeDo: formatVrijeme(r.vrijemeDo) }); }} className={`w-full text-left rounded-lg p-2 ring-1 ${boja.ring} ${boja.bg} hover:brightness-125 transition-all`}>
+                              <p className="text-[11px] font-semibold text-white leading-tight truncate">{r.osoblje.korisnik.ime} {r.osoblje.korisnik.prezime}</p>
+                              <p className="text-[9px] mt-0.5 px-1 py-0.5 rounded inline-block bg-yellow-500/20 text-yellow-300">{r.osoblje.pozicija}</p>
+                              <p className="text-[10px] text-white/40 mt-0.5 truncate">{r.osoblje.odjel.naziv}</p>
+                              <p className="text-[10px] text-white/60 mt-0.5">{formatVrijeme(r.vrijemeOd)}–{formatVrijeme(r.vrijemeDo)}</p>
                             </button>
                           );
                         })}
-                        <button onClick={() => { setNoviOsobljeModal({ danUSedmici: dan }); setNovaOsobljeForma({ idOsoblje: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-xs py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
+                        <button onClick={() => { setNoviOsobljeModal({ danUSedmici: dan }); setNovaOsobljeForma({ idOsoblje: "", vrijemeOd: "08:00", vrijemeDo: "16:00" }); }} className="w-full text-center text-white/25 hover:text-white/60 text-[10px] py-1 border border-dashed border-white/10 hover:border-white/30 rounded-lg transition-colors">
                           + Dodaj
                         </button>
                       </div>
@@ -1281,6 +1351,15 @@ function TabRaspored() {
                 className="w-full py-2 rounded-lg bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-sm font-medium transition-colors"
               >
                 + Dodaj izuzetak za specifični datum
+              </button>
+            </div>
+
+            <div className="mt-3">
+              <button
+                onClick={() => dodajTermineZaDoktora(editModal.raspored.idDoktor, editModal.raspored.danUSedmici)}
+                className="w-full py-2 rounded-lg bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 text-sm font-medium transition-colors"
+              >
+                ↻ Dodaj termine za ovaj dan
               </button>
             </div>
           </div>
@@ -1981,9 +2060,273 @@ function TabAnalitika() {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  TAB: DEAKTIVACIJE NALOGA
+// ══════════════════════════════════════════════════════════════
+function TabDeaktivacije() {
+  const [zahtjevi, setZahtjevi] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [obradaZahtjeva, setObradaZahtjeva] = useState<number | null>(null);
+  const [showOdbijModal, setShowOdbijModal] = useState<number | null>(null);
+  const [odbijObrazlozenje, setOdbijObrazlozenje] = useState("");
+  const [statusFilter, setStatusFilter] = useState("NA_CEKANJU");
+  const [poruka, setPoruka] = useState<{ tekst: string; tip: "success" | "error" } | null>(null);
+  const [odabraniZahtjev, setOdabraniZahtjev] = useState<any | null>(null);
+
+  const fetchZahtjevi = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qs = statusFilter === "SVI" ? "" : `?status=${statusFilter}`;
+      const res = await fetch(`${API}/admin/deactivation-requests${qs}`, {
+        headers: authHeader(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setZahtjevi(data.zahtjevi || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchZahtjevi();
+  }, [fetchZahtjevi]);
+
+  const handleOdluka = async (id: number, odluka: "ODOBRENO" | "ODBIJENO", obrazlozenje?: string) => {
+    if (odluka === "ODOBRENO" && !window.confirm("Jeste li sigurni? Ova akcija anonimizira podatke i trajno deaktivira nalog!")) {
+      return;
+    }
+
+    setObradaZahtjeva(id);
+    setPoruka(null);
+    try {
+      const res = await fetch(`${API}/admin/deactivation-requests/${id}`, {
+        method: "PATCH",
+        headers: authHeader(),
+        body: JSON.stringify({ odluka, obrazlozenje }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPoruka({ tekst: data.poruka, tip: "success" });
+        if (odluka === "ODBIJENO") {
+          setShowOdbijModal(null);
+          setOdbijObrazlozenje("");
+        }
+        fetchZahtjevi();
+      } else {
+        setPoruka({ tekst: data.poruka || "Greška", tip: "error" });
+      }
+    } catch (err) {
+      setPoruka({ tekst: "Greška servera", tip: "error" });
+    } finally {
+      setObradaZahtjeva(null);
+    }
+  };
+
+  return (
+    <div className="bg-[#1a1a2e] rounded-xl border border-white/5 overflow-hidden">
+      <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Zahtjevi za deaktivaciju</h2>
+          <p className="text-sm text-white/50">Pregled i odobravanje zahtjeva za brisanje i anonimizaciju naloga</p>
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-[#0f0f1a] border border-white/10 rounded-lg px-4 py-2 text-sm text-white outline-none focus:border-purple-500"
+        >
+          <option value="NA_CEKANJU">Na čekanju</option>
+          <option value="ODOBRENO">Odobreno</option>
+          <option value="ODBIJENO">Odbijeno</option>
+          <option value="SVI">Svi zahtjevi</option>
+        </select>
+      </div>
+
+      <div className="p-6">
+        {poruka && (
+          <div className={`mb-6 p-4 rounded-lg text-sm border ${
+            poruka.tip === "success" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
+          }`}>
+            {poruka.tekst}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-10 text-white/50 text-sm">Učitavanje zahtjeva...</div>
+        ) : zahtjevi.length === 0 ? (
+          <div className="text-center py-10 text-white/50 text-sm">Nema pronađenih zahtjeva za odabrani filter.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-white/40">
+                  <th className="px-4 py-3 font-medium">Pacijent</th>
+                  <th className="px-4 py-3 font-medium">Datum</th>
+                  <th className="px-4 py-3 font-medium">Razlog (pacijent)</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium text-right">Akcije</th>
+                </tr>
+              </thead>
+              <tbody>
+                {zahtjevi.map((z) => (
+                  <tr key={z.id} className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setOdabraniZahtjev(z)}>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-white">{z.korisnik.ime} {z.korisnik.prezime}</div>
+                      <div className="text-xs text-white/40">{z.korisnik.email}</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-white/60">
+                      {new Date(z.kreiranAt).toLocaleDateString("bs-BA")}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-white/60 max-w-[200px] truncate" title={z.razlogKorisnika || "-"}>
+                      {z.razlogKorisnika || <span className="text-white/20 italic">Nije navedeno</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider ${
+                        z.status === "NA_CEKANJU" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                        z.status === "ODOBRENO" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                        "bg-red-500/10 text-red-400 border border-red-500/20"
+                      }`}>
+                        {z.status.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {z.status === "NA_CEKANJU" ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleOdluka(z.id, "ODOBRENO"); }}
+                            disabled={obradaZahtjeva === z.id}
+                            className="px-3 py-1.5 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded text-xs transition-colors border border-green-500/20 disabled:opacity-50"
+                          >
+                            Odobri
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setShowOdbijModal(z.id); }}
+                            disabled={obradaZahtjeva === z.id}
+                            className="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded text-xs transition-colors border border-red-500/20 disabled:opacity-50"
+                          >
+                            Odbij
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-white/30 truncate block max-w-[150px] ml-auto" title={z.adminObrazlozenje || ""}>
+                          {z.adminObrazlozenje || "Obrađeno"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {odabraniZahtjev && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setOdabraniZahtjev(null)}>
+          <div className="bg-[#1a1a2e] rounded-xl border border-white/10 shadow-2xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">Detalji zahtjeva</h3>
+              <button onClick={() => setOdabraniZahtjev(null)} className="text-white/40 hover:text-white transition-colors text-xl leading-none">
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-5 text-sm text-white/80">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5">
+                  <span className="text-white/40 block text-[10px] uppercase tracking-wider mb-1 font-semibold">Pacijent</span>
+                  <div className="font-medium text-white text-base">{odabraniZahtjev.korisnik.ime} {odabraniZahtjev.korisnik.prezime}</div>
+                  <div className="text-white/50 text-xs mt-0.5">{odabraniZahtjev.korisnik.email}</div>
+                </div>
+                <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5">
+                  <span className="text-white/40 block text-[10px] uppercase tracking-wider mb-1 font-semibold">Status</span>
+                  <span className={`inline-block px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider ${
+                    odabraniZahtjev.status === "NA_CEKANJU" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                    odabraniZahtjev.status === "ODOBRENO" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                    "bg-red-500/10 text-red-400 border border-red-500/20"
+                  }`}>
+                    {odabraniZahtjev.status.replace("_", " ")}
+                  </span>
+                  <div className="text-white/40 text-[10px] uppercase tracking-wider mt-2 font-semibold">Kreirano</div>
+                  <div className="text-white/60 text-xs">{new Date(odabraniZahtjev.kreiranAt).toLocaleString("bs-BA")}</div>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-white/40 block text-[10px] uppercase tracking-wider mb-2 font-semibold ml-1">Razlog pacijenta</span>
+                <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5 whitespace-pre-wrap text-white/70 min-h-[80px] max-h-[160px] overflow-y-auto break-words [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
+                  {odabraniZahtjev.razlogKorisnika || <span className="italic text-white/30">Nije navedeno</span>}
+                </div>
+              </div>
+
+              {odabraniZahtjev.status !== "NA_CEKANJU" && (
+                <div>
+                  <div className="flex justify-between items-baseline mb-2 ml-1">
+                    <span className="text-white/40 block text-[10px] uppercase tracking-wider font-semibold">Obrazloženje admina</span>
+                    <span className="text-white/30 text-[10px]">{odabraniZahtjev.obradenAt ? new Date(odabraniZahtjev.obradenAt).toLocaleString("bs-BA") : ""}</span>
+                  </div>
+                  <div className="bg-[#0f0f1a] p-4 rounded-lg border border-white/5 whitespace-pre-wrap text-white/70 min-h-[80px] max-h-[160px] overflow-y-auto break-words [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
+                    {odabraniZahtjev.adminObrazlozenje || <span className="italic text-white/30">Nema obrazloženja</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setOdabraniZahtjev(null)}
+                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors text-sm font-medium border border-white/10"
+              >
+                Zatvori
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showOdbijModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#1a1a2e] rounded-xl border border-white/10 shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-white mb-4">Odbijanje zahtjeva</h3>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-white/60 mb-2 uppercase tracking-wider">
+                Obrazloženje za pacijenta
+              </label>
+              <textarea
+                value={odbijObrazlozenje}
+                onChange={(e) => setOdbijObrazlozenje(e.target.value)}
+                className="w-full bg-[#0f0f1a] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-red-500 resize-none h-24"
+                placeholder="Unesite razlog odbijanja..."
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowOdbijModal(null)}
+                className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+              >
+                Odustani
+              </button>
+              <button
+                onClick={() => handleOdluka(showOdbijModal, "ODBIJENO", odbijObrazlozenje)}
+                disabled={obradaZahtjeva === showOdbijModal || !odbijObrazlozenje.trim()}
+                className="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {obradaZahtjeva === showOdbijModal ? "Obrada..." : "Potvrdi odbijanje"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
 //  GLAVNI ADMIN PANEL
 // ══════════════════════════════════════════════════════════════
-type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika";
+//type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "statistika";
+type Tab = "korisnici" | "raspored" | "termini" | "odjeli" | "analitika" | "deaktivacije" | "auditlog" | "statistika";
 
 export default function AdminPanel() {
   const [aktivniTab, setAktivniTab] = useState<Tab>("korisnici");
@@ -1995,6 +2338,9 @@ export default function AdminPanel() {
     { key: "termini", label: "Termini", opis: "Pregled svih zakazanih termina" },
     { key: "odjeli", label: "Odjeli", opis: "Pregled, dodavanje i brisanje odjela" },
     { key: "analitika", label: "Analitika", opis: "Statistike bukiranja po odjelu i doktoru" },
+    { key: "statistika", label: "Statistika", opis: "Grafički prikaz statistike zakazanih pregleda" },
+    { key: "deaktivacije", label: "Deaktivacije", opis: "Zahtjevi za brisanje i anonimizaciju naloga" },
+    { key: "auditlog", label: "Audit Log", opis: "Historija svih akcija u sistemu" },
   ];
 
   return (
@@ -2042,6 +2388,9 @@ export default function AdminPanel() {
         {aktivniTab === "termini" && <TabTermini />}
         {aktivniTab === "odjeli" && <TabOdjeli />}
         {aktivniTab === "analitika" && <TabAnalitika />}
+        {aktivniTab === "statistika" && <StatistikaDashboard />}
+        {aktivniTab === "deaktivacije" && <TabDeaktivacije />}
+        {aktivniTab === "auditlog" && <TabAuditLog />}
       </div>
     </div>
   );
