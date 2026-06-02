@@ -517,3 +517,345 @@ recenzija.findMany({
 | Prisma mock | `mockDeep` (`vitest-mock-extended`) |
 | Baza podataka (prod) | PostgreSQL via Prisma ORM |
 | Jezik | TypeScript |
+
+---
+
+# Proof of Testing — Medicinski profil pacijenta
+
+**Modul:** `userController.js` / `reservationController.js`
+**Tip testova:** Unit testovi (Vitest) + Integracioni testovi (Supertest)
+
+---
+
+## 1. Pregled testnog pokrivanja
+
+| Funkcionalnost | Unit testovi | Integracioni testovi | Ukupno |
+|---|---:|---:|---:|
+| Dohvat profila pacijenta sa medicinskim podacima | 1 | 1 | 2 |
+| Ažuriranje medicinskog profila pacijenta | 1 | 1 | 2 |
+| Validacija medicinskih podataka | 1 | 1 | 2 |
+| Prikaz medicinskih podataka doktoru | 0 | 1 | 1 |
+| NFR-01 zaštita pristupa doktora | 1 | 1 | 2 |
+| Provjera doktorskih rezervacija nakon NFR-01 izmjene | 0 | 2 | 2 |
+| **Ukupno** | **4** | **6** | **10** |
+
+---
+
+## 2. Unit testovi (`userProfile.test.ts`)
+
+Testovi koriste mockovani Prisma klijent i Express rute profila korisnika. Cilj je provjeriti da backend ispravno vraća profil pacijenta, sprječava pristup tuđem profilu i ažurira medicinska polja na postojećem pacijent profilu.
+
+### 2.1 `GET /users/:id/profile`
+
+#### Test 1 — Dohvat profila sa medicinskim podacima
+
+**Opis:** Provjerava da li endpoint vraća osnovne podatke korisnika i ugniježđeni `pacijentProfile` objekat sa medicinskim atributima.
+
+**Mock podaci:**
+```json
+{
+  "alergije": "Penicilin",
+  "hronicneBolesti": null,
+  "krvnaGrupa": "A+",
+  "doniraKrv": true,
+  "imaoOperacije": false,
+  "operacijeOpis": null
+}
+```
+
+**Očekivani rezultat:**
+```json
+{
+  "status": 200,
+  "pacijentProfile": {
+    "krvnaGrupa": "A+"
+  }
+}
+```
+
+**Rezultat:** PASS
+
+---
+
+#### Test 2 — Zabrana pristupa tuđem profilu
+
+**Opis:** Provjerava da korisnik ne može dohvatiti profil drugog korisnika.
+
+**HTTP zahtjev:** `GET /users/2/profile`
+
+**Očekivani rezultat:**
+```json
+{ "status": 403 }
+```
+
+**Rezultat:** PASS
+
+---
+
+### 2.2 `PATCH /users/:id/profile`
+
+#### Test 3 — Ažuriranje osnovnih podataka profila
+
+**Opis:** Provjerava postojeći tok ažuriranja osnovnih podataka profila kako bi se potvrdilo da proširenje medicinskog profila nije narušilo ranije ponašanje.
+
+**Ulazni podaci:**
+```json
+{
+  "ime": "NovoIme",
+  "prezime": "NovoPrezime",
+  "brojTelefona": "98765",
+  "datumRodjenja": "1990-01-01"
+}
+```
+
+**Očekivani rezultat:**
+```json
+{
+  "poruka": "Profil uspješno ažuriran"
+}
+```
+
+**HTTP status:** `200`
+**Rezultat:** PASS
+
+---
+
+#### Test 4 — Ažuriranje medicinskog profila pacijenta
+
+**Opis:** Provjerava da se medicinska polja šalju u Prisma `pacijent.update` poziv i da se ažurirani profil vraća klijentu.
+
+**Ulazni podaci:**
+```json
+{
+  "alergije": "Penicilin",
+  "hronicneBolesti": "Astma",
+  "krvnaGrupa": "A+",
+  "doniraKrv": true,
+  "imaoOperacije": true,
+  "operacijeOpis": "Operacija koljena 2020."
+}
+```
+
+**Provjera Prisma poziva:**
+```javascript
+prisma.pacijent.update({
+  where: { idKorisnik: 1 },
+  data: {
+    alergije: "Penicilin",
+    hronicneBolesti: "Astma",
+    krvnaGrupa: "A+",
+    doniraKrv: true,
+    imaoOperacije: true,
+    operacijeOpis: "Operacija koljena 2020."
+  }
+})
+```
+
+**Rezultat:** PASS
+
+---
+
+#### Test 5 — Validacija neispravnog datuma
+
+**Opis:** Provjerava da validacija profila i dalje odbija neispravan datum rođenja nakon dodavanja medicinskih polja.
+
+**Ulazni podaci:**
+```json
+{ "datumRodjenja": "nevalidan-datum" }
+```
+
+**Očekivani rezultat:**
+```json
+{
+  "errors": [
+    { "msg": "Nevalidan format datuma" }
+  ]
+}
+```
+
+**HTTP status:** `400`
+**Rezultat:** PASS
+
+---
+
+## 3. Integracioni testovi (`patientMedicalProfile.integration.test.ts`)
+
+Integracioni testovi provjeravaju kompletan tok kroz HTTP sloj, Prisma ORM i testnu bazu. Testovi su definisani za izvršavanje uz Docker testno okruženje jer koriste PostgreSQL i Redis kontejnere.
+
+### 3.1 Medicinski profil pacijenta
+
+#### Test 6 — Spremanje i dohvat medicinskog profila
+
+**Opis:** Pacijent šalje `PATCH /api/users/:id/profile` sa medicinskim podacima. Nakon toga se provjerava stanje u bazi i odgovor `GET /api/users/:id/profile`.
+
+**Očekivani rezultat:**
+```json
+{
+  "alergije": "Penicilin i lateks",
+  "hronicneBolesti": "Astma",
+  "krvnaGrupa": "A+",
+  "doniraKrv": true,
+  "imaoOperacije": true,
+  "operacijeOpis": "Operacija slijepog crijeva 2020."
+}
+```
+
+**Status:** Definisano
+
+---
+
+#### Test 7 — Odbijanje nevalidne krvne grupe
+
+**Opis:** Provjerava da backend odbija nevalidnu krvnu grupu i da prethodna vrijednost u bazi ostaje nepromijenjena.
+
+**Ulazni podaci:**
+```json
+{ "krvnaGrupa": "X+" }
+```
+
+**Očekivani rezultat:**
+```json
+{
+  "status": 400,
+  "msg": "Nevalidna krvna grupa"
+}
+```
+
+**Status:** Definisano
+
+---
+
+#### Test 8 — Prikaz medicinskih podataka doktoru
+
+**Opis:** Provjerava da doktor kroz `GET /api/rezervacije/doktor/:doktorId` dobija rezervaciju čiji pacijent sadrži medicinske podatke potrebne pri pregledu.
+
+**Očekivani rezultat:**
+```json
+{
+  "pacijent": {
+    "alergije": "Penicilin i lateks",
+    "hronicneBolesti": "Astma",
+    "krvnaGrupa": "A+",
+    "doniraKrv": true,
+    "imaoOperacije": true
+  }
+}
+```
+
+**Status:** Definisano
+
+---
+
+#### Test 9 — NFR-01 zabrana pristupa tuđim pacijentima
+
+**Opis:** Test prvo kreira drugog doktora u testnoj bazi, a zatim provjerava da prijavljeni doktor ne može pristupiti rezervacijama tog drugog doktora.
+
+**HTTP zahtjev:** `GET /api/rezervacije/doktor/:drugiDoktorId`
+
+**Očekivani rezultat:**
+```json
+{
+  "status": 403,
+  "poruka": "Nemate dozvolu za pregled rezervacija ovog doktora."
+}
+```
+
+**Status:** Definisano
+
+---
+
+### 3.2 Dodatna provjera doktorskih rezervacija (`rezervacije.test.ts`)
+
+#### Test 10 — Dohvat rezervacija za doktora
+
+**Opis:** Provjerava da postojeći doktor može dohvatiti svoje rezervacije i da odgovor sadrži `pacijent` i `termin`.
+
+**HTTP status:** `200`
+**Status:** Definisano
+
+---
+
+#### Test 11 — Prazna lista za doktora bez rezervacija
+
+**Opis:** Provjerava da postojeći doktor bez aktivnih rezervacija dobija prazan niz, a ne grešku. Test je prilagođen nakon NFR-01 zaštite tako da koristi stvarnog doktora umjesto nepostojećeg ID-a.
+
+**Očekivani rezultat:**
+```json
+[]
+```
+
+**HTTP status:** `200`
+**Status:** Definisano
+
+---
+
+## 4. Ručna provjera funkcionalnosti
+
+Ručna provjera se izvodi kroz frontend aplikaciju nakon pokretanja servera i klijenta.
+
+| Korak | Akcija | Očekivani rezultat |
+|---|---|---|
+| 1 | Pacijent se prijavljuje u aplikaciju | Pacijent vidi svoj profil |
+| 2 | Pacijent otvara profil i unosi medicinske podatke | Forma prihvata alergije, hronične bolesti, krvnu grupu, doniranje krvi i operacije |
+| 3 | Pacijent sprema profil | Podaci se čuvaju u tabeli `Pacijent` |
+| 4 | Pacijent osvježava stranicu profila | Sačuvani medicinski podaci ostaju prikazani |
+| 5 | Doktor otvara detalje rezervacije pacijenta | Doktor vidi medicinske podatke pacijenta |
+| 6 | Doktor pokušava pristupiti rezervacijama drugog doktora | Sistem vraća zabranu pristupa prema NFR-01 |
+
+---
+
+## 5. Verifikacija baze podataka
+
+Migracijom `20260530090000_add_patient_medical_profile` postojeća tabela `Pacijent` proširena je novim medicinskim atributima.
+
+| Polje | Tip | Opis |
+|---|---|---|
+| `alergije` | `String?` | Poznate alergije pacijenta |
+| `hronicneBolesti` | `String?` | Hronične bolesti pacijenta |
+| `krvnaGrupa` | `String?` | Krvna grupa pacijenta |
+| `doniraKrv` | `Boolean` | Podatak da li pacijent donira krv |
+| `imaoOperacije` | `Boolean` | Podatak da li je pacijent imao operacije |
+| `operacijeOpis` | `String?` | Opis prethodnih operacija |
+
+---
+
+## 6. Sažetak rezultata
+
+| | Broj testova | Prošlo | Palo | Napomena |
+|---|---:|---:|---:|---|
+| Unit testovi | 5 | 5 | 0 | Izvršeno lokalno |
+| Integracioni testovi | 6 | - | - | Definisano; zahtijeva Docker testno okruženje |
+| TypeScript provjera | 1 | 1 | 0 | `npx.cmd tsc --noEmit` |
+| **Ukupno izvršeno lokalno** | **6** | **6** | **0** | **Uspješno** |
+
+**Komanda za unit testove:**
+```powershell
+npm.cmd test -- src/__tests__/userProfile.test.ts
+```
+
+**Rezultat izvršavanja:**
+```bash
+Test Files  1 passed (1)
+Tests       5 passed (5)
+Duration    1.03s
+```
+
+**Komanda za integracione testove:**
+```powershell
+npm.cmd run test:integration -- src/__integration_tests__/patientMedicalProfile.integration.test.ts src/__integration_tests__/rezervacije.test.ts
+```
+
+**Napomena:** Integracioni testovi zahtijevaju pokrenut Docker Desktop zbog testne PostgreSQL baze i Redis kontejnera.
+
+---
+
+## 7. Tehnički stack
+
+| Komponenta | Tehnologija |
+|---|---|
+| Test framework | Vitest |
+| HTTP testiranje | Supertest |
+| ORM | Prisma |
+| Baza podataka | PostgreSQL / Neon |
+| Test infrastruktura | Docker, Redis |
+| Frontend | React + TypeScript |
