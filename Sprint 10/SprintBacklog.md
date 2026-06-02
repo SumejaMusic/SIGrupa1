@@ -1,7 +1,7 @@
 
 # Sprint Backlog — Sprint 10
  
-**Fokus sprinta:** Implementacija admin i menadžment panela sa audit logom i statistikama, proširenje pacijentovog profila sa medicinskim podacima, uvođenje potvrde dolaska pacijenta u realnom vremenu te generisanje PDF uputnica od strane doktora za potrebe **Release 5**.
+**Fokus sprinta:** Implementacija admin i menadžment panela sa audit logom i statistikama, proširenje pacijentovog profila sa medicinskim podacima, uvođenje potvrde dolaska pacijenta u realnom vremenu te generisanje PDF uputnica od strane doktora za potrebe **Release 4**.
 
 **Sprint Goal:** Izgradnja kompletnog administrativno-menadžerskog sloja sistema kroz admin panel sa audit logom, statistički modul sa CSV exportom i menadžment panel za nadzor resursa, uz istovremeno unapređenje korisničkog iskustva kroz proširenje pacijentovog medicinskog profila, potvrdu dolaska jednim klikom i generisanje PDF uputnica specijalistima.
 
@@ -83,4 +83,4 @@ Sprint 10 zatvara ključni administrativno-upravljački sloj sistema neophodan z
 
 > **Napomena:** Ovaj Sprint Backlog je živi dokument i ažurira se kroz sprint. Svaki backlog item direktno je vezan za odgovarajući user story ili tehnički zadatak. Testiranje GDPR anonimizacije i audit log skripti nad bazom podataka mora se izvršiti u staging okruženju prije bilo kakve integracije u produkciju. Kolona "Odgovorna osoba" popunjava se na Sprint Planning sesiji.
 
-**Release:** Release 5 — Admin panel, statistike, menadžment | **Sprint:** Sprint 10 | **Ključna isporuka:** Audit log, CSV export statistike, PDF uputnica, prošireni medicinski profil i potvrda dolaska pacijenta.
+**Release:** Release 4 — Admin panel, statistike, menadžment | **Sprint:** Sprint 10 | **Ključna isporuka:** Audit log, CSV export statistike, PDF uputnica, prošireni medicinski profil i potvrda dolaska pacijenta.
