@@ -153,7 +153,7 @@ Zakazivanje pregleda odvija se kroz pet koraka:
 - Prikazuje se lista dostupnih odjela (Kardiologija, Neurologija, Pedijatrija, itd.)
 - Kliknite na željeni odjel
 
-![Odabir odjela](izborodjela.png)
+![Odabir odjela](images/izborodjela.png)
 
 #### Korak 2 — Odabir doktora (`/step2-doktori`)
 
@@ -161,7 +161,7 @@ Zakazivanje pregleda odvija se kroz pet koraka:
 - Za svakog doktora vidite: ime, specijalizaciju i prosječnu ocjenu pacijenata
 - Kliknite na željenog doktora
 
-![Izbor doktora](izbordoktora.png)
+![Izbor doktora](images/izbordoktora.png)
 
 #### Korak 3 — Tip pregleda (`/step3-tip-pregleda`)
 
@@ -173,7 +173,7 @@ Dostupni tipovi:
 | **Kontrolni** | Praćenje stanja |
 | **Hitni** | Prioritetni termin |
 
-![Tip pregleda](tippregleda.png)
+![Tip pregleda](images/tippregleda.png)
 
 #### Korak 4 — Odabir termina (`/step4-termini`)
 
@@ -182,7 +182,7 @@ Dostupni tipovi:
 - Kliknite na slobodan termin da ga odaberete
 - Sistem provjerava zauzetost u realnom vremenu
 
-![Odabir termina](podacitremina.png)
+![Odabir termina](images/podacitremina.png)
 
 #### Korak 5 — Potvrda (`/step5-potvrda`)
 
@@ -213,7 +213,7 @@ Uz svaku rezervaciju možete priložiti PDF dokument (npr. uputnicu, nalaz):
 3. Odaberite PDF fajl s vašeg računara
 4. Kliknite **"Učitaj"** — dokument je sada priložen terminu
 
-![Upload PDF](uploadodf.png)
+![Upload PDF](images/uploadodf.png)
 
 ---
 
