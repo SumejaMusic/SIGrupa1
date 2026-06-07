@@ -182,7 +182,7 @@ Dostupni tipovi:
 - Kliknite na slobodan termin da ga odaberete
 - Sistem provjerava zauzetost u realnom vremenu
 
-![Odabir termina](images/podacitremina.png)
+![Odabir termina](images/podacitermina.png)
 
 #### Korak 5 — Potvrda (`/step5-potvrda`)
 
@@ -213,7 +213,7 @@ Uz svaku rezervaciju možete priložiti PDF dokument (npr. uputnicu, nalaz):
 3. Odaberite PDF fajl s vašeg računara
 4. Kliknite **"Učitaj"** — dokument je sada priložen terminu
 
-![Upload PDF](images/uploadodf.png)
+![Upload PDF](images/uploadpdf.png)
 
 ---
 
