@@ -161,7 +161,7 @@ nego kao poznato ograničenje arhitekture.
 | PB-8 | Infrastruktura baze podataka | R0 | Done |
 | PB-9 | Menadžment panel i izvještaji | R2 |  Done |
 | PB-10 | Panel doktora | R3 | Partially Done |
-| PB-11 | Panel medicinskog osoblja | R3 | Partially Done |
+| PB-11 | Panel medicinskog osoblja | R3 | Done |
 | PB-12 | Korisničko iskustvo | R3 | Partially Done |
 
 ---
