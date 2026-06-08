@@ -127,6 +127,15 @@ Tokom razvoja dodata je peta korisnička uloga **VLASNIK**, koja nije bila u ori
 #### GDPR usklađenost
 GDPR modul (ZahtjevDeaktivacije) je implementiran — pacijent može podnijeti zahtjev, admin ga odobrava ili odbija, te se šalju email obavijesti. Međutim, **potpuna GDPR usklađenost (anonimizacija u roku 30 dana, NFR-30) nije formalno validirana**.
 
+#### VLASNIK i ADMINISTRATOR — ograničenje pristupa rezervacijama
+Korisnici s ulogom VLASNIK i ADMINISTRATOR nemaju mogućnost kreiranja 
+rezervacija putem aplikacije. Ove uloge nemaju pacijentski profil u bazi 
+podataka, što je posljedica dizajna sistema u kojem su administrativne uloge 
+striktno odvojene od pacijentskih. Budući da uloga VLASNIK nije bila dio 
+originalnog plana (PB-3 predviđa četiri uloge), niti je rezervacija bila 
+predviđena kao funkcionalnost za administratore, ovo nije tretirano kao bug 
+nego kao poznato ograničenje arhitekture.
+
 ---
 
 ## 5. Poznati bugovi
