@@ -116,7 +116,7 @@ U ovoj fazi implementirane su ključne funkcionalnosti poput pregleda dostupnih 
 U ovom sprintu fokus je bio na završetku kompletnog procesa rezervacije termina i stabilizaciji sistema za realnu upotrebu. Cilj je bio omogućiti pacijentu da u potpunosti prođe tok: pregled dostupnih doktora i termina, rezervacija, potvrda i otkazivanje, uz real-time ažuriranje i zaštitu od konflikata u podacima.
 Poseban naglasak stavljen je na pouzdanost sistema (ACID transakcije), sprječavanje duplih rezervacija kroz buffer zonu, te real-time sinhronizaciju rasporeda.
 
-Implementirane funkcionalnosti
+#### Implementirane funkcionalnosti
 
 U sprintu je uspješno isporučen kompletan rezervacijski sistem:
 
@@ -129,3 +129,18 @@ U sprintu je uspješno isporučen kompletan rezervacijski sistem:
 **WebSocket real-time ažuriranje rasporeda**
 **buffer zona od 2 minute za zaključavanje termina**
 **E2E testiranje kompletnog toka**
+
+### Sprint 7 — Autentifikacija i sigurnosni sloj (Release 4)
+
+Implementiran kompletan sigurnosni sistem aplikacije: JWT login, RBAC, 2FA, enkripciju podataka i audit log. Sistem omogućava sigurno prijavljivanje, kontrolu pristupa po ulogama i zaštitu osjetljivih podataka.
+
+#### Implementirano:
+**JWT login sistem sa RBAC redirekcijom**
+**2FA autentifikacija putem emaila**
+**reset lozinke (email link)**
+**automatska odjava zbog neaktivnosti**
+**blokiranje naloga nakon 5 neuspješnih pokušaja**
+**AES-256 enkripcija osjetljivih podataka + bcrypt hashiranje**
+**audit log svih akcija**
+**konfigurisan RBAC (4 uloge)**
+**kompletno testiran sigurnosni tok**
