@@ -1,4 +1,4 @@
-# SwiftMed — Release Notes
+# Release Notes
 ---
 
 ## 1. O ovoj verziji
