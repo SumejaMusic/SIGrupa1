@@ -120,12 +120,12 @@ Implementirane funkcionalnosti
 
 U sprintu je uspješno isporučen kompletan rezervacijski sistem:
 
--pregled doktora i slobodnih termina u realnom vremenu
--kreiranje rezervacije uz validaciju i zaštitu od dupliranja
--otkazivanje termina (pacijent i medicinsko osoblje)
--komentar uz rezervaciju
--email potvrde (zamjena za Nodemailer implementirana kroz Resend)
--upload i pregled PDF nalaza
--WebSocket real-time ažuriranje rasporeda
--buffer zona od 2 minute za zaključavanje termina
--E2E testiranje kompletnog toka
+**pregled doktora i slobodnih termina u realnom vremenu**
+**kreiranje rezervacije uz validaciju i zaštitu od dupliranja**
+**otkazivanje termina (pacijent i medicinsko osoblje)**
+**komentar uz rezervaciju**
+**email potvrde (zamjena za Nodemailer implementirana kroz Resend)**
+**upload i pregled PDF nalaza**
+**WebSocket real-time ažuriranje rasporeda**
+**buffer zona od 2 minute za zaključavanje termina**
+**E2E testiranje kompletnog toka**
