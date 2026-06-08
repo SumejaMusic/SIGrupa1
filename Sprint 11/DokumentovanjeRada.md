@@ -120,44 +120,44 @@ Poseban naglasak stavljen je na pouzdanost sistema (ACID transakcije), sprječav
 
 U sprintu je uspješno isporučen kompletan rezervacijski sistem:
 
-**pregled doktora i slobodnih termina u realnom vremenu**
-**kreiranje rezervacije uz validaciju i zaštitu od dupliranja**
-**otkazivanje termina (pacijent i medicinsko osoblje)**
-**komentar uz rezervaciju**
-**email potvrde (zamjena za Nodemailer implementirana kroz Resend)**
-**upload i pregled PDF nalaza**
-**WebSocket real-time ažuriranje rasporeda**
-**buffer zona od 2 minute za zaključavanje termina**
-**E2E testiranje kompletnog toka**
+*pregled doktora i slobodnih termina u realnom vremenu
+*kreiranje rezervacije uz validaciju i zaštitu od dupliranja
+*otkazivanje termina (pacijent i medicinsko osoblje)
+*komentar uz rezervaciju
+*email potvrde (zamjena za Nodemailer implementirana kroz Resend)
+*upload i pregled PDF nalaza
+*WebSocket real-time ažuriranje rasporeda
+*buffer zona od 2 minute za zaključavanje termina
+*E2E testiranje kompletnog toka
 
 ### Sprint 7 — Autentifikacija i sigurnosni sloj (Release 4)
 
 Implementiran kompletan sigurnosni sistem aplikacije: JWT login, RBAC, 2FA, enkripciju podataka i audit log. Sistem omogućava sigurno prijavljivanje, kontrolu pristupa po ulogama i zaštitu osjetljivih podataka.
 
 #### Implementirano:
-**JWT login sistem sa RBAC redirekcijom**
-**2FA autentifikacija putem emaila**
-**reset lozinke (email link)**
-**automatska odjava zbog neaktivnosti**
-**blokiranje naloga nakon 5 neuspješnih pokušaja**
-**AES-256 enkripcija osjetljivih podataka + bcrypt hashiranje**
-**audit log svih akcija**
-**konfigurisan RBAC (4 uloge)**
-**kompletno testiran sigurnosni tok**
+*JWT login sistem sa RBAC redirekcijom
+*2FA autentifikacija putem emaila
+**reset lozinke (email link)
+**automatska odjava zbog neaktivnosti
+**blokiranje naloga nakon 5 neuspješnih pokušaja
+**AES-256 enkripcija osjetljivih podataka + bcrypt hashiranje
+**audit log svih akcija
+**konfigurisan RBAC (4 uloge)
+**kompletno testiran sigurnosni tok
 
 ### Sprint 8 — Personalizovani paneli i role routing
 
 
 Završena implementacija korisničkih panela za sve uloge u sistemu te omogućena role-based routing nakon prijave, kako bi svaki korisnik bio automatski usmjeren na odgovarajući interfejs.
 #### Implementirano
-**implementirana prijava korisnika (US-03)**
-**implementiran osnovni role-based routing nakon login-a**
-**postavljeni osnovni paneli za sve korisničke uloge (UI struktura)**
-**prikaz početne organizacije dashboarda za doktora i medicinsko osoblje**
-**pripremljena osnova za dalju nadogradnju funkcionalnih panela**
+implementirana prijava korisnika (US-03)
+**implementiran osnovni role-based routing nakon login-a
+**postavljeni osnovni paneli za sve korisničke uloge (UI struktura)
+**prikaz početne organizacije dashboarda za doktora i medicinsko osoblje
+**pripremljena osnova za dalju nadogradnju funkcionalnih panela
 
 #### Demonstrirane funkcionalnosti
-**uspješna autentifikacija korisnika**
-**automatsko preusmjeravanje prema ulozi (role-based routing)**
-**prikaz svih korisničkih panela u osnovnoj verziji**
-**validna struktura frontenda spremna za dalju implementaciju logike**
+**uspješna autentifikacija korisnika
+**automatsko preusmjeravanje prema ulozi (role-based routing)
+**prikaz svih korisničkih panela u osnovnoj verziji
+**validna struktura frontenda spremna za dalju implementaciju logike
