@@ -426,3 +426,13 @@ U slučaju nastavka razvoja sistema, fokus bi bio na skalabilnosti, automatizaci
 - Integracija sa laboratorijskim sistemima
 - Napredna analitika sistema (zauzetost, čekanja, statistika)
 - Inteligentni chatbot za asistenciju pacijentima
+
+## 10. Zaključak
+
+Razvoj bolničkog informacionog sistema predstavljao je kompleksan proces koji je obuhvatio dizajn, implementaciju i iterativno unapređenje ključnih funkcionalnosti kao što su zakazivanje termina, upravljanje korisnicima, workflow medicinskih procesa i integracija notifikacionog sistema.
+Kroz razvoj je uspostavljena modularna arhitektura zasnovana na servisnom sloju, čime je postignuta jasna separacija odgovornosti između prezentacijskog, poslovnog i pristupnog sloja podataka. Posebna pažnja posvećena je sigurnosti sistema kroz implementaciju RBAC modela, centralizovane autorizacije i validacije podataka na više nivoa.
+Upotreba eksternih servisa (kao što su Resend za email notifikacije i Neon PostgreSQL za bazu podataka) omogućila je brži razvoj i stabilno cloud okruženje bez potrebe za kompleksnom infrastrukturom. Istovremeno, sistem je dizajniran tako da ostane fleksibilan za buduće migracije i skaliranje.
+Tokom razvoja identifikovani su i riješeni brojni tehnički izazovi, uključujući probleme sa konkurentnim zakazivanjem termina, neusklađenostima autorizacije, performansama sistema i ograničenjima eksternih servisa. Ova rješenja su doprinijela stabilnosti i pouzdanosti sistema.
+Iako je sistem funkcionalno kompletan u okviru definisanog opsega, jasno su definisana i buduća unapređenja koja uključuju mobilne aplikacije, naprednu analitiku, asinhronu obradu podataka i dodatne integracije sa eksternim medicinskim sistemima.
+
+U konačnici, razvijeni sistem predstavlja stabilnu osnovu za digitalizaciju bolničkih procesa, uz mogućnost daljeg širenja i prilagođavanja realnim kliničkim i administrativnim potrebama.
