@@ -157,7 +157,27 @@ implementirana prijava korisnika (US-03)
 - pripremljena osnova za dalju nadogradnju funkcionalnih panela
 
 #### Demonstrirane funkcionalnosti
+
 - uspješna autentifikacija korisnika
 - automatsko preusmjeravanje prema ulozi (role-based routing)
 - prikaz svih korisničkih panela u osnovnoj verziji
 - validna struktura frontenda spremna za dalju implementaciju logike
+- 
+### Sprint 9 — Proširenje sistema i automatizacija (Release 3)
+
+U Sprintu 9 fokus je bio na proširenju korisničkih panela iz Sprinta 8 i uvođenju naprednih funkcionalnosti za automatizaciju sistema. Implementirani su dodatni moduli za doktore i medicinsko osoblje, lista čekanja, real-time prikaz podataka, SMS/email notifikacije, GDPR funkcionalnosti te AI chatbot asistent. Sprint je imao cilj da unaprijedi kompletan sistem i pripremi stabilan Release 3.
+
+#### Završeno: 
+- Proširen doktorski dashboard (kalendar, filteri, pregled rasporeda)
+- Proširen panel medicinskog osoblja (real-time pretraga i trijaža hitnosti)
+- Implementirano označavanje hitnosti termina (urgency level)
+- Upload i evidencija laboratorijskih nalaza (sigurno skladištenje)
+- SMS podsjetnici za hronične pacijente (cron job integracija)
+- Lista čekanja sa automatskim dodjeljivanjem termina
+- Real-time prikaz zauzetosti kabineta (WebSocket)
+- GDPR modul (deaktivacija i anonimizacija profila)
+- Obavijesti o promjeni termina (email + in-app)
+- Sistem anonimnih ocjena i komentara
+- AI chatbot asistent za korisnike
+- Admin panel (frontend + backend upravljanje ulogama)
+- Unit i integraciono testiranje svih novih funkcionalnosti
