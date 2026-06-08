@@ -194,8 +194,53 @@ Završeno je sljedeće:
 - Proširen medicinski profil pacijenta
 - Implementirano generisanje PDF uputnica specijalistima
 
-## Šta je završeno, djelimično završeno ili nije završeno
+## 6. Šta je završeno, djelimično završeno ili nije završeno
 
+### Završeno
+- Izrađen Definition of Done dokument.
+- Izrađen Initial Release Plan.
+- Postavljen tehnički skeleton sistema i struktura repozitorija.
+- Implementiran pregled dostupnih doktora i slobodnih termina.
+- Implementirano zakazivanje termina kod odabranog doktora.
+- Implementirano otkazivanje termina od strane pacijenta i medicinskog osoblja.
+- Implementirane email potvrde i obavijesti o rezervacijama.
+- Uvedena zaštita od duplih rezervacija.
+- Implementirana buffer zona za zaključavanje termina tokom rezervacije.
+- Omogućeno dodavanje komentara prilikom zakazivanja termina.
+- Implementiran pregled rezervacija za doktore.
+- Omogućen upload i pregled PDF nalaza.
+- Implementirano real-time ažuriranje rasporeda putem WebSocket tehnologije.
+- Implementiran login sistem sa JWT autentifikacijom.
+- Implementiran reset lozinke putem emaila.
+- Implementirana dvofaktorska autentifikacija (2FA).
+- Implementirana automatska odjava nakon perioda neaktivnosti.
+- Implementirano blokiranje korisničkog računa nakon više neuspješnih prijava.
+- Implementirana AES-256 enkripcija osjetljivih podataka i bcrypt zaštita lozinki.
+- Implementiran audit log za praćenje aktivnosti korisnika.
+- Implementiran role-based access control (RBAC) sistem.
+- Razvijen dashboard za doktore sa pregledom rasporeda.
+- Razvijen panel medicinskog osoblja.
+- Implementiran sistem označavanja hitnosti termina.
+- Implementirani SMS podsjetnici za pacijente.
+- Implementirana lista čekanja za termine.
+- Implementiran grafički prikaz zauzetosti kabineta u realnom vremenu.
+- Implementirane email i in-app obavijesti o promjenama termina.
+- Omogućeno anonimno ocjenjivanje i komentarisanje rada doktora.
+- Implementiran korisnički profil sa pregledom podataka.
+- Razvijen AI chatbot asistent.
+- Implementiran admin panel za upravljanje korisnicima i ulogama.
+- Implementiran menadžment panel sa ključnim statistikama ustanove.
+- Implementiran statistički modul sa grafičkim prikazom podataka.
+- Omogućen izvoz statističkih podataka u CSV format.
+- Implementirana GDPR funkcionalnost za deaktivaciju i anonimizaciju korisničkih profila.
+- Implementirana potvrda dolaska pacijenta jednim klikom.
+- Proširen medicinski profil pacijenta.
+- Implementirano generisanje PDF uputnica specijalistima.
+- Provedeno unit, integraciono i end-to-end testiranje sistema.
+### Djelimično završeno
+Nema djelimično završenih stavki.
+### Nije završeno
+Sve stavke navedene u Product Backlog dokumentu su završene.
 ## Glavne tehničke odluke
 ## Najveći problemi tokom razvoja i način rješavanja
 ## Šta bi tim unaprijedio da se projekat nastavlja
