@@ -37,3 +37,48 @@ Integracioni testovi provjeravaju saradnju između API endpointova i baze podata
 
 ---
 
+## 7.4. Sigurnosno testiranje (Penetration Testing)
+Sigurnosno testiranje je sprovedeno kako bi se identifikovale potencijalne ranjivosti sistema i osigurala zaštita osjetljivih podataka pacijenata.
+
+*   **Alat:** OWASP ZAP 2.17.0
+*   **Tester:** Hana Mahmutović
+*   **Metoda:** Automatski scan + Manual Explore (Black Box)
+
+### 7.4.1. Sažetak nalaza
+Tokom testiranja nije pronađena nijedna kritična (High) ranjivost. Identifikovane su srednje i niske ranjivosti koje se primarno odnose na sigurnosne headere.
+
+| Ozbiljnost | Broj nalaza | Status |
+| :--- | :--- | :--- |
+| 🔴 Visoka (High) | 0 | ✅ Sigurno |
+| 🟠 Srednja (Medium) | 5 | Potrebno popraviti |
+| 🟡 Niska (Low) | 5 | Preporučeno popraviti |
+
+### 7.4.2. Ključne preporuke (Srednje ranjivosti)
+1. **CSP Header:** Potrebno je postaviti Content Security Policy kako bi se spriječili XSS napadi.
+2. **Anti-clickjacking:** Dodati `X-Frame-Options: DENY` u Express middleware.
+3. **Session ID:** Socket.IO sesije se prenose u URL-u; preporučuje se isključivo korištenje WebSocket transporta.
+
+---
+
+## 7.5. RBAC Testiranje (Pristupna kontrola)
+Ručno je testirana kontrola pristupa zasnovana na ulogama (Role-Based Access Control) pomoću Postman-a i JWT tokena.
+
+**Rezultati matrice pristupa:**
+
+| Endpoint | Pacijent | Doktor | Admin | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET /api/admin/korisnici` | 🚫 403 | 🚫 403 | ✅ 200 | ✅ PASS |
+| `GET /api/doktori` | ✅ 200 | ✅ 200 | ✅ 200 | ✅ PASS |
+| `GET /api/odjeli` | ✅ 200 | ✅ 200 | ✅ 200 | ✅ PASS |
+
+**Zaključak:** Sistem ispravno identifikuje korisničke uloge i onemogućava pacijentima pristup administrativnim podacima.
+
+---
+
+## 7.6. Poznati testni propusti i ograničenja
+Na osnovu sigurnosnog skeniranja, identifikovani su sljedeći propusti koje je potrebno adresirati u narednim iteracijama:
+- Nedostatak **HSTS** headera (Strict-Transport-Security).
+- Nedostatak **Cache-Control** headera na API endpointima koji vraćaju medicinske podatke (rizik od keširanja na javnim računarima).
+- Informacije o serveru su vidljive kroz `X-Powered-By: Express` header.
+
+---
