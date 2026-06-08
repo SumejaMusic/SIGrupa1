@@ -120,23 +120,23 @@ Poseban naglasak stavljen je na pouzdanost sistema (ACID transakcije), sprječav
 
 U sprintu je uspješno isporučen kompletan rezervacijski sistem:
 
-*pregled doktora i slobodnih termina u realnom vremenu
-*kreiranje rezervacije uz validaciju i zaštitu od dupliranja
-*otkazivanje termina (pacijent i medicinsko osoblje)
-*komentar uz rezervaciju
-*email potvrde (zamjena za Nodemailer implementirana kroz Resend)
-*upload i pregled PDF nalaza
-*WebSocket real-time ažuriranje rasporeda
-*buffer zona od 2 minute za zaključavanje termina
-*E2E testiranje kompletnog toka
+-pregled doktora i slobodnih termina u realnom vremenu
+-kreiranje rezervacije uz validaciju i zaštitu od dupliranja
+-otkazivanje termina (pacijent i medicinsko osoblje)
+-komentar uz rezervaciju
+-email potvrde (zamjena za Nodemailer implementirana kroz Resend)
+-upload i pregled PDF nalaza
+-WebSocket real-time ažuriranje rasporeda
+-buffer zona od 2 minute za zaključavanje termina
+-E2E testiranje kompletnog toka
 
 ### Sprint 7 — Autentifikacija i sigurnosni sloj (Release 4)
 
 Implementiran kompletan sigurnosni sistem aplikacije: JWT login, RBAC, 2FA, enkripciju podataka i audit log. Sistem omogućava sigurno prijavljivanje, kontrolu pristupa po ulogama i zaštitu osjetljivih podataka.
 
 #### Implementirano:
-*JWT login sistem sa RBAC redirekcijom
-*2FA autentifikacija putem emaila
+-JWT login sistem sa RBAC redirekcijom
+2FA autentifikacija putem emaila
 **reset lozinke (email link)
 **automatska odjava zbog neaktivnosti
 **blokiranje naloga nakon 5 neuspješnih pokušaja
