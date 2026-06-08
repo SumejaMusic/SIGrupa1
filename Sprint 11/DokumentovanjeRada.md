@@ -181,3 +181,15 @@ U Sprintu 9 fokus je bio na proširenju korisničkih panela iz Sprinta 8 i uvođ
 - AI chatbot asistent za korisnike
 - Admin panel (frontend + backend upravljanje ulogama)
 - Unit i integraciono testiranje svih novih funkcionalnosti
+
+### Sprint 10
+Sprint 10 bio je jedan od najobimnijih u projektu — svi planirani user storiji završeni su unutar sprinta, uključujući i tri nova user storija (US-45, US-46, US-NEW) koji nisu bili u originalnom backlogu.
+Završeno je sljedeće:
+- Implementiran admin panel za upravljanje korisnicima i ulogama (RBAC)
+- Urađen audit log za praćenje svih sistemskih akcija
+- Implementiran menadžment panel sa ključnim metrikama sistema
+- Dodan statistički modul sa grafičkim prikazom i CSV exportom
+- Implementirana GDPR funkcionalnost (deaktivacija i anonimizacija profila)
+- Dodana potvrda dolaska pacijenta jednim klikom (real-time)
+- Proširen medicinski profil pacijenta
+- Implementirano generisanje PDF uputnica specijalistima
