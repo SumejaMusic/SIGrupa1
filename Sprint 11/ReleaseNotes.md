@@ -140,10 +140,17 @@ nego kao poznato ograničenje arhitekture.
 
 ## 5. Poznati bugovi
 
-- **Email na fiksnu adresu** — sve notifikacije idu na jednu adresu umjesto na stvarnog korisnika (opisano u ograničenjima)
-- **Render cold start** — prvi zahtjev nakon perioda neaktivnosti može biti spor (30–60s)
-- **Startup migracije** — `index.ts` pokušava ručno kreirati `RasporedOsoblja` tablicu pri svakom pokretanju; u slučaju promjene Prisma scheme može uzrokovati konflikte
-- **Socket.io na Render free tier** — WebSocket konekcije mogu biti nestabilne zbog timeout ograničenja besplatnog plana
+- **Email na fiksnu adresu** - sve notifikacije idu na jednu adresu umjesto na stvarnog korisnika (opisano u ograničenjima)
+- **Render cold start** - prvi zahtjev nakon perioda neaktivnosti može biti spor (30–60s)
+- **Startup migracije** - `index.ts` pokušava ručno kreirati `RasporedOsoblja` tablicu pri svakom pokretanju; u slučaju promjene Prisma scheme može uzrokovati konflikte
+- **Socket.io na Render free tier** - WebSocket konekcije mogu biti nestabilne zbog timeout ograničenja besplatnog plana
+- **Nekonzistentna enkripcija medicinskih podataka** - 
+Zbog korištenja različitih enkripcijskih ključeva (`AES_SECRET_KEY`) u 
+lokalnim razvojnim okruženjima članova tima, medicinska historija pacijenta 
+(JMBG, broj zdravstvene knjižice) može biti neispravno dekriptovana u 
+produkcijskom okruženju. Podaci enkriptovani s jednim ključem nisu čitljivi 
+s drugim ključem, što rezultira greškom pri prikazu medicinskih podataka 
+za određene korisnike.
 
 ---
 
