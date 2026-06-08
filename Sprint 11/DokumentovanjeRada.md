@@ -92,7 +92,7 @@ Menadžment u sistemu ima pristup agregiranim podacima i statističkim prikazima
 
 Podaci su prikazani kroz grafičke i tabelarne prikaze, čime se omogućava lakše donošenje odluka na osnovu stvarnih podataka iz sistema.
 
-## Pregled rada kroz sprintove
+## 5. Pregled rada kroz sprintove
 
 Razvoj SwiftMed sistema bio je organizovan kroz iterativni Scrum proces u kojem je svaki sprint imao jasno definisane ciljeve, fokus i isporuke, od inicijalne analize i planiranja do definisanja arhitekture i tehničkih temelja sistema.
 ### Sprint 1 — Analiza i planiranje
