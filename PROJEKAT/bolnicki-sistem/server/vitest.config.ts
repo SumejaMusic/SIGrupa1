@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     exclude: [
       '**/node_modules/**',
-      '**/__integration_tests__/**'
+      '**/__integration_tests__/**',
+      '**/src/load/**',
     ]
   }
 });
