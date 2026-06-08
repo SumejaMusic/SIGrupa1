@@ -73,8 +73,8 @@ function getResend(): any {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-//const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'musicsumeja98@gmail.com';
-const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'aminaalispahic67@gmail.com';
+const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'musicsumeja98@gmail.com';
+
 const FROM_EMAIL = 'onboarding@resend.dev';
 const REVIEW_TOKEN_PURPOSE = 'appointment-review';
 
