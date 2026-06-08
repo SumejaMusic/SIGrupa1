@@ -107,3 +107,8 @@ Pored toga, izrađen je Initial Release Plan koji organizuje razvoj funkcionalno
 
 Na tehničkom nivou uspostavljen je inicijalni skeleton sistema zajedno sa osnovnom strukturom repozitorija i dogovorenim pravilima rada unutar tima, čime je postavljena stabilna arhitektonska i organizaciona osnova za dalji razvoj.
 Sprint je završen finalnom provjerom spremnosti projekta za implementaciju, pri čemu je potvrđeno da su svi ključni poslovni, tehnički i organizacioni elementi usklađeni i spremni za ulazak u narednu fazu razvoja.
+## Sprint 5 — Implementacija osnovnog rezervacijskog sistema
+
+Sprint 5 je bio usmjeren na implementaciju osnovnog end-to-end toka rezervacije termina i uspostavljanje prve funkcionalne verzije sistema. Cilj je bio omogućiti kompletan proces rezervacije od pregleda doktora i termina do kreiranja i otkazivanja rezervacija.
+
+U ovoj fazi implementirane su ključne funkcionalnosti poput pregleda dostupnih doktora i termina, kreiranja rezervacije kroz definisani flow te otkazivanja termina od strane pacijenta. Uspostavljena je API komunikacija između frontend i backend dijela sistema, kao i osnovne CRUD operacije nad terminima i rezervacijama.
