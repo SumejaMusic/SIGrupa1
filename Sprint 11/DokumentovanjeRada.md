@@ -101,14 +101,31 @@ U Sprintu 1 fokus je bio na analizi problema i definisanju osnovnih projektnih a
 Usmjeren na detaljnu razradu zahtjeva i njihovu prioritizaciju, kao i na definisanje sigurnosnih i nefunkcionalnih aspekata sistema. Sve backlog stavke su razrađene u user stories sa jasno definisanim acceptance kriterijima, čime je omogućena kasnija provjerljivost implementacije. Paralelno su definisani ključni nefunkcionalni zahtjevi poput sigurnosti, performansi i skalabilnosti. U ovoj fazi izrađen je Risk Register, izvršeno modeliranje domene i use case scenarija, te definisan osnovni arhitektonski pravac sistema zajedno sa Test Strategy dokumentom.
 ### Sprint 3 — Arhitektura sistema i tehnički setup
 Sprint 3 predstavljao je tehničku i arhitektonsku konsolidaciju sistema. U ovoj fazi definisana je osnovna arhitektura aplikacije i uspostavljen tehnički skeleton projekta, zajedno sa strukturom repozitorija i standardima razvoja. Paralelno je izrađen Definition of Done dokument koji definiše kriterije kvaliteta za sve nivoe razvoja, kao i Initial Release Plan koji određuje prioritete i faze isporuke funkcionalnosti. Sprint je završen validacijom osnovnih projektnih odluka, čime je potvrđena spremnost sistema za prelazak u fazu implementacije.
-## Sprint 4 — Tehnička stabilizacija i priprema za implementaciju
+### Sprint 4 — Tehnička stabilizacija i priprema za implementaciju
 Sprint 4 je bio usmjeren na završno usklađivanje projektnih standarda i postavljanje stabilne osnove za početak implementacije sistema. U ovoj fazi definisan je Definition of Done dokument koji uvodi jasne kriterije završetka zadataka i user story-ja, čime se osigurava konzistentan kvalitet isporuke kroz sve naredne sprintove.
 Pored toga, izrađen je Initial Release Plan koji organizuje razvoj funkcionalnosti po verzijama i definiše realne prioritete i vremenski okvir isporuke u skladu s kapacitetom tima i stanjem Product Backlog-a.
 
 Na tehničkom nivou uspostavljen je inicijalni skeleton sistema zajedno sa osnovnom strukturom repozitorija i dogovorenim pravilima rada unutar tima, čime je postavljena stabilna arhitektonska i organizaciona osnova za dalji razvoj.
 Sprint je završen finalnom provjerom spremnosti projekta za implementaciju, pri čemu je potvrđeno da su svi ključni poslovni, tehnički i organizacioni elementi usklađeni i spremni za ulazak u narednu fazu razvoja.
-## Sprint 5 — Implementacija osnovnog rezervacijskog sistema
+### Sprint 5 — Implementacija osnovnog rezervacijskog sistema(Release 1)
 
 Sprint 5 je bio usmjeren na implementaciju osnovnog end-to-end toka rezervacije termina i uspostavljanje prve funkcionalne verzije sistema. Cilj je bio omogućiti kompletan proces rezervacije od pregleda doktora i termina do kreiranja i otkazivanja rezervacija.
 
 U ovoj fazi implementirane su ključne funkcionalnosti poput pregleda dostupnih doktora i termina, kreiranja rezervacije kroz definisani flow te otkazivanja termina od strane pacijenta. Uspostavljena je API komunikacija između frontend i backend dijela sistema, kao i osnovne CRUD operacije nad terminima i rezervacijama.
+### Sprint 6 - Završetak Release 1 (Rezervacijski sistem)
+U ovom sprintu fokus je bio na završetku kompletnog procesa rezervacije termina i stabilizaciji sistema za realnu upotrebu. Cilj je bio omogućiti pacijentu da u potpunosti prođe tok: pregled dostupnih doktora i termina, rezervacija, potvrda i otkazivanje, uz real-time ažuriranje i zaštitu od konflikata u podacima.
+Poseban naglasak stavljen je na pouzdanost sistema (ACID transakcije), sprječavanje duplih rezervacija kroz buffer zonu, te real-time sinhronizaciju rasporeda.
+
+Implementirane funkcionalnosti
+
+U sprintu je uspješno isporučen kompletan rezervacijski sistem:
+
+-pregled doktora i slobodnih termina u realnom vremenu
+-kreiranje rezervacije uz validaciju i zaštitu od dupliranja
+-otkazivanje termina (pacijent i medicinsko osoblje)
+-komentar uz rezervaciju
+-email potvrde (zamjena za Nodemailer implementirana kroz Resend)
+-upload i pregled PDF nalaza
+-WebSocket real-time ažuriranje rasporeda
+-buffer zona od 2 minute za zaključavanje termina
+-E2E testiranje kompletnog toka
