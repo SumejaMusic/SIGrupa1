@@ -1,13 +1,11 @@
-## Product Backlog 
+## Finalni Product Backlog 
 ---
-**Izmjene nakon Sprinta 2**: 
-Nakon Sprinta 2 izvršena je reorganizacija Product Backloga: stavke su podignute na višu razinu apstrakcije, grupisane po tematskim cjelinama
 
 | ID | Ime | Opis | Tip stavke | Prioritet | Procjena složenosti | Status | Razlog / napomena finalnog statusa | Veza sa sprintom | User storiji | Jira ID |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| :----- | :----- | :----- | :----- | :----- | :----- | :----- | :----- | :----- | :----- | :----- |
 | **PB-1** | Upravljanje terminima | Funkcionalnosti koje se aktiviraju nakon zakazivanja termina: otkazivanje od strane pacijenta ili medicinskog osoblja, automatsko oslobađanje nepotvrđenih termina, te vizualno označavanje hitnih slučajeva unutar rasporeda. | Feature | Medium | Medium | Done | Otkazivanje, oslobađanje termina i obavijesti o promjeni termina su implementirani kroz sprintove. | Sprint 6, Sprint 9, Sprint 10 | US-09, US-10, US-12, US-41 | |
 | **PB-2** | Rezervacija termina | Implementacija centralne funkcionalnosti sistema koja pacijentu omogućava pregled slobodnih resursa, doktora i termina, te zakazivanje pregleda uz automatsku provjeru dostupnosti i sprječavanje kolizije termina. | Feature | High | High | Done | End-to-end tok rezervacije je završen i potvrđen kroz Sprint Review. | Sprint 6, Sprint 8, Sprint 9 | US-05, US-06, US-07, US-13, US-17, US-22, US-38 | |
-| **PB-3** | Admin panel | Razvoj kompletnog administratorskog interfejsa koje bolničkom administratoru omogućava registraciju novih pacijenata u sistem, upravljanje radnim vremenom i rasporedima doktora, te ukupnu administraciju korisničkih naloga. | Feature | High | High | Partially Done | Urađeno je upravljanje ulogama i dio admin funkcija. Nije završen kompletan admin panel sa svim CRUD funkcijama, statistikama i punim upravljanjem rasporedima jer je opseg prebačen na kasnije sprintove. | Sprint 6, Sprint 8, Sprint 9, Sprint 10 | US-02, US-04, US-14, US-29, US-33 | |
+| **PB-3** | Admin panel | Razvoj kompletnog administratorskog interfejsa koje bolničkom administratoru omogućava registraciju novih pacijenata u sistem, upravljanje radnim vremenom i rasporedima doktora, te ukupnu administraciju korisničkih naloga. | Feature | High | High | Done | Admin panel je završen: implementirano je upravljanje korisnicima, ulogama, registracijom pacijenata, radnim vremenom doktora i povezanim backend funkcionalnostima. | Sprint 6, Sprint 8, Sprint 9, Sprint 10 | US-02, US-04, US-14, US-29, US-33 | |
 | **PB-4** | Medicinska historija pacijenta | Prikaz kompletne medicinske dokumentacije pacijenta unutar sistema: historija prošlih pregleda, uvid u napomene vezane za zakazivanje, te mogućnost dodavanja i pregleda laboratorijskih nalaza u PDF formatu. | Feature | Medium | Medium | Partially Done | Urađeni su PDF nalazi, osnovni profil i dio historije. Nije završen prošireni medicinski profil jer je dodat kao kasnije proširenje i ostavljen za budući rad. | Sprint 6, Sprint 9, Sprint 10 | US-01, US-32, US-43, US-46 | |
 | **PB-5** | Autentikacija i upravljanje sesijom | Implementacija sistema za prijavu korisnika u sistem, uključujući mehanizam povratka lozinke putem emaila te automatsku odjavu korisnika nakon perioda neaktivnosti radi zaštite podataka. | Feature | High | High | Done | Login, reset lozinke i automatska odjava su završeni u sigurnosnom sloju. | Sprint 7, Sprint 8 | US-03, US-16, US-19 | |
 | **PB-6** | Sigurnost i zaštita sistema | Implementacija sveobuhvatnih sigurnosnih mehanizama: dvofaktorska autentikacija, blokiranje naloga nakon višestrukih neuspješnih pokušaja prijave, enkripcija osjetljivih zdravstvenih podataka te bilježenje svih akcija korisnika kroz audit log. | Technical Task | High | High | Partially Done | Urađeni su 2FA, blokiranje naloga, enkripcija i audit log. Nije završena deaktivacija i anonimizacija profila jer je GDPR proširenje ostavljeno za kasniju fazu. | Sprint 7, Sprint 9, Sprint 10 | US-20, US-25, US-26, US-27, US-40 | |
@@ -21,6 +19,5 @@ Nakon Sprinta 2 izvršena je reorganizacija Product Backloga: stavke su podignut
 
 ## Link 
 * [**Jira Board Projekta**](https://etf-team1-si.atlassian.net/jira/software/projects/KAN/list?jql=project+%3D+KAN+ORDER+BY+created+DESC&atlOrigin=eyJpIjoiMGMwNmUyOTYxMTk3NDFlNThmOTc2MDI3MzViZjM5ZTkiLCJwIjoiaiJ9)
-
 
 
