@@ -241,6 +241,188 @@ Završeno je sljedeće:
 Nema djelimično završenih stavki.
 ### Nije završeno
 Sve stavke navedene u Product Backlog dokumentu su završene.
-## Glavne tehničke odluke
-## Najveći problemi tokom razvoja i način rješavanja
-## Šta bi tim unaprijedio da se projekat nastavlja
+
+## 7. Glavne tehničke odluke
+Tokom razvoja bolničkog informacionog sistema donesene su ključne arhitektonske i implementacijske odluke koje su formalizovane kroz Decision Log (DEC-001 do DEC-010). Ove odluke direktno utiču na sigurnost, skalabilnost i održavanje sistema.
+
+### DEC-001 — Platforma za deployment
+Za deployment sistema odabrana je Render platforma.
+Odluka je donesena zbog jednostavne integracije sa GitHub repozitorijem, podrške za backend i frontend servise, te minimalnih zahtjeva za konfiguraciju infrastrukture.
+- Backend se deploya kao Web Service
+- Frontend kao Static Site
+- Potrebna CORS konfiguracija između servisa
+- Moguć “cold start” na free tier-u
+
+---
+
+### DEC-002 — Baza podataka (Neon PostgreSQL)
+Kao primarna baza podataka odabran je Neon PostgreSQL.
+
+Ovo rješenje omogućava serverless pristup bazi, jednostavnu integraciju sa ORM slojem i fleksibilno skaliranje.
+
+- DATABASE_URL konfigurisan kroz environment varijable
+- SSL konekcija obavezna (`sslmode=require`)
+- Baza odvojena od aplikacionog sloja
+
+---
+
+### DEC-003 — Privremeni hardkodirani korisnik
+Zbog nedostatka implementirane autentifikacije u ranoj fazi, uveden je privremeni testni korisnik.
+
+Ova odluka je omogućila paralelni razvoj funkcionalnosti bez blokade sistema.
+
+- Korisnik se dohvaća iz baze (nije hardkodiran u kodu)
+- Odluka je privremena i zamjenjuje se JWT autentifikacijom
+
+---
+
+### DEC-004 — Email notifikacije putem Resend servisa
+Za slanje email notifikacija odabran je Resend servis umjesto klasičnog SMTP pristupa.
+
+Razlog je jednostavnija integracija i stabilniji rad u produkcijskom okruženju.
+
+- Koristi se REST API umjesto SMTP konfiguracije
+- API ključ se čuva u environment varijablama
+- Zavisnost od eksternog servisa (moguća latencija)
+
+---
+
+### DEC-005 — Promjena redoslijeda sprintova (autentifikacija)
+Autentifikacija i RBAC sistem pomjereni su ranije u razvoju.
+
+Cilj odluke bio je omogućiti validaciju sigurnosnog modela prije razvoja kompleksnih modula.
+
+- Smanjen tehnički dug
+- Omogućeno testiranje RBAC sistema
+- Bolja integracija sa svim modulima
+
+---
+
+### DEC-006 — Odgoda automatskih podsjetnika
+Funkcionalnost automatskih notifikacija prebačena je u naredni sprint.
+
+Razlog je bolja usklađenost sa notifikacionom arhitekturom i autentifikacijom.
+
+---
+
+### DEC-007 — Rani razvoj admin role management-a
+Funkcionalnost dodjele uloga premještena je ranije u sprint planu.
+
+Ovo je omogućilo validaciju RBAC sistema u realnim scenarijima.
+
+---
+
+### DEC-008 — Proširenje Sprinta 9
+Sprint 9 je proširen dodatnim funkcionalnostima vezanim za analitiku, notifikacije i korisničko iskustvo.
+
+- Lista čekanja za termine
+- Anonimizacija korisnika
+- Grafička analiza zauzetosti
+- Chatbot integracija
+- Napredne notifikacije
+
+---
+
+### DEC-010 — Proširenje Sprinta 10 (medicinske funkcionalnosti)
+Sprint 10 proširen je funkcionalnostima koje direktno utiču na klinički rad sistema.
+
+- PDF uputnice specijalistima
+- Real-time potvrda dolaska pacijenta
+- Prošireni medicinski profil pacijenta
+
+---
+
+## 8. Najveći problemi tokom razvoja i rješenja
+
+Tokom razvoja sistema identifikovani su tehnički i organizacioni problemi koji su rješavani iterativno kroz refaktoring, izmjene arhitekture i optimizaciju workflow-a.
+
+---
+
+### Problem 1 — Neusklađenost backlog-a i zahtjeva
+U ranoj fazi razvoja backlog nije bio u potpunosti usklađen sa stvarnim poslovnim zahtjevima.
+
+Rješenje:
+- Revidiran backlog
+- Uvedeni jasni prioriteti (P1/P2/P3)
+- Definisani detaljni acceptance kriteriji
+
+---
+
+### Problem 2 — Dupliranje termina
+Pojavljivala se mogućnost duplog zakazivanja termina za istog doktora.
+
+Rješenje:
+- Server-side validacija dostupnosti
+- Transakcioni pristup pri kreiranju termina
+- Eliminacija race condition scenarija
+
+---
+
+### Problem 3 — Neusklađenost autorizacije
+Frontend je skrivao funkcionalnosti, ali backend nije uvijek provodio iste provjere.
+
+Rješenje:
+- Backend postavljen kao jedini izvor istine
+- Centralizovani authorization middleware
+
+---
+
+### Problem 4 — Nevalidne statusne tranzicije
+Dozvoljene su bile neispravne promjene statusa u workflow-u.
+
+Rješenje:
+- Uveden centralni workflow servis
+- Definisane validne tranzicije statusa
+
+---
+
+### Problem 5 — Performanse pri većem opterećenju
+Došlo je do usporavanja sistema pri većem broju pacijenata i termina.
+
+Rješenje:
+- Implementirana paginacija
+- Optimizacija SQL upita
+- Indeksiranje ključnih kolona
+
+---
+
+### Problem 6 — Email notifikacije u production okruženju
+SMTP konfiguracija nije bila stabilna na hosting platformi.
+
+Rješenje:
+- Migracija na Resend servis
+- Eliminacija SMTP zavisnosti
+
+---
+
+## 9. Buduća unapređenja sistema
+
+U slučaju nastavka razvoja sistema, fokus bi bio na skalabilnosti, automatizaciji i proširenju medicinskih funkcionalnosti.
+
+---
+
+## Kratkoročna unapređenja
+
+- E2E testiranje kompletnog workflow-a (Playwright)
+- Uvođenje code coverage praga u CI pipeline-u
+- Napredni filteri za termine i pacijente
+- Real-time notifikacije putem WebSocket sistema
+
+---
+
+## Arhitekturna unapređenja
+
+- Migracija medicinskih dokumenata na S3/MinIO
+- Uvođenje Redis cache sloja za optimizaciju performansi
+- Asinhrona obrada notifikacija putem queue sistema
+- Postepeni prelazak ka microservice arhitekturi
+
+---
+
+## Funkcionalna proširenja
+
+- Mobilna aplikacija za pacijente i medicinsko osoblje
+- Digitalni medicinski karton sa kompletnom historijom pregleda
+- Integracija sa laboratorijskim sistemima
+- Napredna analitika sistema (zauzetost, čekanja, statistika)
+- Inteligentni chatbot za asistenciju pacijentima
