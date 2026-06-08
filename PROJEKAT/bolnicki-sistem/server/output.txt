@@ -1,0 +1,6 @@
+[36mINFO[0m[0001] ✅ Admin login uspješan, token dobijen        
+[36mINFO[0m[0010] ✅ Auth testovi završeni                      
+[36mINFO[0m[0002] ✅ Admin login uspješan, token dobijen        
+[36mINFO[0m[0009] ✅ Auth testovi završeni                      
+[36mINFO[0m[0001] ✅ Admin login uspješan, token dobijen        
+[36mINFO[0m[0011] ✅ Auth testovi završeni                      
