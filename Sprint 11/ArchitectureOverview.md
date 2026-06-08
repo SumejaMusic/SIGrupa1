@@ -1,7 +1,4 @@
-# SwiftMed — Arhitekturalni i tehnički pregled sistema
-
-> **Bolnički sistem za upravljanje rezervacijama**  
-> SI Grupa 1 · 2025/2026
+# Arhitekturalni i tehnički pregled sistema
 
 ---
 
@@ -337,5 +334,3 @@ Socket.io server inicijaliziran je u `app.ts` i exportovan kao `io` objekt:
 | `REVIEW_TOKEN_SECRET` | Tajni ključ za JWT tokene anonimnih recenzija |
 
 ---
-
-*SwiftMed — Arhitekturalni pregled sistema*
