@@ -91,3 +91,13 @@ Svi upiti su optimizovani kroz paginaciju rezultata, čime se osigurava visoke p
 Menadžment u sistemu ima pristup agregiranim podacima i statističkim prikazima koji omogućavaju analizu rada zdravstvene ustanove. Ovi podaci uključuju broj zakazanih i završenih pregleda, zauzetost doktora, stopu otkazivanja i druge ključne metrike.
 
 Podaci su prikazani kroz grafičke i tabelarne prikaze, čime se omogućava lakše donošenje odluka na osnovu stvarnih podataka iz sistema.
+
+## Pregled rada kroz sprintove
+
+Razvoj SwiftMed sistema bio je organizovan kroz iterativni Scrum proces u kojem je svaki sprint imao jasno definisane ciljeve, fokus i isporuke, od inicijalne analize i planiranja do definisanja arhitekture i tehničkih temelja sistema.
+### Sprint 1 — Analiza i planiranje
+U Sprintu 1 fokus je bio na analizi problema i definisanju osnovnih projektnih artefakata. Tim je uspostavio zajedničko razumijevanje sistema kroz Product Vision, Stakeholder Map i Team Charter dokumente, čime su definisani ciljevi projekta, ključni akteri i pravila rada unutar tima. Također je kreiran inicijalni Product Backlog koji je sadržavao osnovne funkcionalne zahtjeve sistema, pri čemu je identifikovana određena neusklađenost između vizije i backloga, što je definisano kao osnova za dalju razradu.
+### Sprint 2 — Razrada zahtjeva i prioriteta
+Sprint 2 bio je usmjeren na detaljnu razradu zahtjeva i njihovu prioritizaciju, kao i na definisanje sigurnosnih i nefunkcionalnih aspekata sistema. Sve backlog stavke su razrađene u user stories sa jasno definisanim acceptance kriterijima, čime je omogućena kasnija provjerljivost implementacije. Paralelno su definisani ključni nefunkcionalni zahtjevi poput sigurnosti, performansi i skalabilnosti. U ovoj fazi izrađen je Risk Register, izvršeno modeliranje domene i use case scenarija, te definisan osnovni arhitektonski pravac sistema zajedno sa Test Strategy dokumentom.
+### Sprint 3 — Arhitektura sistema i tehnički setup
+Sprint 3 predstavljao je tehničku i arhitektonsku konsolidaciju sistema. U ovoj fazi definisana je osnovna arhitektura aplikacije i uspostavljen tehnički skeleton projekta, zajedno sa strukturom repozitorija i standardima razvoja. Paralelno je izrađen Definition of Done dokument koji definiše kriterije kvaliteta za sve nivoe razvoja, kao i Initial Release Plan koji određuje prioritete i faze isporuke funkcionalnosti. Sprint je završen validacijom osnovnih projektnih odluka, čime je potvrđena spremnost sistema za prelazak u fazu implementacije.
