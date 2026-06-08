@@ -166,6 +166,8 @@ Initial Release Plan predviđao je sigumost (R4) kao posljednji funkcionalni rel
 - **Sprint 9** — Proširenja panela, chatbot, waitlist, SMS, recenzije
 - **Sprint 10** — Admin panel, menadžment panel, statistike, CSV export, GDPR, PDF uputnica
 
-Ova reorganizacija je bila svjesna odluka tima (DL-10-01, DL-10-02) i nije negativno utjecala na isporuku ključnih funkcionalnosti.
+Funkcionalnosti koje su naknadno dodane, a nisu bile uključene u initial release plan su dodane su u sklopu Sprinta 9: chatbot, waitlist, te recenzije.
+
+Ova reorganizacija je bila svjesna odluka tima i nije negativno utjecala na isporuku ključnih funkcionalnosti.
 
 ---
