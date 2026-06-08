@@ -193,3 +193,9 @@ Završeno je sljedeće:
 - Dodana potvrda dolaska pacijenta jednim klikom (real-time)
 - Proširen medicinski profil pacijenta
 - Implementirano generisanje PDF uputnica specijalistima
+
+## Šta je završeno, djelimično završeno ili nije završeno
+
+## Glavne tehničke odluke
+## Najveći problemi tokom razvoja i način rješavanja
+## Šta bi tim unaprijedio da se projekat nastavlja
