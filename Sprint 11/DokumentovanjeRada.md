@@ -144,3 +144,20 @@ Implementiran kompletan sigurnosni sistem aplikacije: JWT login, RBAC, 2FA, enkr
 **audit log svih akcija**
 **konfigurisan RBAC (4 uloge)**
 **kompletno testiran sigurnosni tok**
+
+### Sprint 8 — Personalizovani paneli i role routing
+
+
+Završena implementacija korisničkih panela za sve uloge u sistemu te omogućena role-based routing nakon prijave, kako bi svaki korisnik bio automatski usmjeren na odgovarajući interfejs.
+#### Implementirano
+**implementirana prijava korisnika (US-03)**
+**implementiran osnovni role-based routing nakon login-a**
+**postavljeni osnovni paneli za sve korisničke uloge (UI struktura)**
+**prikaz početne organizacije dashboarda za doktora i medicinsko osoblje**
+**pripremljena osnova za dalju nadogradnju funkcionalnih panela**
+
+#### Demonstrirane funkcionalnosti
+**uspješna autentifikacija korisnika**
+**automatsko preusmjeravanje prema ulozi (role-based routing)**
+**prikaz svih korisničkih panela u osnovnoj verziji**
+**validna struktura frontenda spremna za dalju implementaciju logike**
