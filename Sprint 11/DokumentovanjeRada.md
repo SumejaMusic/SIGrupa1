@@ -19,3 +19,14 @@ Konkretni problemi koje ovaj sistem rješava su sljedeći:
 **Nedostatak jasne evidencije i praćenja termina** – u klasičnim sistemima često ne postoji centralizovana istorija zakazanih i odrađenih termina, što otežava praćenje aktivnosti pacijenata i doktora. Ovaj sistem uvodi strukturisanu evidenciju svih rezervacija, uključujući status termina i historiju promjena, čime se poboljšava preglednost i kontrola.
 
 **Problemi u komunikaciji između pacijenata i zdravstvenog osoblja** – bez digitalnog sistema dolazi do nesporazuma oko termina, otkazivanja i promjena rasporeda. Sistem uvodi jasno definisane informacije o svakom terminu i omogućava transparentan prikaz statusa, čime se smanjuju greške u komunikaciji.
+
+## 3. Glavne korisničke uloge
+**Pacijent** predstavlja krajnjeg korisnika sistema koji koristi platformu za zakazivanje i praćenje svojih medicinskih pregleda. Pacijent ima mogućnost pregleda dostupnih termina, kreiranja rezervacija te uvida u historiju i status svojih zakazanih pregleda. Nakon prijave, pacijent se usmjerava na stranicu /moje-rezervacije, gdje može upravljati svim svojim aktivnim i prošlim terminima. Ova uloga nema pristup podacima drugih korisnika niti mogućnost upravljanja sistemskim parametrima.
+
+**Doktor** je medicinski korisnik koji ima pristup terminima pacijenata koji su mu dodijeljeni. Doktor može pregledati svoj raspored, detalje zakazanih pregleda te informacije o pacijentima. Također ima mogućnost upravljanja statusom termina i dodavanja napomena vezanih za određene preglede. Početna stranica za doktora je /doktor-rezervacije, gdje dobija pregled svih relevantnih termina organizovanih po vremenu i statusu.
+
+**Medicinsko osoblje** ima ulogu operativne podrške u okviru sistema i odgovorno je za pregled rasporeda, kontrolu termina i administrativne zadatke vezane za organizaciju pregleda. Ova uloga ima širi uvid u sistem u odnosu na pacijente, ali bez direktnog uticaja na medicinske odluke. Početna stranica za medicinsko osoblje je /osoblje-panel, gdje se prikazuju svi aktivni termini i rasporedi doktora.
+
+**Administrator** ima najviši nivo ovlaštenja u sistemu i odgovoran je za cjelokupno upravljanje platformom. Administrator upravlja korisničkim nalozima, dodjeljuje uloge, kontroliše pristup sistemu i ima uvid u sve rezervacije i aktivnosti unutar aplikacije. Početna stranica za administratora je /admin, gdje se nalaze alati za konfiguraciju i upravljanje sistemom.
+
+**Vlasnik** predstavlja ulogu fokusiranu na analitiku i strateški pregled sistema. Vlasnik nema operativni pristup rezervacijama, već koristi sistem za praćenje statistika, izvještaja i ključnih performansi sistema kao što su broj pregleda, zauzetost doktora i ukupna iskorištenost kapaciteta. Početna stranica za ovu ulogu je /menadzment, gdje se prikazuju agregirani podaci i poslovni izvještaji.
