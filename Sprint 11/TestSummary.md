@@ -1,113 +1,77 @@
 # 7. Test Summary / QA izvještaj
 
 ## 7.1. Uvod
-U ovom sprintu sproveden je sveobuhvatan QA proces kako bi se osigurala stabilnost bolničkog sistema. Testiranje je podijeljeno u nekoliko nivoa, počevši od automatizovanih Unit i Integracionih testova, do naprednih testova performansi i sigurnosti.
+U ovom sprintu sproveden je sveobuhvatan QA proces kako bi se osigurala stabilnost bolničkog sistema. Testiranje je podijeljeno u nekoliko nivoa, počevši od automatizovanih Unit i Integracionih testova, do naprednih testova performansi i sigurnosti pod opterećenjem.
 
 ---
 
 ## 7.2. Unit Testovi
-Unit testovi su korišteni za provjeru izolovane logike svakog kontrolera i servisa. Ovim testovima potvrđujemo da osnovne funkcije sistema (poput validacije podataka i računanja termina) rade besprijekorno.
+Unit testovi su korišteni za provjeru izolovane logike svakog kontrolera i servisa. Ovim testovima potvrđujemo da osnovne funkcije sistema (poput validacije podataka i računanja termina) rade besprijekorno u izolaciji.
 
-**Rezultati Unit testiranja (Vitest):**
-*   **Test Suites (Fajlovi):** 14 prošlo
-*   **Ukupno testova:** 319 prošlo
-*   **Vrijeme izvršavanja:** 2.23 s
-*   **Status:** ✅ 100% Pass
+| Metrika | Vrijednost |
+| :--- | :--- |
+| **Test Suites (Fajlovi)** | 14 prošlo |
+| **Ukupno testova** | 319 prošlo |
+| **Vrijeme izvršavanja** | 2.23 s |
+| **Status** | ✅ **100% Pass** |
 
 **Pokriveni moduli:**
-- `adminController` (53 testa)
-- `doctorController` (27 testova)
-- `terminController` (31 test)
+- `adminController` (53 testa), `doctorController` (27 testova), `terminController` (31 test)
 - `registration`, `authService`, `userProfile`, `auditLog` i drugi.
 
-<img width="835" height="423" alt="{DEDF9838-1954-428F-B51C-0C6F06CCB72E}" src="https://github.com/user-attachments/assets/1d43c620-dccb-4df6-81b7-bd04a0436f78" />
+<img width="835" alt="Unit Test Results" src="https://github.com/user-attachments/assets/1d43c620-dccb-4df6-81b7-bd04a0436f78" />
 
 ---
 
 ## 7.3. Integracioni Testovi
 Integracioni testovi provjeravaju saradnju između API endpointova i baze podataka. Ovi testovi osiguravaju da su kompleksni tokovi (poput rezervacije termina kroz više slojeva aplikacije) ispravno implementirani.
 
-**Rezultati integracionog testiranja (Vitest):**
-*   **Test Suites (Fajlovi):** 11 prošlo
-*   **Ukupno testova:** 128 prošlo (9 skipped, 2 todo)
-*   **Vrijeme izvršavanja:** 12.69 s
-*   **Status:** ✅ Pass
+| Metrika | Vrijednost |
+| :--- | :--- |
+| **Test Suites (Fajlovi)** | 11 prošlo |
+| **Ukupno testova** | 128 prošlo (9 skipped, 2 todo) |
+| **Vrijeme izvršavanja** | 12.69 s |
+| **Status** | ✅ **Pass** |
 
-<img width="797" height="166" alt="{EFA56DDB-1707-42C5-B8D8-05288B9E981F}" src="https://github.com/user-attachments/assets/66176693-d7a5-4942-9ed8-2a2c921b0fca" />
+<img width="797" alt="Integration Test Results" src="https://github.com/user-attachments/assets/66176693-d7a5-4942-9ed8-2a2c921b0fca" />
 
-## 7.3.1. Edge Case i Concurrency Testovi
+### 7.3.1. Edge Case i Concurrency Testovi
+Sprovedeni su dodatni testovi fokusirani na rubne slučajeve (*edge cases*), istovremene zahtjeve (*race conditions*) i transakcione rollback mehanizme.
 
-Pored standardnih integracionih testova, sprovedeni su dodatni testovi fokusirani na rubne slučajeve (*edge cases*), istovremene zahtjeve (*race conditions*) i djelimične zapise/transakcione greške. Cilj ovih testova bio je osigurati otpornost sistema na neispravne unose, konkurentni pristup resursima i neočekivane greške baze podataka ili Redis servisa.
+*   **Ukupno testova:** 82 prošlo
+*   **Vrijeme izvršavanja:** 85 ms
+*   **Status:** ✅ **100% Pass**
 
-### Rezultati testiranja (`edgeCases.test.ts`):
-* **Ukupno testova:** 82 prošlo
-* **Vrijeme izvršavanja:** 85 ms
-* **Status:** ✅ 100% Pass
-
----
-
-### Pokrivene kategorije testiranja
-
-#### 1. Neispravni unosi (Input Validation)
-Testirani su različiti scenariji nevalidnih zahtjeva i neispravnih podataka:
-* Negativni i nepostojeći ID-evi (`terminId`, `doktorId`)
-* Nedostajući parametri i *body* polja
-* Nevalidni email formati i lozinke
-* Neovlašten pristup (`401 Unauthorized`)
-* Pokušaji pristupa tuđim rezervacijama (`403 Forbidden`)
-* Validacija komentara, registracije i resetovanja lozinke
-
-**Broj testova:** 51
-
-#### 2. Istovremeni zahtjevi (Concurrency / Race Conditions)
-Testirani su scenariji konkurentnog pristupa sistemu kako bi se spriječile duple rezervacije i konflikti nad terminima:
-* Redis *lock* mehanizam za zaključavanje termina
-* Dupla rezervacija istog termina
-* Preklapanje termina kod različitih doktora
-* Istekli ili nevalidni *lock*-ovi
-* Istovremeno otkazivanje termina
-
-**Broj testova:** 9
-
-#### 3. Djelimični zapisi i rollback mehanizmi
-Provjereno je ponašanje sistema u slučaju pada transakcije ili nepotpunih podataka:
-* *Rollback* transakcija pri grešci baze
-* *Cleanup* uploadovanih nalaza nakon neuspješne transakcije
-* Propagacija Prisma i Redis grešaka putem `next()`
-* *Fallback* ponašanje za obrisane korisnike u komentarima
-* Validacija nepostojećih resursa (`404 Not Found`)
-
-**Broj testova:** 22
+#### Pokrivene kategorije:
+1.  **Input Validation (51 test):** Negativni ID-evi, nevalidni emailovi, neovlašteni pristupi (401/403).
+2.  **Concurrency (9 testova):** Redis *lock* mehanizam, sprječavanje duplih rezervacija, istovremeno otkazivanje.
+3.  **Rollback & Integrity (22 testa):** Cleanup nakon grešaka, fallback za obrisane korisnike, validacija 404 Found.
 
 ---
 
 ## 7.4. Sigurnosno testiranje (Penetration Testing)
-Sigurnosno testiranje je sprovedeno kako bi se identifikovale potencijalne ranjivosti sistema i osigurala zaštita osjetljivih podataka pacijenata.
+Sprovedeno radi identifikacije ranjivosti i zaštite osjetljivih podataka pacijenata.
 
 *   **Alat:** OWASP ZAP 2.17.0
 *   **Tester:** Hana Mahmutović
 *   **Metoda:** Automatski scan + Manual Explore (Black Box)
 
 ### 7.4.1. Sažetak nalaza
-Tokom testiranja nije pronađena nijedna kritična (High) ranjivost. Identifikovane su srednje i niske ranjivosti koje se primarno odnose na sigurnosne headere.
-
 | Ozbiljnost | Broj nalaza | Status |
 | :--- | :--- | :--- |
 | 🔴 Visoka (High) | 0 | ✅ Sigurno |
 | 🟠 Srednja (Medium) | 5 | Potrebno popraviti |
 | 🟡 Niska (Low) | 5 | Preporučeno popraviti |
 
-### 7.4.2. Ključne preporuke (Srednje ranjivosti)
-1. **CSP Header:** Potrebno je postaviti Content Security Policy kako bi se spriječili XSS napadi.
-2. **Anti-clickjacking:** Dodati `X-Frame-Options: DENY` u Express middleware.
-3. **Session ID:** Socket.IO sesije se prenose u URL-u; preporučuje se isključivo korištenje WebSocket transporta.
+### 7.4.2. Ključne preporuke (Medium)
+1.  **CSP Header:** Postaviti Content Security Policy za sprječavanje XSS napada.
+2.  **Anti-clickjacking:** Dodati `X-Frame-Options: DENY` u Express middleware.
+3.  **Session ID:** Isključivo korištenje WebSocket transporta za Socket.IO sesije.
 
 ---
 
 ## 7.5. RBAC Testiranje (Pristupna kontrola)
-Ručno je testirana kontrola pristupa zasnovana na ulogama (Role-Based Access Control) pomoću Postman-a i JWT tokena.
-
-**Rezultati matrice pristupa:**
+Ručno testirana kontrola pristupa zasnovana na ulogama pomoću Postmana i JWT tokena.
 
 | Endpoint | Pacijent | Doktor | Admin | Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -115,91 +79,66 @@ Ručno je testirana kontrola pristupa zasnovana na ulogama (Role-Based Access Co
 | `GET /api/doktori` | ✅ 200 | ✅ 200 | ✅ 200 | ✅ PASS |
 | `GET /api/odjeli` | ✅ 200 | ✅ 200 | ✅ 200 | ✅ PASS |
 
-**Zaključak:** Sistem ispravno identifikuje korisničke uloge i onemogućava pacijentima pristup administrativnim podacima.
+**Zaključak:** Sistem ispravno izoluje administrativne podatke od neovlaštenih uloga.
 
 ---
 
 ## 7.6. Poznati testni propusti i ograničenja
-Na osnovu sigurnosnog skeniranja, identifikovani su sljedeći propusti koje je potrebno adresirati u narednim iteracijama:
 - Nedostatak **HSTS** headera (Strict-Transport-Security).
-- Nedostatak **Cache-Control** headera na API endpointima koji vraćaju medicinske podatke (rizik od keširanja na javnim računarima).
-- Informacije o serveru su vidljive kroz `X-Powered-By: Express` header.
+- Nedostatak **Cache-Control** headera na API endpointima sa medicinskim podacima.
+- Vidljivost Express frameworka kroz `X-Powered-By` header.
 
 ---
 
 ## 7.7. Performansno testiranje (NFR-20)
-Provedena je verifikacija nefunkcionalnog zahtjeva NFR-20 kako bi se osigurala reaktivnost sistema nad velikim skupom podataka.
+Verifikacija brzine sistema nad velikim skupom podataka.
 
 ### 7.7.1. Seeding proces
-Tabela `AuditLog` je napunjena sa **50.000 zapisa** koristeći Faker biblioteku. 
-- **Trajanje unosa:** 49.902 sekunde.
-- **Status:** ✅ USPJEŠNO
+Tabela `AuditLog` je napunjena sa **50.000 zapisa** koristeći Faker biblioteku.
+-   **Trajanje unosa:** 49.902 sekunde.
+-   **Status:** ✅ **USPJEŠNO**
 
 ### 7.7.2. Benchmark rezultati (EXPLAIN ANALYZE)
-Testiranje je izvršeno direktno nad produkcionom shemom baze podataka.
-
 | Parametar | Rezultat |
 | :--- | :--- |
 | **Ukupan broj redova** | 50.000 |
-| **Vrijeme izvršavanja upita** | 203.727 ms |
-| **Status zahtjeva NFR-20** | ✅ ISPUNJENO |
+| **Vrijeme izvršavanja upita** | **203.727 ms** |
+| **Status zahtjeva NFR-20** | ✅ **ISPUNJENO** |
 
-**Zaključak:** Baza podataka uspješno obrađuje kompleksne upite nad 50.000 zapisa u vremenu od ~200ms, što potvrđuje visoku efikasnost sistema.
+**Zaključak:** Baza podataka obrađuje kompleksne upite nad 50.000 zapisa u vremenu od **~200ms**, što potvrđuje visoku skalabilnost sistema.
 
-**Dokazi:**
-
-
-<img width="931" height="326" alt="{8AB3ED52-1412-4419-B3EA-CEB4EB598A1F}" src="https://github.com/user-attachments/assets/9a9a0e9a-b915-42ba-b076-3221bac90f5f" />
-<img width="1060" height="379" alt="{42748A74-4EB1-4EFC-B706-78D8C5BF3D92}" src="https://github.com/user-attachments/assets/8e91343e-a0ad-47de-82ca-7cd54b2f77bf" />
+**Dokazi (Terminal Seeding & Execution):**
+<img width="931" alt="Performance Seeding" src="https://github.com/user-attachments/assets/9a9a0e9a-b915-42ba-b076-3221bac90f5f" />
+<img width="1060" alt="Query Explain Analyze" src="https://github.com/user-attachments/assets/8e91343e-a0ad-47de-82ca-7cd54b2f77bf" />
 
 ---
-## 7.8. Load i Stress testiranje
 
-Izvršen je sveobuhvatan set od 12 automatizovanih testnih scenarija koristeći **k6** alat. Testovi su simulirali različite nivoe opterećenja (od pojedinačnih iteracija do 20+ istovremenih korisnika) kako bi se potvrdila stabilnost i sigurnost sistema.
+## 7.8. Load i Stress testiranje (k6)
+Izvršen set od 12 automatizovanih k6 scenarija za potvrdu stabilnosti pod opterećenjem.
 
-### 7.8.1. Pregled testiranih modula i rezultata
-
+### 7.8.1. Pregled modula i rezultata
 | Modul (Skripta) | Fokus testiranja | Vrijeme odziva (avg) | Status |
 | :--- | :--- | :--- | :--- |
-| **Autentifikacija** | Login proces, JWT tokeni, validacija rola. | 269.25 ms | ✅ PASS |
-| **Doktori** | Dohvatanje lista, provjera ID-eva i 404 error handlinga. | 480.44 ms | ✅ PASS |
-| **Konkurencija** | Testiranje istovremenih rezervacija (Race Condition). | 30.22 ms | ✅ PASS |
-| **NFR-22 (Rezervacije)** | Provjera zaključavanja termina pri konkurentnom pristupu. | 1.13 s | ✅ PASS |
-| **Pacijenti** | **Privatnost:** Provjera skrivanja JMBG-a i enkripcije. | 737.54 ms | ✅ PASS |
-| **Pregledi** | Kreiranje nalaza, dijagnoza i terapija. | 147.81 ms | ✅ PASS |
-| **Recenzije** | Sistem ocjenjivanja, sakrivanje i validacija ocjena. | 80.06 ms | ✅ PASS |
-| **Osoblje (Staff)** | Dashboard, PDF nalazi, rad sa terminima i hitnost. | 638.48 ms | ✅ PASS |
-| **Termini** | Zaključavanje/Oslobađanje (Redis lock) i filtriranje. | 171.35 ms | ✅ PASS |
-| **Vlasnik/Admin** | Statistike, occupancy sale i CSV/XLSX exporti. | 647.4 ms | ✅ PASS |
-| **Izvještaji (Waitlist)** | Liste čekanja i odjelni izvještaji (NFR-01, NFR-17). | 217.79 ms | ✅ PASS |
+| **Autentifikacija** | Login proces i JWT validacija | 269.25 ms | ✅ PASS |
+| **Konkurencija** | Race Condition (istovremene rezervacije) | **30.22 ms** | ✅ PASS |
+| **NFR-22 (Lock)** | Sprječavanje duplih rezervacija | 1.13 s | ✅ PASS |
+| **Pacijenti** | **Privatnost:** Sakrivanje JMBG-a | 737.54 ms | ✅ PASS |
+| **Pregledi** | Kreiranje nalaza i dijagnoza | 147.81 ms | ✅ PASS |
+| **Osoblje (Staff)** | Dashboard i PDF nalazi | 638.48 ms | ✅ PASS |
+
+### 7.8.2. Ključni nalazi NFR verifikacije
+1.  **NFR-22:** Potvrđeno da Redis lock ispravno dodjeljuje pristup samo jednom pacijentu pri simultanom zahtjevu (409 Conflict za drugog).
+2.  **Privatnost:** Testovi su potvrdili da osjetljivi podaci (JMBG) nisu izloženi u javnim API odgovorima.
+3.  **Performanse:** Čak i pri simulaciji 20+ VUs, prosječno vrijeme odziva ostaje ispod **500ms** za većinu modula.
+
+### 7.8.3. Vizuelni dokazi izvršavanja (k6 Logovi)
+<img width="545" alt="k6 Result 1" src="https://github.com/user-attachments/assets/87091678-f14c-40f0-9266-ee3e5250c74a" />
+<img width="824" alt="k6 Result 2" src="https://github.com/user-attachments/assets/54753976-06c1-43a0-b7a1-86b5fa0e2b06" />
+<img width="825" alt="k6 Result 3" src="https://github.com/user-attachments/assets/f83c9b61-4c1e-41af-9a58-ebdadd0d110c" />
+<img width="765" alt="k6 Result 4" src="https://github.com/user-attachments/assets/9bcc23fb-df6e-4940-9987-37c632aab74d" />
+<img width="848" alt="k6 Result 5" src="https://github.com/user-attachments/assets/b5c4f4df-f94c-460e-9d73-f3297e71b984" />
+<img width="405" alt="k6 Result 6" src="https://github.com/user-attachments/assets/0568a87e-4ca1-4d4c-8e6a-7aad00ca5189" />
+<img width="582" alt="k6 Result 7" src="https://github.com/user-attachments/assets/a9d0a953-7294-4c4f-81c5-e73250a33046" />
 
 ---
-
-### 7.8.2. Ključni nalazi i verifikacija NFR zahtjeva
-
-Na osnovu k6 logova, potvrđeno je ispunjenje sljedećih kritičnih tačaka:
-
-1.  **NFR-22 (Konkurentnost):** Test `nfr22-reservation.test.js` je potvrdio da kada dva pacijenta istovremeno pokušaju rezervisati isti termin, sistem ispravno dodjeljuje "lock" samo jednom, dok drugi dobija status **409 Conflict**, čime je spriječena dupla rezervacija.
-2.  **Privatnost i Enkripcija:** Test `patients.test.js` je potvrdio da **JMBG nije izložen** u API odgovorima, te da su recepti u historiji pregleda ispravno dekriptovani za ovlašteno osoblje.
-3.  **RBAC Validacija:** Visok procenat "failed requests" u nekim testovima (npr. 84% u recenzijama) je **pozitivan indikator**, jer k6 potvrđuje da pacijenti i doktori dobijaju 401/403 greške kada pokušaju pristupiti funkcijama koje im nisu dozvoljene.
-4.  **Performanse pod opterećenjem:** Čak i pri simulaciji 20 istovremenih korisnika, prosječno vrijeme odziva za većinu modula ostalo je ispod **500ms**, što osigurava fluidno korisničko iskustvo.
-
----
-
-### 7.8.3. Vizuelni dokazi izvršavanja
-
-<img width="545" height="379" alt="{C5118DB2-C1BD-4F58-8DF5-D49ACBAE9FAC}" src="https://github.com/user-attachments/assets/87091678-f14c-40f0-9266-ee3e5250c74a" />
-<img width="824" height="626" alt="{39C8F79A-062C-4EC8-B362-2D895EBCD8BC}" src="https://github.com/user-attachments/assets/54753976-06c1-43a0-b7a1-86b5fa0e2b06" />
-<img width="825" height="741" alt="{CD5DC02D-2003-4D09-81B1-834DE54DB0AE}" src="https://github.com/user-attachments/assets/f83c9b61-4c1e-41af-9a58-ebdadd0d110c" />
-<img width="765" height="680" alt="{133ECC48-5714-415F-A465-90EA319DF13C}" src="https://github.com/user-attachments/assets/9bcc23fb-df6e-4940-9987-37c632aab74d" />
-<img width="848" height="629" alt="{95A414D3-1F7E-4645-9C42-41BFA04A169E}" src="https://github.com/user-attachments/assets/b5c4f4df-f94c-460e-9d73-f3297e71b984" />
-<img width="405" height="350" alt="{B392523B-5BA1-4C9C-A141-C4E0B2D1E0FA}" src="https://github.com/user-attachments/assets/0568a87e-4ca1-4d4c-8e6a-7aad00ca5189" />
-<img width="582" height="420" alt="{8DCD0C7D-9485-43F7-8CC5-B8C90035FDAA}" src="https://github.com/user-attachments/assets/a9d0a953-7294-4c4f-81c5-e73250a33046" />
-
-
-
-
-
----
-
-
+**Zaključak:** Sistem u potpunosti ispunjava sve funkcionalne i nefunkcionalne (NFR) zahtjeve testirane u Sprintu 11.
