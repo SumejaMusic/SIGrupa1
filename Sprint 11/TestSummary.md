@@ -152,5 +152,54 @@ Testiranje je izvršeno direktno nad produkcionom shemom baze podataka.
 <img width="931" height="326" alt="{8AB3ED52-1412-4419-B3EA-CEB4EB598A1F}" src="https://github.com/user-attachments/assets/9a9a0e9a-b915-42ba-b076-3221bac90f5f" />
 <img width="1060" height="379" alt="{42748A74-4EB1-4EFC-B706-78D8C5BF3D92}" src="https://github.com/user-attachments/assets/8e91343e-a0ad-47de-82ca-7cd54b2f77bf" />
 
+---
+## 7.8. Load i Stress testiranje
+
+Izvršen je sveobuhvatan set od 12 automatizovanih testnih scenarija koristeći **k6** alat. Testovi su simulirali različite nivoe opterećenja (od pojedinačnih iteracija do 20+ istovremenih korisnika) kako bi se potvrdila stabilnost i sigurnost sistema.
+
+### 7.8.1. Pregled testiranih modula i rezultata
+
+| Modul (Skripta) | Fokus testiranja | Vrijeme odziva (avg) | Status |
+| :--- | :--- | :--- | :--- |
+| **Autentifikacija** | Login proces, JWT tokeni, validacija rola. | 269.25 ms | ✅ PASS |
+| **Doktori** | Dohvatanje lista, provjera ID-eva i 404 error handlinga. | 480.44 ms | ✅ PASS |
+| **Konkurencija** | Testiranje istovremenih rezervacija (Race Condition). | 30.22 ms | ✅ PASS |
+| **NFR-22 (Rezervacije)** | Provjera zaključavanja termina pri konkurentnom pristupu. | 1.13 s | ✅ PASS |
+| **Pacijenti** | **Privatnost:** Provjera skrivanja JMBG-a i enkripcije. | 737.54 ms | ✅ PASS |
+| **Pregledi** | Kreiranje nalaza, dijagnoza i terapija. | 147.81 ms | ✅ PASS |
+| **Recenzije** | Sistem ocjenjivanja, sakrivanje i validacija ocjena. | 80.06 ms | ✅ PASS |
+| **Osoblje (Staff)** | Dashboard, PDF nalazi, rad sa terminima i hitnost. | 638.48 ms | ✅ PASS |
+| **Termini** | Zaključavanje/Oslobađanje (Redis lock) i filtriranje. | 171.35 ms | ✅ PASS |
+| **Vlasnik/Admin** | Statistike, occupancy sale i CSV/XLSX exporti. | 647.4 ms | ✅ PASS |
+| **Izvještaji (Waitlist)** | Liste čekanja i odjelni izvještaji (NFR-01, NFR-17). | 217.79 ms | ✅ PASS |
+
+---
+
+### 7.8.2. Ključni nalazi i verifikacija NFR zahtjeva
+
+Na osnovu k6 logova, potvrđeno je ispunjenje sljedećih kritičnih tačaka:
+
+1.  **NFR-22 (Konkurentnost):** Test `nfr22-reservation.test.js` je potvrdio da kada dva pacijenta istovremeno pokušaju rezervisati isti termin, sistem ispravno dodjeljuje "lock" samo jednom, dok drugi dobija status **409 Conflict**, čime je spriječena dupla rezervacija.
+2.  **Privatnost i Enkripcija:** Test `patients.test.js` je potvrdio da **JMBG nije izložen** u API odgovorima, te da su recepti u historiji pregleda ispravno dekriptovani za ovlašteno osoblje.
+3.  **RBAC Validacija:** Visok procenat "failed requests" u nekim testovima (npr. 84% u recenzijama) je **pozitivan indikator**, jer k6 potvrđuje da pacijenti i doktori dobijaju 401/403 greške kada pokušaju pristupiti funkcijama koje im nisu dozvoljene.
+4.  **Performanse pod opterećenjem:** Čak i pri simulaciji 20 istovremenih korisnika, prosječno vrijeme odziva za većinu modula ostalo je ispod **500ms**, što osigurava fluidno korisničko iskustvo.
+
+---
+
+### 7.8.3. Vizuelni dokazi izvršavanja
+
+<img width="545" height="379" alt="{C5118DB2-C1BD-4F58-8DF5-D49ACBAE9FAC}" src="https://github.com/user-attachments/assets/87091678-f14c-40f0-9266-ee3e5250c74a" />
+<img width="824" height="626" alt="{39C8F79A-062C-4EC8-B362-2D895EBCD8BC}" src="https://github.com/user-attachments/assets/54753976-06c1-43a0-b7a1-86b5fa0e2b06" />
+<img width="825" height="741" alt="{CD5DC02D-2003-4D09-81B1-834DE54DB0AE}" src="https://github.com/user-attachments/assets/f83c9b61-4c1e-41af-9a58-ebdadd0d110c" />
+<img width="765" height="680" alt="{133ECC48-5714-415F-A465-90EA319DF13C}" src="https://github.com/user-attachments/assets/9bcc23fb-df6e-4940-9987-37c632aab74d" />
+<img width="848" height="629" alt="{95A414D3-1F7E-4645-9C42-41BFA04A169E}" src="https://github.com/user-attachments/assets/b5c4f4df-f94c-460e-9d73-f3297e71b984" />
+<img width="405" height="350" alt="{B392523B-5BA1-4C9C-A141-C4E0B2D1E0FA}" src="https://github.com/user-attachments/assets/0568a87e-4ca1-4d4c-8e6a-7aad00ca5189" />
+<img width="582" height="420" alt="{8DCD0C7D-9485-43F7-8CC5-B8C90035FDAA}" src="https://github.com/user-attachments/assets/a9d0a953-7294-4c4f-81c5-e73250a33046" />
+
+
+
+
+
+---
 
 
