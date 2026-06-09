@@ -127,4 +127,30 @@ Na osnovu sigurnosnog skeniranja, identifikovani su sljedeći propusti koje je p
 
 ---
 
+## 7.7. Performansno testiranje (NFR-20)
+Provedena je verifikacija nefunkcionalnog zahtjeva NFR-20 kako bi se osigurala reaktivnost sistema nad velikim skupom podataka.
+
+### 7.7.1. Seeding proces
+Tabela `AuditLog` je napunjena sa **50.000 zapisa** koristeći Faker biblioteku. 
+- **Trajanje unosa:** 49.902 sekunde.
+- **Status:** ✅ USPJEŠNO
+
+### 7.7.2. Benchmark rezultati (EXPLAIN ANALYZE)
+Testiranje je izvršeno direktno nad produkcionom shemom baze podataka.
+
+| Parametar | Rezultat |
+| :--- | :--- |
+| **Ukupan broj redova** | 50.000 |
+| **Vrijeme izvršavanja upita** | 203.727 ms |
+| **Status zahtjeva NFR-20** | ✅ ISPUNJENO |
+
+**Zaključak:** Baza podataka uspješno obrađuje kompleksne upite nad 50.000 zapisa u vremenu od ~200ms, što potvrđuje visoku efikasnost sistema.
+
+**Dokazi:**
+
+
+<img width="931" height="326" alt="{8AB3ED52-1412-4419-B3EA-CEB4EB598A1F}" src="https://github.com/user-attachments/assets/9a9a0e9a-b915-42ba-b076-3221bac90f5f" />
+<img width="1060" height="379" alt="{42748A74-4EB1-4EFC-B706-78D8C5BF3D92}" src="https://github.com/user-attachments/assets/8e91343e-a0ad-47de-82ca-7cd54b2f77bf" />
+
+
 
