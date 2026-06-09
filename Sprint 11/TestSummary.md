@@ -141,4 +141,4 @@ Izvršen set od 12 automatizovanih k6 scenarija za potvrdu stabilnosti pod opter
 <img width="582" alt="k6 Result 7" src="https://github.com/user-attachments/assets/a9d0a953-7294-4c4f-81c5-e73250a33046" />
 
 ---
-**Zaključak:** Sistem u potpunosti ispunjava sve funkcionalne i nefunkcionalne (NFR) zahtjeve testirane u Sprintu 11.
+**Zaključak:** Sistem u potpunosti ispunjava sve funkcionalne i nefunkcionalne (NFR) zahtjeve koji su testirani.
