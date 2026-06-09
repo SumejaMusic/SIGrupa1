@@ -74,6 +74,7 @@ function getResend(): any {
 }
 
 const TO_EMAIL = process.env.RESEND_TO_EMAIL || 'musicsumeja98@gmail.com';
+
 const FROM_EMAIL = 'onboarding@resend.dev';
 const REVIEW_TOKEN_PURPOSE = 'appointment-review';
 
