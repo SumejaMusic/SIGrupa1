@@ -170,6 +170,9 @@ Fokus testiranja bio je na sljedećim vizuelnim komponentama:
 
 ### 7.9.3. Vizuelni dokazi (UI Screenshotovi)
 
+**Napomena:** Zbog obima sistema, u nastavku su prikazani samo reprezentativni dijelovi korisničkog interfejsa u svrhu demonstracije vizuelnih standarda i ključnih funkcionalnosti, dok su sve ostale stranice i stanja aplikacije verifikovani manuelno tokom procesa testiranja.
+
+
 Ispod je prikazan **Doktorski Dashboard** koji služi kao dokaz uspješne verifikacije ključnih UI elemenata:
 
 <img width="1929" height="593" alt="{C8D1C5FE-CC15-41B6-9CE5-047FBF3B375D}" src="https://github.com/user-attachments/assets/05ae77ae-37a3-4906-aa82-43771b07beb1" />
@@ -194,8 +197,21 @@ Ispod je prikazan **Doktorski Dashboard** koji služi kao dokaz uspješne verifi
 3.  **Konzistentnost dizajna:** Dugme "Nazad" i ikone u tabovima prate opštu temu aplikacije, čime se osigurava da je i administrativni dio jednako intuitivan kao i korisnički.
 
 
-
 ---
+
+**Proces rezervacije termina (Korisnički tok za pacijenta):**
+
+Prikazan je intuitivan proces zakazivanja termina kroz više koraka, čime se osigurava jednostavnost korištenja sistema.
+
+<img width="1164" height="650" alt="{1167AF6E-1D6E-431C-9B7E-F7580142F21E}" src="https://github.com/user-attachments/assets/4fcdfb62-25f4-4154-b387-1bb3994996a6" />
+<img width="1183" height="633" alt="{07B7D537-69C3-44D1-BCEF-F90CE51FE137}" src="https://github.com/user-attachments/assets/122350c5-c10e-45a2-894f-96f90cf2bed1" />
+
+
+**Analiza elemenata sa slika:**
+1.  **Stepper mehanizam:** Na vrhu ekrana jasno je vidljiv progresivni bar (Korak 1/5, 2/5...) koji informiše pacijenta o preostalim koracima rezervacije, što smanjuje kognitivno opterećenje.
+2.  **Vizuelna identifikacija:** Svaki medicinski odjel ima unikatnu ikonu (npr. srce za kardiologiju, kost za ortopediju), što omogućava brže snalaženje korisnika.
+3.  **Funkcionalnost pretrage:** Implementirana polja za pretragu ("Traži odjel", "Pretraži po imenu doktora") omogućavaju efikasnu navigaciju kroz veći broj podataka.
+4.  **Informativne kartice:** Kartice doktora sadrže ključne informacije: ime, specijalizaciju i avatar sa inicijalima, uz jasno definisana dugmad za akciju ("Odaberi / Select").
 
 ## Finalni zaključak
 Na osnovu sprovedenih testova potvrđuje se sljedeće:
