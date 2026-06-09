@@ -58,7 +58,7 @@ const validirajPolje = (name: string, value: string): string | undefined => {
       break;
     case 'jmbg':
       if (!value) return 'JMBG je obavezan.';
-      if (!/^\d{13}$/.test(value)) return 'JMBG mora imati 13 cifara.';
+      if (!/^\d{13}$/.test(value)) return 'JMBG mora imati 13 cifara bez slova.';
       break;
     case 'datumRodjenja':
       if (!value) return 'Datum rođenja je obavezan.';
