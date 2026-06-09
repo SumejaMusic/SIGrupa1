@@ -35,7 +35,7 @@ const app = express();
 }));*/
 app.use(cors({
   origin: [
-    process.env.CORS_ORIGIN || "https://bolnicki-sistem-rezervacija.onrender.com",
+    process.env.CORS_ORIGIN || "https://bolnicki-sistem-rezervacija.onrender.com/",
     "http://localhost:5173",
   ],
   credentials: true,
@@ -77,7 +77,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: [
-      process.env.CORS_ORIGIN || "https://bolnicki-sistem-rezervacija.onrender.com",
+      process.env.CORS_ORIGIN || "https://bolnicki-sistem-rezervacija.onrender.com/",
       "http://localhost:5173",
     ],
     credentials: true,
