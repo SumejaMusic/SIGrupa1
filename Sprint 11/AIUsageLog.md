@@ -493,6 +493,7 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Rizici, problemi ili greške** | Kod migracija na Neon bazi pojavio se problem sa starijom migracijom gdje je tabela već postojala, pa je bilo potrebno koristiti Prisma resolve postupak i provjeriti stanje migracija. Integracioni testovi lokalno zahtijevaju pokrenut Docker Desktop jer koriste testne Postgres i Redis kontejnere. Također je utvrđeno da generisanje PDF uputnice postoji na posebnoj grani `origin/GenerisanjePDFUputnice`, ali nije dio trenutne grane `feature/Dovrsavanje` |
 | **Ko je koristio alat** | Hamza Husović |
 
+## Unos 029
 
 | Stavka | Opis |
 | :--- | :--- |
@@ -507,3 +508,19 @@ Ovaj dokument je kreiran s ciljem transparentnog praćenja i dokumentovanja ulog
 | **Šta je tim odbacio** | Prijedlog za GitHub Actions workflow koji koristi Deploy Hook URL-ove iz Render Settings — tim je zadržao Render Auto-Deploy umjesto ručnog trigerovanja putem `curl` komandi, jer je to jednostavnije i bez potrebe za GitHub Secrets. |
 | **Rizici, problemi ili greške** | AI je u početku pretpostavio da servis treba biti rekreiran od nule zbog problema s Git Credentials, što je bio ispravan zaključak, ali je uzrokovalo dodatni posao. Problem je bio što Render ne dozvoljava promjenu credentials na postojećem servisu — ovo ograničenje nije odmah identifikovano. Pored toga, AI je predložio `sleep 90` u health check workflowu kao aproksimaciju vremena Render deploymenta, što nije pouzdano za produkcijsku upotrebu i tim treba imati to u vidu. |
 | **Ko je koristio alat** | Sumeja Mušić |
+
+## Unos 030 — Implementacija i verifikacija performansnog testa (NFR-20)
+
+| Stavka | Opis |
+| :--- | :--- |
+| **Datum** | 09.06.2026. |
+| **Sprint broj** | Sprint 11 |
+| **Alat koji je korišten** | OpenAI ChatGPT |
+| **Svrha korištenja** | Generisanje testnih podataka velikog obima (50.000 zapisa) i verifikacija performansi baze podataka prema specifikaciji NFR-20. |
+| **Kratak opis zadatka ili upita** | Kreiranje automatizovane TypeScript skripte za popunjavanje PostgreSQL baze podataka; Izvođenje benchmarkinga nad tabelom `AuditLog` pomoću `EXPLAIN ANALYZE`; Pokretanje Load testova pomoću k6 alata. |
+| **Šta je AI predložio ili generisao** | TypeScript skriptu `seedPerformance.ts` koja koristi `@faker-js/faker` biblioteku i Prisma `createMany` metodu za optimizovan unos; Skriptu `testPerformance.ts` za direktno mjerenje vremena upita; Strukturu QA izvještaja u Markdown formatu. |
+| **Šta je tim prihvatio** | Metodologiju "Bulk Insert" u paketima od 5.000 zapisa radi brzine; Tabela `AuditLog` je prihvaćena kao najreprezentativniji model za testiranje opterećenja; Korištenje k6 alata za simulaciju 20+ istovremenih korisnika. |
+| **Šta je tim izmijenio** | Putanje izvršavanja unutar `PROJEKAT/bolnicki-sistem/server` foldera; Imena polja u skripti prilagođena su prema `schema.prisma` (npr. `tipAkcije`, `vrijemeAkcije`); Parametri baze podešeni na port `5556`. |
+| **Šta je tim odbacio** | Upotrebu grafičkih SQL alata (SQLTools) za benchmarking zbog problema sa SSL konekcijom; Korištenje pojedinačnih `INSERT` upita koji bi trajali predugo za 50.000 zapisa. |
+| **Rizici, problemi ili greške** | Problem `ERR_MODULE_NOT_FOUND` riješen ispravljanjem radne putanje u terminalu; Greška `EADDRINUSE` na portu 5000 (ubijanje "zombie" procesa); Nedostatak paketa `xlsx` nakon merge-a sa `main` granom (riješen sa `npm install`). |
+| **Ko je koristio alat** | Kenan Hatibović |
