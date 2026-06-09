@@ -35,7 +35,7 @@ Integracioni testovi provjeravaju saradnju između API endpointova i baze podata
 
 <img width="797" height="166" alt="{EFA56DDB-1707-42C5-B8D8-05288B9E981F}" src="https://github.com/user-attachments/assets/66176693-d7a5-4942-9ed8-2a2c921b0fca" />
 
-# 7.3.1. Edge Case i Concurrency Testovi
+## 7.3.1. Edge Case i Concurrency Testovi
 
 Pored standardnih integracionih testova, sprovedeni su dodatni testovi fokusirani na rubne slučajeve (*edge cases*), istovremene zahtjeve (*race conditions*) i djelimične zapise/transakcione greške. Cilj ovih testova bio je osigurati otpornost sistema na neispravne unose, konkurentni pristup resursima i neočekivane greške baze podataka ili Redis servisa.
 
