@@ -1090,7 +1090,160 @@ SIGrupa1/
 ├── Sprint 11/
 ├── .gitignore
 └── README.md
+# Upute za produkcijski ili cloud deployment
 
+Ovaj dokument opisuje kompletan postupak postavljanja aplikacije SwiftMed
+na produkcijsku infrastrukturu koristeći Render (backend i frontend),
+Neon (PostgreSQL baza) i Render Redis (cache).
+
+---
+
+## Preduvjeti
+
+Prije početka osigurati da postoji:
+
+- GitHub account s pristupom repou `SumejaMusic/SIGrupa1`
+- Render account (besplatni plan je dovoljan): [render.com](https://render.com)
+- Neon account (besplatni plan): [neon.tech](https://neon.tech)
+- Resend account (za email notifikacije): [resend.com](https://resend.com)
+- Twilio account (za SMS notifikacije, opcionalno): [twilio.com](https://twilio.com)
+
+---
+
+## Korak 1 — Postavljanje baze podataka (Neon)
+
+1. Registrovati se na [neon.tech](https://neon.tech) i kreirati novi projekt
+2. Odabrati region najbliži Render serveru (preporučeno: **Frankfurt, EU**)
+3. Kreirati novu bazu podataka
+4. Kopirati **connection string** iz Neon dashboarda
+Ovaj string koristiti kao vrijednost `DATABASE_URL` environment varijable.
+
+---
+
+## Korak 2 — Postavljanje Redisa (Render Redis)
+
+1. U Render dashboardu kliknuti **New → Redis**
+2. Odabrati:
+   - **Name:** `bolnicki-redis` (ili po izboru)
+   - **Plan:** Free
+   - **Region:** Frankfurt (EU Central) — isti kao backend servis
+3. Nakon kreiranja, kopirati **Internal Redis URL** (koristi se za komunikaciju između Render servisa)
+
+> Koristiti **Internal URL** (ne External), jer je brži i bez latencije između Render servisa.
+
+---
+
+## Korak 3 — Instalacija Render GitHub App
+
+Render mora imati pristup repou kako bi automatski detektovao pusheve.
+
+1. Otvoriti: `https://github.com/apps/render`
+2. Kliknuti **Install**
+3. Odabrati organizaciju ili account (`SumejaMusic`)
+4. Pod *Repository access* odabrati `SumejaMusic/SIGrupa1`
+5. Kliknuti **Save**
+
+> Ovaj korak je neophodan za automatski CI/CD deploy. Bez njega Render ne prima
+> obavijesti o novim commitovima i deploy mora biti pokretan ručno.
+
+---
+
+## Korak 4 — Kreiranje backend servisa (Web Service)
+
+1. Render Dashboard → **New → Web Service**
+2. Odabrati **Build and deploy from a Git repository**
+3. Konektovati repo `SumejaMusic/SIGrupa1`
+4. Unijeti sljedeće postavke:
+
+| Postavka | Vrijednost |
+|---|---|
+| **Name** | `sigrupa1-back` |
+| **Region** | Frankfurt (EU Central) |
+| **Branch** | `main` |
+| **Root Directory** | `PROJEKAT/bolnicki-sistem/server` |
+| **Runtime** | Node |
+| **Build Command** | `npm install --include=dev && npx prisma generate && npx prisma migrate deploy && npm run build` |
+| **Start Command** | `npm start` |
+| **Plan** | Free |
+| **Auto-Deploy** | On Commit |
+
+5. Kliknuti **Create Web Service**
+
+---
+
+## Korak 5 — Postavljanje environment varijabli (backend)
+
+Nakon kreiranja backend servisa
+Dodati sve sljedeće varijable:
+
+| Varijabla | Vrijednost |
+|---|---|
+| `DATABASE_URL` | Connection string iz Neona |
+| `REDIS_URL` | Internal Redis URL iz Koraka 2 |
+| `JWT_SECRET` | Nasumičan string od min. 64 karaktera |
+| `MASTER_ENCRYPTION_KEY` | Tačno 64 hex karaktera |
+| `RESEND_API_KEY` | API ključ iz Resend dashboarda |
+| `NODE_ENV` | `production` |
+| `PORT` | `5000` |
+
+Generisanje sigurnih ključeva:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+> Pokrenuti gornju komandu dva puta — jednom za `JWT_SECRET`, jednom za `MASTER_ENCRYPTION_KEY`.
+
+---
+
+## Korak 6 — Kreiranje frontend servisa (Static Site)
+
+1. Render Dashboard → **New → Static Site**
+2. Konektovati isti repo `SumejaMusic/SIGrupa1`
+3. Unijeti sljedeće postavke:
+
+| Postavka | Vrijednost |
+|---|---|
+| **Name** | `bolnicki-sistem-za-rezervacije` |
+| **Branch** | `main` |
+| **Root Directory** | `PROJEKAT/bolnicki-sistem/client` |
+| **Build Command** | `npm install && npm run build` |
+| **Publish Directory** | `dist` |
+| **Auto-Deploy** | On Commit |
+
+4. Pod **Environment Variables** dodati:
+
+| Varijabla | Vrijednost |
+|---|---|
+| `VITE_API_URL` | URL backend servisa, npr. `https://sigrupa1-back.onrender.com` |
+
+5. Pod **Redirects/Rewrites** dodati pravilo za React Router:
+
+| Source | Destination | Action |
+|---|---|---|
+| `/*` | `/index.html` | Rewrite |
+
+> Ovo pravilo je neophodno — bez njega direktni pristup rutama poput
+> `/prijava` ili `/profil` vraća `404` grešku jer Render traži fizički fajl na toj putanji.
+
+6. Kliknuti **Create Static Site**
+
+---
+
+## Korak 7 — Provjera deploymenta
+
+Nakon što su oba servisa kreirana, provjeriti da su ispravno pokrenuta:
+
+**Backend:**
+Treba vratiti JSON odgovor (ili 401 Unauthorized — što znači da server radi).
+
+**Frontend:**
+Treba prikazati početnu stranicu aplikacije.
+---
+
+## Korak 8 — CI/CD tok (automatski deploy)
+
+Nakon završetka inicijalnog setupa, svaki push na `main` granu automatski
+trigeruje rebuild i redeploy oba servisa:
 ## Napomena o monorepu
 
 Pošto su frontend i backend u istom repou, svaki push na `main` trigeruje
