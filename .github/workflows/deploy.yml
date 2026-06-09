@@ -1,0 +1,19 @@
+name: CD — Auto Deploy (Render)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    name: Deployment info
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment managed by Render
+        run: |
+          echo "Deployment se vrši automatski putem Render GitHub App integracije."
+          echo "Svaki push na main granu trigeruje rebuild na:"
+          echo "  - Backend:  https://sigrupa1-back.onrender.com"
+          echo "  - Frontend: https://bolnicki-sistem-za-rezervacije.onrender.com"
+          echo "Status deploymenta: https://dashboard.render.com"
