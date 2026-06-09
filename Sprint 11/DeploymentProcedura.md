@@ -644,6 +644,207 @@ PDF nalazi se čuvaju direktno u PostgreSQL bazi kao `Bytes` polje, a ne na ekst
 **Ograničenje:** Neon besplatni plan ima limit od **0.5 GB** prostora za bazu.
 
 # Najčešći problemi pri pokretanju i njihova rješenja
+# Najčešći problemi pri pokretanju i njihova rješenja
+
+## Lokalno pokretanje
+
+---
+
+### Backend se ne pokreće — greška `Cannot find module`
+
+**Uzrok:** Zavisnosti nisu instalirane ili Prisma klijent nije generisan.
+
+**Rješenje:**
+```bash
+cd PROJEKAT/bolnicki-sistem/server
+npm install
+npx prisma generate
+npm run dev
+```
+
+---
+
+### Greška `Environment variable not found: DATABASE_URL`
+
+**Uzrok:** Fajl `server/.env` ne postoji ili je varijabla pogrešno napisana.
+
+**Rješenje:** Kreirati `server/.env` prema šablonu iz sekcije *Environment varijable*.
+Provjeriti da nema razmaka oko `=` znaka:
+```env
+DATABASE_URL="postgresql://..."   ✅
+DATABASE_URL = "postgresql://..."  ❌
+```
+
+---
+
+### Greška pri Prisma migraciji — `SSL connection required`
+
+**Uzrok:** Neon zahtijeva SSL konekciju, ali `DATABASE_URL` ne sadrži `sslmode=require`.
+
+**Rješenje:** Dodati parametre na kraj connection stringa:
+```env
+DATABASE_URL="postgresql://USER:PASS@HOST/DB?sslmode=require&channel_binding=require"
+```
+
+---
+
+### Frontend ne može doseći backend — greška `ERR_CONNECTION_REFUSED`
+
+**Uzrok:** `VITE_API_URL` nije postavljen ili backend nije pokrenut.
+
+**Rješenje:**
+1. Provjeriti da je backend pokrenut na `http://localhost:5000`
+2. Provjeriti `client/.env`:
+```env
+VITE_API_URL=http://localhost:5000
+```
+3. Restartati Vite dev server nakon izmjene `.env` fajla (Vite ne učitava env promjene automatski).
+
+---
+
+### Redis greška — `Connection refused` ili `ECONNREFUSED 127.0.0.1:6379`
+
+**Uzrok:** Redis nije pokrenut lokalno.
+
+**Rješenje (za development):** Pokrenuti Redis lokalno:
+```bash
+redis-server
+```
+Ili koristiti Render Redis instancu i postaviti `REDIS_URL` u `.env`.
+
+---
+
+### Greška `Invalid hex string` pri pokretanju enkripcije
+
+**Uzrok:** `MASTER_ENCRYPTION_KEY` nije tačno 64 hex karaktera.
+
+**Rješenje:** Generisati ispravan ključ:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+Rezultat kopirati u `.env` kao vrijednost `MASTER_ENCRYPTION_KEY`.
+
+---
+
+## Deployment na Render
+
+---
+
+### Auto-deploy se ne okida pri pushu na `main`
+
+**Uzrok:** Render GitHub App nije instaliran ili nema pristup repou.
+
+**Rješenje:**
+1. Otvoriti: `https://github.com/apps/render`
+2. Kliknuti **Install** → odabrati `SumejaMusic/SIGrupa1` → **Save**
+3. Provjeriti u Render Dashboard → servis → Settings → Deploy → **Auto-Deploy: On Commit**
+
+---
+
+### Backend build pada — `error TS7016: Could not find a declaration file`
+
+**Uzrok:** Render ne instalira `devDependencies` po defaultu, a `@types/*` paketi su tamo.
+
+**Rješenje:** Izmijeniti Build Command u Render Settings
+---
+
+### Frontend build pada — prazna stranica ili `404` na svim rutama
+
+**Uzrok 1:** `Publish Directory` nije postavljen na `dist`.
+
+**Rješenje:** Render Dashboard → frontend servis → Settings → Build → **Publish Directory: `dist`**
+
+**Uzrok 2:** React Router rute ne rade na statičkom servisu (osvježavanje stranice vraća 404).
+
+**Rješenje:** Dodati Redirect/Rewrite pravilo u Render Settings → Redirects/Rewrites
+---
+
+### CORS greška — `No 'Access-Control-Allow-Origin' header`
+
+**Uzrok:** Frontend URL nije dodan u CORS whitelist na backendu.
+
+**Rješenje:** U `server/src/app.ts` (ili gdje je CORS konfigurisan) dodati produkcijski frontend URL:
+```typescript
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://bolnicki-sistem-za-rezervacije.onrender.com"
+  ],
+  credentials: true
+}));
+```
+Isto vrijedi za Socket.io konfiguraciju. Nakon izmjene, pushati na `main`.
+
+---
+
+### Deployment uspješan, ali aplikacija vraća grešku `500` ili se ne pokreće
+
+**Uzrok:** Environment varijable nisu postavljene na Renderu.
+
+**Rješenje:** Render Dashboard → backend servis → **Environment** → dodati sve varijable iz `server/.env`:
+
+| Varijabla | Obavezna |
+|---|---|
+| `DATABASE_URL` | Da |
+| `JWT_SECRET` | Da |
+| `MASTER_ENCRYPTION_KEY` | Da |
+| `RESEND_API_KEY` | Da |
+| `REDIS_URL` | Da (Render Redis URL) |
+
+---
+
+### Prisma greška u produkciji — `Table does not exist`
+
+**Uzrok:** Migracije nisu pokrenute na produkcijskoj bazi.
+
+**Rješenje:** Dodati `prisma migrate deploy` u Build Command
+---
+
+### Backend se gasi i zahtjevi traju 30–60 sekundi
+
+**Uzrok:** Render besplatni plan gasi servis nakon 15 minuta neaktivnosti (cold start).
+
+**Rješenje (privremeno):** Koristiti servis poput [UptimeRobot](https://uptimerobot.com) koji pinga backend URL svakih 10 minuta kako bi ga održao aktivnim (nije garantovano na besplatnom planu).
+
+**Trajno rješenje:** Upgrade na Render `Starter` plan koji onemogućava automatsko gašenje.
+
+---
+
+### Email notifikacije ne stižu korisnicima
+
+**Uzrok:** Resend besplatni plan dozvoljava slanje samo na jednu verificiranu adresu.
+
+**Rješenje za testiranje:** Koristiti vlastitu verificiranu adresu u Resend dashboardu kao primatelja.
+
+**Trajno rješenje:** Aktivirati Resend plaćeni plan i verificirati vlastitu domenu.
+
+---
+
+## Testovi
+
+---
+
+### Integracijski testovi padaju — `Connection refused` na portu 5433
+
+**Uzrok:** Docker kontejneri za test bazu i Redis nisu pokrenuti.
+
+**Rješenje:**
+```bash
+cd PROJEKAT/bolnicki-sistem/server
+docker compose -f docker-compose.test.yml up -d
+```
+Pričekati da oba kontejnera imaju status `healthy`:
+```bash
+docker compose -f docker-compose.test.yml ps
+```
+
+---
+
+### Unit testovi padaju — `Cannot find module '@/...'`
+
+**Uzrok:** Path aliasi iz `tsconfig.json` nisu konfigurisani u `vitest.config.ts`.
+
+**Rješenje:** Provjeriti da `vitest.config.ts` sadrži iste path aliase kao `tsconfig.json`.
 
 # Struktura Projekta
 
@@ -893,5 +1094,5 @@ SIGrupa1/
 ## Napomena o monorepu
 
 Pošto su frontend i backend u istom repou, svaki push na `main` trigeruje
-build **oba** servisa, čak i ako je promijenjen samo jedan. Ovo je očekivano
+build oba servisa, čak i ako je promijenjen samo jedan. Ovo je očekivano
 ponašanje na besplatnom Render planu.
