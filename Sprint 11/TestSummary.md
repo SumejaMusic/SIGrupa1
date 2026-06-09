@@ -141,4 +141,66 @@ Izvršen set od 12 automatizovanih k6 scenarija za potvrdu stabilnosti pod opter
 <img width="582" alt="k6 Result 7" src="https://github.com/user-attachments/assets/a9d0a953-7294-4c4f-81c5-e73250a33046" />
 
 ---
-**Zaključak:** Sistem u potpunosti ispunjava sve funkcionalne i nefunkcionalne (NFR) zahtjeve koji su testirani.
+
+## 7.9. UI Testiranje (Korisnički interfejs)
+U skladu sa QA planom, izvršena je manuelna verifikacija vizuelnog prikaza i interaktivnih elemenata sistema kako bi se osiguralo optimalno korisničko iskustvo (UX) za sve uloge.
+
+*   **Odgovorna osoba:** QA inženjer
+*   **Alati:** Chrome DevTools, Ručno testiranje (Manual Explore)
+*   **Kriterij prolaznosti:** 90% UI testova prolazi, bez kritičnih vizuelnih grešaka.
+
+### 7.9.1. Obuhvat i scenariji testiranja
+Fokus testiranja bio je na sljedećim vizuelnim komponentama:
+
+1.  **Validacija poruka:** Provjera jasnoće i vidljivosti error/success poruka prilikom akcija (npr. neuspješna prijava, uspješna rezervacija).
+2.  **Dizajn termina:** Vizuelna distinkcija između slobodnih, zauzetih i hitnih termina (korištenje boja i oznaka).
+3.  **Preglednost Dashboarda:** Testiranje preglednosti kontrolnih tabli za svaku ulogu (Admin, Doktor, Osoblje, Pacijent).
+4.  **Statusi i obavijesti:** Ispravan prikaz statusa termina u realnom vremenu.
+
+### 7.9.2. Rezultati UI testiranja
+| Testni scenario | Rezultat | Status |
+| :--- | :--- | :--- |
+| **Prikaz error poruka** | Jasno vidljive i deskriptivne | ✅ PASS |
+| **Oznaka hitnih termina** | Istaknute crvenom bojom, lako uočljive | ✅ PASS |
+| **Dashboard (Doktor)** | Prikazuje listu pacijenata bez preklapanja | ✅ PASS |
+| **Dashboard (Pacijent)** | Intuitivan proces rezervacije u 3 klika | ✅ PASS |
+| **Odzivnost (Responsive)** | Layout se ispravno prilagođava mobilnim uređajima | ✅ PASS |
+
+---
+
+### 7.9.3. Vizuelni dokazi (UI Screenshotovi)
+
+Ispod je prikazan **Doktorski Dashboard** koji služi kao dokaz uspješne verifikacije ključnih UI elemenata:
+
+<img width="1929" height="593" alt="{C8D1C5FE-CC15-41B6-9CE5-047FBF3B375D}" src="https://github.com/user-attachments/assets/05ae77ae-37a3-4906-aa82-43771b07beb1" />
+
+
+**Analiza elemenata sa slike:**
+1.  **Vizuelna distinkcija termina:** U gornjem desnom uglu vidljiva je legenda (Hitni, Preventivni, Kontrolni) sa odgovarajućim kodiranjem boja, što omogućava doktoru brz pregled prioriteta.
+2.  **Oznaka hitnosti:** Termin pacijenta jasno je označen crvenim bedžom **"HITNO"**, čime je potvrđen zahtjev za isticanje kritičnih informacija.
+3.  **Statusi i analitika:** UI ispravno renderuje prosječnu ocjenu (3.7 zvjezdice) i anonimne komentare pacijenata, uz jasnu naznaku kada je komentar uklonjen od strane administratora.
+4.  **Preglednost i navigacija:** Sidebar navigacija je čista i responzivna, a akciona dugmad (npr. "+ Nova rezervacija") su istaknuta primarnom plavom bojom radi lakšeg snalaženja.
+
+**Menadžment Panel :**
+
+<img width="1656" height="336" alt="{09FC564E-8ABB-4E1C-991E-2A281E7D15A1}" src="https://github.com/user-attachments/assets/e027a2e7-5444-47e2-ae35-12e33143d712" />
+<img width="1367" height="700" alt="{A8D2F098-297A-4D60-B323-68DB3992E4C7}" src="https://github.com/user-attachments/assets/38bd1966-a244-43a1-8e98-d5106fce694e" />
+<img width="1330" height="751" alt="{7732972A-41C2-40EF-A256-6C649635BC98}" src="https://github.com/user-attachments/assets/1876f08f-79d9-47ca-875e-fa3798e4f134" />
+
+
+**Analiza elemenata sa slike:**
+1.  **Preglednost statistike:** UI koristi "Card" dizajn sa jasnim bojama za različite uloge (Administrator, Vlasnik, Pacijent, Doktor, Med. osoblje), što omogućava menadžmentu trenutan uvid u stanje baze korisnika.
+2.  **Navigacija unutar panela:** Implementiran je tab-sistem ("Korisnici", "Termini po doktoru", "Zauzetost sala"...) koji omogućava brzu promjenu konteksta izvještavanja bez učitavanja cijele stranice.
+3.  **Konzistentnost dizajna:** Dugme "Nazad" i ikone u tabovima prate opštu temu aplikacije, čime se osigurava da je i administrativni dio jednako intuitivan kao i korisnički.
+
+
+
+---
+
+## Finalni zaključak
+Na osnovu sprovedenih testova potvrđuje se sljedeće:
+
+1.  **Stabilnost:** Svi kritični bugovi su otklonjeni, a 100% integracionih testova prolazi.
+2.  **Skalabilnost:** Sistem ostaje brz (~200ms) pod opterećenjem od 50.000 zapisa.
+3.  **Sigurnost:** RBAC model je neprobojan za neautorizovane uloge.
+4.  **UI/UX:** Interfejs je čist, responzivan i prati definisanu specifikaciju.
