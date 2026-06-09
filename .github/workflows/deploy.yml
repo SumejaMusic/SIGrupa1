@@ -14,6 +14,6 @@ jobs:
         run: |
           echo "Deployment se vrši automatski putem Render GitHub App integracije."
           echo "Svaki push na main granu trigeruje rebuild na:"
-          echo "  - Backend:  https://sigrupa1-back.onrender.com"
-          echo "  - Frontend: https://bolnicki-sistem-za-rezervacije.onrender.com"
+          echo "  - Backend:  https://sigrupa1.onrender.com"
+          echo "  - Frontend: https://bolnicki-sistem-rezervacije.onrender.com"
           echo "Status deploymenta: https://dashboard.render.com"
