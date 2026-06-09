@@ -459,7 +459,7 @@ npx tsx prisma/seedAdmin.ts
 |---|---|---|
 |Vlasnik   | vlasnik@email.com | Lozinka123!
 | Medicinsko osoblje | emailprimjer3@gmail.com | Lozinka123!
-|Pacijent | emailprimjer4@gmail.com | Lozinka123!
+|Pacijent | aalispahic1@etf.unsa.ba  | Lozinka123!
 
 ## Pokretanje testova
 
