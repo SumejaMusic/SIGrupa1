@@ -312,6 +312,38 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## Preduvjeti
 
+- **Render GitHub App** mora biti instaliran i imati pristup repou  
+  → GitHub → Settings → Applications → Render → Repository access → `SumejaMusic/SIGrupa1`
+
+- **Auto-Deploy** mora biti postavljen na `On Commit` na oba servisa  
+  → Render Dashboard → servis → Settings → Deploy → Auto-Deploy
+
+### Konfiguracija servisa na Renderu
+
+#### Backend (Web Service)
+
+| Postavka | Vrijednost |
+|---|---|
+| Repository | `SumejaMusic/SIGrupa1` |
+| Branch | `main` |
+| Root Directory | `PROJEKAT/bolnicki-sistem/server` |
+| Build Command | `npm install --include=dev && npx prisma generate && npm run build` |
+| Start Command | `npm start` |
+| Auto-Deploy | `On Commit` |
+
+#### Frontend (Static Site)
+
+| Postavka | Vrijednost |
+|---|---|
+| Repository | `SumejaMusic/SIGrupa1` |
+| Branch | `main` |
+| Root Directory | `PROJEKAT/bolnicki-sistem/client` |
+| Build Command | `npm install && npm run build` |
+| Publish Directory | `dist` |
+| Auto-Deploy | `On Commit` |
+
+
+
 Prije pokretanja provjeriti da su instalirani sljedeći alati:
 
 | Alat | Minimalna verzija | Provjera |
@@ -404,7 +436,7 @@ npx prisma migrate deploy
 npx prisma migrate dev --name naziv_migracije
 
 # Resetovati bazu i primijeniti sve migracije iznova
-# ⚠️ BRIŠE SVE PODATKE — koristiti samo u developmentu
+#  BRIŠE SVE PODATKE — koristiti samo u developmentu
 npx prisma migrate reset
 ```
 
@@ -542,7 +574,12 @@ JWT_SECRET=test-secret
 | Integracijski watch | `npm run test:integration:watch` | Watch mod za integracijske testove |
 
 # Upute za produkcijski ili cloud deployment
- dodati
+ 
+## CI/CD — automatski deploy na Render
+
+Aplikacija koristi **Render GitHub App** integraciju za automatski deployment.
+Svaki push na `main` granu automatski trigeruje rebuild i redeploy oba servisa.
+
 
 # Link na deployment
 
@@ -852,3 +889,9 @@ SIGrupa1/
 ├── Sprint 11/
 ├── .gitignore
 └── README.md
+
+## Napomena o monorepu
+
+Pošto su frontend i backend u istom repou, svaki push na `main` trigeruje
+build **oba** servisa, čak i ako je promijenjen samo jedan. Ovo je očekivano
+ponašanje na besplatnom Render planu.
