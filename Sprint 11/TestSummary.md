@@ -35,6 +35,50 @@ Integracioni testovi provjeravaju saradnju između API endpointova i baze podata
 
 <img width="797" height="166" alt="{EFA56DDB-1707-42C5-B8D8-05288B9E981F}" src="https://github.com/user-attachments/assets/66176693-d7a5-4942-9ed8-2a2c921b0fca" />
 
+# 7.3.1. Edge Case i Concurrency Testovi
+
+Pored standardnih integracionih testova, sprovedeni su dodatni testovi fokusirani na rubne slučajeve (*edge cases*), istovremene zahtjeve (*race conditions*) i djelimične zapise/transakcione greške. Cilj ovih testova bio je osigurati otpornost sistema na neispravne unose, konkurentni pristup resursima i neočekivane greške baze podataka ili Redis servisa.
+
+### Rezultati testiranja (`edgeCases.test.ts`):
+* **Ukupno testova:** 82 prošlo
+* **Vrijeme izvršavanja:** 85 ms
+* **Status:** ✅ 100% Pass
+
+---
+
+### Pokrivene kategorije testiranja
+
+#### 1. Neispravni unosi (Input Validation)
+Testirani su različiti scenariji nevalidnih zahtjeva i neispravnih podataka:
+* Negativni i nepostojeći ID-evi (`terminId`, `doktorId`)
+* Nedostajući parametri i *body* polja
+* Nevalidni email formati i lozinke
+* Neovlašten pristup (`401 Unauthorized`)
+* Pokušaji pristupa tuđim rezervacijama (`403 Forbidden`)
+* Validacija komentara, registracije i resetovanja lozinke
+
+**Broj testova:** 51
+
+#### 2. Istovremeni zahtjevi (Concurrency / Race Conditions)
+Testirani su scenariji konkurentnog pristupa sistemu kako bi se spriječile duple rezervacije i konflikti nad terminima:
+* Redis *lock* mehanizam za zaključavanje termina
+* Dupla rezervacija istog termina
+* Preklapanje termina kod različitih doktora
+* Istekli ili nevalidni *lock*-ovi
+* Istovremeno otkazivanje termina
+
+**Broj testova:** 9
+
+#### 3. Djelimični zapisi i rollback mehanizmi
+Provjereno je ponašanje sistema u slučaju pada transakcije ili nepotpunih podataka:
+* *Rollback* transakcija pri grešci baze
+* *Cleanup* uploadovanih nalaza nakon neuspješne transakcije
+* Propagacija Prisma i Redis grešaka putem `next()`
+* *Fallback* ponašanje za obrisane korisnike u komentarima
+* Validacija nepostojećih resursa (`404 Not Found`)
+
+**Broj testova:** 22
+
 ---
 
 ## 7.4. Sigurnosno testiranje (Penetration Testing)
@@ -82,3 +126,5 @@ Na osnovu sigurnosnog skeniranja, identifikovani su sljedeći propusti koje je p
 - Informacije o serveru su vidljive kroz `X-Powered-By: Express` header.
 
 ---
+
+
